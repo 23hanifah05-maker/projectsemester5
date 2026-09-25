@@ -1,0 +1,134 @@
+/* =====================================================
+   public/css/pendaftaran.css
+   CSS khusus halaman Pendaftaran saja
+===================================================== */
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.master-data-title {
+    color: #d71920;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: underline;
+}
+
+.btn-input {
+    background: #c8161d;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.btn-input:hover {
+    background: #a9121a;
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-item label {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.filter-item input[type="date"] {
+    height: 30px;
+    border: 1px solid #cfcfcf;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-family: inherit;
+    font-size: 11px;
+}
+
+.filter-keyword input[type="text"] {
+    height: 30px;
+    width: 220px;
+    border: 1px solid #cfcfcf;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-family: inherit;
+    font-size: 11px;
+}
+
+/* ---------- TABEL ---------- */
+
+.table-pendaftaran {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.table-pendaftaran thead th {
+    background: #c8161d;
+    color: white;
+    font-weight: 700;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid #c8161d;
+}
+
+.table-pendaftaran tbody td {
+    padding: 10px 12px;
+    border: 1px solid #e5e5e5;
+    vertical-align: middle;
+}
+
+.table-pendaftaran tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.aksi-cell {
+    display: flex;
+    gap: 6px;
+}
+
+.form-delete {
+    display: inline;
+}
+
+.btn-aksi {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: #c8161d;
+    color: white;
+    font-size: 11px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-aksi:hover {
+    background: #a9121a;
+}
+
+@media (max-width: 750px) {
+    .table-pendaftaran {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
