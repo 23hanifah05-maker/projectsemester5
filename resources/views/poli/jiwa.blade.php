@@ -1,89 +1,97 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poli Jiwa</title>
+@extends('layouts.app')
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+@section('title', 'Poli Jiwa - Klinik Utama Merah Putih')
+@section('header-icon', '🩺')
+@section('header-title', 'Poli Jiwa')
 
-        body {
-            background: #f5f5f5;
-        }
+@section('extra-css')
+    {{-- Pakai CSS yang sama dengan halaman Pendaftaran karena struktur tabelnya sama --}}
+    <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
+@endsection
 
-        .header {
-            background: #b71c1c;
-            color: white;
-            padding: 20px 30px;
-            font-size: 24px;
-            font-weight: bold;
-        }
+@section('content')
 
-        .container {
-            padding: 30px;
-        }
+    <div class="panel">
 
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #b71c1c;
-            margin-bottom: 15px;
-        }
-
-        p {
-            color: #555;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-
-        .button {
-            display: inline-block;
-            padding: 12px 20px;
-            background: #b71c1c;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-        }
-
-        .button:hover {
-            background: #8e0000;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div class="header">
-        🧠 Poli Jiwa
-    </div>
-
-    <div class="container">
-
-        <div class="card">
-            <h1>Poli Jiwa</h1>
-
-            <p>
-                Selamat datang di halaman Poli Jiwa.
-                Halaman ini digunakan untuk pengelolaan informasi pelayanan pasien Poli Jiwa.
-            </p>
-
-            <a href="{{ route('dashboard') }}" class="button">
-                ← Kembali ke Dashboard
-            </a>
+        <div class="panel-head">
+            <a href="#" class="master-data-title">Daftar Pasien</a>
         </div>
 
+        <form method="GET" action="{{ route('poli.jiwa') }}" class="filter-row">
+            <div class="filter-item">
+                <label>Periode</label>
+                <input type="date" name="dari" value="{{ request('dari') }}">
+                <span>s.d</span>
+                <input type="date" name="sampai" value="{{ request('sampai') }}">
+            </div>
+
+            <div class="filter-item filter-keyword">
+                <label>Keyword</label>
+                <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder="Cari nama, NIK, atau No. RM">
+            </div>
+        </form>
+
+        <table class="table-pendaftaran">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>No. RM</th>
+                    <th>Nama Pasien</th>
+                    <th>NIK</th>
+                    <th>Tgl. Lahir</th>
+                    <th>Jenis Kelamin</th>
+                    <th>Alamat</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse (($pasien ?? []) as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $item->no_rm }}</td>
+                        <td>{{ $item->nama_pasien }}</td>
+                        <td>{{ $item->nik }}</td>
+                        <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
+                        <td>{{ $item->jenis_kelamin }}</td>
+                        <td>{{ $item->alamat }}</td>
+                        <td>{{ $item->status }}</td>
+                        <td class="aksi-cell">
+                            <a href="#" class="btn-aksi" title="Lihat">✔</a>
+                            <a href="#" class="btn-aksi" title="Tambah">+</a>
+                            <a href="#" class="btn-aksi" title="Edit">✎</a>
+                            <form action="#" method="POST" class="form-delete"
+                                  onsubmit="return confirm('Hapus data pasien ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-aksi" title="Hapus">🗑</button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    {{-- Baris kosong sebagai placeholder, selama belum ada data --}}
+                    @for ($i = 0; $i < 6; $i++)
+                        <tr>
+                            <td>{{ $i + 1 }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="aksi-cell">
+                                <span class="btn-aksi">✔</span>
+                                <span class="btn-aksi">+</span>
+                                <span class="btn-aksi">✎</span>
+                                <span class="btn-aksi">🗑</span>
+                            </td>
+                        </tr>
+                    @endfor
+                @endforelse
+            </tbody>
+        </table>
+
     </div>
 
-</body>
-</html>
+@endsection

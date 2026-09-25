@@ -1,0 +1,125 @@
+/* public/css/pendaftaran-input.css
+   Khusus untuk halaman Input Data Pendaftaran (create.blade.php).
+   Class .panel, .panel-head, .master-data-title dipakai bareng dengan
+   pendaftaran.css (halaman tabel) supaya kepala panel konsisten;
+   sisanya (.form-grid, .field, dst) khusus halaman ini saja.
+*/
+
+:root {
+    --merah: #c0392b;
+    --merah-tua: #a93226;
+    --abu-border: #d9d9d9;
+    --abu-bg: #f4f4f4;
+}
+
+.form-alert {
+    background: #fdecea;
+    border: 1px solid #f5b7b1;
+    color: #922b21;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 13px;
+}
+.form-alert ul { margin: 0; padding-left: 18px; }
+
+.section-title {
+    color: var(--merah);
+    font-weight: 700;
+    text-decoration: underline;
+    margin: 22px 0 14px;
+    font-size: 15px;
+}
+.section-title:first-of-type { margin-top: 4px; }
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 32px;
+}
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+.field input,
+.field select,
+.field textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--abu-border);
+    border-radius: 4px;
+    font-size: 13px;
+    width: 100%;
+    background: #fff;
+    font-family: inherit;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: none;
+    border-color: var(--merah);
+    box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.15);
+}
+
+.field textarea { resize: vertical; min-height: 60px; }
+
+.split-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.umur-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--abu-border);
+}
+
+.form-actions-right { display: flex; gap: 10px; }
+
+.btn-consent,
+.btn-simpan,
+.btn-reset {
+    border: none;
+    padding: 9px 18px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-consent,
+.btn-simpan {
+    background: var(--merah);
+    color: #fff;
+}
+.btn-consent:hover,
+.btn-simpan:hover { background: var(--merah-tua); }
+
+.btn-reset {
+    background: #fff;
+    color: #444;
+    border: 1px solid var(--abu-border);
+}
+.btn-reset:hover { background: var(--abu-bg); }
+
+@media (max-width: 760px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .split-2 { grid-template-columns: 1fr; }
+    .form-actions { flex-direction: column; gap: 12px; align-items: stretch; }
+    .form-actions-right { justify-content: flex-end; }
+}

@@ -1,11 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Poli Obgyn - Klinik Utama Merah Putih')
-@section('header-icon', '🩺')
-@section('header-title', 'Poli Obgyn')
+@section('title', 'Pendaftaran - Klinik Utama Merah Putih')
+@section('header-icon', '📋')
+@section('header-title', 'Pendaftaran')
 
 @section('extra-css')
-    {{-- Pakai CSS yang sama dengan halaman Pendaftaran karena struktur tabelnya sama --}}
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
 @endsection
 
@@ -14,10 +13,11 @@
     <div class="panel">
 
         <div class="panel-head">
-            <a href="#" class="master-data-title">Daftar Pasien</a>
+            <a href="#" class="master-data-title">Master Data</a>
+            <a href="{{ route('pendaftaran.create') }}" class="btn-input">+ Input</a>
         </div>
 
-        <form method="GET" action="{{ route('poli.obgyn') }}" class="filter-row">
+        <form method="GET" action="{{ route('pendaftaran.index') }}" class="filter-row">
             <div class="filter-item">
                 <label>Periode</label>
                 <input type="date" name="dari" value="{{ request('dari') }}">
@@ -41,7 +41,6 @@
                     <th>Tgl. Lahir</th>
                     <th>Jenis Kelamin</th>
                     <th>Alamat</th>
-                    <th>Status</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -55,12 +54,11 @@
                         <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
                         <td>{{ $item->jenis_kelamin }}</td>
                         <td>{{ $item->alamat }}</td>
-                        <td>{{ $item->status }}</td>
                         <td class="aksi-cell">
-                            <a href="#" class="btn-aksi" title="Lihat">✔</a>
-                            <a href="#" class="btn-aksi" title="Tambah">+</a>
-                            <a href="#" class="btn-aksi" title="Edit">✎</a>
-                            <form action="#" method="POST" class="form-delete"
+                            <a href="{{ route('pendaftaran.show', $item->id) }}" class="btn-aksi" title="Lihat">✔</a>
+                            <a href="{{ route('pendaftaran.tambah', $item->id) }}" class="btn-aksi" title="Tambah Kunjungan">+</a>
+                            <a href="{{ route('pendaftaran.edit', $item->id) }}" class="btn-aksi" title="Edit">✎</a>
+                            <form action="{{ route('pendaftaran.destroy', $item->id) }}" method="POST" class="form-delete"
                                   onsubmit="return confirm('Hapus data pasien ini?')">
                                 @csrf
                                 @method('DELETE')
@@ -69,11 +67,10 @@
                         </td>
                     </tr>
                 @empty
-                    {{-- Baris kosong sebagai placeholder, selama belum ada data --}}
+                    {{-- Baris kosong sebagai placeholder, sama seperti desain, selama belum ada data --}}
                     @for ($i = 0; $i < 6; $i++)
                         <tr>
                             <td>{{ $i + 1 }}</td>
-                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
