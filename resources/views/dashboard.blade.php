@@ -1146,7 +1146,7 @@
 
 
                     <div class="stat-title">
-                        Total Kamar Tersedia
+                        Selesai Pelayanan
                     </div>
 
 
