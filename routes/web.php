@@ -21,6 +21,26 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
 
+// Poli (halaman utama/daftar poli)
+Route::get('/poli', function () {
+    $daftarPoli = [
+        'jantung' => 'Poli Jantung',
+        'jiwa'    => 'Poli Jiwa',
+        'syaraf'  => 'Poli Syaraf',
+        'obgyn'   => 'Poli Obgyn',
+    ];
+    return view('poli.poli', [
+        'namaPoli'   => 'Poli',
+        'daftarPoli' => $daftarPoli,
+        'poliAktif'  => null,
+    ]);
+})->name('poli');
+
+// Poli Show (untuk link dari daftar poli)
+Route::get('/poli/show/{slug}', function ($slug) {
+    return view('poli.' . $slug);
+})->name('poli.show');
+
 // Poli Jantung
 Route::get('/poli/jantung', function () {
     return view('poli.jantung');
