@@ -136,37 +136,31 @@
         }
 
 
-        .menu a {
-            display: flex;
+        .menu a{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    height:35px;
+    padding:0 11px;
+    border-radius:9px;
+    color:white;
+    text-decoration:none;
+    font-size:13px;
+    font-weight:600;
+    transition:.2s;
+}
 
-            align-items: center;
+.menu a:hover{
+    background:white;
+    color:#d71920;
+}
 
-            gap: 10px;
-
-            height: 35px;
-
-            padding: 0 11px;
-
-            border-radius: 9px;
-
-            color: white;
-
-            text-decoration: none;
-
-            font-size: 13px;
-
-            font-weight: 600;
-
-            transition: .2s;
-        }
-
-
-        .menu a:hover,
-        .menu a.active {
-            background: white;
-
-            color: #d71920;
-        }
+.menu a:focus,
+.menu a:active{
+    background:transparent;
+    color:white;
+    outline:none;
+}
 
 
         .menu-icon {
@@ -849,8 +843,7 @@
         <li>
 
             <a
-                href="{{ route('dashboard') }}"
-                class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
 
                 <span class="menu-icon">
                     🏠
