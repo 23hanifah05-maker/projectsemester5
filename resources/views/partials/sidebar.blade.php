@@ -50,22 +50,32 @@
 
             <ul class="poli-submenu {{ request()->routeIs('poli.*') ? 'show' : '' }}" id="poliSubmenu">
                 <li>
+<<<<<<< HEAD
     <a href="{{ route('poli.syaraf') }}" class="{{ request()->routeIs('poli.syaraf*') ? 'active-sub' : '' }}">
         Poli Saraf
     </a>
 </li>
+=======
+                    <a href="{{ route('poli.syaraf') }}" class="{{ request()->routeIs('poli.syaraf*') ? 'active-sub' : '' }}">
+                        Poli Saraf
+                    </a>
+                </li>
+>>>>>>> b8c1c21d3f7318b894b4737a4c08cda744a6cbb8
                 <li>
-                    <a href="{{ route('poli.obgyn') }}" class="{{ request()->routeIs('poli.obgyn') ? 'active-sub' : '' }}">
+                    {{-- FIX: tambah wildcard (*) supaya menu tetap aktif
+                         waktu buka halaman kunjungan (poli.obgyn.kunjungan),
+                         bukan cuma pas persis di poli.obgyn --}}
+                    <a href="{{ route('poli.obgyn') }}" class="{{ request()->routeIs('poli.obgyn*') ? 'active-sub' : '' }}">
                         Poli Obgyn
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('poli.jantung') }}" class="{{ request()->routeIs('poli.jantung') ? 'active-sub' : '' }}">
+                    <a href="{{ route('poli.jantung') }}" class="{{ request()->routeIs('poli.jantung*') ? 'active-sub' : '' }}">
                         Poli Jantung
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('poli.jiwa') }}" class="{{ request()->routeIs('poli.jiwa') ? 'active-sub' : '' }}">
+                    <a href="{{ route('poli.jiwa') }}" class="{{ request()->routeIs('poli.jiwa*') ? 'active-sub' : '' }}">
                         Poli Jiwa
                     </a>
                 </li>
