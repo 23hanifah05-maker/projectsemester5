@@ -200,7 +200,7 @@
 
             <div class="filter-item filter-keyword">
                 <label>Keyword</label>
-                <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder="Cari nama, NIK, atau No. RM">
+                <input type="text" id="inputKeyword" name="keyword" value="{{ request('keyword') }}" placeholder="Cari nama, NIK, atau No. RM">
             </div>
         </form>
 
@@ -628,6 +628,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+document.getElementById('inputKeyword')?.addEventListener('input', function () {
+    const keyword = this.value.trim().toLowerCase();
+    document.querySelectorAll('.row-pasien').forEach(function (row) {
+        const data = JSON.parse(row.getAttribute('data-pasien'));
+        const gabungan = (data.nama_pasien + ' ' + data.nik + ' ' + data.no_rm).toLowerCase();
+        row.style.display = gabungan.includes(keyword) ? '' : 'none';
+    });
+});
+
+document.querySelector('.filter-row')?.addEventListener('submit', e => e.preventDefault());
 
 </script>
 @endsection

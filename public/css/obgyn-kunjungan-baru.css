@@ -1,0 +1,363 @@
+/* ===== Reset dasar agar padding/border tidak bikin elemen meluber ===== */
+.ob-card, .ob-card * {
+    box-sizing: border-box;
+}
+
+/* ===== Data Pasien card (top box, reused on both pages) ===== */
+.ob-card {
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+.ob-section-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 0 18px 12px;
+    margin: 0 -18px 14px;
+    border-bottom: 1px solid #999;
+}
+.ob-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 32px;
+}
+.ob-field { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ob-field .ob-label {
+    flex: 0 0 auto; min-width: 110px;
+    font-size: 13px; font-weight: 700; color: #333; white-space: nowrap;
+}
+.ob-field .ob-value {
+    flex: 1 1 auto; min-width: 0; border: 1px solid #ccc; border-radius: 4px;
+    padding: 6px 12px; font-size: 13px; color: #333; background: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ===== Tabs ===== */
+.ob-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0;
+    width: 100%;
+}
+.ob-tab {
+    background: #f1f1f1;
+    color: #555;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 22px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    border: 1px solid #d9d9d9;
+    border-bottom: none;
+}
+.ob-tab i { margin-right: 6px; }
+.ob-tab.active {
+    background: #b81d24;
+    color: #fff;
+    border-color: #b81d24;
+}
+.ob-tab-content {
+    display: none;
+    border: 1px solid #d9d9d9;
+    border-radius: 0 8px 8px 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 20px;
+    width: 100%;
+}
+.ob-tab-content.active { display: block; }
+.ob-tab-content, .ob-tab-content * { box-sizing: border-box; }
+
+/* ===== Vital signs (Assesment) ===== */
+.ob-vitals-box {
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+    width: 100%;
+}
+.ob-vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px 24px;
+    width: 100%;
+}
+.ob-vital-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.ob-vital-row label {
+    flex: 0 0 auto;
+    min-width: 46px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+}
+.ob-vital-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+.ob-vital-unit {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: #777;
+    white-space: nowrap;
+}
+.ob-check-icon {
+    color: #1a9c4a;
+    font-weight: 700;
+    font-size: 16px;
+    flex: 0 0 auto;
+}
+
+.ob-divider {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 18px 0;
+}
+
+/* ===== SOAP ===== */
+.ob-soap-title, .ob-diagnosa-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.ob-soap-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+}
+.ob-soap-row { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.ob-soap-badge {
+    background: #b81d24;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+.ob-soap-row input,
+.ob-soap-row textarea {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.4;
+    min-height: 40px;
+    resize: vertical;
+}
+
+/* ===== Diagnosa ===== */
+.ob-diagnosa-box {
+    position: relative;
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+}
+.ob-diagnosa-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.ob-cetak-btn, .ob-rujuk-btn {
+    background: #fff;
+    color: #b81d24;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 16px;
+    border: 1px solid #b81d24;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.ob-cetak-btn:hover, .ob-rujuk-btn:hover {
+    background: #b81d24;
+    color: #fff;
+}
+.ob-diagnosa-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+}
+.ob-search-field { min-width: 0; }
+.ob-search-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 6px;
+}
+.ob-search-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.ob-search-box {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.ob-search-box input {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 34px 8px 12px;
+    font-size: 13px;
+}
+.ob-search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+.ob-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 2px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 20;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.ob-dropdown-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+.ob-dropdown-item:hover { background: #f5f5f5; }
+.ob-dropdown-empty { color: #999; cursor: default; }
+.ob-dropdown-empty:hover { background: none; }
+.ob-check-box { flex: 0 0 auto; width: 20px; text-align: center; }
+
+/* ===== Action buttons (Simpan / Reset) ===== */
+.ob-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+.ob-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 9px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+.ob-btn-simpan { background: #b81d24; color: #fff; }
+.ob-btn-simpan:hover { background: #9c161c; }
+.ob-btn-reset { background: #fff; color: #555; border: 1px solid #ccc; }
+.ob-btn-reset:hover { background: #f2f2f2; }
+
+/* ===== Radiologi tab ===== */
+.ob-radio-card {
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px 18px;
+}
+.ob-radio-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 16px;
+}
+.ob-radio-sub {
+    font-weight: 700;
+    font-size: 13px;
+    color: #333;
+    margin: 18px 0 10px;
+}
+.ob-checklist-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+    width: 100%;
+}
+.ob-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    min-width: 0;
+}
+.ob-checklist-item input[type=checkbox] { width: 16px; height: 16px; flex: 0 0 auto; }
+.ob-checklist-lainnya { flex-wrap: wrap; }
+.ob-checklist-lainnya input[type=text] {
+    flex: 1 1 auto;
+    min-width: 140px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+.ob-checklist-lainnya input[type=text]:disabled { background: #f5f5f5; color: #aaa; }
+
+.ob-upload-box {
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+    padding: 26px 16px;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    cursor: pointer;
+    background: #fafafa;
+    width: 100%;
+}
+.ob-upload-box:hover { border-color: #b81d24; color: #b81d24; }
+.ob-upload-hint { font-size: 11px; color: #999; }
+
+.ob-hasil-textarea {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+@media (max-width: 900px) {
+    .ob-vitals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ob-diagnosa-row { grid-template-columns: 1fr; }
+    .ob-checklist-grid { grid-template-columns: 1fr; }
+    .ob-fields { grid-template-columns: 1fr; }
+}

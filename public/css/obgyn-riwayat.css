@@ -1,0 +1,157 @@
+
+.obr-card {
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+}
+
+.obr-section-title,
+.obr-riwayat-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 0 18px 12px;
+    margin: 0 -18px 14px;
+    border-bottom: 1px solid #999;
+}
+
+.obr-datapasien-box,
+.obr-riwayat-box {
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px 18px;
+}
+
+.obr-datapasien-box {
+    margin-bottom: 22px;
+}
+
+.obr-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 32px;
+}
+
+.obr-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.obr-field .obr-label {
+    flex: 0 0 auto;
+    min-width: 110px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    white-space: nowrap;
+}
+
+.obr-field .obr-value {
+    flex: 1 1 auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #333;
+    background: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+/* ===== Tabel Riwayat Kunjungan ===== */
+
+.obr-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    border: 1px solid #999;
+}
+
+.obr-table th:nth-child(1),
+.obr-table td:nth-child(1) {
+    width: 60px;
+    text-align: center;
+}
+
+.obr-table th:nth-child(2),
+.obr-table td:nth-child(2) {
+    width: 180px;
+}
+
+.obr-table th:nth-child(3),
+.obr-table td:nth-child(3) {
+    width: auto;
+}
+
+.obr-table thead th {
+    background: #b81d24;
+    color: #fff;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-right: 1px solid #d64b52;
+    border-bottom: 1px solid #999;
+}
+
+.obr-table thead th:first-child {
+    text-align: center;
+}
+
+.obr-table thead th:last-child {
+    border-right: none;
+}
+
+.obr-table tbody td {
+    padding: 6px 16px;
+    border-bottom: 1px solid #999;
+    border-right: 1px solid #999;
+    font-size: 14px;
+    color: #333;
+}
+
+.obr-table tbody td:last-child {
+    border-right: none;
+}
+
+.obr-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.obr-table tbody td:first-child {
+    text-align: center;
+}
+
+/* ===== Tombol Kunjungan Baru ===== */
+
+.obr-riwayat-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.obr-new-btn {
+    background: #b81d24;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.obr-new-btn:hover {
+    background: #9c161c;
+}
+
+@media (max-width: 900px) {
+    .obr-fields {
+        grid-template-columns: 1fr;
+    }
+}
