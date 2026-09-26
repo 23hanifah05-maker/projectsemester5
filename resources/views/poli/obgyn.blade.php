@@ -11,6 +11,63 @@
 
 @section('content')
 
+    {{-- =====================================================
+         DATA DUMMY PASIEN POLI OBGYN
+         (5 pasien perempuan dari Master Data Pendaftaran:
+         RM-0002, RM-0004, RM-0006, RM-0008, RM-0010.
+         Obgyn hanya untuk pasien perempuan, jadi jenis kelamin
+         disesuaikan agar logis)
+    ===================================================== --}}
+    @php
+        $pasien = $pasien ?? [
+            (object) [
+                'no_rm' => 'RM-0002',
+                'nama_pasien' => 'Siti Aminah',
+                'nik' => '3515025205850002',
+                'tgl_lahir' => '1985-05-12',
+                'jenis_kelamin' => 'Perempuan',
+                'alamat' => 'Jl. Diponegoro No. 25',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0004',
+                'nama_pasien' => 'Dewi Lestari',
+                'nik' => '3515044507920004',
+                'tgl_lahir' => '1992-07-05',
+                'jenis_kelamin' => 'Perempuan',
+                'alamat' => 'Jl. Ahmad Yani No. 15',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0006',
+                'nama_pasien' => 'Lina Marlina',
+                'nik' => '3515065508800006',
+                'tgl_lahir' => '1980-08-15',
+                'jenis_kelamin' => 'Perempuan',
+                'alamat' => 'Jl. Pahlawan No. 32',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0008',
+                'nama_pasien' => 'Nur Aisyah',
+                'nik' => '3515084203840008',
+                'tgl_lahir' => '1984-03-02',
+                'jenis_kelamin' => 'Perempuan',
+                'alamat' => 'Jl. Hasanudin No. 18',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0010',
+                'nama_pasien' => 'Sri Wahyuni',
+                'nik' => '3515105807750010',
+                'tgl_lahir' => '1975-07-18',
+                'jenis_kelamin' => 'Perempuan',
+                'alamat' => 'Jl. Mawar No. 12',
+                'status' => 'Sudah Terdaftar',
+            ],
+        ];
+    @endphp
+
     <div class="panel">
 
         <div class="panel-head">
