@@ -126,15 +126,8 @@
                     @endif
                 </div>
             @endforeach
-        </div>
 
-        <hr class="ob-divider">
-
-        {{-- ===== DIAGNOSA ===== --}}
-        <div class="ob-diagnosa-title">Diagnosa</div>
-        <div class="ob-diagnosa-box">
-
-            <div class="ob-diagnosa-actions">
+            <div class="ob-soap-actions">
                 <button type="button" class="ob-cetak-btn" onclick="window.print()">
                     <i class="fa-solid fa-print"></i> Cetak
                 </button>
@@ -142,6 +135,13 @@
                     <i class="fa-solid fa-right-from-bracket"></i> Rujuk
                 </button>
             </div>
+        </div>
+
+        <hr class="ob-divider">
+
+        {{-- ===== DIAGNOSA ===== --}}
+        <div class="ob-diagnosa-title">Diagnosa</div>
+        <div class="ob-diagnosa-box">
 
             <div class="ob-diagnosa-row">
                 @foreach ($diagnosaFields as [$label, $placeholder])
