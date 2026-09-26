@@ -70,9 +70,37 @@
                     <input type="text" name="no_rekam_medis" value="{{ old('no_rekam_medis') }}">
                 </div>
                 <div class="field">
-                    <label>No Hp</label>
-                    <input type="text" name="no_hp" value="{{ old('no_hp') }}">
+                    <label>No HP</label>
+
+                    <input
+                        type="text"
+                        name="no_hp"
+                        value="{{ old('no_hp') }}"
+                        inputmode="numeric"
+                        id="no_hp"
+                        oninput="cekNoHp(this)"
+                    >
+
+                    <small id="noHpError" style="display:none; color:red;">
+                        No HP hanya boleh berisi angka.
+                    </small>
                 </div>
+
+                <script>
+                function cekNoHp(input) {
+                    const error = document.getElementById('noHpError');
+
+                    if (/[^0-9]/.test(input.value)) {
+                        error.style.display = 'block';
+                        input.style.border = '1px solid red';
+
+                        input.value = input.value.replace(/[^0-9]/g, '');
+                    } else {
+                        error.style.display = 'none';
+                        input.style.border = '';
+                    }
+                }
+                </script>
 
                 <div class="field">
                     <label>Nama Lengkap</label>

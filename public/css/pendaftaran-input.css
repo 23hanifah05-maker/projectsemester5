@@ -123,3 +123,14 @@
     .form-actions { flex-direction: column; gap: 12px; align-items: stretch; }
     .form-actions-right { justify-content: flex-end; }
 }
+.error-message {
+    display: none;
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.input-error {
+    border: 1px solid #dc3545 !important;
+    background-color: #fff5f5;
+}
