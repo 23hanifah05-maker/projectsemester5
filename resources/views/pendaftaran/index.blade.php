@@ -22,6 +22,9 @@
 
 {{-- =====================================================
      DATA DUMMY 10 PASIEN
+     Ditambahkan field 'poli' (otomatis dari jenis kelamin:
+     Laki-laki -> Poli Syaraf, Perempuan -> Poli Obgyn)
+     dan field 'dokter' dikosongkan dulu (belum ditentukan)
 ===================================================== --}}
 
 @php
@@ -50,6 +53,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61215',
         'pembayaran' => 'Umum',
+        'poli' => 'Poli Syaraf',
+        'dokter' => '',
         'pj_nama' => 'Siti Aminah',
         'pj_hubungan' => 'Istri',
         'pj_jenis_kelamin' => 'Perempuan',
@@ -78,6 +83,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61213',
         'pembayaran' => 'BPJS',
+        'poli' => 'Poli Obgyn',
+        'dokter' => '',
         'pj_nama' => 'Budi Santoso',
         'pj_hubungan' => 'Suami',
         'pj_jenis_kelamin' => 'Laki-laki',
@@ -106,6 +113,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61219',
         'pembayaran' => 'Umum',
+        'poli' => 'Poli Syaraf',
+        'dokter' => '',
         'pj_nama' => 'Dewi Lestari',
         'pj_hubungan' => 'Istri',
         'pj_jenis_kelamin' => 'Perempuan',
@@ -134,6 +143,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61262',
         'pembayaran' => 'BPJS',
+        'poli' => 'Poli Obgyn',
+        'dokter' => '',
         'pj_nama' => 'Andi Pratama',
         'pj_hubungan' => 'Suami',
         'pj_jenis_kelamin' => 'Laki-laki',
@@ -162,6 +173,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61257',
         'pembayaran' => 'Umum',
+        'poli' => 'Poli Syaraf',
+        'dokter' => '',
         'pj_nama' => 'Lina Marlina',
         'pj_hubungan' => 'Istri',
         'pj_jenis_kelamin' => 'Perempuan',
@@ -190,6 +203,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61252',
         'pembayaran' => 'Umum',
+        'poli' => 'Poli Obgyn',
+        'dokter' => '',
         'pj_nama' => 'Rudi Hartono',
         'pj_hubungan' => 'Suami',
         'pj_jenis_kelamin' => 'Laki-laki',
@@ -218,6 +233,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61256',
         'pembayaran' => 'BPJS',
+        'poli' => 'Poli Syaraf',
+        'dokter' => '',
         'pj_nama' => 'Nur Aisyah',
         'pj_hubungan' => 'Ibu',
         'pj_jenis_kelamin' => 'Perempuan',
@@ -246,6 +263,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61254',
         'pembayaran' => 'Umum',
+        'poli' => 'Poli Obgyn',
+        'dokter' => '',
         'pj_nama' => 'Fajar Ramadhan',
         'pj_hubungan' => 'Anak',
         'pj_jenis_kelamin' => 'Laki-laki',
@@ -274,6 +293,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61274',
         'pembayaran' => 'BPJS',
+        'poli' => 'Poli Syaraf',
+        'dokter' => '',
         'pj_nama' => 'Sri Wahyuni',
         'pj_hubungan' => 'Istri',
         'pj_jenis_kelamin' => 'Perempuan',
@@ -302,6 +323,8 @@ $dataPasien = [
         'provinsi' => 'Jawa Timur',
         'kode_pos' => '61271',
         'pembayaran' => 'Umum',
+        'poli' => 'Poli Obgyn',
+        'dokter' => '',
         'pj_nama' => 'Agus Setiawan',
         'pj_hubungan' => 'Suami',
         'pj_jenis_kelamin' => 'Laki-laki',
@@ -657,6 +680,18 @@ $dataPasien = [
                 <span id="m-pembayaran"></span>
             </div>
 
+            <div class="modal-row">
+                <span class="modal-label">Poli</span>
+                <span>:</span>
+                <span id="m-poli"></span>
+            </div>
+
+            <div class="modal-row">
+                <span class="modal-label">Dokter</span>
+                <span>:</span>
+                <span id="m-dokter"></span>
+            </div>
+
         </div>
 
 
@@ -844,6 +879,10 @@ $dataPasien = [
 
 {{-- =====================================================
      MODAL EDIT
+     Catatan: Nama Pasien dan NIK dibuat READONLY.
+     Hanya Alamat dan No. HP yang bisa diubah,
+     karena NIK & Nama adalah data identitas resmi yang
+     seharusnya tidak diubah sembarangan dari halaman ini.
 ===================================================== --}}
 
 <div
@@ -898,6 +937,9 @@ $dataPasien = [
                 <input
                     type="text"
                     id="editNama"
+                    readonly
+                    class="input-locked"
+                    title="Nama tidak dapat diubah dari sini"
                 >
 
             </div>
@@ -911,6 +953,9 @@ $dataPasien = [
                     type="text"
                     id="editNik"
                     inputmode="numeric"
+                    readonly
+                    class="input-locked"
+                    title="NIK tidak dapat diubah dari sini"
                 >
 
             </div>
@@ -924,6 +969,7 @@ $dataPasien = [
                     type="text"
                     id="editHp"
                     inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                 >
 
             </div>
@@ -1105,6 +1151,12 @@ function isiDetail(data)
     document.getElementById('m-pembayaran').textContent =
         data.pembayaran ?? '-';
 
+    document.getElementById('m-poli').textContent =
+        data.poli ?? '-';
+
+    document.getElementById('m-dokter').textContent =
+        (data.dokter && data.dokter.length > 0) ? data.dokter : '-';
+
     document.getElementById('m-pj-nama').textContent =
         data.pj_nama ?? '-';
 
@@ -1187,7 +1239,7 @@ function bukaKunjungan(button)
         tanggal;
 
     document.getElementById('kunjunganPoli').value =
-        '';
+        data.poli ?? '';
 
     document.getElementById('kunjunganKeluhan').value =
         '';
@@ -1260,6 +1312,8 @@ function simpanKunjungan()
 
 /* =====================================================
    EDIT
+   Catatan: Nama & NIK hanya ditampilkan (readonly),
+   yang benar-benar bisa disimpan hanya Alamat & No. HP.
 ===================================================== */
 
 function bukaEdit(button)
@@ -1341,11 +1395,9 @@ function simpanEdit()
         );
 
 
-    data.nama_pasien =
-        document.getElementById('editNama').value;
-
-    data.nik =
-        document.getElementById('editNik').value;
+    // Hanya Alamat & No. HP yang boleh diubah.
+    // Nama Pasien dan NIK sengaja TIDAK diambil dari form
+    // karena field-nya readonly di modal edit.
 
     data.no_hp =
         document.getElementById('editHp').value;
@@ -1364,11 +1416,9 @@ function simpanEdit()
         row.querySelectorAll('td');
 
 
-    kolom[2].textContent =
-        data.nama_pasien;
-
-    kolom[3].textContent =
-        data.nik;
+    // Kolom Alamat ada di index ke-6 pada tabel Master Data.
+    // Nama (index 2) dan NIK (index 3) sengaja tidak disentuh
+    // karena datanya tidak berubah.
 
     kolom[6].textContent =
         data.alamat;
@@ -1402,7 +1452,7 @@ function hapusPasien(button)
 
     const yakin =
         confirm(
-            'Apakah kamu yakin ingin menghapus data ini?\n\n' +
+            'Apakah kamu yakin ingin menghapus data pasien ini?\n\n' +
             'No. RM : ' + data.no_rm + '\n' +
             'Nama   : ' + data.nama_pasien
         );
