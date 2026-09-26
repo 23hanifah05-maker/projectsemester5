@@ -135,11 +135,13 @@
 .btn-aksi {
     width: 36px;
     height: 36px;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
     border-radius: 6px;
+
     background: #c8161d;
     color: white;
 
@@ -168,6 +170,7 @@
 
 /* =====================================================
    MODAL DETAIL PASIEN
+   DENGAN BLUR HALAMAN BELAKANG
 ===================================================== */
 
 .modal-overlay {
@@ -179,7 +182,12 @@
     width: 100%;
     height: 100%;
 
-    background: rgba(0, 0, 0, 0.55);
+    /* LAPISAN TRANSPARAN */
+    background: rgba(255, 255, 255, 0.25);
+
+    /* TINGKAT BLUR BACKGROUND */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 
     z-index: 9998;
 
@@ -194,6 +202,11 @@
     display: flex;
 }
 
+
+/* =====================================================
+   BOX MODAL DETAIL
+===================================================== */
+
 .modal-box {
     width: 100%;
     max-width: 900px;
@@ -201,7 +214,7 @@
 
     overflow-y: auto;
 
-    background: #fff;
+    background: #ffffff;
 
     border-radius: 10px;
 
@@ -209,22 +222,39 @@
         0 10px 40px rgba(0, 0, 0, 0.25);
 }
 
+
+/* =====================================================
+   HEADER MODAL DATA PASIEN
+===================================================== */
+
 .modal-header {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     padding: 16px 20px;
 
-    border-bottom: 1px solid #ddd;
+    /* BACKGROUND MERAH */
+    background: #c8161d;
+
+    /* BORDER MERAH */
+    border-bottom: 1px solid #c8161d;
+
+    /* Supaya sudut atas mengikuti modal */
+    border-radius: 10px 10px 0 0;
 }
 
 .modal-header h3 {
     margin: 0;
 
-    color: #d71920;
+    /* TULISAN PUTIH */
+    color: #ffffff;
 
     font-size: 19px;
+
+    font-weight: 700;
 }
 
 .modal-close {
@@ -232,20 +262,39 @@
     height: 34px;
 
     border: none;
+
     border-radius: 5px;
 
     background: transparent;
 
-    color: #555;
+    /* TOMBOL X PUTIH */
+    color: #ffffff;
 
     font-size: 27px;
 
+    font-weight: 700;
+
     cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .modal-close:hover {
-    color: #d71920;
+    color: #ffffff;
+
+    background: rgba(255, 255, 255, 0.15);
 }
+
+
+/* =====================================================
+   JUDUL SECTION MODAL
+===================================================== */
 
 .modal-section-title {
     padding: 12px 20px;
@@ -259,6 +308,11 @@
     border-bottom: 1px solid #eee;
 }
 
+
+/* =====================================================
+   GRID DATA PASIEN
+===================================================== */
+
 .modal-grid {
     display: grid;
 
@@ -266,6 +320,11 @@
 
     column-gap: 30px;
 }
+
+
+/* =====================================================
+   BARIS DATA PASIEN
+===================================================== */
 
 .modal-row {
     display: grid;
@@ -297,7 +356,11 @@
     width: 100%;
     height: 100%;
 
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(255, 255, 255, 0.25);
+
+    /* BLUR BACKGROUND */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 
     z-index: 9999;
 
@@ -321,13 +384,18 @@
 
     overflow-y: auto;
 
-    background: #fff;
+    background: #ffffff;
 
     border-radius: 10px;
 
     box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.25);
 }
+
+
+/* =====================================================
+   HEADER MODAL CUSTOM
+===================================================== */
 
 .custom-modal-header {
     display: flex;
@@ -365,9 +433,19 @@
     color: #d71920;
 }
 
+
+/* =====================================================
+   BODY MODAL CUSTOM
+===================================================== */
+
 .custom-modal-body {
     padding: 22px;
 }
+
+
+/* =====================================================
+   FOOTER MODAL CUSTOM
+===================================================== */
 
 .custom-modal-footer {
     display: flex;
@@ -540,6 +618,7 @@
     .btn-aksi {
         width: 32px;
         height: 32px;
+
         font-size: 14px;
     }
 }
