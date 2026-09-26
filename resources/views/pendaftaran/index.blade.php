@@ -925,6 +925,7 @@ $dataPasien = [
                     type="text"
                     id="editRm"
                     readonly
+                    style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
                 >
 
             </div>
@@ -940,6 +941,7 @@ $dataPasien = [
                     readonly
                     class="input-locked"
                     title="Nama tidak dapat diubah dari sini"
+                    style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
                 >
 
             </div>
@@ -956,6 +958,7 @@ $dataPasien = [
                     readonly
                     class="input-locked"
                     title="NIK tidak dapat diubah dari sini"
+                    style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
                 >
 
             </div>
