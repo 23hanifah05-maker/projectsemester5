@@ -67,7 +67,18 @@
             <div class="form-grid">
                 <div class="field">
                     <label>No. Rekam Medis</label>
-                    <input type="text" name="no_rekam_medis" value="{{ old('no_rekam_medis') }}">
+                    <input
+                        type="text"
+                        name="no_rekam_medis"
+                        value="{{ old('no_rekam_medis') }}"
+                        inputmode="numeric"
+                        maxlength="6"
+                        id="no_rekam_medis"
+                        oninput="cekNoRekamMedis(this, 'noRekamMedisError')"
+                    >
+                    <small id="noRekamMedisError" style="display:none; color:red;">
+                        No. Rekam Medis harus 6 digit angka.
+                    </small>
                 </div>
                 <div class="field">
                     <label>No HP</label>
@@ -78,7 +89,7 @@
                         value="{{ old('no_hp') }}"
                         inputmode="numeric"
                         id="no_hp"
-                        oninput="cekNoHp(this)"
+                        oninput="cekAngkaSaja(this, 'noHpError')"
                     >
 
                     <small id="noHpError" style="display:none; color:red;">
@@ -86,29 +97,22 @@
                     </small>
                 </div>
 
-                <script>
-                function cekNoHp(input) {
-                    const error = document.getElementById('noHpError');
-
-                    if (/[^0-9]/.test(input.value)) {
-                        error.style.display = 'block';
-                        input.style.border = '1px solid red';
-
-                        input.value = input.value.replace(/[^0-9]/g, '');
-                    } else {
-                        error.style.display = 'none';
-                        input.style.border = '';
-                    }
-                }
-                </script>
-
                 <div class="field">
                     <label>Nama Lengkap</label>
                     <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}">
                 </div>
                 <div class="field">
                     <label>Suku</label>
-                    <input type="text" name="suku" value="{{ old('suku') }}">
+                    <input
+                        type="text"
+                        name="suku"
+                        value="{{ old('suku') }}"
+                        id="suku"
+                        oninput="cekHurufSaja(this, 'sukuError')"
+                    >
+                    <small id="sukuError" style="display:none; color:red;">
+                        Suku hanya boleh berisi huruf.
+                    </small>
                 </div>
 
                 <div class="field">
@@ -209,7 +213,18 @@
                 </div>
                 <div class="field">
                     <label>Kode Pos</label>
-                    <input type="text" name="kode_pos" value="{{ old('kode_pos') }}">
+                    <input
+                        type="text"
+                        name="kode_pos"
+                        value="{{ old('kode_pos') }}"
+                        inputmode="numeric"
+                        maxlength="5"
+                        id="kode_pos"
+                        oninput="cekAngkaSaja(this, 'kodePosError')"
+                    >
+                    <small id="kodePosError" style="display:none; color:red;">
+                        Kode Pos hanya boleh berisi angka.
+                    </small>
                 </div>
 
                 <div class="field">
@@ -265,7 +280,17 @@
                 </div>
                 <div class="field">
                     <label>No Hp</label>
-                    <input type="text" name="pj_no_hp" value="{{ old('pj_no_hp') }}">
+                    <input
+                        type="text"
+                        name="pj_no_hp"
+                        value="{{ old('pj_no_hp') }}"
+                        inputmode="numeric"
+                        id="pj_no_hp"
+                        oninput="cekAngkaSaja(this, 'pjNoHpError')"
+                    >
+                    <small id="pjNoHpError" style="display:none; color:red;">
+                        No HP hanya boleh berisi angka.
+                    </small>
                 </div>
             </div>
 
@@ -281,5 +306,50 @@
         </form>
 
     </div>
+
+    {{-- ================= VALIDASI INPUT (JS) ================= --}}
+    <script>
+    // Hanya boleh angka (No HP, Kode Pos, dll)
+    function cekAngkaSaja(input, errorId) {
+        const error = document.getElementById(errorId);
+
+        if (/[^0-9]/.test(input.value)) {
+            if (error) error.style.display = 'block';
+            input.style.border = '1px solid red';
+            input.value = input.value.replace(/[^0-9]/g, '');
+        } else {
+            if (error) error.style.display = 'none';
+            input.style.border = '';
+        }
+    }
+
+    // Hanya boleh huruf & spasi (Suku, dll)
+    function cekHurufSaja(input, errorId) {
+        const error = document.getElementById(errorId);
+
+        if (/[^a-zA-Z\s]/.test(input.value)) {
+            if (error) error.style.display = 'block';
+            input.style.border = '1px solid red';
+            input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
+        } else {
+            if (error) error.style.display = 'none';
+            input.style.border = '';
+        }
+    }
+
+    // Khusus No. Rekam Medis: angka, maksimal 6 digit
+    function cekNoRekamMedis(input, errorId) {
+        const error = document.getElementById(errorId);
+        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 6);
+
+        if (input.value.length > 0 && input.value.length < 6) {
+            if (error) error.style.display = 'block';
+            input.style.border = '1px solid red';
+        } else {
+            if (error) error.style.display = 'none';
+            input.style.border = '';
+        }
+    }
+    </script>
 
 @endsection
