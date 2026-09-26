@@ -1,6 +1,11 @@
 /* =====================================================
    public/css/pendaftaran.css
-   CSS khusus halaman Pendaftaran saja
+   CSS HALAMAN PENDAFTARAN / MASTER DATA
+===================================================== */
+
+
+/* =====================================================
+   PANEL HEADER
 ===================================================== */
 
 .panel-head {
@@ -25,11 +30,18 @@
     padding: 8px 16px;
     border-radius: 6px;
     text-decoration: none;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-input:hover {
     background: #a9121a;
 }
+
+
+/* =====================================================
+   FILTER
+===================================================== */
 
 .filter-row {
     display: flex;
@@ -70,7 +82,10 @@
     font-size: 11px;
 }
 
-/* ---------- TABEL ---------- */
+
+/* =====================================================
+   TABEL MASTER DATA
+===================================================== */
 
 .table-pendaftaran {
     width: 100%;
@@ -97,38 +112,434 @@
     background: #fafafa;
 }
 
+.table-pendaftaran tbody tr.row-pasien {
+    cursor: pointer;
+}
+
+.table-pendaftaran tbody tr.row-pasien:hover {
+    background: #fff5f5;
+}
+
+
+/* =====================================================
+   KOLOM AKSI
+===================================================== */
+
 .aksi-cell {
+    white-space: nowrap;
     display: flex;
+    align-items: center;
     gap: 6px;
 }
 
-.form-delete {
-    display: inline;
-}
-
 .btn-aksi {
-    width: 24px;
-    height: 24px;
+    width: 36px;
+    height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+
+    border-radius: 6px;
     background: #c8161d;
     color: white;
-    font-size: 11px;
+
+    font-size: 16px;
+    font-weight: 600;
+
     text-decoration: none;
     border: none;
+
     cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
 }
 
 .btn-aksi:hover {
     background: #a9121a;
+    transform: translateY(-1px);
 }
 
+.btn-aksi:active {
+    transform: scale(0.94);
+}
+
+
+/* =====================================================
+   MODAL DETAIL PASIEN
+===================================================== */
+
+.modal-overlay {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.55);
+
+    z-index: 9998;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-box {
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: #fff;
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 16px 20px;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.modal-header h3 {
+    margin: 0;
+
+    color: #d71920;
+
+    font-size: 19px;
+}
+
+.modal-close {
+    width: 34px;
+    height: 34px;
+
+    border: none;
+    border-radius: 5px;
+
+    background: transparent;
+
+    color: #555;
+
+    font-size: 27px;
+
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #d71920;
+}
+
+.modal-section-title {
+    padding: 12px 20px;
+
+    background: #fff5f5;
+
+    color: #d71920;
+
+    font-weight: 700;
+
+    border-bottom: 1px solid #eee;
+}
+
+.modal-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    column-gap: 30px;
+}
+
+.modal-row {
+    display: grid;
+
+    grid-template-columns: 150px 15px 1fr;
+
+    padding: 9px 20px;
+
+    border-bottom: 1px solid #f0f0f0;
+
+    font-size: 13px;
+}
+
+.modal-label {
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   MODAL TAMBAH KUNJUNGAN & EDIT
+===================================================== */
+
+.custom-modal-overlay {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.55);
+
+    z-index: 9999;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+}
+
+.custom-modal-overlay.show {
+    display: flex;
+}
+
+.custom-modal-box {
+    width: 100%;
+    max-width: 650px;
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: #fff;
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.custom-modal-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 18px 22px;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.custom-modal-header h3 {
+    margin: 0;
+
+    color: #d71920;
+
+    font-size: 19px;
+}
+
+.custom-modal-close {
+    border: none;
+
+    background: transparent;
+
+    color: #555;
+
+    font-size: 28px;
+
+    cursor: pointer;
+}
+
+.custom-modal-close:hover {
+    color: #d71920;
+}
+
+.custom-modal-body {
+    padding: 22px;
+}
+
+.custom-modal-footer {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding: 15px 22px;
+
+    border-top: 1px solid #ddd;
+}
+
+
+/* =====================================================
+   FORM MODAL
+===================================================== */
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 6px;
+
+    box-sizing: border-box;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #d71920;
+
+    box-shadow:
+        0 0 0 2px rgba(215, 25, 32, 0.08);
+}
+
+.form-group input[readonly] {
+    background: #f5f5f5;
+}
+
+.form-group textarea {
+    min-height: 90px;
+
+    resize: vertical;
+}
+
+
+/* =====================================================
+   BUTTON MODAL
+===================================================== */
+
+.btn-modal {
+    border: none;
+
+    padding: 10px 18px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.btn-modal-primary {
+    background: #d71920;
+
+    color: white;
+}
+
+.btn-modal-primary:hover {
+    background: #a9121a;
+}
+
+.btn-modal-secondary {
+    background: #eee;
+
+    color: #333;
+}
+
+.btn-modal-secondary:hover {
+    background: #ddd;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
 @media (max-width: 750px) {
+
     .table-pendaftaran {
         display: block;
+
         overflow-x: auto;
+
         white-space: nowrap;
+    }
+
+    .filter-row {
+        align-items: flex-start;
+    }
+
+    .filter-item {
+        width: 100%;
+    }
+
+    .filter-keyword input[type="text"] {
+        width: 100%;
+    }
+
+    .modal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-box {
+        max-height: 95vh;
+    }
+
+    .modal-row {
+        grid-template-columns: 130px 15px 1fr;
+    }
+
+    .custom-modal-overlay {
+        padding: 10px;
+    }
+
+    .custom-modal-box {
+        max-height: 95vh;
+    }
+
+    .custom-modal-header {
+        padding: 15px;
+    }
+
+    .custom-modal-body {
+        padding: 15px;
+    }
+
+    .custom-modal-footer {
+        padding: 12px 15px;
+    }
+
+    .btn-aksi {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
 }
