@@ -8,6 +8,16 @@
     {{-- Pakai CSS yang sama dengan halaman Pendaftaran karena struktur tabel & modalnya sama --}}
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
+    <style>
+        .nama-pasien-link {
+            color: #b81d24;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .nama-pasien-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -213,7 +223,11 @@
                     <tr class="row-pasien" data-pasien='@json($item)' title="Klik dua kali untuk melihat detail">
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->no_rm }}</td>
-                        <td>{{ $item->nama_pasien }}</td>
+                        <td>
+                            <a href="{{ route('poli.obgyn.kunjungan', $item->no_rm) }}" class="nama-pasien-link">
+                                {{ $item->nama_pasien }}
+                            </a>
+                        </td>
                         <td>{{ $item->nik }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
                         <td>{{ $item->jenis_kelamin }}</td>
@@ -585,7 +599,9 @@ function perbaruiNomor() {
 
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.row-pasien').forEach(function (row) {
-        row.addEventListener('dblclick', function () {
+        row.addEventListener('dblclick', function (event) {
+            // Hindari konflik saat mengklik link nama pasien atau tombol aksi
+            if (event.target.closest('a') || event.target.closest('button')) return;
             const data = JSON.parse(this.getAttribute('data-pasien'));
             isiDetail(data);
             document.getElementById('pasienModal').classList.add('show');
