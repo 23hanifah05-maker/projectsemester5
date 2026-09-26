@@ -50,10 +50,10 @@
 
             <ul class="poli-submenu {{ request()->routeIs('poli.*') ? 'show' : '' }}" id="poliSubmenu">
                 <li>
-                    <a href="{{ route('poli.syaraf') }}" class="{{ request()->routeIs('poli.syaraf') ? 'active-sub' : '' }}">
-                        Poli Saraf
-                    </a>
-                </li>
+    <a href="{{ route('poli.syaraf') }}" class="{{ request()->routeIs('poli.syaraf*') ? 'active-sub' : '' }}">
+        Poli Saraf
+    </a>
+</li>
                 <li>
                     <a href="{{ route('poli.obgyn') }}" class="{{ request()->routeIs('poli.obgyn') ? 'active-sub' : '' }}">
                         Poli Obgyn

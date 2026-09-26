@@ -1,0 +1,130 @@
+.kb-card {
+    border: 1px solid #d9d9d9; border-radius: 8px; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 18px 20px 20px; margin-bottom: 18px;
+}
+.kb-section-title {
+    color: #b81d24; font-weight: 700; font-size: 15px;
+    padding: 0 18px 12px; margin: 0 -18px 14px; border-bottom: 1px solid #999;
+}
+.kb-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
+.kb-field { display: flex; align-items: center; gap: 12px; }
+.kb-field .kb-label { flex: 0 0 auto; min-width: 110px; font-size: 13px; font-weight: 700; color: #333; white-space: nowrap; }
+.kb-field .kb-value {
+    flex: 1 1 auto; border: 1px solid #ccc; border-radius: 4px; padding: 6px 12px;
+    font-size: 13px; color: #333; background: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+
+/* Tabs */
+.kb-tabs { display: flex; gap: 8px; margin-bottom: 0; }
+.kb-tab {
+    display: flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 6px 6px 0 0;
+    font-weight: 600; font-size: 14px; cursor: pointer; border: 1px solid #d9d9d9; border-bottom: none;
+    background: #f1f1f1; color: #555;
+}
+.kb-tab.active { background: #b81d24; color: #fff; border-color: #b81d24; }
+.kb-tab-content {
+    display: none; border: 1px solid #d9d9d9; border-top: none; border-radius: 0 8px 8px 8px;
+    padding: 18px 20px; background: #fff;
+}
+.kb-tab-content.active { display: block; }
+
+/* ===== Kotak Vital Signs (dibungkus 1 box) ===== */
+.kb-vitals-box {
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+}
+.kb-vitals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 24px; }
+.kb-vital-row { display: flex; align-items: center; gap: 10px; }
+.kb-vital-row label { min-width: 45px; font-weight: 700; font-size: 13px; color: #333; }
+.kb-vital-row input[type="text"] {
+    flex: 1; border: 1px solid #ccc; border-radius: 4px; padding: 7px 10px; font-size: 13px; min-width: 0;
+}
+.kb-vital-unit { font-size: 12px; color: #777; white-space: nowrap; }
+
+/* Garis pembatas antar section */
+.kb-divider {
+    border: none;
+    border-top: 1px solid #999;
+    margin: 20px 0;
+}
+
+/* ===== Kotak SOAP (dibungkus 1 box) ===== */
+.kb-soap-title { color: #b81d24; font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+.kb-soap-box {
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+}
+.kb-soap-row {
+    display: flex; align-items: stretch; gap: 12px; margin-bottom: 12px;
+}
+.kb-soap-row:last-of-type { margin-bottom: 0; }
+.kb-soap-badge {
+    width: 36px; flex: 0 0 36px; background: #b81d24; color: #fff; font-weight: 700; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; border-radius: 4px;
+}
+.kb-soap-row textarea, .kb-soap-row input[type="text"] {
+    flex: 1; border: 1px solid #ccc; border-radius: 4px; padding: 8px 12px; font-size: 13px;
+    resize: vertical; min-height: 40px; background: #fff;
+}
+.kb-soap-cetak-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+.kb-cetak-btn {
+    background: #f1f1f1; border: 1px solid #ccc;
+    border-radius: 4px; padding: 6px 16px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+}
+.kb-cetak-btn:hover { background: #e5e5e5; }
+
+/* Diagnosa & Tindakan */
+.kb-diagnosa-title { color: #b81d24; font-weight: 700; font-size: 15px; margin: 0 0 12px; }
+.kb-diagnosa-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.kb-search-field label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.kb-search-inline { display: flex; align-items: stretch; gap: 10px; }
+.kb-search-box { position: relative; flex: 1; }
+.kb-search-box input[type="text"] {
+    width: 100%; height: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 8px 34px 8px 12px;
+    font-size: 13px; box-sizing: border-box;
+}
+.kb-search-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #999; font-size: 13px; }
+.kb-check-box {
+    flex: 0 0 auto;
+    width: 42px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+}
+.kb-check-icon { color: #2ecc71; font-size: 18px; font-weight: bold; }
+
+.kb-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 20;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+.kb-dropdown-item { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+.kb-dropdown-item:hover { background: #f5f5f5; }
+.kb-dropdown-empty { color: #999; cursor: default; }
+.kb-dropdown-empty:hover { background: #fff; }
+
+.kb-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.kb-btn { border: none; border-radius: 5px; padding: 9px 22px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.kb-btn-simpan { background: #b81d24; color: #fff; }
+.kb-btn-simpan:hover { background: #9c161c; }
+.kb-btn-reset { background: #fff; color: #333; border: 1px solid #ccc; }
+.kb-btn-reset:hover { background: #f1f1f1; }

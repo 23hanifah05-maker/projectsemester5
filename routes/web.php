@@ -77,6 +77,12 @@ Route::get('/poli/show/{slug}', function ($slug) {
 })->name('poli.show');
 
 Route::get('/poli/syaraf', [PoliController::class, 'saraf'])->name('poli.syaraf');
+Route::get('/poli/syaraf/detail/{no_rm}', function ($no_rm) {
+    return view('poli.syaraf-detail', ['no_rm' => $no_rm]);
+})->name('poli.syaraf.detail');
+Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', function ($no_rm) {
+    return view('poli.syaraf-kunjungan-baru', ['no_rm' => $no_rm]);
+})->name('poli.syaraf.kunjungan-baru');
 Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])->name('poli.obgyn');
 Route::get('/poli/obgyn/kunjungan/{no_rm}', function ($no_rm) {
     return view('poli.obgyn-kunjungan', ['no_rm' => $no_rm]);
