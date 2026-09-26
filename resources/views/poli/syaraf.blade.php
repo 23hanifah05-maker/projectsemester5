@@ -11,6 +11,63 @@
 
 @section('content')
 
+    {{-- =====================================================
+         DATA DUMMY PASIEN POLI SYARAF
+         (5 pasien laki-laki dari Master Data Pendaftaran:
+         RM-0001, RM-0003, RM-0005, RM-0007, RM-0009.
+         Poli syaraf tidak terikat jenis kelamin, jadi dipilih
+         pasien laki-laki agar sisanya pas untuk Poli Obgyn)
+    ===================================================== --}}
+    @php
+        $pasien = $pasien ?? [
+            (object) [
+                'no_rm' => 'RM-0001',
+                'nama_pasien' => 'Budi Santoso',
+                'nik' => '3515010101800001',
+                'tgl_lahir' => '1980-01-01',
+                'jenis_kelamin' => 'Laki-laki',
+                'alamat' => 'Jl. Merdeka No. 10',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0003',
+                'nama_pasien' => 'Andi Pratama',
+                'nik' => '3515031503900003',
+                'tgl_lahir' => '1990-03-15',
+                'jenis_kelamin' => 'Laki-laki',
+                'alamat' => 'Jl. Kartini No. 8',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0005',
+                'nama_pasien' => 'Rudi Hartono',
+                'nik' => '3515051206750005',
+                'tgl_lahir' => '1975-06-12',
+                'jenis_kelamin' => 'Laki-laki',
+                'alamat' => 'Jl. Gajah Mada No. 21',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0007',
+                'nama_pasien' => 'Fajar Ramadhan',
+                'nik' => '3515071801980007',
+                'tgl_lahir' => '1998-01-18',
+                'jenis_kelamin' => 'Laki-laki',
+                'alamat' => 'Jl. Sunan Ampel No. 7',
+                'status' => 'Sudah Terdaftar',
+            ],
+            (object) [
+                'no_rm' => 'RM-0009',
+                'nama_pasien' => 'Agus Setiawan',
+                'nik' => '3515092206700009',
+                'tgl_lahir' => '1970-06-22',
+                'jenis_kelamin' => 'Laki-laki',
+                'alamat' => 'Jl. Diponegoro No. 44',
+                'status' => 'Sudah Terdaftar',
+            ],
+        ];
+    @endphp
+
     <div class="panel">
 
         <div class="panel-head">
