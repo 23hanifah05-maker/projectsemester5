@@ -50,17 +50,10 @@
 
             <ul class="poli-submenu {{ request()->routeIs('poli.*') ? 'show' : '' }}" id="poliSubmenu">
                 <li>
-<<<<<<< HEAD
-    <a href="{{ route('poli.syaraf') }}" class="{{ request()->routeIs('poli.syaraf*') ? 'active-sub' : '' }}">
-        Poli Saraf
-    </a>
-</li>
-=======
                     <a href="{{ route('poli.syaraf') }}" class="{{ request()->routeIs('poli.syaraf*') ? 'active-sub' : '' }}">
                         Poli Saraf
                     </a>
                 </li>
->>>>>>> b8c1c21d3f7318b894b4737a4c08cda744a6cbb8
                 <li>
                     {{-- FIX: tambah wildcard (*) supaya menu tetap aktif
                          waktu buka halaman kunjungan (poli.obgyn.kunjungan),
@@ -103,7 +96,7 @@
 </aside>
 
 <script>
-        // Dropdown Poli. Karena sidebar ada di setiap halaman lewat @@include,
+    // Dropdown Poli. Karena sidebar ada di setiap halaman lewat @@include,
     // script ini juga otomatis ikut ada di setiap halaman.
     function togglePoli() {
         const submenu = document.getElementById('poliSubmenu');
