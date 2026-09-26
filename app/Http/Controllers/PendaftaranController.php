@@ -2,24 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pasien;
 use Illuminate\Http\Request;
 
 class PendaftaranController extends Controller
 {
     public function index(Request $request)
     {
-        // TODO: ganti dengan query Model Pasien/Pendaftaran, contoh:
-        // $pasien = Pasien::when($request->keyword, fn ($q) =>
-        //                $q->where('nama_pasien', 'like', '%'.$request->keyword.'%')
-        //                  ->orWhere('nik', 'like', '%'.$request->keyword.'%'))
-        //            ->when($request->dari && $request->sampai, fn ($q) =>
-        //                $q->whereBetween('created_at', [$request->dari, $request->sampai]))
-        //            ->latest()
-        //            ->get();
+        $keyword = $request->input('keyword');
+        $dari = $request->input('dari');
+        $sampai = $request->input('sampai');
 
-        $pasien = collect(); // kosong dulu -> tabel tampil dengan baris placeholder
+        $pasien = Pasien::query()
 
-        return view('pendaftaran.index', compact('pasien'));
+            // SEARCH KEYWORD
+            ->when($keyword, function ($query) use ($keyword) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('nama_pasien', 'like', '%' . $keyword . '%')
+                      ->orWhere('no_rm', 'like', '%' . $keyword . '%')
+                      ->orWhere('nik', 'like', '%' . $keyword . '%');
+                });
+            })
+
+            // FILTER TANGGAL
+            ->when($dari, function ($query) use ($dari) {
+                $query->whereDate('created_at', '>=', $dari);
+            })
+
+            ->when($sampai, function ($query) use ($sampai) {
+                $query->whereDate('created_at', '<=', $sampai);
+            })
+
+            ->latest()
+            ->get();
+
+        return view('pendaftaran.index', compact(
+            'pasien',
+            'keyword',
+            'dari',
+            'sampai'
+        ));
     }
 
     public function create()
@@ -29,37 +51,71 @@ class PendaftaranController extends Controller
 
     public function store(Request $request)
     {
-        // TODO: validasi + simpan ke database
-        return redirect()->route('pendaftaran.index')->with('success', 'Data pasien berhasil ditambahkan.');
+        $request->validate([
+            'no_rm' => 'required|unique:pasiens,no_rm',
+            'nama_pasien' => 'required',
+            'nik' => 'nullable',
+            'tgl_lahir' => 'nullable|date',
+            'jenis_kelamin' => 'nullable',
+            'alamat' => 'nullable',
+        ]);
+
+        Pasien::create($request->all());
+
+        return redirect()
+            ->route('pendaftaran.index')
+            ->with('success', 'Data pasien berhasil ditambahkan.');
     }
 
     public function show($id)
     {
-        // TODO: tampilkan detail pasien
-        return view('pendaftaran.show', compact('id'));
+        $pasien = Pasien::findOrFail($id);
+
+        return view('pendaftaran.show', compact('pasien'));
     }
 
     public function edit($id)
     {
-        // TODO: form edit pasien
-        return view('pendaftaran.edit', compact('id'));
+        $pasien = Pasien::findOrFail($id);
+
+        return view('pendaftaran.edit', compact('pasien'));
     }
 
     public function update(Request $request, $id)
     {
-        // TODO: validasi + update ke database
-        return redirect()->route('pendaftaran.index')->with('success', 'Data pasien berhasil diperbarui.');
+        $pasien = Pasien::findOrFail($id);
+
+        $request->validate([
+            'no_rm' => 'required|unique:pasiens,no_rm,' . $id,
+            'nama_pasien' => 'required',
+            'nik' => 'nullable',
+            'tgl_lahir' => 'nullable|date',
+            'jenis_kelamin' => 'nullable',
+            'alamat' => 'nullable',
+        ]);
+
+        $pasien->update($request->all());
+
+        return redirect()
+            ->route('pendaftaran.index')
+            ->with('success', 'Data pasien berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
-        // TODO: hapus data pasien
-        return redirect()->route('pendaftaran.index')->with('success', 'Data pasien berhasil dihapus.');
+        $pasien = Pasien::findOrFail($id);
+
+        $pasien->delete();
+
+        return redirect()
+            ->route('pendaftaran.index')
+            ->with('success', 'Data pasien berhasil dihapus.');
     }
 
     public function tambah($id)
     {
-        // Tombol "+" di kolom Aksi -> misal untuk tambah kunjungan baru bagi pasien ini
+        $pasien = Pasien::findOrFail($id);
+
         return redirect()->route('pendaftaran.index');
     }
 }

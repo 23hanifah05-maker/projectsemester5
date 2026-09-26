@@ -16,15 +16,11 @@
 @endsection
 
 
-
 @section('content')
 
 
 {{-- =====================================================
      DATA DUMMY 10 PASIEN
-     Ditambahkan field 'poli' (otomatis dari jenis kelamin:
-     Laki-laki -> Poli Syaraf, Perempuan -> Poli Obgyn)
-     dan field 'dokter' dikosongkan dulu (belum ditentukan)
 ===================================================== --}}
 
 @php
@@ -333,8 +329,72 @@ $dataPasien = [
 
 ];
 
-@endphp
 
+/* =====================================================
+   FILTER KEYWORD
+===================================================== */
+
+$keyword = trim(request('keyword', ''));
+
+if ($keyword !== '') {
+
+    $keywordLower = strtolower($keyword);
+
+    $dataPasien = collect($dataPasien)
+        ->filter(function ($pasien) use ($keywordLower) {
+
+            return
+                str_contains(
+                    strtolower($pasien->nama_pasien ?? ''),
+                    $keywordLower
+                )
+                ||
+                str_contains(
+                    strtolower($pasien->nik ?? ''),
+                    $keywordLower
+                )
+                ||
+                str_contains(
+                    strtolower($pasien->no_rm ?? ''),
+                    $keywordLower
+                )
+                ||
+                str_contains(
+                    strtolower($pasien->no_hp ?? ''),
+                    $keywordLower
+                );
+
+        })
+        ->values();
+
+}
+
+
+/* =====================================================
+   FILTER PERIODE
+   Menggunakan tanggal lahir sebagai data tanggal dummy.
+   Jika belum ingin menggunakan periode, bagian ini bisa
+   dihapus.
+===================================================== */
+
+$dari = request('dari');
+$sampai = request('sampai');
+
+if ($dari && $sampai) {
+
+    $dataPasien = collect($dataPasien)
+        ->filter(function ($pasien) use ($dari, $sampai) {
+
+            return
+                $pasien->tgl_lahir >= $dari &&
+                $pasien->tgl_lahir <= $sampai;
+
+        })
+        ->values();
+
+}
+
+@endphp
 
 
 {{-- =====================================================
@@ -359,12 +419,15 @@ $dataPasien = [
     </div>
 
 
-    {{-- FILTER --}}
+    {{-- =================================================
+         FILTER
+    ================================================= --}}
 
     <form
         method="GET"
         action="{{ route('pendaftaran.index') }}"
         class="filter-row"
+        id="filterForm"
     >
 
         <div class="filter-item">
@@ -395,8 +458,10 @@ $dataPasien = [
             <input
                 type="text"
                 name="keyword"
+                id="keywordInput"
                 value="{{ request('keyword') }}"
                 placeholder="Cari nama, NIK, atau No. RM"
+                autocomplete="off"
             >
 
         </div>
@@ -428,7 +493,7 @@ $dataPasien = [
 
         <tbody>
 
-        @foreach ($dataPasien as $index => $item)
+        @forelse ($dataPasien as $index => $item)
 
             <tr
                 class="row-pasien"
@@ -517,14 +582,31 @@ $dataPasien = [
 
             </tr>
 
-        @endforeach
+        @empty
+
+            <tr>
+
+                <td
+                    colspan="8"
+                    style="
+                        text-align:center;
+                        padding:25px;
+                        color:#777;
+                    "
+                >
+                    Data pasien tidak ditemukan.
+
+                </td>
+
+            </tr>
+
+        @endforelse
 
         </tbody>
 
     </table>
 
 </div>
-
 
 
 {{-- =====================================================
@@ -733,7 +815,6 @@ $dataPasien = [
 </div>
 
 
-
 {{-- =====================================================
      MODAL TAMBAH KUNJUNGAN
 ===================================================== --}}
@@ -747,9 +828,7 @@ $dataPasien = [
 
         <div class="custom-modal-header">
 
-            <h3>
-                Tambah Kunjungan
-            </h3>
+            <h3>Tambah Kunjungan</h3>
 
             <button
                 type="button"
@@ -876,13 +955,8 @@ $dataPasien = [
 </div>
 
 
-
 {{-- =====================================================
      MODAL EDIT
-     Catatan: Nama Pasien dan NIK dibuat READONLY.
-     Hanya Alamat dan No. HP yang bisa diubah,
-     karena NIK & Nama adalah data identitas resmi yang
-     seharusnya tidak diubah sembarangan dari halaman ini.
 ===================================================== --}}
 
 <div
@@ -894,9 +968,7 @@ $dataPasien = [
 
         <div class="custom-modal-header">
 
-            <h3>
-                Edit Data Pasien
-            </h3>
+            <h3>Edit Data Pasien</h3>
 
             <button
                 type="button"
@@ -940,7 +1012,6 @@ $dataPasien = [
                     id="editNama"
                     readonly
                     class="input-locked"
-                    title="Nama tidak dapat diubah dari sini"
                     style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
                 >
 
@@ -957,7 +1028,6 @@ $dataPasien = [
                     inputmode="numeric"
                     readonly
                     class="input-locked"
-                    title="NIK tidak dapat diubah dari sini"
                     style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
                 >
 
@@ -1017,7 +1087,6 @@ $dataPasien = [
 @endsection
 
 
-
 {{-- =====================================================
      JAVASCRIPT
 ===================================================== --}}
@@ -1057,7 +1126,6 @@ function ambilDataBaris(button)
 }
 
 
-
 /* =====================================================
    FORMAT TANGGAL
 ===================================================== */
@@ -1083,7 +1151,6 @@ function formatTanggal(tanggal)
         }
     );
 }
-
 
 
 /* =====================================================
@@ -1158,7 +1225,9 @@ function isiDetail(data)
         data.poli ?? '-';
 
     document.getElementById('m-dokter').textContent =
-        (data.dokter && data.dokter.length > 0) ? data.dokter : '-';
+        data.dokter && data.dokter.length > 0
+            ? data.dokter
+            : '-';
 
     document.getElementById('m-pj-nama').textContent =
         data.pj_nama ?? '-';
@@ -1172,7 +1241,6 @@ function isiDetail(data)
     document.getElementById('m-pj-hp').textContent =
         data.pj_no_hp ?? '-';
 }
-
 
 
 /* =====================================================
@@ -1205,7 +1273,6 @@ function closePasienModal()
 }
 
 
-
 /* =====================================================
    TAMBAH KUNJUNGAN
 ===================================================== */
@@ -1220,13 +1287,11 @@ function bukaKunjungan(button)
 
     const data = hasil.data;
 
-
     document.getElementById('kunjunganRm').value =
         data.no_rm ?? '';
 
     document.getElementById('kunjunganNama').value =
         data.nama_pasien ?? '';
-
 
     const today = new Date();
 
@@ -1237,7 +1302,6 @@ function bukaKunjungan(button)
         '-' +
         String(today.getDate()).padStart(2, '0');
 
-
     document.getElementById('kunjunganTanggal').value =
         tanggal;
 
@@ -1246,7 +1310,6 @@ function bukaKunjungan(button)
 
     document.getElementById('kunjunganKeluhan').value =
         '';
-
 
     document
         .getElementById('kunjunganModal')
@@ -1281,22 +1344,15 @@ function simpanKunjungan()
     const keluhan =
         document.getElementById('kunjunganKeluhan').value;
 
-
     if (!tanggal) {
-
         alert('Tanggal kunjungan wajib diisi.');
-
         return;
     }
-
 
     if (!poli) {
-
         alert('Silakan pilih poli.');
-
         return;
     }
-
 
     alert(
         'Kunjungan berhasil dibuat.\n\n' +
@@ -1307,16 +1363,12 @@ function simpanKunjungan()
         'Keluhan: ' + (keluhan || '-')
     );
 
-
     tutupKunjungan();
 }
 
 
-
 /* =====================================================
    EDIT
-   Catatan: Nama & NIK hanya ditampilkan (readonly),
-   yang benar-benar bisa disimpan hanya Alamat & No. HP.
 ===================================================== */
 
 function bukaEdit(button)
@@ -1330,12 +1382,10 @@ function bukaEdit(button)
     const data = hasil.data;
     const row = hasil.row;
 
-
     document.getElementById('editRow').value =
         Array.from(
             document.querySelectorAll('.row-pasien')
         ).indexOf(row);
-
 
     document.getElementById('editRm').value =
         data.no_rm ?? '';
@@ -1347,11 +1397,10 @@ function bukaEdit(button)
         data.nik ?? '';
 
     document.getElementById('editHp').value =
-        data.no_hp ?? '';
+               data.no_hp ?? '';
 
     document.getElementById('editAlamat').value =
         data.alamat ?? '';
-
 
     document
         .getElementById('editModal')
@@ -1376,31 +1425,24 @@ function simpanEdit()
             document.getElementById('editRow').value
         );
 
-
-    const rows =
-        document.querySelectorAll('.row-pasien');
-
-
-    const row = rows[index];
-
+    const row =
+        document.querySelectorAll('.row-pasien')[index];
 
     if (!row) {
-
-        alert('Data pasien tidak ditemukan.');
-
         return;
     }
 
+    const dataString =
+        row.getAttribute('data-pasien');
 
-    const data =
-        JSON.parse(
-            row.getAttribute('data-pasien')
-        );
+    let data;
 
-
-    // Hanya Alamat & No. HP yang boleh diubah.
-    // Nama Pasien dan NIK sengaja TIDAK diambil dari form
-    // karena field-nya readonly di modal edit.
+    try {
+        data = JSON.parse(dataString);
+    } catch (error) {
+        console.error(error);
+        return;
+    }
 
     data.no_hp =
         document.getElementById('editHp').value;
@@ -1408,37 +1450,26 @@ function simpanEdit()
     data.alamat =
         document.getElementById('editAlamat').value;
 
-
     row.setAttribute(
         'data-pasien',
         JSON.stringify(data)
     );
 
+    const cells = row.querySelectorAll('td');
 
-    const kolom =
-        row.querySelectorAll('td');
+    if (cells[6]) {
+        cells[6].textContent =
+            data.alamat ?? '';
+    }
 
-
-    // Kolom Alamat ada di index ke-6 pada tabel Master Data.
-    // Nama (index 2) dan NIK (index 3) sengaja tidak disentuh
-    // karena datanya tidak berubah.
-
-    kolom[6].textContent =
-        data.alamat;
-
-
-    alert(
-        'Data pasien berhasil diperbarui.'
-    );
-
+    alert('Data pasien berhasil diperbarui.');
 
     tutupEdit();
 }
 
 
-
 /* =====================================================
-   HAPUS
+   HAPUS PASIEN
 ===================================================== */
 
 function hapusPasien(button)
@@ -1452,173 +1483,549 @@ function hapusPasien(button)
     const data = hasil.data;
     const row = hasil.row;
 
+    const konfirmasi = confirm(
+        'Apakah Anda yakin ingin menghapus pasien "' +
+        (data.nama_pasien ?? '') +
+        '"?'
+    );
 
-    const yakin =
-        confirm(
-            'Apakah kamu yakin ingin menghapus data pasien ini?\n\n' +
-            'No. RM : ' + data.no_rm + '\n' +
-            'Nama   : ' + data.nama_pasien
-        );
-
-
-    if (!yakin) {
+    if (!konfirmasi) {
         return;
     }
-
 
     row.remove();
 
     perbaruiNomor();
 
+    cekDataKosong();
 
-    alert(
-        'Data pasien berhasil dihapus.'
-    );
+    alert('Data pasien berhasil dihapus.');
 }
-
-
-function perbaruiNomor()
-{
-    document
-        .querySelectorAll('.row-pasien')
-        .forEach(function(row, index)
-        {
-
-            row.querySelector(
-                'td:first-child'
-            ).textContent = index + 1;
-
-        });
-}
-
 
 
 /* =====================================================
-   DOUBLE CLICK BARIS
+   UPDATE NOMOR
+===================================================== */
+
+function perbaruiNomor()
+{
+    const rows =
+        document.querySelectorAll(
+            '.row-pasien'
+        );
+
+    let nomor = 1;
+
+    rows.forEach(function (row) {
+
+        if (row.style.display === 'none') {
+            return;
+        }
+
+        const cell =
+            row.querySelector('td:first-child');
+
+        if (cell) {
+            cell.textContent = nomor++;
+        }
+
+    });
+}
+
+
+/* =====================================================
+   CEK DATA KOSONG
+===================================================== */
+
+function cekDataKosong()
+{
+    const tbody =
+        document.querySelector(
+            '.table-pendaftaran tbody'
+        );
+
+    if (!tbody) {
+        return;
+    }
+
+    const rows =
+        tbody.querySelectorAll('.row-pasien');
+
+    const rowsTampil =
+        Array.from(rows).filter(function (row) {
+            return row.style.display !== 'none';
+        });
+
+    const pesan =
+        document.getElementById(
+            'keywordEmptyRow'
+        );
+
+    if (rowsTampil.length === 0) {
+
+        if (!pesan) {
+
+            const rowKosong =
+                document.createElement('tr');
+
+            rowKosong.id =
+                'keywordEmptyRow';
+
+            rowKosong.innerHTML = `
+                <td
+                    colspan="8"
+                    style="
+                        text-align:center;
+                        padding:25px;
+                        color:#777;
+                    "
+                >
+                    Data pasien tidak ditemukan.
+                </td>
+            `;
+
+            tbody.appendChild(rowKosong);
+        }
+
+    } else {
+
+        if (pesan) {
+            pesan.remove();
+        }
+    }
+}
+
+
+/* =====================================================
+   DOUBLE CLICK DETAIL
+===================================================== */
+
+document.addEventListener(
+    'dblclick',
+    function (event) {
+
+        const row =
+            event.target.closest(
+                '.row-pasien'
+            );
+
+        if (!row) {
+            return;
+        }
+
+        const tombol =
+            row.querySelector(
+                '.btn-aksi'
+            );
+
+        if (tombol) {
+            bukaDetail(tombol);
+        }
+
+    }
+);
+
+
+/* =====================================================
+   KLIK DI LUAR MODAL
+===================================================== */
+
+document.addEventListener(
+    'click',
+    function (event) {
+
+        const pasienModal =
+            document.getElementById(
+                'pasienModal'
+            );
+
+        const kunjunganModal =
+            document.getElementById(
+                'kunjunganModal'
+            );
+
+        const editModal =
+            document.getElementById(
+                'editModal'
+            );
+
+
+        if (
+            event.target === pasienModal
+        ) {
+            closePasienModal();
+        }
+
+
+        if (
+            event.target === kunjunganModal
+        ) {
+            tutupKunjungan();
+        }
+
+
+        if (
+            event.target === editModal
+        ) {
+            tutupEdit();
+        }
+
+    }
+);
+
+
+/* =====================================================
+   ESC UNTUK TUTUP MODAL
+===================================================== */
+
+document.addEventListener(
+    'keydown',
+    function (event) {
+
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        closePasienModal();
+        tutupKunjungan();
+        tutupEdit();
+
+    }
+);
+
+
+/* =====================================================
+   SEARCH KEYWORD
 ===================================================== */
 
 document.addEventListener(
     'DOMContentLoaded',
-    function()
-    {
+    function () {
 
-        document
-            .querySelectorAll('.row-pasien')
-            .forEach(function(row)
-            {
+        const keywordInput =
+            document.getElementById('keywordInput');
 
-                row.addEventListener(
-                    'dblclick',
-                    function()
-                    {
+        if (!keywordInput) {
+            return;
+        }
 
-                        const data =
-                            JSON.parse(
-                                this.getAttribute(
-                                    'data-pasien'
-                                )
-                            );
+        let keywordSebelumnya = '';
 
+        keywordInput.addEventListener(
+            'input',
+            function () {
 
-                        isiDetail(data);
+                const keyword =
+                    this.value
+                        .trim()
+                        .toLowerCase();
 
+                const rows =
+                    document.querySelectorAll('.row-pasien');
 
-                        document
-                            .getElementById(
-                                'pasienModal'
-                            )
-                            .classList
-                            .add('show');
+                let nomor = 1;
+                let ditemukan = 0;
 
+                /*
+                 * =================================================
+                 * JIKA KEYWORD DIHAPUS
+                 * =================================================
+                 */
+
+                if (keyword === '') {
+
+                    rows.forEach(function (row) {
+
+                        row.style.display = '';
+
+                        const nomorCell =
+                            row.querySelector('td:first-child');
+
+                        if (nomorCell) {
+                            nomorCell.textContent = nomor++;
+                        }
+
+                    });
+
+                    const pesanLama =
+                        document.getElementById('keywordEmptyRow');
+
+                    if (pesanLama) {
+                        pesanLama.remove();
                     }
-                );
 
-            });
+                    keywordSebelumnya = '';
 
-
-        /* klik luar modal detail */
-
-        document
-            .getElementById('pasienModal')
-            ?.addEventListener(
-                'click',
-                function(event)
-                {
-
-                    if (
-                        event.target === this
-                    ) {
-
-                        closePasienModal();
-
-                    }
-
+                    return;
                 }
-            );
 
 
-        /* klik luar modal kunjungan */
+                /*
+                 * =================================================
+                 * CEK DATA PASIEN
+                 * =================================================
+                 */
 
-        document
-            .getElementById('kunjunganModal')
-            ?.addEventListener(
-                'click',
-                function(event)
-                {
+                const hasilPasien = [];
 
-                    if (
-                        event.target === this
-                    ) {
+                rows.forEach(function (row) {
 
-                        tutupKunjungan();
+                    const dataString =
+                        row.getAttribute('data-pasien');
+
+                    if (!dataString) {
+                        return;
+                    }
+
+                    let data;
+
+                    try {
+
+                        data = JSON.parse(dataString);
+
+                    } catch (error) {
+
+                        console.error(error);
+                        return;
 
                     }
 
-                }
-            );
+
+                    const nama =
+                        String(
+                            data.nama_pasien || ''
+                        ).toLowerCase();
+
+                    const nik =
+                        String(
+                            data.nik || ''
+                        ).toLowerCase();
+
+                    const noRm =
+                        String(
+                            data.no_rm || ''
+                        ).toLowerCase();
+
+                    const noHp =
+                        String(
+                            data.no_hp || ''
+                        ).toLowerCase();
 
 
-        /* klik luar modal edit */
+                    const cocok =
+                        nama.includes(keyword) ||
+                        nik.includes(keyword) ||
+                        noRm.includes(keyword) ||
+                        noHp.includes(keyword);
 
-        document
-            .getElementById('editModal')
-            ?.addEventListener(
-                'click',
-                function(event)
-                {
 
-                    if (
-                        event.target === this
-                    ) {
+                    if (cocok) {
 
-                        tutupEdit();
+                        hasilPasien.push({
+                            row: row,
+                            data: data,
+                            nama: nama
+                        });
 
                     }
 
-                }
-            );
+                });
 
 
-        /* tombol ESC */
+                /*
+                 * =================================================
+                 * KETIKA USER MENGHAPUS KARAKTER
+                 *
+                 * Contoh:
+                 * siti → sit → si → s
+                 *
+                 * Jika hasil tersebut hanya pasien yang sama
+                 * dengan pencarian sebelumnya, tampilkan kembali
+                 * semua pasien.
+                 * =================================================
+                 */
 
-        document.addEventListener(
-            'keydown',
-            function(event)
-            {
+                const sedangMenghapus =
+                    keyword.length < keywordSebelumnya.length;
+
 
                 if (
-                    event.key === 'Escape'
+                    sedangMenghapus &&
+                    hasilPasien.length === 1 &&
+                    keywordSebelumnya !== ''
                 ) {
 
-                    closePasienModal();
+                    const pasienHasil =
+                        hasilPasien[0];
 
-                    tutupKunjungan();
+                    const namaPasien =
+                        pasienHasil.nama;
 
-                    tutupEdit();
+
+                    /*
+                     * Cek apakah keyword baru hanya merupakan
+                     * awalan dari pasien yang sebelumnya dicari.
+                     */
+
+                    const hanyaPasienSebelumnya =
+                        namaPasien.startsWith(keyword);
+
+
+                    /*
+                     * Kalau iya, berarti user sedang menghapus
+                     * nama pasien yang tadi dicari.
+                     *
+                     * Maka jangan tetap menampilkan pasien tersebut.
+                     * Kembalikan semua data pasien.
+                     */
+
+                    if (hanyaPasienSebelumnya) {
+
+                        rows.forEach(function (row) {
+
+                            row.style.display = '';
+
+                            const nomorCell =
+                                row.querySelector(
+                                    'td:first-child'
+                                );
+
+                            if (nomorCell) {
+                                nomorCell.textContent =
+                                    nomor++;
+                            }
+
+                        });
+
+
+                        const pesanLama =
+                            document.getElementById(
+                                'keywordEmptyRow'
+                            );
+
+                        if (pesanLama) {
+                            pesanLama.remove();
+                        }
+
+
+                        keywordSebelumnya = keyword;
+
+                        return;
+                    }
 
                 }
 
+
+                /*
+                 * =================================================
+                 * TAMPILKAN HASIL PENCARIAN
+                 * =================================================
+                 */
+
+                rows.forEach(function (row) {
+
+                    const ditemukanData =
+                        hasilPasien.some(function (item) {
+
+                            return item.row === row;
+
+                        });
+
+
+                    if (ditemukanData) {
+
+                        row.style.display = '';
+
+                        const nomorCell =
+                            row.querySelector(
+                                'td:first-child'
+                            );
+
+                        if (nomorCell) {
+                            nomorCell.textContent =
+                                nomor++;
+                        }
+
+                        ditemukan++;
+
+                    } else {
+
+                        row.style.display = 'none';
+
+                    }
+
+                });
+
+
+                /*
+                 * =================================================
+                 * PESAN DATA TIDAK DITEMUKAN
+                 * =================================================
+                 */
+
+                const tbody =
+                    document.querySelector(
+                        '.table-pendaftaran tbody'
+                    );
+
+                if (!tbody) {
+                    return;
+                }
+
+
+                const pesanLama =
+                    document.getElementById(
+                        'keywordEmptyRow'
+                    );
+
+
+                if (pesanLama) {
+                    pesanLama.remove();
+                }
+
+
+                if (ditemukan === 0) {
+
+                    const rowKosong =
+                        document.createElement('tr');
+
+                    rowKosong.id =
+                        'keywordEmptyRow';
+
+
+                    rowKosong.innerHTML = `
+                        <td
+                            colspan="8"
+                            style="
+                                text-align:center;
+                                padding:25px;
+                                color:#777;
+                            "
+                        >
+                            Data pasien tidak ditemukan.
+                        </td>
+                    `;
+
+
+                    tbody.appendChild(rowKosong);
+
+                }
+
+
+                keywordSebelumnya = keyword;
+
             }
+        );
+
+
+        /*
+         * =================================================
+         * JALANKAN SEARCH SAAT HALAMAN DIBUKA
+         * =================================================
+         */
+
+        keywordInput.dispatchEvent(
+            new Event('input')
         );
 
     }

@@ -1,7 +1,5 @@
 /* =====================================================
    public/css/app.css
-   CSS eksternal untuk LAYOUT UTAMA: sidebar, header, main.
-   Dipakai di semua halaman lewat layouts/app.blade.php
 ===================================================== */
 
 * {
@@ -17,6 +15,7 @@ body {
     font-size: 13px;
 }
 
+
 /* =====================================================
    SIDEBAR
 ===================================================== */
@@ -27,8 +26,10 @@ body {
     left: 0;
     width: 225px;
     height: 100vh;
+
     color: white;
     padding: 25px 14px;
+
     z-index: 1000;
 
     background:
@@ -43,7 +44,14 @@ body {
     background-size: cover;
     background-position: center bottom;
     background-repeat: no-repeat;
+
+    overflow-y: auto;
 }
+
+
+/* =====================================================
+   LOGO
+===================================================== */
 
 .logo-area {
     display: flex;
@@ -71,83 +79,189 @@ body {
     font-weight: 700;
 }
 
+
+/* =====================================================
+   MENU TITLE
+===================================================== */
+
 .menu-title {
     font-size: 14px;
-    margin: 0 7px 8px;
-    opacity: .85;
+    font-weight: 500;
+
+    margin: 0 7px 10px;
+
+    color: rgba(255, 255, 255, .9);
 }
+
+
+/* =====================================================
+   MENU
+===================================================== */
 
 .menu {
     list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .menu li {
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
+
+
+/* =====================================================
+   LINK MENU
+===================================================== */
 
 .menu a {
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 35px;
+
+    width: 100%;
+    height: 40px;
+
     padding: 0 11px;
-    border-radius: 9px;
+
+    border-radius: 10px;
+
     color: white;
     text-decoration: none;
+
     font-size: 13px;
     font-weight: 600;
-    transition: .2s;
+
+    transition: .2s ease;
 }
 
-.menu a:hover,
-.menu a.active {
+
+/* =====================================================
+   ICON MENU
+===================================================== */
+
+.menu-icon {
+    width: 28px;
+    min-width: 28px;
+
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 8px;
+
+    font-size: 18px;
+
+    color: white;
+}
+
+.menu-icon i {
+    color: inherit;
+}
+
+
+/* =====================================================
+   MENU LABEL
+===================================================== */
+
+.menu-label {
+    display: block;
+}
+
+
+/* =====================================================
+   HOVER
+===================================================== */
+
+.menu > li > a:hover {
+    background: rgba(255, 255, 255, .12);
+}
+
+
+/* =====================================================
+   ACTIVE
+===================================================== */
+
+.menu > li > a.active {
     background: white;
     color: #d71920;
 }
 
-.menu-icon {
-    width: 20px;
-    text-align: center;
-    font-size: 16px;
+.menu > li > a.active .menu-icon {
+    color: #d71920;
 }
 
-/* ---------- DROPDOWN POLI ---------- */
+.menu > li > a.active .menu-icon i {
+    color: #d71920;
+}
+
+
+/* =====================================================
+   POLI
+===================================================== */
 
 .poli-menu {
     position: relative;
-    margin-bottom: 4px !important;
+    margin-bottom: 5px !important;
 }
 
 .poli-toggle {
     cursor: pointer;
-    position: relative;
 }
 
 .poli-toggle.open {
     background: white !important;
     color: #d71920 !important;
-    border-radius: 9px 9px 0 0;
+
+    border-radius: 10px 10px 0 0;
 }
 
 .poli-toggle.open .menu-icon {
     color: #d71920;
 }
 
+.poli-toggle.open .menu-icon i {
+    color: #d71920;
+}
+
+
+/* =====================================================
+   ARROW
+===================================================== */
+
 .poli-arrow {
     margin-left: auto;
-    font-size: 10px;
-    line-height: 1;
+
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 11px;
+    font-weight: 700;
+
     color: inherit;
-    transition: transform .2s ease;
 }
+
+
+/* =====================================================
+   SUBMENU
+===================================================== */
 
 .poli-submenu {
     display: none;
+
     list-style: none;
+
     margin: 0;
-    padding: 0;
-    background: rgba(255, 255, 255, 0.20);
-    border-radius: 0 0 9px 9px;
+    padding: 4px 0;
+
+    background: rgba(255, 255, 255, .10);
+
+    border-radius: 0 0 10px 10px;
+
     overflow: hidden;
 }
 
@@ -155,71 +269,157 @@ body {
     display: block;
 }
 
+
+/* =====================================================
+   SUBMENU ITEM
+===================================================== */
+
 .poli-submenu li {
     margin: 0 !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.28);
 }
 
-.poli-submenu li:first-child {
-    border-top: 0;
-}
+
+/* =====================================================
+   SUBMENU LINK
+===================================================== */
 
 .poli-submenu li a {
-    position: relative;
     display: flex;
     align-items: center;
-    height: 34px;
-    box-sizing: border-box;
-    padding: 0 8px 0 42px;
+
+    width: 100%;
+    height: 36px;
+
+    padding: 0 10px 0 30px;
+
+    border-radius: 0;
+
     color: white;
+
     text-decoration: none;
+
     font-size: 12px;
     font-weight: 600;
-    line-height: 34px;
-    border-radius: 0;
+
+    transition: .2s ease;
 }
 
-.poli-submenu li a::before {
-    content: "";
-    position: absolute;
-    left: 27px;
-    top: 50%;
-    width: 6px;
-    height: 6px;
-    margin-top: -3px;
-    border-radius: 50%;
-    background: white;
+
+/* =====================================================
+   SUB ICON
+===================================================== */
+
+.sub-icon {
+    width: 26px;
+    min-width: 26px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 8px;
+
+    font-size: 15px;
+
+    color: white;
 }
 
-.poli-submenu li a:hover,
+.sub-icon i {
+    color: inherit;
+}
+
+
+/* =====================================================
+   SUBMENU HOVER
+===================================================== */
+
+.poli-submenu li a:hover {
+    background: rgba(255, 255, 255, .12);
+}
+
+
+/* =====================================================
+   SUBMENU ACTIVE
+===================================================== */
+
 .poli-submenu li a.active-sub {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, .18);
+    color: white;
 }
 
-/* ---------- LOGOUT ---------- */
+
+/* =====================================================
+   LOGOUT
+===================================================== */
 
 .logout {
     position: absolute;
+
     left: 22px;
     right: 22px;
     bottom: 20px;
+
     padding-top: 12px;
-    border-top: 2px solid rgba(255, 255, 255, .65);
+
+    border-top: 2px solid rgba(255, 255, 255, .30);
+}
+
+.logout form {
+    margin: 0;
+    padding: 0;
 }
 
 .logout button {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    height: 40px;
+
+    padding: 0;
+
     border: 0;
     background: transparent;
+
     color: white;
+
     font-family: inherit;
     font-size: 13px;
     font-weight: 600;
+
     cursor: pointer;
-    padding: 3px 0;
+
+    text-align: left;
 }
 
+.logout button .menu-icon {
+    width: 28px;
+    min-width: 28px;
+
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 8px;
+
+    font-size: 18px;
+
+    color: white;
+}
+
+.logout button .menu-icon i {
+    color: white;
+}
+
+.logout button:hover {
+    opacity: .8;
+}
+
+
 /* =====================================================
-   MAIN / HEADER (dipakai semua halaman)
+   MAIN
 ===================================================== */
 
 .main {
@@ -228,33 +428,105 @@ body {
     background: #f5f5f5;
 }
 
+
+/* =====================================================
+   HEADER
+===================================================== */
+
 .header {
     height: 55px;
+
     background: white;
+
     border-bottom: 1px solid #ddd;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     padding: 0 18px;
 }
 
-.header-title {
-    color: #d71920;
-    font-size: 16px;
-    font-weight: 700;
+
+/* =====================================================
+   HEADER LEFT
+===================================================== */
+
+.header-left {
     display: flex;
     align-items: center;
+
     gap: 8px;
+
+    height: 100%;
 }
 
-.home-icon {
-    font-size: 18px;
+
+/* =====================================================
+   HEADER ICON
+===================================================== */
+
+.header-icon {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #d71920;
+
+    flex-shrink: 0;
+
+    overflow: hidden;
 }
+
+.header-icon svg {
+    width: 26px !important;
+    height: 26px !important;
+
+    min-width: 26px !important;
+    min-height: 26px !important;
+
+    max-width: 26px !important;
+    max-height: 26px !important;
+
+    display: block;
+
+    color: #d71920;
+
+    flex-shrink: 0;
+}
+
+
+/* =====================================================
+   HEADER TITLE
+===================================================== */
+
+.header-left h1 {
+    margin: 0;
+    padding: 0;
+
+    color: #d71920;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
+
+/* =====================================================
+   ADMIN
+===================================================== */
 
 .admin {
     display: flex;
     align-items: center;
     gap: 9px;
+
     font-size: 14px;
     font-weight: 600;
 }
@@ -262,29 +534,48 @@ body {
 .admin-icon {
     width: 31px;
     height: 31px;
+
     border-radius: 50%;
+
     background: #d71920;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     color: white;
     font-size: 15px;
 }
+
+
+/* =====================================================
+   CONTENT
+===================================================== */
 
 .content {
     padding: 18px 15px;
 }
 
-/* Filter periode - dipakai di dashboard & pendaftaran */
+
+/* =====================================================
+   FILTER PERIODE
+===================================================== */
+
 .period {
     height: 40px;
+
     background: white;
+
     border: 1px solid #ddd;
     border-radius: 7px;
+
     padding: 0 18px;
+
     display: flex;
     align-items: center;
+
     gap: 8px;
+
     margin-bottom: 9px;
 }
 
@@ -297,9 +588,12 @@ body {
 .period input {
     width: 113px;
     height: 27px;
+
     border: 1px solid #cfcfcf;
     border-radius: 4px;
+
     padding: 3px 7px;
+
     font-family: inherit;
     font-size: 10px;
 }
@@ -308,24 +602,36 @@ body {
     font-size: 11px;
 }
 
-/* Panel generik - dipakai di dashboard & pendaftaran */
+
+/* =====================================================
+   PANEL
+===================================================== */
+
 .panel {
     background: white;
+
     border: 1px solid #ddd;
     border-radius: 7px;
+
     padding: 12px 15px;
+
     margin-bottom: 10px;
 }
 
 .panel-title {
     height: 29px;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     border-bottom: 1px solid #ddd;
+
     color: #b3151c;
+
     font-size: 13px;
     font-weight: 700;
+
     margin-bottom: 7px;
 }
 
@@ -338,36 +644,62 @@ body {
 .panel-title-icon {
     width: 25px;
     height: 25px;
+
     background: #d71920;
     color: white;
+
     border-radius: 4px;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     font-size: 13px;
 }
 
 .panel-title small {
     font-size: 9px;
     font-weight: 500;
+
     color: #d71920;
 }
+
 
 /* =====================================================
    RESPONSIVE
 ===================================================== */
 
 @media (max-width: 1000px) {
-    .sidebar { width: 210px; }
-    .main { margin-left: 210px; }
+
+    .sidebar {
+        width: 210px;
+    }
+
+    .main {
+        margin-left: 210px;
+    }
 }
+
 
 @media (max-width: 750px) {
-    .sidebar { width: 180px; }
-    .main { margin-left: 180px; }
+
+    .sidebar {
+        width: 180px;
+    }
+
+    .main {
+        margin-left: 180px;
+    }
 }
 
+
 @media (max-width: 550px) {
-    .sidebar { display: none; }
-    .main { margin-left: 0; }
+
+    .sidebar {
+        display: none;
+    }
+
+    .main {
+        margin-left: 0;
+    }
 }
