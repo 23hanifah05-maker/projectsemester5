@@ -83,11 +83,34 @@
 
     {{-- ===== TAB ===== --}}
     <div class="ob-tabs">
-        <div class="ob-tab active" onclick="gantiTab('assessment', event)">
+        <div class="ob-tab active" id="ob-tab-btn-assessment" onclick="gantiTab('assessment', event)">
             <i class="fa-solid fa-clipboard-list"></i> Assessment
         </div>
-        <div class="ob-tab" onclick="gantiTab('radiologi', event)">
+        <div class="ob-tab" id="ob-tab-btn-radiologi" onclick="gantiTab('radiologi', event)">
             <i class="fa-solid fa-x-ray"></i> Radiologi
+        </div>
+    </div>
+
+    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print) ===== --}}
+    <div id="cetak-resep-area" class="cetak-resep-only">
+        <div class="resep-header">
+            <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
+            <p>Poli Obgyn — Resep Obat</p>
+        </div>
+        <div class="resep-info">
+            <p><strong>No. RM</strong> : {{ $pasien->no_rm ?? '-' }}</p>
+            <p><strong>Nama</strong> : {{ $pasien->nama_pasien ?? '-' }}</p>
+            <p><strong>Umur</strong> : {{ $pasien->umur ?? '-' }}</p>
+            <p><strong>Jenis Kelamin</strong> : {{ $pasien->jenis_kelamin ?? '-' }}</p>
+            <p><strong>Tanggal</strong> : <span id="resep-tanggal"></span></p>
+        </div>
+        <hr>
+        <div class="resep-rp">R/</div>
+        <div class="resep-isi" id="resep-isi-plan"></div>
+        <div class="resep-footer">
+            <p>Dokter,</p>
+            <br><br><br>
+            <p>( _______________________ )</p>
         </div>
     </div>
 
@@ -126,15 +149,6 @@
                     @endif
                 </div>
             @endforeach
-
-            <div class="ob-soap-actions">
-                <button type="button" class="ob-cetak-btn" onclick="window.print()">
-                    <i class="fa-solid fa-print"></i> Cetak
-                </button>
-                <button type="button" class="ob-rujuk-btn" onclick="alert('Fitur rujuk belum terhubung.')">
-                    <i class="fa-solid fa-right-from-bracket"></i> Rujuk
-                </button>
-            </div>
         </div>
 
         <hr class="ob-divider">
@@ -163,6 +177,16 @@
                         </div>
                     </div>
                 @endforeach
+
+                {{-- Tombol Cetak & Rujuk dipindah ke sini, sejajar dengan baris Diagnosa --}}
+                <div class="ob-soap-actions">
+                    <button type="button" class="ob-cetak-btn" onclick="cetakResep()">
+                        <i class="fa-solid fa-print"></i> Cetak
+                    </button>
+                    <button type="button" class="ob-rujuk-btn" onclick="rujukKeRadiologi()">
+                        <i class="fa-solid fa-right-from-bracket"></i> Rujuk
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -224,6 +248,30 @@
         document.querySelectorAll('.ob-tab-content').forEach(el => el.classList.remove('active'));
         event.currentTarget.classList.add('active');
         document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    function cetakResep() {
+        const planEl = document.querySelector('textarea[name="plan"]');
+        const planText = planEl ? planEl.value.trim() : '';
+
+        if (planText === '') {
+            alert('Isi bagian Plan (P) di SOAP dulu sebelum mencetak resep.');
+            return;
+        }
+
+        document.getElementById('resep-isi-plan').innerText = planText;
+        document.getElementById('resep-tanggal').innerText = new Date().toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        window.print();
+    }
+
+    function rujukKeRadiologi() {
+        document.querySelectorAll('.ob-tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.ob-tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('ob-tab-btn-radiologi').classList.add('active');
+        document.getElementById('tab-radiologi').classList.add('active');
     }
 
     function simpanKunjunganBaru() {

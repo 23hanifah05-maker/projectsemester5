@@ -189,8 +189,13 @@
     margin-bottom: 12px;
 }
 .ob-soap-actions {
+    flex-direction: column;
     margin-bottom: 0;
-    margin-top: 12px;
+    align-self: end;
+}
+.ob-soap-actions .ob-cetak-btn,
+.ob-soap-actions .ob-rujuk-btn {
+    width: 100%;
 }
 .ob-cetak-btn, .ob-rujuk-btn {
     background: #fff;
@@ -208,7 +213,8 @@
 }
 .ob-diagnosa-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
     gap: 20px;
     width: 100%;
 }
@@ -362,9 +368,65 @@
     resize: vertical;
 }
 
+/* ===== Area Cetak Resep ===== */
+.cetak-resep-only {
+    display: none;
+}
+.resep-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.resep-header h2 {
+    margin: 0;
+    font-size: 16px;
+}
+.resep-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+.resep-info p {
+    margin: 4px 0;
+    font-size: 13px;
+}
+.resep-rp {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 16px 0 8px;
+}
+.resep-isi {
+    min-height: 120px;
+    font-size: 14px;
+    white-space: pre-wrap;
+    padding: 0 8px;
+}
+.resep-footer {
+    margin-top: 40px;
+    text-align: right;
+    font-size: 13px;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .cetak-resep-only,
+    .cetak-resep-only * {
+        visibility: visible;
+    }
+    .cetak-resep-only {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 24px;
+    }
+}
+
 @media (max-width: 900px) {
     .ob-vitals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ob-diagnosa-row { grid-template-columns: 1fr; }
+    .ob-soap-actions { justify-content: flex-end; align-self: stretch; }
     .ob-checklist-grid { grid-template-columns: 1fr; }
     .ob-fields { grid-template-columns: 1fr; }
 }
