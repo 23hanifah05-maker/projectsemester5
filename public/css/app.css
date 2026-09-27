@@ -703,3 +703,38 @@ body {
         margin-left: 0;
     }
 }
+
+
+/* =====================================================
+   PRINT MODE
+   Waktu di-print (Ctrl+P / tombol Cetak), sidebar & header
+   ikut kecetak kalau tidak disembunyikan lewat @media print.
+   Blok ini menyembunyikan bagian yang tidak perlu, dan bikin
+   konten utama full-width tanpa margin sidebar.
+===================================================== */
+
+@media print {
+
+    .sidebar,
+    .header {
+        display: none !important;
+    }
+
+    .main {
+        margin-left: 0 !important;
+    }
+
+    .content {
+        padding: 0 !important;
+    }
+
+    /* Tombol aksi (Cetak, Rujuk, Simpan, Reset, Tab) tidak perlu ikut kecetak */
+    .ob-actions,
+    .ob-cetak-btn,
+    .ob-rujuk-btn,
+    .ob-tabs,
+    .obr-riwayat-actions,
+    .obr-new-btn {
+        display: none !important;
+    }
+}
