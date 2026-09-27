@@ -1,4 +1,3 @@
-```php
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Poli Obgyn - Klinik Utama Merah Putih')
@@ -155,4 +154,3 @@
     }
 </script>
 @endsection
-```
