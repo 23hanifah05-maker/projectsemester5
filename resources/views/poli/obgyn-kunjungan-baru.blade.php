@@ -9,6 +9,29 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}">
+
+    {{-- Tombol Cetak di dalam kolom Plan --}}
+    <style>
+        .ob-plan-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+        .ob-plan-wrap textarea[name="plan"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding-right: 110px; /* ruang untuk tombol Cetak */
+        }
+        .ob-plan-wrap .ob-cetak-plan {
+            position: absolute;
+            top: 50%;
+            right: 14px;
+            bottom: auto;
+            margin: 0;
+            transform: translateY(-50%);
+            white-space: nowrap;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -117,8 +140,8 @@
                 margin-bottom: 15px;
             }
             .cetak-logo {
-                width: 70px;
-                height: 70px;
+                width: 80px;
+                height: 80px;
                 margin-right: 20px;
                 object-fit: contain;
             }
@@ -190,11 +213,11 @@
     <div id="cetak-resep-area" class="cetak-resep-only">
         <!-- Kop Resep -->
         <div class="cetak-header">
-            <img src="{{ asset('logo.png') }}" class="cetak-logo" alt="Logo Klinik">
+            <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
             <div class="cetak-header-text">
                 <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
-                <p>Jl. Contoh Alamat Klinik No. 123, Surabaya</p>
-                <p>Hp: 081234567890, E-mail: klinikmerahputih@example.com</p>
+                <p>Jl. Ronggo Warsito No. 98 A, Ngawi</p>
+                <p>Telp: (0351) 745596</p>
             </div>
         </div>
 
@@ -226,7 +249,7 @@
 
         <!-- Tanda Tangan Dokter -->
         <div class="cetak-footer">
-            <p>Surabaya, <span id="resep-tanggal"></span></p>
+            <p>Ngawi, <span id="resep-tanggal"></span></p>
             <div class="cetak-signature">
                 <p>dr. Poli Obgyn</p>
             </div>
@@ -263,6 +286,14 @@
                     <div class="ob-soap-badge">{{ $kode }}</div>
                     @if ($tipe === 'input')
                         <input type="text" name="{{ $name }}" placeholder="{{ $placeholder }}">
+                    @elseif ($name === 'plan')
+                        {{-- Plan: tombol Cetak berada di dalam kolom --}}
+                        <div class="ob-plan-wrap">
+                            <textarea name="{{ $name }}" rows="1" placeholder="{{ $placeholder }}"></textarea>
+                            <button type="button" class="ob-cetak-btn ob-cetak-plan" onclick="cetakResep()">
+                                <i class="fa-solid fa-print"></i> Cetak
+                            </button>
+                        </div>
                     @else
                         <textarea name="{{ $name }}" rows="1" placeholder="{{ $placeholder }}"></textarea>
                     @endif
@@ -298,9 +329,6 @@
                 @endforeach
 
                 <div class="ob-soap-actions">
-                    <button type="button" class="ob-cetak-btn" onclick="cetakResep()">
-                        <i class="fa-solid fa-print"></i> Cetak
-                    </button>
                     <button type="button" class="ob-rujuk-btn" onclick="rujukKeRadiologi()">
                         <i class="fa-solid fa-right-from-bracket"></i> Rujuk
                     </button>
