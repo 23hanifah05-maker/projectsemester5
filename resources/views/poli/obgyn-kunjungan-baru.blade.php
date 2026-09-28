@@ -92,25 +92,144 @@
     </div>
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print) ===== --}}
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #cetak-resep-area, #cetak-resep-area * {
+                visibility: visible;
+            }
+            #cetak-resep-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+                font-family: Arial, sans-serif;
+                color: #000;
+            }
+            .cetak-header {
+                display: flex;
+                align-items: center;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+            .cetak-logo {
+                width: 70px;
+                height: 70px;
+                margin-right: 20px;
+                object-fit: contain;
+            }
+            .cetak-header-text {
+                flex-grow: 1;
+                text-align: center;
+            }
+            .cetak-header-text h2 {
+                margin: 0;
+                font-size: 18px;
+            }
+            .cetak-header-text p {
+                margin: 3px 0;
+                font-size: 12px;
+            }
+            .cetak-info-table {
+                width: 100%;
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+            .cetak-info-table td {
+                padding: 3px 0;
+                vertical-align: top;
+            }
+            .cetak-divider {
+                border-bottom: 2px solid #000;
+                margin-bottom: 15px;
+            }
+            .cetak-title {
+                text-align: center;
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 20px;
+            }
+            .cetak-body {
+                display: flex;
+                gap: 15px;
+                min-height: 250px;
+                font-size: 14px;
+            }
+            .resep-rp {
+                font-weight: bold;
+                font-size: 18px;
+            }
+            .resep-isi {
+                white-space: pre-wrap;
+                flex-grow: 1;
+                line-height: 1.5;
+            }
+            .cetak-footer {
+                margin-top: 20px;
+                text-align: right;
+                font-size: 12px;
+            }
+            .cetak-footer p {
+                margin: 2px 0;
+            }
+            .cetak-signature {
+                margin-top: 70px; /* Jarak untuk tanda tangan manual */
+            }
+        }
+        @media screen {
+            .cetak-resep-only {
+                display: none;
+            }
+        }
+    </style>
+
     <div id="cetak-resep-area" class="cetak-resep-only">
-        <div class="resep-header">
-            <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
-            <p>Poli Obgyn — Resep Obat</p>
+        <!-- Kop Resep -->
+        <div class="cetak-header">
+            <img src="{{ asset('logo.png') }}" class="cetak-logo" alt="Logo Klinik">
+            <div class="cetak-header-text">
+                <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
+                <p>Jl. Contoh Alamat Klinik No. 123, Surabaya</p>
+                <p>Hp: 081234567890, E-mail: klinikmerahputih@example.com</p>
+            </div>
         </div>
-        <div class="resep-info">
-            <p><strong>No. RM</strong> : {{ $pasien->no_rm ?? '-' }}</p>
-            <p><strong>Nama</strong> : {{ $pasien->nama_pasien ?? '-' }}</p>
-            <p><strong>Umur</strong> : {{ $pasien->umur ?? '-' }}</p>
-            <p><strong>Jenis Kelamin</strong> : {{ $pasien->jenis_kelamin ?? '-' }}</p>
-            <p><strong>Tanggal</strong> : <span id="resep-tanggal"></span></p>
+
+        <!-- Informasi Pasien (menggunakan tabel agar titik dua sejajar) -->
+        <table class="cetak-info-table">
+            <tr>
+                <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>No. R.M.</td><td>:</td><td>{{ $pasien->no_rm ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Umur / JK</td><td>:</td><td>{{ $pasien->umur ?? '-' }} / {{ $pasien->jenis_kelamin ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Pemberi Resep</td><td>:</td><td>Dokter Poli Obgyn</td>
+            </tr>
+        </table>
+
+        <div class="cetak-divider"></div>
+
+        <div class="cetak-title">RESEP</div>
+
+        <!-- Isi Resep -->
+        <div class="cetak-body">
+            <div class="resep-rp">R/</div>
+            <div class="resep-isi" id="resep-isi-plan"></div>
         </div>
-        <hr>
-        <div class="resep-rp">R/</div>
-        <div class="resep-isi" id="resep-isi-plan"></div>
-        <div class="resep-footer">
-            <p>Dokter,</p>
-            <br><br><br>
-            <p>( _______________________ )</p>
+
+        <!-- Tanda Tangan Dokter -->
+        <div class="cetak-footer">
+            <p>Surabaya, <span id="resep-tanggal"></span></p>
+            <div class="cetak-signature">
+                <p>dr. Poli Obgyn</p>
+            </div>
         </div>
     </div>
 
@@ -178,7 +297,6 @@
                     </div>
                 @endforeach
 
-                {{-- Tombol Cetak & Rujuk dipindah ke sini, sejajar dengan baris Diagnosa --}}
                 <div class="ob-soap-actions">
                     <button type="button" class="ob-cetak-btn" onclick="cetakResep()">
                         <i class="fa-solid fa-print"></i> Cetak
