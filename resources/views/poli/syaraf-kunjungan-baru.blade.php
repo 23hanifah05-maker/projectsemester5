@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}">
 
-    {{-- Ukuran kolom SOAP (disamakan dengan Obgyn), tombol Cetak di kolom Plan, dan tombol centang TTV --}}
+    {{-- Ukuran kolom SOAP (disamakan dengan Obgyn), tombol Cetak di kolom Plan, dan checkbox TTV --}}
     <style>
         .kb-soap-box {
             gap: 16px;
@@ -66,13 +66,32 @@
             color: #fff;
         }
 
+        /* Checkbox tanda vital (checkbox asli, bukan simbol) */
         .kb-vital-check {
-            color: #1a9c4a;
-            font-weight: 700;
-            font-size: 16px;
+            appearance: auto;
+            -webkit-appearance: checkbox;
+            width: 22px;
+            height: 22px;
+            margin: 0;
             flex: 0 0 auto;
             cursor: pointer;
-            user-select: none;
+            accent-color: #1a9c4a;
+        }
+
+        /* Checkbox diagnosa (bisa diklik) */
+        .kb-check-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kb-diag-check {
+            appearance: auto;
+            -webkit-appearance: checkbox;
+            width: 24px;
+            height: 24px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #1a9c4a;
         }
     </style>
 @endsection
@@ -138,33 +157,35 @@
             <div class="kb-vitals">
                 <div class="kb-vital-row">
                     <label>TD</label>
-                    <input type="text" placeholder="mis. 120/80">
+                    <input type="text" placeholder="mis. 120/80" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">mmHg</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>HR</label>
-                    <input type="text">
+                    <input type="text" placeholder="mis. 80" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>SpO2</label>
-                    <input type="text">
+                    <input type="text" placeholder="mis. 98" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">%</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>Suhu</label>
-                    <input type="text">
+                    <input type="text" placeholder="mis. 36.5" inputmode="decimal" autocomplete="off">
                     <span class="kb-vital-unit">°C</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>RR</label>
-                    <input type="text">
+                    <input type="text" placeholder="mis. 20" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>Lainnya</label>
-                    <input type="text" placeholder="Catatan lainnya...">
-                    <span class="kb-vital-check" id="btnCentangVital" role="button" title="Masukkan tanda vital ke Objective" onclick="isiObjektifDariVital()">✓</span>
+                    <input type="text" placeholder="Catatan lainnya..." autocomplete="off">
+                    <input type="checkbox" class="kb-vital-check" id="chkVital"
+                           title="Centang untuk memasukkan tanda vital ke Objective"
+                           onchange="toggleVitalKeObjektif(this)">
                 </div>
             </div>
         </div>
@@ -216,7 +237,9 @@
                         <div class="kb-dropdown" id="dropdownPenyakit"></div>
                     </div>
                     <div class="kb-check-box">
-                        <span class="kb-check-icon" id="checkPenyakit" style="display:none;">✓</span>
+                        <input type="checkbox" class="kb-diag-check" id="checkPenyakit"
+                               title="Centang setelah memilih penyakit"
+                               onchange="toggleCekDiagnosa('penyakit', this)">
                     </div>
                 </div>
             </div>
@@ -230,7 +253,9 @@
                         <div class="kb-dropdown" id="dropdownTindakan"></div>
                     </div>
                     <div class="kb-check-box">
-                        <span class="kb-check-icon" id="checkTindakan" style="display:none;">✓</span>
+                        <input type="checkbox" class="kb-diag-check" id="checkTindakan"
+                               title="Centang setelah memilih tindakan"
+                               onchange="toggleCekDiagnosa('tindakan', this)">
                     </div>
                 </div>
             </div>
@@ -265,21 +290,24 @@
         alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
     }
 
+    // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';
 
     function resetForm() {
         document.querySelectorAll('#tab-assesment input[type=text], #tab-assesment textarea').forEach(el => el.value = '');
+        document.getElementById('chkVital').checked = false;
         vitalTerakhir = '';
-        document.getElementById('checkPenyakit').style.display = 'none';
-        document.getElementById('checkTindakan').style.display = 'none';
+        document.getElementById('checkPenyakit').checked = false;
+        document.getElementById('checkTindakan').checked = false;
     }
 
-    function isiObjektifDariVital() {
+    // ===== Tanda vital -> Objective (lewat checkbox) =====
+    function bangunTeksVital() {
         const bagian = [];
 
         document.querySelectorAll('.kb-vitals .kb-vital-row').forEach(function (row) {
             const label = row.querySelector('label').textContent.trim();
-            const nilai = row.querySelector('input').value.trim();
+            const nilai = row.querySelector('input[type=text]').value.trim();
             const unitEl = row.querySelector('.kb-vital-unit');
             const unit = unitEl ? unitEl.textContent.trim() : '';
 
@@ -288,16 +316,22 @@
             }
         });
 
-        if (bagian.length === 0) {
-            alert('Isi minimal satu tanda vital terlebih dahulu.');
-            return;
-        }
+        return bagian.join(', ');
+    }
 
-        const teks = bagian.join(', ');
+    // Hapus hanya bagian yang diisi otomatis; tulisan manual tetap aman
+    function hapusVitalDariObjektif() {
+        const objektif = document.querySelector('textarea[name="objective"]');
+        if (vitalTerakhir && objektif.value.startsWith(vitalTerakhir)) {
+            objektif.value = objektif.value.slice(vitalTerakhir.length).replace(/^\n/, '');
+        }
+        vitalTerakhir = '';
+    }
+
+    function terapkanVitalKeObjektif(teks) {
         const objektif = document.querySelector('textarea[name="objective"]');
 
-        // Jika sebelumnya sudah pernah diisi otomatis, ganti bagian itu saja
-        // agar tulisan manual di bawahnya tidak hilang dan tidak terduplikasi.
+        // Ganti bagian otomatis sebelumnya agar tidak terduplikasi
         let sisa = objektif.value;
         if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
             sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
@@ -305,9 +339,38 @@
 
         objektif.value = sisa ? teks + '\n' + sisa : teks;
         vitalTerakhir = teks;
-
-        objektif.focus();
     }
+
+    function toggleVitalKeObjektif(cb) {
+        if (cb.checked) {
+            const teks = bangunTeksVital();
+
+            if (teks === '') {
+                alert('Isi minimal satu tanda vital terlebih dahulu.');
+                cb.checked = false;
+                return;
+            }
+
+            terapkanVitalKeObjektif(teks);
+            document.querySelector('textarea[name="objective"]').focus();
+        } else {
+            hapusVitalDariObjektif();
+        }
+    }
+
+    // Jika checkbox sudah dicentang lalu nilai vital diubah, Objective ikut diperbarui
+    document.querySelectorAll('.kb-vitals input[type=text]').forEach(function (input) {
+        input.addEventListener('input', function () {
+            if (!document.getElementById('chkVital').checked) return;
+
+            const teks = bangunTeksVital();
+            if (teks === '') {
+                hapusVitalDariObjektif();
+            } else {
+                terapkanVitalKeObjektif(teks);
+            }
+        });
+    });
 
     // ===== Dummy data Penyakit & Tindakan (nanti diganti dari database) =====
     const daftarPenyakit = [
@@ -360,7 +423,24 @@
 
         document.getElementById(inputId).value = item;
         document.getElementById(dropdownId).style.display = 'none';
-        document.getElementById(checkId).style.display = 'inline';
+        document.getElementById(checkId).checked = true; // otomatis tercentang saat memilih
+    }
+
+    // Klik manual pada checkbox diagnosa
+    function toggleCekDiagnosa(jenis, cb) {
+        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
+        const input = document.getElementById(inputId);
+
+        if (cb.checked && input.value.trim() === '') {
+            alert('Pilih ' + jenis + ' terlebih dahulu.');
+            cb.checked = false;
+            return;
+        }
+
+        // Kalau centang dilepas, kosongkan pilihan
+        if (!cb.checked) {
+            input.value = '';
+        }
     }
 
     document.addEventListener('click', function (e) {
