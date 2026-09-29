@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}">
 
-    {{-- Ukuran kolom SOAP dan tombol Cetak di dalam kolom Plan --}}
+    {{-- Ukuran kolom SOAP, tombol Cetak di kolom Plan, dan daftar diagnosa di bawah kolom --}}
     <style>
         .ob-soap-box {
             gap: 16px;
@@ -49,6 +49,29 @@
             margin: 0;
             transform: translateY(-50%);
             white-space: nowrap;
+        }
+
+        /* Diagnosa: tanda centang bisa diklik, hasilnya tampil di bawah kolom */
+        .ob-diagnosa-row {
+            align-items: start;
+        }
+        .ob-diagnosa-row .ob-soap-actions {
+            align-self: start;
+            margin-top: 26px;
+        }
+        .ob-check-box .ob-check-icon {
+            cursor: pointer;
+            user-select: none;
+        }
+        .ob-diagnosa-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .ob-diagnosa-item {
+            font-size: 13px;
+            color: #333;
         }
     </style>
 @endsection
@@ -336,14 +359,18 @@
                                 <input type="text" id="cari{{ $label }}" placeholder="{{ $placeholder }}"
                                        autocomplete="off"
                                        oninput="cariItem('{{ $jenis }}')"
-                                       onfocus="cariItem('{{ $jenis }}')">
+                                       onfocus="cariItem('{{ $jenis }}')"
+                                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('{{ $jenis }}'); }">
                                 <span class="ob-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                                 <div class="ob-dropdown" id="dropdown{{ $label }}"></div>
                             </div>
                             <div class="ob-check-box">
-                                <span class="ob-check-icon" id="check{{ $label }}" style="display:none;">✓</span>
+                                <span class="ob-check-icon" id="check{{ $label }}" role="button"
+                                      title="Tambahkan {{ strtolower($label) }} ke daftar"
+                                      onclick="tambahDiagnosa('{{ $jenis }}')">✓</span>
                             </div>
                         </div>
+                        <div class="ob-diagnosa-list" id="list{{ $label }}"></div>
                     </div>
                 @endforeach
 
@@ -449,8 +476,10 @@
         document.querySelectorAll('#tab-assessment input[type=text], #tab-assessment textarea')
             .forEach(el => el.value = '');
         vitalTerakhir = '';
-        document.getElementById('checkPenyakit').style.display = 'none';
-        document.getElementById('checkTindakan').style.display = 'none';
+        diagnosaTerpilih.penyakit = [];
+        diagnosaTerpilih.tindakan = [];
+        renderDiagnosa('penyakit');
+        renderDiagnosa('tindakan');
         document.getElementById('dropdownPenyakit').style.display = 'none';
         document.getElementById('dropdownTindakan').style.display = 'none';
     }
@@ -538,11 +567,46 @@
     function pilihItem(jenis, item) {
         const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
         const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-        const checkId = jenis === 'penyakit' ? 'checkPenyakit' : 'checkTindakan';
 
         document.getElementById(inputId).value = item;
         document.getElementById(dropdownId).style.display = 'none';
-        document.getElementById(checkId).style.display = 'inline';
+    }
+
+    // ===== Daftar Penyakit & Tindakan yang sudah dicentang (tampil di bawah kolom) =====
+    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
+
+    function tambahDiagnosa(jenis) {
+        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
+        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
+
+        const input = document.getElementById(inputId);
+        const nilai = input.value.trim();
+
+        if (nilai === '') {
+            alert('Pilih atau tuliskan ' + jenis + ' terlebih dahulu.');
+            return;
+        }
+
+        if (!diagnosaTerpilih[jenis].includes(nilai)) {
+            diagnosaTerpilih[jenis].push(nilai);
+        }
+
+        input.value = '';
+        document.getElementById(dropdownId).style.display = 'none';
+        renderDiagnosa(jenis);
+    }
+
+    function renderDiagnosa(jenis) {
+        const listId = jenis === 'penyakit' ? 'listPenyakit' : 'listTindakan';
+        const list = document.getElementById(listId);
+        list.innerHTML = '';
+
+        diagnosaTerpilih[jenis].forEach(function (item) {
+            const baris = document.createElement('div');
+            baris.className = 'ob-diagnosa-item';
+            baris.textContent = item;
+            list.appendChild(baris);
+        });
     }
 
     document.addEventListener('click', function (e) {
