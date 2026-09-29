@@ -10,8 +10,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}">
 
-    {{-- Tombol Cetak di dalam kolom Plan --}}
+    {{-- Ukuran kolom SOAP dan tombol Cetak di dalam kolom Plan --}}
     <style>
+        .ob-soap-box {
+            gap: 16px;
+            padding: 18px 20px;
+        }
+        .ob-soap-box .ob-soap-row {
+            gap: 12px;
+        }
+        .ob-soap-box .ob-soap-badge {
+            width: 34px;
+            height: 34px;
+            font-size: 15px;
+        }
+        .ob-soap-box .ob-soap-row textarea {
+            min-height: 110px;
+            padding: 12px 16px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
         .ob-plan-wrap {
             position: relative;
             flex: 1;
@@ -60,7 +79,7 @@
 
         // Data untuk baris SOAP: [kode, name, tipe, placeholder]
         $soapRows = [
-            ['S', 'subjective', 'input', 'Diagnosis Masuk :'],
+            ['S', 'subjective', 'textarea', 'Diagnosis Masuk :'],
             ['O', 'objective', 'textarea', 'Hasil pemeriksaan objektif...'],
             ['A', 'assessment', 'textarea', 'Assessment / analisa...'],
             ['P', 'plan', 'textarea', 'Rencana/plan...'],
@@ -271,7 +290,7 @@
                 <div class="ob-vital-row">
                     <label>Lainnya</label>
                     <input type="text" name="lainnya" placeholder="Catatan lainnya...">
-                    <span class="ob-check-icon">✓</span>
+                    <span class="ob-check-icon" id="btnCentangVital" role="button" title="Masukkan tanda vital ke Objective" style="cursor:pointer;" onclick="isiObjektifDariVital()">✓</span>
                 </div>
             </div>
         </div>
@@ -289,13 +308,13 @@
                     @elseif ($name === 'plan')
                         {{-- Plan: tombol Cetak berada di dalam kolom --}}
                         <div class="ob-plan-wrap">
-                            <textarea name="{{ $name }}" rows="1" placeholder="{{ $placeholder }}"></textarea>
+                            <textarea name="{{ $name }}" rows="4" placeholder="{{ $placeholder }}"></textarea>
                             <button type="button" class="ob-cetak-btn ob-cetak-plan" onclick="cetakResep()">
                                 <i class="fa-solid fa-print"></i> Cetak
                             </button>
                         </div>
                     @else
-                        <textarea name="{{ $name }}" rows="1" placeholder="{{ $placeholder }}"></textarea>
+                        <textarea name="{{ $name }}" rows="4" placeholder="{{ $placeholder }}"></textarea>
                     @endif
                 </div>
             @endforeach
@@ -424,13 +443,51 @@
         alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end.');
     }
 
+    let vitalTerakhir = '';
+
     function resetForm() {
         document.querySelectorAll('#tab-assessment input[type=text], #tab-assessment textarea')
             .forEach(el => el.value = '');
+        vitalTerakhir = '';
         document.getElementById('checkPenyakit').style.display = 'none';
         document.getElementById('checkTindakan').style.display = 'none';
         document.getElementById('dropdownPenyakit').style.display = 'none';
         document.getElementById('dropdownTindakan').style.display = 'none';
+    }
+
+    function isiObjektifDariVital() {
+        const bagian = [];
+
+        document.querySelectorAll('.ob-vitals-grid .ob-vital-row').forEach(function (row) {
+            const label = row.querySelector('label').textContent.trim();
+            const nilai = row.querySelector('input').value.trim();
+            const unitEl = row.querySelector('.ob-vital-unit');
+            const unit = unitEl ? unitEl.textContent.trim() : '';
+
+            if (nilai !== '') {
+                bagian.push(label + ': ' + nilai + (unit ? ' ' + unit : ''));
+            }
+        });
+
+        if (bagian.length === 0) {
+            alert('Isi minimal satu tanda vital terlebih dahulu.');
+            return;
+        }
+
+        const teks = bagian.join(', ');
+        const objektif = document.querySelector('textarea[name="objective"]');
+
+        // Jika sebelumnya sudah pernah diisi otomatis, ganti bagian itu saja
+        // agar tulisan manual di bawahnya tidak hilang dan tidak terduplikasi.
+        let sisa = objektif.value;
+        if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
+            sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
+        }
+
+        objektif.value = sisa ? teks + '\n' + sisa : teks;
+        vitalTerakhir = teks;
+
+        objektif.focus();
     }
 
     const daftarPenyakit = [

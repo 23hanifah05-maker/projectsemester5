@@ -9,6 +9,72 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}">
+
+    {{-- Ukuran kolom SOAP (disamakan dengan Obgyn), tombol Cetak di kolom Plan, dan tombol centang TTV --}}
+    <style>
+        .kb-soap-box {
+            gap: 16px;
+            padding: 18px 20px;
+        }
+        .kb-soap-box .kb-soap-row {
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .kb-soap-box .kb-soap-badge {
+            width: 34px;
+            height: 34px;
+            font-size: 15px;
+            margin-top: 2px;
+        }
+        .kb-soap-box .kb-soap-row textarea {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 110px;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-family: inherit;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .kb-plan-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+        .kb-plan-wrap textarea[name="plan"] {
+            padding-right: 110px; /* ruang untuk tombol Cetak */
+        }
+        .kb-plan-wrap .kb-cetak-plan {
+            position: absolute;
+            top: 50%;
+            right: 14px;
+            transform: translateY(-50%);
+            margin: 0;
+            white-space: nowrap;
+            background: #fff;
+            color: #b81d24;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 7px 16px;
+            border: 1px solid #b81d24;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .kb-plan-wrap .kb-cetak-plan:hover {
+            background: #b81d24;
+            color: #fff;
+        }
+
+        .kb-vital-check {
+            color: #1a9c4a;
+            font-weight: 700;
+            font-size: 16px;
+            flex: 0 0 auto;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -98,6 +164,7 @@
                 <div class="kb-vital-row">
                     <label>Lainnya</label>
                     <input type="text" placeholder="Catatan lainnya...">
+                    <span class="kb-vital-check" id="btnCentangVital" role="button" title="Masukkan tanda vital ke Objective" onclick="isiObjektifDariVital()">✓</span>
                 </div>
             </div>
         </div>
@@ -109,28 +176,28 @@
         <div class="kb-soap-box">
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">S</div>
-                <input type="text" placeholder="Diagnosis Masuk : ">
+                <textarea name="subjective" rows="4" placeholder="Diagnosis Masuk :"></textarea>
             </div>
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">O</div>
-                <textarea rows="2" placeholder="Hasil pemeriksaan objektif..."></textarea>
+                <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif..."></textarea>
             </div>
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">A</div>
-                <textarea rows="2" placeholder="Assessment / analisa..."></textarea>
+                <textarea name="assessment" rows="4" placeholder="Assessment / analisa..."></textarea>
             </div>
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">P</div>
-                <textarea rows="2" placeholder="Rencana/plan..."></textarea>
-            </div>
-
-            <div class="kb-soap-cetak-wrap">
-                <button type="button" class="kb-cetak-btn" onclick="alert('Cetak belum terhubung ke fitur cetak.')">
-                    <i class="fa-solid fa-print"></i> Cetak
-                </button>
+                {{-- Plan: tombol Cetak berada di dalam kolom --}}
+                <div class="kb-plan-wrap">
+                    <textarea name="plan" rows="4" placeholder="Rencana/plan..."></textarea>
+                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="alert('Cetak belum terhubung ke fitur cetak.')">
+                        <i class="fa-solid fa-print"></i> Cetak
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -198,10 +265,48 @@
         alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
     }
 
+    let vitalTerakhir = '';
+
     function resetForm() {
         document.querySelectorAll('#tab-assesment input[type=text], #tab-assesment textarea').forEach(el => el.value = '');
+        vitalTerakhir = '';
         document.getElementById('checkPenyakit').style.display = 'none';
         document.getElementById('checkTindakan').style.display = 'none';
+    }
+
+    function isiObjektifDariVital() {
+        const bagian = [];
+
+        document.querySelectorAll('.kb-vitals .kb-vital-row').forEach(function (row) {
+            const label = row.querySelector('label').textContent.trim();
+            const nilai = row.querySelector('input').value.trim();
+            const unitEl = row.querySelector('.kb-vital-unit');
+            const unit = unitEl ? unitEl.textContent.trim() : '';
+
+            if (nilai !== '') {
+                bagian.push(label + ': ' + nilai + (unit ? ' ' + unit : ''));
+            }
+        });
+
+        if (bagian.length === 0) {
+            alert('Isi minimal satu tanda vital terlebih dahulu.');
+            return;
+        }
+
+        const teks = bagian.join(', ');
+        const objektif = document.querySelector('textarea[name="objective"]');
+
+        // Jika sebelumnya sudah pernah diisi otomatis, ganti bagian itu saja
+        // agar tulisan manual di bawahnya tidak hilang dan tidak terduplikasi.
+        let sisa = objektif.value;
+        if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
+            sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
+        }
+
+        objektif.value = sisa ? teks + '\n' + sisa : teks;
+        vitalTerakhir = teks;
+
+        objektif.focus();
     }
 
     // ===== Dummy data Penyakit & Tindakan (nanti diganti dari database) =====

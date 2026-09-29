@@ -80,16 +80,24 @@ Route::get('/poli/syaraf', [PoliController::class, 'saraf'])->name('poli.syaraf'
 Route::get('/poli/syaraf/detail/{no_rm}', function ($no_rm) {
     return view('poli.syaraf-detail', ['no_rm' => $no_rm]);
 })->name('poli.syaraf.detail');
+Route::get('/poli/syaraf/detail/{no_rm}/{tanggal}', function ($no_rm, $tanggal) {
+    return view('poli.syaraf-kunjungan-baru', compact('no_rm', 'tanggal'));
+})->name('poli.syaraf.kunjungan.detail');
 Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', function ($no_rm) {
     return view('poli.syaraf-kunjungan-baru', ['no_rm' => $no_rm]);
 })->name('poli.syaraf.kunjungan-baru');
+
 Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])->name('poli.obgyn');
 Route::get('/poli/obgyn/kunjungan/{no_rm}', function ($no_rm) {
     return view('poli.obgyn-kunjungan', ['no_rm' => $no_rm]);
 })->name('poli.obgyn.kunjungan');
+Route::get('/poli/obgyn/kunjungan/{no_rm}/{tanggal}', function ($no_rm, $tanggal) {
+    return view('poli.obgyn-kunjungan-baru', compact('no_rm', 'tanggal'));
+})->name('poli.obgyn.kunjungan.detail');
 Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', function ($no_rm) {
     return view('poli.obgyn-kunjungan-baru', compact('no_rm'));
 })->name('poli.obgyn.kunjungan-baru');
+
 Route::get('/poli/jantung', [PoliController::class, 'jantung'])->name('poli.jantung');
 Route::get('/poli/jiwa', [PoliController::class, 'jiwa'])->name('poli.jiwa');
 

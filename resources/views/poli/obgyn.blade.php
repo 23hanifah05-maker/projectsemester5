@@ -236,12 +236,6 @@
                         <td class="aksi-cell">
                             <button type="button" class="btn-aksi" title="Lihat Detail"
                                     onclick="event.stopPropagation(); bukaDetail(this)">✔</button>
-                            <button type="button" class="btn-aksi" title="Tambah Kunjungan"
-                                    onclick="event.stopPropagation(); bukaKunjungan(this)">+</button>
-                            <button type="button" class="btn-aksi" title="Edit Data"
-                                    onclick="event.stopPropagation(); bukaEdit(this)">✎</button>
-                            <button type="button" class="btn-aksi" title="Hapus Data"
-                                    onclick="event.stopPropagation(); hapusPasien(this)">🗑</button>
                         </td>
                     </tr>
                 @empty
@@ -258,9 +252,6 @@
                             <td></td>
                             <td class="aksi-cell">
                                 <span class="btn-aksi">✔</span>
-                                <span class="btn-aksi">+</span>
-                                <span class="btn-aksi">✎</span>
-                                <span class="btn-aksi">🗑</span>
                             </td>
                         </tr>
                     @endfor

@@ -8,6 +8,16 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/obgyn-riwayat.css') }}">
+    <style>
+        .obr-link {
+            color: #b81d24;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .obr-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -22,8 +32,10 @@
             (object)['no_rm'=>'RM-0010','nama_pasien'=>'Sri Wahyuni','jenis_kelamin'=>'Perempuan','tempat_lahir'=>'Sidoarjo','tgl_lahir'=>'1975-07-18','umur'=>'51 Tahun','no_hp'=>'081298112233'],
         ];
 
+        $noRmAktif = $no_rm ?? request('no_rm');
+
         $pasien = $pasien ?? collect($semuaPasienObgyn)
-            ->firstWhere('no_rm', $no_rm ?? request('no_rm'));
+            ->firstWhere('no_rm', $noRmAktif);
 
         // Dummy riwayat kunjungan — beda per pasien
         $riwayatPerPasienObgyn = [
@@ -52,7 +64,7 @@
             'RM-0010' => [],
         ];
 
-        $riwayat = $riwayatPerPasienObgyn[$no_rm ?? request('no_rm')] ?? [];
+        $riwayat = $riwayatPerPasienObgyn[$noRmAktif] ?? [];
     @endphp
 
     <div class="obr-card">
@@ -116,12 +128,24 @@
 
                 <tbody>
                     @forelse ($riwayat as $i => $item)
+                        @php
+                            $urlDetail = route('poli.obgyn.kunjungan.detail', [
+                                'no_rm'   => $noRmAktif,
+                                'tanggal' => $item['tanggal'],
+                            ]);
+                        @endphp
                         <tr>
                             <td>{{ $i + 1 }}</td>
                             <td>
-                                {{ \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y') }}
+                                <a href="{{ $urlDetail }}" class="obr-link">
+                                    {{ \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y') }}
+                                </a>
                             </td>
-                            <td>{{ $item['poli'] }}</td>
+                            <td>
+                                <a href="{{ $urlDetail }}" class="obr-link">
+                                    {{ $item['poli'] }}
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
@@ -132,25 +156,8 @@
                     @endforelse
                 </tbody>
             </table>
-
-            <div class="obr-riwayat-actions">
-                <a href="{{ route('poli.obgyn.kunjungan-baru', $no_rm ?? request('no_rm')) }}"
-                   class="obr-new-btn"
-                   style="text-decoration:none; display:inline-block;">
-                    + Kunjungan Baru
-                </a>
-            </div>
-
         </div>
 
     </div>
 
-@endsection
-
-@section('extra-js')
-<script>
-    function kunjunganBaruObgyn() {
-        alert('Fitur "Kunjungan Baru" untuk pasien ini belum terhubung ke form/database. Beri tahu saya kalau mau dibuatkan modalnya.');
-    }
-</script>
 @endsection
