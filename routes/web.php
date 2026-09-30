@@ -58,19 +58,8 @@ Route::prefix('pendaftaran')->name('pendaftaran.')->group(function () {
 | Poli
 |--------------------------------------------------------------------------
 */
-Route::get('/poli', function () {
-    $daftarPoli = [
-        'jantung' => 'Poli Jantung',
-        'jiwa'    => 'Poli Jiwa',
-        'syaraf'  => 'Poli Syaraf',
-        'obgyn'   => 'Poli Obgyn',
-    ];
-    return view('poli.poli', [
-        'namaPoli'   => 'Poli',
-        'daftarPoli' => $daftarPoli,
-        'poliAktif'  => null,
-    ]);
-})->name('poli');
+// Rute poli utama kini mengambil data dari database melalui PoliController
+Route::get('/poli', [PoliController::class, 'index'])->name('poli');
 
 Route::get('/poli/show/{slug}', function ($slug) {
     return view('poli.' . $slug);
