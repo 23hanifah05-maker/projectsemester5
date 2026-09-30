@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/obgyn-kunjungan-baru.css')) }}">
 
     {{-- Ukuran kolom SOAP, tombol Cetak di kolom Plan, dan daftar diagnosa di bawah kolom --}}
     <style>
@@ -51,17 +51,13 @@
             white-space: nowrap;
         }
 
-        /* Diagnosa: tanda centang bisa diklik, hasilnya tampil di bawah kolom */
+        /* Diagnosa: daftar hasil tampil di bawah kolom */
         .ob-diagnosa-row {
             align-items: start;
         }
         .ob-diagnosa-row .ob-soap-actions {
             align-self: start;
             margin-top: 26px;
-        }
-        .ob-check-box .ob-check-icon {
-            cursor: pointer;
-            user-select: none;
         }
         .ob-diagnosa-list {
             display: flex;
@@ -156,23 +152,42 @@
         </div>
     </div>
 
-    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print) ===== --}}
+    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
     <style>
+        @page {
+            size: A4;
+            margin: 0; /* juga menghilangkan tanggal & URL bawaan browser di kertas */
+        }
+        @media screen {
+            .cetak-resep-only {
+                display: none;
+            }
+        }
         @media print {
-            body * {
-                visibility: hidden;
+            /* Saat mode cetak, semua elemen lain dihilangkan total agar tidak menambah halaman */
+            body.cetak-resep-mode > *:not(#cetak-resep-area) {
+                display: none !important;
             }
-            #cetak-resep-area, #cetak-resep-area * {
-                visibility: visible;
+            html, body.cetak-resep-mode {
+                margin: 0 !important;
+                padding: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
+                background: #fff !important;
             }
-            #cetak-resep-area {
-                position: absolute;
-                left: 0;
-                top: 0;
+            body.cetak-resep-mode #cetak-resep-area {
+                display: block !important;
+                visibility: visible !important;
+                position: static !important;
                 width: 100%;
-                padding: 20px;
+                box-sizing: border-box;
+                padding: 15mm 18mm;
                 font-family: Arial, sans-serif;
                 color: #000;
+                page-break-inside: avoid;
+            }
+            body.cetak-resep-mode #cetak-resep-area * {
+                visibility: visible !important;
             }
             .cetak-header {
                 display: flex;
@@ -227,11 +242,14 @@
             .resep-rp {
                 font-weight: bold;
                 font-size: 18px;
+                margin: 0;
             }
             .resep-isi {
                 white-space: pre-wrap;
                 flex-grow: 1;
                 line-height: 1.5;
+                min-height: 0;
+                padding: 0;
             }
             .cetak-footer {
                 margin-top: 20px;
@@ -243,11 +261,6 @@
             }
             .cetak-signature {
                 margin-top: 70px; /* Jarak untuk tanda tangan manual */
-            }
-        }
-        @media screen {
-            .cetak-resep-only {
-                display: none;
             }
         }
     </style>
@@ -313,7 +326,9 @@
                 <div class="ob-vital-row">
                     <label>Lainnya</label>
                     <input type="text" name="lainnya" placeholder="Catatan lainnya...">
-                    <span class="ob-check-icon" id="btnCentangVital" role="button" title="Masukkan tanda vital ke Objective" style="cursor:pointer;" onclick="isiObjektifDariVital()">✓</span>
+                    <div class="ob-vital-check">
+                        <span class="ob-check-icon" id="btnCentangVital" role="button" title="Masukkan tanda vital ke Objective" onclick="isiObjektifDariVital()">✓</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -451,13 +466,24 @@
             return;
         }
 
+        const area = document.getElementById('cetak-resep-area');
+
         document.getElementById('resep-isi-plan').innerText = planText;
         document.getElementById('resep-tanggal').innerText = new Date().toLocaleDateString('id-ID', {
             day: 'numeric', month: 'long', year: 'numeric'
         });
 
+        // Pindahkan area resep jadi anak langsung <body> agar elemen lain bisa disembunyikan total
+        document.body.appendChild(area);
+        document.body.classList.add('cetak-resep-mode');
+
         window.print();
     }
+
+    // Kembalikan tampilan normal setelah dialog cetak ditutup
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('cetak-resep-mode');
+    });
 
     function rujukKeRadiologi() {
         document.querySelectorAll('.ob-tab').forEach(el => el.classList.remove('active'));
@@ -476,13 +502,27 @@
         document.querySelectorAll('#tab-assessment input[type=text], #tab-assessment textarea')
             .forEach(el => el.value = '');
         vitalTerakhir = '';
+        updateCentangVital();
         diagnosaTerpilih.penyakit = [];
         diagnosaTerpilih.tindakan = [];
         renderDiagnosa('penyakit');
         renderDiagnosa('tindakan');
+        updateCentang('penyakit');
+        updateCentang('tindakan');
         document.getElementById('dropdownPenyakit').style.display = 'none';
         document.getElementById('dropdownTindakan').style.display = 'none';
     }
+
+    // Centang TTV hijau jika minimal satu tanda vital terisi
+    function updateCentangVital() {
+        const adaIsi = Array.from(document.querySelectorAll('.ob-vitals-grid .ob-vital-row input'))
+            .some(el => el.value.trim() !== '');
+        document.getElementById('btnCentangVital').classList.toggle('aktif', adaIsi);
+    }
+
+    document.querySelectorAll('.ob-vitals-grid .ob-vital-row input').forEach(function (el) {
+        el.addEventListener('input', updateCentangVital);
+    });
 
     function isiObjektifDariVital() {
         const bagian = [];
@@ -531,6 +571,14 @@
         'Pemberian Terapi', 'Konsultasi Lanjutan', 'Rujukan Spesialis',
     ];
 
+    // Centang hijau menyala selama kolom terisi, abu-abu jika kosong
+    function updateCentang(jenis) {
+        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
+        const iconId = jenis === 'penyakit' ? 'checkPenyakit' : 'checkTindakan';
+        const terisi = document.getElementById(inputId).value.trim() !== '';
+        document.getElementById(iconId).classList.toggle('aktif', terisi);
+    }
+
     function cariItem(jenis) {
         const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
         const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
@@ -540,6 +588,7 @@
         const dropdown = document.getElementById(dropdownId);
         const keyword = input.value.trim().toLowerCase();
 
+        updateCentang(jenis);
         dropdown.innerHTML = '';
 
         if (keyword === '') {
@@ -570,6 +619,7 @@
 
         document.getElementById(inputId).value = item;
         document.getElementById(dropdownId).style.display = 'none';
+        updateCentang(jenis);
     }
 
     // ===== Daftar Penyakit & Tindakan yang sudah dicentang (tampil di bawah kolom) =====
@@ -593,6 +643,7 @@
 
         input.value = '';
         document.getElementById(dropdownId).style.display = 'none';
+        updateCentang(jenis);
         renderDiagnosa(jenis);
     }
 

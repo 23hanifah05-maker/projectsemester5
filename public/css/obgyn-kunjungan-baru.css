@@ -121,6 +121,41 @@
     flex: 0 0 auto;
 }
 
+/* Kotak centang Vital Signs: kosong = abu-abu, ada tanda vital terisi = hijau */
+.ob-vitals-grid .ob-vital-row .ob-vital-check {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+}
+.ob-vitals-grid .ob-vital-row .ob-vital-check .ob-check-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #555;
+    border-radius: 4px;
+    background: #fff;
+    color: transparent;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+}
+.ob-vitals-grid .ob-vital-row .ob-vital-check .ob-check-icon.aktif {
+    background: #1e9e4a;
+    border-color: #1e9e4a;
+    color: #fff;
+}
+
 .ob-divider {
     border: none;
     border-top: 1px solid #ddd;
@@ -277,7 +312,40 @@
 .ob-dropdown-item:hover { background: #f5f5f5; }
 .ob-dropdown-empty { color: #999; cursor: default; }
 .ob-dropdown-empty:hover { background: none; }
-.ob-check-box { flex: 0 0 auto; width: 20px; text-align: center; }
+
+/* Kotak centang Penyakit/Tindakan: kosong = abu-abu, aktif = hijau */
+.ob-check-box {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+}
+.ob-check-box .ob-check-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #555;
+    border-radius: 4px;
+    background: #fff;
+    color: transparent;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+}
+.ob-check-box .ob-check-icon.aktif {
+    background: #1e9e4a;
+    border-color: #1e9e4a;
+    color: #fff;
+}
 
 /* ===== Action buttons (Simpan / Reset) ===== */
 .ob-actions {
@@ -422,7 +490,7 @@
         top: 0;
         left: 0;
         width: 100%;
-        padding: 24px; 
+        padding: 24px;
     }
 }
 

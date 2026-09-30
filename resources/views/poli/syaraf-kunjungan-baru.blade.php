@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}">
 
-    {{-- Ukuran kolom SOAP (disamakan dengan Obgyn), tombol Cetak di kolom Plan, dan checkbox TTV --}}
+    {{-- Ukuran kolom SOAP (disamakan dengan Obgyn), tombol Cetak di kolom Plan, checkbox TTV, dan daftar diagnosa --}}
     <style>
         .kb-soap-box {
             gap: 16px;
@@ -78,20 +78,168 @@
             accent-color: #1a9c4a;
         }
 
-        /* Checkbox diagnosa (bisa diklik) */
-        .kb-check-box {
+        /* Diagnosa: baris rata atas supaya daftar di bawah kolom tidak menggeser kolom lain */
+        .kb-diagnosa-row {
+            align-items: flex-start;
+        }
+
+        /* Kotak centang Penyakit/Tindakan: kosong = abu-abu, terisi = hijau */
+        .kb-diagnosa-row .kb-check-box {
+            flex: 0 0 auto;
+            width: 40px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
         }
-        .kb-diag-check {
-            appearance: auto;
-            -webkit-appearance: checkbox;
-            width: 24px;
-            height: 24px;
-            margin: 0;
+        .kb-diagnosa-row .kb-check-box .kb-check-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #555;
+            border-radius: 4px;
+            background: #fff;
+            color: transparent;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1;
             cursor: pointer;
-            accent-color: #1a9c4a;
+            user-select: none;
+        }
+        .kb-diagnosa-row .kb-check-box .kb-check-icon.aktif {
+            background: #1e9e4a;
+            border-color: #1e9e4a;
+            color: #fff;
+        }
+
+        /* Daftar hasil yang muncul di bawah kolom */
+        .kb-diagnosa-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .kb-diagnosa-item {
+            font-size: 13px;
+            color: #333;
+        }
+    </style>
+
+    {{-- Area cetak resep (sama dengan Obgyn, hasil 1 lembar) --}}
+    <style>
+        @page {
+            size: A4;
+            margin: 0; /* juga menghilangkan tanggal & URL bawaan browser di kertas */
+        }
+        @media screen {
+            .cetak-resep-only {
+                display: none;
+            }
+        }
+        @media print {
+            /* Saat mode cetak, semua elemen lain dihilangkan total agar tidak menambah halaman */
+            body.cetak-resep-mode > *:not(#cetak-resep-area) {
+                display: none !important;
+            }
+            html, body.cetak-resep-mode {
+                margin: 0 !important;
+                padding: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
+                background: #fff !important;
+            }
+            body.cetak-resep-mode #cetak-resep-area {
+                display: block !important;
+                visibility: visible !important;
+                position: static !important;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 15mm 18mm;
+                font-family: Arial, sans-serif;
+                color: #000;
+                page-break-inside: avoid;
+            }
+            body.cetak-resep-mode #cetak-resep-area * {
+                visibility: visible !important;
+            }
+            .cetak-header {
+                display: flex;
+                align-items: center;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+            .cetak-logo {
+                width: 80px;
+                height: 80px;
+                margin-right: 20px;
+                object-fit: contain;
+            }
+            .cetak-header-text {
+                flex-grow: 1;
+                text-align: center;
+            }
+            .cetak-header-text h2 {
+                margin: 0;
+                font-size: 18px;
+            }
+            .cetak-header-text p {
+                margin: 3px 0;
+                font-size: 12px;
+            }
+            .cetak-info-table {
+                width: 100%;
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+            .cetak-info-table td {
+                padding: 3px 0;
+                vertical-align: top;
+            }
+            .cetak-divider {
+                border-bottom: 2px solid #000;
+                margin-bottom: 15px;
+            }
+            .cetak-title {
+                text-align: center;
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 20px;
+            }
+            .cetak-body {
+                display: flex;
+                gap: 15px;
+                min-height: 250px;
+                font-size: 14px;
+            }
+            .resep-rp {
+                font-weight: bold;
+                font-size: 18px;
+                margin: 0;
+            }
+            .resep-isi {
+                white-space: pre-wrap;
+                flex-grow: 1;
+                line-height: 1.5;
+                min-height: 0;
+                padding: 0;
+            }
+            .cetak-footer {
+                margin-top: 20px;
+                text-align: right;
+                font-size: 12px;
+            }
+            .cetak-footer p {
+                margin: 2px 0;
+            }
+            .cetak-signature {
+                margin-top: 70px; /* Jarak untuk tanda tangan manual */
+            }
         }
     </style>
 @endsection
@@ -148,6 +296,53 @@
     <div class="kb-tabs">
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assesment</div>
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
+    </div>
+
+    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
+    <div id="cetak-resep-area" class="cetak-resep-only">
+        <!-- Kop Resep -->
+        <div class="cetak-header">
+            <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
+            <div class="cetak-header-text">
+                <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
+                <p>Jl. Ronggo Warsito No. 98 A, Ngawi</p>
+                <p>Telp: (0351) 745596</p>
+            </div>
+        </div>
+
+        <!-- Informasi Pasien (menggunakan tabel agar titik dua sejajar) -->
+        <table class="cetak-info-table">
+            <tr>
+                <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>No. R.M.</td><td>:</td><td>{{ $pasien->no_rm ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Umur / JK</td><td>:</td><td>{{ $pasien->umur ?? '-' }} / {{ $pasien->jenis_kelamin ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Pemberi Resep</td><td>:</td><td>Dokter Poli Syaraf</td>
+            </tr>
+        </table>
+
+        <div class="cetak-divider"></div>
+
+        <div class="cetak-title">RESEP</div>
+
+        <!-- Isi Resep -->
+        <div class="cetak-body">
+            <div class="resep-rp">R/</div>
+            <div class="resep-isi" id="resep-isi-plan"></div>
+        </div>
+
+        <!-- Tanda Tangan Dokter -->
+        <div class="cetak-footer">
+            <p>Ngawi, <span id="resep-tanggal"></span></p>
+            <div class="cetak-signature">
+                <p>dr. Poli Syaraf</p>
+            </div>
+        </div>
     </div>
 
     <div id="tab-assesment" class="kb-tab-content active">
@@ -215,7 +410,7 @@
                 {{-- Plan: tombol Cetak berada di dalam kolom --}}
                 <div class="kb-plan-wrap">
                     <textarea name="plan" rows="4" placeholder="Rencana/plan..."></textarea>
-                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="alert('Cetak belum terhubung ke fitur cetak.')">
+                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
                         <i class="fa-solid fa-print"></i> Cetak
                     </button>
                 </div>
@@ -232,32 +427,36 @@
                 <div class="kb-search-inline">
                     <div class="kb-search-box">
                         <input type="text" id="cariPenyakit" placeholder="Cari penyakit..." autocomplete="off"
-                               oninput="cariItem('penyakit')" onfocus="cariItem('penyakit')">
+                               oninput="cariItem('penyakit')" onfocus="cariItem('penyakit')"
+                               onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('penyakit'); }">
                         <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <div class="kb-dropdown" id="dropdownPenyakit"></div>
                     </div>
                     <div class="kb-check-box">
-                        <input type="checkbox" class="kb-diag-check" id="checkPenyakit"
-                               title="Centang setelah memilih penyakit"
-                               onchange="toggleCekDiagnosa('penyakit', this)">
+                        <span class="kb-check-icon" id="checkPenyakit" role="button"
+                              title="Tambahkan penyakit ke daftar"
+                              onclick="tambahDiagnosa('penyakit')">✓</span>
                     </div>
                 </div>
+                <div class="kb-diagnosa-list" id="listPenyakit"></div>
             </div>
             <div class="kb-search-field">
                 <label>Tindakan</label>
                 <div class="kb-search-inline">
                     <div class="kb-search-box">
                         <input type="text" id="cariTindakan" placeholder="Cari tindakan..." autocomplete="off"
-                               oninput="cariItem('tindakan')" onfocus="cariItem('tindakan')">
+                               oninput="cariItem('tindakan')" onfocus="cariItem('tindakan')"
+                               onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('tindakan'); }">
                         <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <div class="kb-dropdown" id="dropdownTindakan"></div>
                     </div>
                     <div class="kb-check-box">
-                        <input type="checkbox" class="kb-diag-check" id="checkTindakan"
-                               title="Centang setelah memilih tindakan"
-                               onchange="toggleCekDiagnosa('tindakan', this)">
+                        <span class="kb-check-icon" id="checkTindakan" role="button"
+                              title="Tambahkan tindakan ke daftar"
+                              onclick="tambahDiagnosa('tindakan')">✓</span>
                     </div>
                 </div>
+                <div class="kb-diagnosa-list" id="listTindakan"></div>
             </div>
         </div>
 
@@ -286,6 +485,34 @@
         document.getElementById('tab-' + tab).classList.add('active');
     }
 
+    function cetakResep() {
+        const planEl = document.querySelector('textarea[name="plan"]');
+        const planText = planEl ? planEl.value.trim() : '';
+
+        if (planText === '') {
+            alert('Isi bagian Plan (P) di SOAP dulu sebelum mencetak resep.');
+            return;
+        }
+
+        const area = document.getElementById('cetak-resep-area');
+
+        document.getElementById('resep-isi-plan').innerText = planText;
+        document.getElementById('resep-tanggal').innerText = new Date().toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        // Pindahkan area resep jadi anak langsung <body> agar elemen lain bisa disembunyikan total
+        document.body.appendChild(area);
+        document.body.classList.add('cetak-resep-mode');
+
+        window.print();
+    }
+
+    // Kembalikan tampilan normal setelah dialog cetak ditutup
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('cetak-resep-mode');
+    });
+
     function simpanKunjunganBaru() {
         alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
     }
@@ -297,8 +524,15 @@
         document.querySelectorAll('#tab-assesment input[type=text], #tab-assesment textarea').forEach(el => el.value = '');
         document.getElementById('chkVital').checked = false;
         vitalTerakhir = '';
-        document.getElementById('checkPenyakit').checked = false;
-        document.getElementById('checkTindakan').checked = false;
+
+        diagnosaTerpilih.penyakit = [];
+        diagnosaTerpilih.tindakan = [];
+        renderDiagnosa('penyakit');
+        renderDiagnosa('tindakan');
+        updateCentang('penyakit');
+        updateCentang('tindakan');
+        document.getElementById('dropdownPenyakit').style.display = 'none';
+        document.getElementById('dropdownTindakan').style.display = 'none';
     }
 
     // ===== Tanda vital -> Objective (lewat checkbox) =====
@@ -383,6 +617,14 @@
         'Fisioterapi Syaraf', 'Terapi Injeksi', 'Konsultasi Lanjutan', 'Rawat Inap', 'Rujukan Spesialis',
     ];
 
+    // Centang hijau menyala selama kolom terisi, abu-abu jika kosong
+    function updateCentang(jenis) {
+        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
+        const iconId  = jenis === 'penyakit' ? 'checkPenyakit' : 'checkTindakan';
+        const terisi  = document.getElementById(inputId).value.trim() !== '';
+        document.getElementById(iconId).classList.toggle('aktif', terisi);
+    }
+
     function cariItem(jenis) {
         const inputId    = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
         const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
@@ -392,6 +634,7 @@
         const dropdown = document.getElementById(dropdownId);
         const keyword = input.value.trim().toLowerCase();
 
+        updateCentang(jenis);
         dropdown.innerHTML = '';
 
         if (keyword === '') {
@@ -419,28 +662,48 @@
     function pilihItem(jenis, item) {
         const inputId    = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
         const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-        const checkId    = jenis === 'penyakit' ? 'checkPenyakit' : 'checkTindakan';
 
         document.getElementById(inputId).value = item;
         document.getElementById(dropdownId).style.display = 'none';
-        document.getElementById(checkId).checked = true; // otomatis tercentang saat memilih
+        updateCentang(jenis);
     }
 
-    // Klik manual pada checkbox diagnosa
-    function toggleCekDiagnosa(jenis, cb) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const input = document.getElementById(inputId);
+    // ===== Daftar Penyakit & Tindakan yang sudah dicentang (tampil di bawah kolom) =====
+    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
 
-        if (cb.checked && input.value.trim() === '') {
-            alert('Pilih ' + jenis + ' terlebih dahulu.');
-            cb.checked = false;
+    function tambahDiagnosa(jenis) {
+        const inputId    = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
+        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
+
+        const input = document.getElementById(inputId);
+        const nilai = input.value.trim();
+
+        if (nilai === '') {
+            alert('Pilih atau tuliskan ' + jenis + ' terlebih dahulu.');
             return;
         }
 
-        // Kalau centang dilepas, kosongkan pilihan
-        if (!cb.checked) {
-            input.value = '';
+        if (!diagnosaTerpilih[jenis].includes(nilai)) {
+            diagnosaTerpilih[jenis].push(nilai);
         }
+
+        input.value = '';
+        document.getElementById(dropdownId).style.display = 'none';
+        updateCentang(jenis);
+        renderDiagnosa(jenis);
+    }
+
+    function renderDiagnosa(jenis) {
+        const listId = jenis === 'penyakit' ? 'listPenyakit' : 'listTindakan';
+        const list = document.getElementById(listId);
+        list.innerHTML = '';
+
+        diagnosaTerpilih[jenis].forEach(function (item) {
+            const baris = document.createElement('div');
+            baris.className = 'kb-diagnosa-item';
+            baris.textContent = item;
+            list.appendChild(baris);
+        });
     }
 
     document.addEventListener('click', function (e) {
