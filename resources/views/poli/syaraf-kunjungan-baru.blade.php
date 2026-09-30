@@ -10,11 +10,153 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}">
 
-    {{-- Ukuran kolom SOAP (disamakan dengan Obgyn), tombol Cetak di kolom Plan, checkbox TTV, dan daftar diagnosa --}}
+    {{-- Kotak Assesment: Data Pasien, Tanda Vital, SOAP, Diagnosa (dirapikan) --}}
     <style>
+        :root {
+            --kb-merah: #b81d24;
+            --kb-hijau: #1e9e4a;
+            --kb-garis: #d9dce1;
+            --kb-teks-samar: #8a8f98;
+        }
+
+        /* ===== Data Pasien: 2 kolom sama lebar, label & isi sejajar ===== */
+        .kb-card .kb-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 40px;
+        }
+        .kb-card .kb-fields .kb-field {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+        }
+        .kb-card .kb-fields .kb-label {
+            font-weight: 600;
+        }
+        .kb-card .kb-fields .kb-value {
+            display: flex;
+            align-items: center;
+            min-height: 42px;
+            box-sizing: border-box;
+            padding: 0 14px;
+            border: 1px solid var(--kb-garis);
+            border-radius: 6px;
+            background: #fff;
+            width: 100%;
+        }
+        @media (max-width: 900px) {
+            .kb-card .kb-fields { grid-template-columns: 1fr; }
+        }
+
+        /* ===== Kotak Tanda Vital ===== */
+        .kb-vitals-box {
+            padding: 20px 24px;
+            border: 1px solid var(--kb-garis);
+            border-radius: 10px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        .kb-vitals-box .kb-vitals {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px 36px;
+            align-items: center;
+        }
+        .kb-vitals .kb-vital-row {
+            display: grid;
+            grid-template-columns: 56px minmax(0, 1fr) 64px; /* label | input | satuan */
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .kb-vitals .kb-vital-row label {
+            font-weight: 600;
+            margin: 0;
+        }
+        .kb-vitals .kb-vital-row input[type=text] {
+            width: 100%;
+            height: 40px;
+            box-sizing: border-box;
+            padding: 0 12px;
+            font-size: 15px;
+            font-family: inherit;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .kb-vitals .kb-vital-row input[type=text]:focus {
+            outline: none;
+            border-color: var(--kb-merah);
+            box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+        }
+        .kb-vitals .kb-vital-unit {
+            color: var(--kb-teks-samar);
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        @media (max-width: 1000px) {
+            .kb-vitals-box .kb-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 640px) {
+            .kb-vitals-box .kb-vitals { grid-template-columns: 1fr; }
+        }
+
+        /* Checkbox Lainnya: sama dengan kotak centang Penyakit/Tindakan */
+        .kb-vital-row .kb-check-box {
+            justify-self: start;
+            flex: 0 0 auto;
+            width: 40px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+        }
+        .kb-vital-row .kb-vital-check {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #555;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+        }
+        .kb-vital-row .kb-vital-check::after {
+            content: "✓";
+            color: transparent;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .kb-vital-row .kb-vital-check:checked {
+            background: var(--kb-hijau);
+            border-color: var(--kb-hijau);
+        }
+        .kb-vital-row .kb-vital-check:checked::after {
+            color: #fff;
+        }
+        .kb-vital-row .kb-vital-check:focus-visible {
+            outline: 2px solid var(--kb-merah);
+            outline-offset: 2px;
+        }
+
+        /* ===== Kotak SOAP ===== */
         .kb-soap-box {
             gap: 16px;
-            padding: 18px 20px;
+            padding: 20px 24px;
+            border: 1px solid var(--kb-garis);
+            border-radius: 10px;
+            background: #fff;
+            box-sizing: border-box;
         }
         .kb-soap-box .kb-soap-row {
             gap: 12px;
@@ -25,6 +167,7 @@
             height: 34px;
             font-size: 15px;
             margin-top: 2px;
+            flex: 0 0 auto;
         }
         .kb-soap-box .kb-soap-row textarea {
             width: 100%;
@@ -35,6 +178,13 @@
             font-family: inherit;
             line-height: 1.5;
             resize: vertical;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .kb-soap-box .kb-soap-row textarea:focus {
+            outline: none;
+            border-color: var(--kb-merah);
+            box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
         }
 
         .kb-plan-wrap {
@@ -53,37 +203,23 @@
             margin: 0;
             white-space: nowrap;
             background: #fff;
-            color: #b81d24;
+            color: var(--kb-merah);
             font-weight: 600;
             font-size: 13px;
             padding: 7px 16px;
-            border: 1px solid #b81d24;
+            border: 1px solid var(--kb-merah);
             border-radius: 5px;
             cursor: pointer;
         }
         .kb-plan-wrap .kb-cetak-plan:hover {
-            background: #b81d24;
+            background: var(--kb-merah);
             color: #fff;
         }
 
-        /* Checkbox tanda vital (checkbox asli, bukan simbol) */
-        .kb-vital-check {
-            appearance: auto;
-            -webkit-appearance: checkbox;
-            width: 22px;
-            height: 22px;
-            margin: 0;
-            flex: 0 0 auto;
-            cursor: pointer;
-            accent-color: #1a9c4a;
-        }
-
-        /* Diagnosa: baris rata atas supaya daftar di bawah kolom tidak menggeser kolom lain */
+        /* ===== Diagnosa ===== */
         .kb-diagnosa-row {
             align-items: flex-start;
         }
-
-        /* Kotak centang Penyakit/Tindakan: kosong = abu-abu, terisi = hijau */
         .kb-diagnosa-row .kb-check-box {
             flex: 0 0 auto;
             width: 40px;
@@ -112,25 +248,55 @@
             user-select: none;
         }
         .kb-diagnosa-row .kb-check-box .kb-check-icon.aktif {
-            background: #1e9e4a;
-            border-color: #1e9e4a;
+            background: var(--kb-hijau);
+            border-color: var(--kb-hijau);
             color: #fff;
         }
 
-        /* Daftar hasil yang muncul di bawah kolom */
+        /* Daftar penyakit/tindakan yang sudah dicentang */
         .kb-diagnosa-list {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-top: 8px;
+            gap: 6px;
+            margin-top: 10px;
         }
         .kb-diagnosa-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 12px;
             font-size: 13px;
             color: #333;
+            background: #fdecea;
+            border: 1px solid #f3c2bd;
+            border-radius: 8px;
         }
+        .kb-diagnosa-aksi {
+            display: flex;
+            gap: 4px;
+            flex: 0 0 auto;
+        }
+        .kb-diagnosa-aksi button {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .kb-aksi-ganti { color: #0d6efd; }
+        .kb-aksi-hapus { color: var(--kb-merah); }
+        .kb-aksi-ganti:hover { background: rgba(13, 110, 253, 0.12); }
+        .kb-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
     </style>
 
-    {{-- Area cetak resep (sama dengan Obgyn, hasil 1 lembar) --}}
+    {{-- Area cetak resep (hasil 1 lembar) --}}
     <style>
         @page {
             size: A4;
@@ -142,7 +308,6 @@
             }
         }
         @media print {
-            /* Saat mode cetak, semua elemen lain dihilangkan total agar tidak menambah halaman */
             body.cetak-resep-mode > *:not(#cetak-resep-area) {
                 display: none !important;
             }
@@ -375,12 +540,14 @@
                     <input type="text" placeholder="mis. 20" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
-                <div class="kb-vital-row">
-                    <label>Lainnya</label>
+                <div class="kb-vital-row kb-vital-lainnya">
+                    <label for="chkVital">Lainnya</label>
                     <input type="text" placeholder="Catatan lainnya..." autocomplete="off">
-                    <input type="checkbox" class="kb-vital-check" id="chkVital"
-                           title="Centang untuk memasukkan tanda vital ke Objective"
-                           onchange="toggleVitalKeObjektif(this)">
+                    <span class="kb-check-box">
+                        <input type="checkbox" class="kb-vital-check" id="chkVital"
+                               title="Centang untuk memasukkan tanda vital ke Objective"
+                               onchange="toggleVitalKeObjektif(this)">
+                    </span>
                 </div>
             </div>
         </div>
@@ -426,8 +593,8 @@
                 <label>Penyakit</label>
                 <div class="kb-search-inline">
                     <div class="kb-search-box">
-                        <input type="text" id="cariPenyakit" placeholder="Cari penyakit..." autocomplete="off"
-                               oninput="cariItem('penyakit')" onfocus="cariItem('penyakit')"
+                        <input type="text" id="cariPenyakit" placeholder="Cari kode / nama penyakit..." autocomplete="off"
+                               oninput="cariItem('penyakit')"
                                onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('penyakit'); }">
                         <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <div class="kb-dropdown" id="dropdownPenyakit"></div>
@@ -444,8 +611,8 @@
                 <label>Tindakan</label>
                 <div class="kb-search-inline">
                     <div class="kb-search-box">
-                        <input type="text" id="cariTindakan" placeholder="Cari tindakan..." autocomplete="off"
-                               oninput="cariItem('tindakan')" onfocus="cariItem('tindakan')"
+                        <input type="text" id="cariTindakan" placeholder="Cari kode / nama tindakan..." autocomplete="off"
+                               oninput="cariItem('tindakan')"
                                onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('tindakan'); }">
                         <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <div class="kb-dropdown" id="dropdownTindakan"></div>
@@ -527,6 +694,8 @@
 
         diagnosaTerpilih.penyakit = [];
         diagnosaTerpilih.tindakan = [];
+        pilihan.penyakit = null;
+        pilihan.tindakan = null;
         renderDiagnosa('penyakit');
         renderDiagnosa('tindakan');
         updateCentang('penyakit');
@@ -606,102 +775,189 @@
         });
     });
 
-    // ===== Dummy data Penyakit & Tindakan (nanti diganti dari database) =====
-    const daftarPenyakit = [
-        'Migrain', 'Vertigo', 'Epilepsi', 'Stroke Iskemik', 'Neuropati Perifer',
-        'Parkinson', "Bell's Palsy", 'Meningitis', 'Trigeminal Neuralgia', 'Tension Type Headache',
-    ];
+    // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
+    const URL_CARI = "{{ url('/cari-kode') }}";
 
-    const daftarTindakan = [
-        'Pemeriksaan EEG', 'Pemeriksaan EMG', 'CT Scan Kepala', 'MRI Otak',
-        'Fisioterapi Syaraf', 'Terapi Injeksi', 'Konsultasi Lanjutan', 'Rawat Inap', 'Rujukan Spesialis',
-    ];
+    const konfig = {
+        penyakit: { input: 'cariPenyakit', dropdown: 'dropdownPenyakit', icon: 'checkPenyakit', list: 'listPenyakit', name: 'penyakit_id[]' },
+        tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
+    };
 
-    // Centang hijau menyala selama kolom terisi, abu-abu jika kosong
+    // Item yang sedang dipilih dari dropdown (belum dicentang)
+    const pilihan = { penyakit: null, tindakan: null };
+    // Daftar yang sudah dicentang: [{id, kode, nama}]
+    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
+
+    const timerCari = {};
+    const urutanCari = { penyakit: 0, tindakan: 0 };
+
+    // Centang hijau hanya menyala kalau ada item yang dipilih dari dropdown
     function updateCentang(jenis) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const iconId  = jenis === 'penyakit' ? 'checkPenyakit' : 'checkTindakan';
-        const terisi  = document.getElementById(inputId).value.trim() !== '';
-        document.getElementById(iconId).classList.toggle('aktif', terisi);
+        document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
     }
 
     function cariItem(jenis) {
-        const inputId    = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-        const daftar     = jenis === 'penyakit' ? daftarPenyakit : daftarTindakan;
+        const k = konfig[jenis];
+        const input = document.getElementById(k.input);
+        const dropdown = document.getElementById(k.dropdown);
+        const keyword = input.value.trim();
 
-        const input = document.getElementById(inputId);
-        const dropdown = document.getElementById(dropdownId);
-        const keyword = input.value.trim().toLowerCase();
-
+        // mengetik lagi = membatalkan pilihan sebelumnya
+        pilihan[jenis] = null;
         updateCentang(jenis);
-        dropdown.innerHTML = '';
 
-        if (keyword === '') {
-            dropdown.style.display = 'none';
+        clearTimeout(timerCari[jenis]);
+
+        if (keyword.length < 2) {
+            tampilPesan(dropdown, keyword === '' ? null : 'Ketik minimal 2 karakter');
             return;
         }
 
-        const hasil = daftar.filter(item => item.toLowerCase().includes(keyword));
+        timerCari[jenis] = setTimeout(async function () {
+            const nomor = ++urutanCari[jenis];
+            try {
+                const res = await fetch(URL_CARI + '/' + jenis + '?q=' + encodeURIComponent(keyword), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if (nomor !== urutanCari[jenis]) return; // abaikan respons lama
+                renderDropdown(jenis, data);
+            } catch (e) {
+                tampilPesan(dropdown, 'Gagal memuat data');
+            }
+        }, 250);
+    }
 
-        if (hasil.length === 0) {
-            dropdown.innerHTML = '<div class="kb-dropdown-item kb-dropdown-empty">Tidak ditemukan</div>';
-        } else {
-            hasil.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'kb-dropdown-item';
-                div.textContent = item;
-                div.onclick = () => pilihItem(jenis, item);
-                dropdown.appendChild(div);
-            });
+    function tampilPesan(dropdown, teks) {
+        dropdown.innerHTML = '';
+        if (teks === null) {
+            dropdown.style.display = 'none';
+            return;
         }
+        const div = document.createElement('div');
+        div.className = 'kb-dropdown-item kb-dropdown-empty';
+        div.textContent = teks;
+        dropdown.appendChild(div);
+        dropdown.style.display = 'block';
+    }
 
+    function renderDropdown(jenis, data) {
+        const dropdown = document.getElementById(konfig[jenis].dropdown);
+        if (!data.length) {
+            tampilPesan(dropdown, 'Tidak ditemukan');
+            return;
+        }
+        dropdown.innerHTML = '';
+        data.forEach(function (item) {
+            const div = document.createElement('div');
+            div.className = 'kb-dropdown-item';
+
+            const kode = document.createElement('b');
+            kode.textContent = item.kode;
+            div.appendChild(kode);
+            div.appendChild(document.createTextNode(' — ' + item.nama));
+
+            div.onclick = function () { pilihItem(jenis, item); };
+            dropdown.appendChild(div);
+        });
         dropdown.style.display = 'block';
     }
 
     function pilihItem(jenis, item) {
-        const inputId    = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-
-        document.getElementById(inputId).value = item;
-        document.getElementById(dropdownId).style.display = 'none';
+        const k = konfig[jenis];
+        pilihan[jenis] = item;
+        document.getElementById(k.input).value = item.kode + ' — ' + item.nama;
+        document.getElementById(k.dropdown).style.display = 'none';
         updateCentang(jenis);
     }
 
-    // ===== Daftar Penyakit & Tindakan yang sudah dicentang (tampil di bawah kolom) =====
-    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
-
+    // ===== Klik ✓ : masukkan ke daftar di bawah kolom =====
     function tambahDiagnosa(jenis) {
-        const inputId    = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
+        const k = konfig[jenis];
+        const item = pilihan[jenis];
 
-        const input = document.getElementById(inputId);
-        const nilai = input.value.trim();
-
-        if (nilai === '') {
-            alert('Pilih atau tuliskan ' + jenis + ' terlebih dahulu.');
+        if (!item) {
+            alert('Pilih ' + jenis + ' dari daftar yang muncul terlebih dahulu.');
             return;
         }
 
-        if (!diagnosaTerpilih[jenis].includes(nilai)) {
-            diagnosaTerpilih[jenis].push(nilai);
+        if (diagnosaTerpilih[jenis].some(d => String(d.id) === String(item.id))) {
+            alert('Item ini sudah ada di daftar.');
+        } else {
+            diagnosaTerpilih[jenis].push(item);
         }
 
-        input.value = '';
-        document.getElementById(dropdownId).style.display = 'none';
+        pilihan[jenis] = null;
+        document.getElementById(k.input).value = '';
+        document.getElementById(k.dropdown).style.display = 'none';
         updateCentang(jenis);
         renderDiagnosa(jenis);
     }
 
+    function hapusDiagnosa(jenis, id) {
+        diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
+        renderDiagnosa(jenis);
+    }
+
+    // Ganti: keluarkan dari daftar, lalu cari ulang memakai namanya
+    function gantiDiagnosa(jenis, id) {
+        const item = diagnosaTerpilih[jenis].find(d => String(d.id) === String(id));
+        if (!item) return;
+
+        hapusDiagnosa(jenis, id);
+
+        const input = document.getElementById(konfig[jenis].input);
+        input.value = item.nama;
+        input.focus();
+        cariItem(jenis);
+    }
+
     function renderDiagnosa(jenis) {
-        const listId = jenis === 'penyakit' ? 'listPenyakit' : 'listTindakan';
-        const list = document.getElementById(listId);
+        const k = konfig[jenis];
+        const list = document.getElementById(k.list);
         list.innerHTML = '';
 
         diagnosaTerpilih[jenis].forEach(function (item) {
             const baris = document.createElement('div');
             baris.className = 'kb-diagnosa-item';
-            baris.textContent = item;
+
+            const teks = document.createElement('span');
+            teks.className = 'kb-diagnosa-text';
+            const kode = document.createElement('b');
+            kode.textContent = item.kode;
+            teks.appendChild(kode);
+            teks.appendChild(document.createTextNode(' — ' + item.nama));
+
+            // dikirim saat Simpan (kalau nanti dibungkus <form>)
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = k.name;
+            hidden.value = item.id;
+
+            const aksi = document.createElement('span');
+            aksi.className = 'kb-diagnosa-aksi';
+
+            const btnGanti = document.createElement('button');
+            btnGanti.type = 'button';
+            btnGanti.className = 'kb-aksi-ganti';
+            btnGanti.title = 'Ganti';
+            btnGanti.setAttribute('aria-label', 'Ganti');
+            btnGanti.innerHTML = '<i class="fa-solid fa-pen"></i>';
+            btnGanti.onclick = function () { gantiDiagnosa(jenis, item.id); };
+
+            const btnHapus = document.createElement('button');
+            btnHapus.type = 'button';
+            btnHapus.className = 'kb-aksi-hapus';
+            btnHapus.title = 'Hapus';
+            btnHapus.setAttribute('aria-label', 'Hapus');
+            btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            btnHapus.onclick = function () { hapusDiagnosa(jenis, item.id); };
+
+            aksi.appendChild(btnGanti);
+            aksi.appendChild(btnHapus);
+            baris.appendChild(teks);
+            baris.appendChild(hidden);
+            baris.appendChild(aksi);
             list.appendChild(baris);
         });
     }

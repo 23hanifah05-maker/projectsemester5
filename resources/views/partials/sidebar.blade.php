@@ -163,6 +163,13 @@
 
     .submenu li a:hover { background: rgba(255, 255, 255, 0.2) !important; color: white !important; }
 
+    .sidebar-menu .submenu li a.active {
+        background: rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+        font-weight: 700;
+        box-shadow: inset 4px 0 0 white !important;
+    }
+
     .sidebar-footer { 
         padding: 15px 20px; 
         flex-shrink: 0;
@@ -195,16 +202,22 @@
                 </a>
             </li>
             <li class="has-dropdown">
-                <a href="#" id="btnPoli" class="{{ request()->routeIs('poli.*') ? 'expanded' : '' }}">
+                @php
+                    $isSyaraf  = request()->routeIs('poli.syaraf*')  || request()->is('*syaraf*');
+                    $isObgyn   = request()->routeIs('poli.obgyn*')   || request()->is('*obgyn*');
+                    $isJantung = request()->routeIs('poli.jantung*') || request()->is('*jantung*');
+                    $isJiwa    = request()->routeIs('poli.jiwa*')    || request()->is('*jiwa*');
+                    $poliOpen  = $isSyaraf || $isObgyn || $isJantung || $isJiwa || request()->routeIs('poli.*');
+                @endphp
+                <a href="#" id="btnPoli" class="{{ $poliOpen ? 'expanded' : '' }}">
                     <div class="left-content"><i class="fa-solid fa-stethoscope icon-main"></i> Poli</div>
                     <i class="fa-solid fa-chevron-down dropdown-icon"></i>
                 </a>
-                <ul class="submenu {{ request()->routeIs('poli.*') ? 'show' : '' }}" id="menuPoli">
-                    <li><a href="{{ route('poli.jantung') }}"><i class="fa-solid fa-heart-pulse"></i> Poli Jantung</a></li>
-                    <li><a href="{{ route('poli.jiwa') }}"><i class="fa-solid fa-head-side-virus"></i> Poli Jiwa</a></li>
-                    <li><a href="{{ route('poli.syaraf') }}"><i class="fa-solid fa-brain"></i> Poli Syaraf</a></li>
-                    <li><a href="{{ route('poli.obgyn') }}"><i class="fa-solid fa-person-dress"></i> Poli Obgyn</a></li>
-                    <li><a href="{{ route('radiologi.index') }}"><i class="fa-solid fa-x-ray"></i> Poli Radiologi</a></li>
+                <ul class="submenu {{ $poliOpen ? 'show' : '' }}" id="menuPoli">
+                    <li><a href="{{ route('poli.syaraf') }}" class="{{ $isSyaraf ? 'active' : '' }}"><i class="fa-solid fa-brain"></i> Poli Syaraf</a></li>
+                    <li><a href="{{ route('poli.obgyn') }}" class="{{ $isObgyn ? 'active' : '' }}"><i class="fa-solid fa-person-dress"></i> Poli Obgyn</a></li>
+                    <li><a href="{{ route('poli.jantung') }}" class="{{ $isJantung ? 'active' : '' }}"><i class="fa-solid fa-heart-pulse"></i> Poli Jantung</a></li>
+                    <li><a href="{{ route('poli.jiwa') }}" class="{{ $isJiwa ? 'active' : '' }}"><i class="fa-solid fa-head-side-virus"></i> Poli Jiwa</a></li>
                 </ul>
             </li>
             <li>

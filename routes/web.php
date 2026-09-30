@@ -6,6 +6,7 @@ use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\PoliController;
 use App\Http\Controllers\RadiologiController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PencarianKodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +90,17 @@ Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', function ($no_rm) {
 
 Route::get('/poli/jantung', [PoliController::class, 'jantung'])->name('poli.jantung');
 Route::get('/poli/jiwa', [PoliController::class, 'jiwa'])->name('poli.jiwa');
+
+/*
+|--------------------------------------------------------------------------
+| Pencarian Kode ICD (Diagnosis ICD-10 & Tindakan ICD-9-CM)
+|--------------------------------------------------------------------------
+| Dipakai oleh kolom Penyakit & Tindakan di halaman kunjungan baru.
+| {jenis} hanya boleh: penyakit | tindakan
+*/
+Route::get('/cari-kode/{jenis}', [PencarianKodeController::class, 'cari'])
+    ->whereIn('jenis', ['penyakit', 'tindakan'])
+    ->name('cari.kode');
 
 /*
 |--------------------------------------------------------------------------
