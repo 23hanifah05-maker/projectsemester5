@@ -290,9 +290,7 @@
             cursor: pointer;
             transition: background .15s;
         }
-        .kb-aksi-ganti { color: #0d6efd; }
         .kb-aksi-hapus { color: var(--kb-merah); }
-        .kb-aksi-ganti:hover { background: rgba(13, 110, 253, 0.12); }
         .kb-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
     </style>
 
@@ -894,22 +892,10 @@
         renderDiagnosa(jenis);
     }
 
+    // ===== Klik ikon hapus : keluarkan item dari daftar =====
     function hapusDiagnosa(jenis, id) {
         diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
         renderDiagnosa(jenis);
-    }
-
-    // Ganti: keluarkan dari daftar, lalu cari ulang memakai namanya
-    function gantiDiagnosa(jenis, id) {
-        const item = diagnosaTerpilih[jenis].find(d => String(d.id) === String(id));
-        if (!item) return;
-
-        hapusDiagnosa(jenis, id);
-
-        const input = document.getElementById(konfig[jenis].input);
-        input.value = item.nama;
-        input.focus();
-        cariItem(jenis);
     }
 
     function renderDiagnosa(jenis) {
@@ -937,14 +923,6 @@
             const aksi = document.createElement('span');
             aksi.className = 'kb-diagnosa-aksi';
 
-            const btnGanti = document.createElement('button');
-            btnGanti.type = 'button';
-            btnGanti.className = 'kb-aksi-ganti';
-            btnGanti.title = 'Ganti';
-            btnGanti.setAttribute('aria-label', 'Ganti');
-            btnGanti.innerHTML = '<i class="fa-solid fa-pen"></i>';
-            btnGanti.onclick = function () { gantiDiagnosa(jenis, item.id); };
-
             const btnHapus = document.createElement('button');
             btnHapus.type = 'button';
             btnHapus.className = 'kb-aksi-hapus';
@@ -953,7 +931,6 @@
             btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
             btnHapus.onclick = function () { hapusDiagnosa(jenis, item.id); };
 
-            aksi.appendChild(btnGanti);
             aksi.appendChild(btnHapus);
             baris.appendChild(teks);
             baris.appendChild(hidden);
