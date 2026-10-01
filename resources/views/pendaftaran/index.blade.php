@@ -13,6 +13,20 @@
 <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
 <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
 
+<style>
+    /* Ikon mata pada tombol Lihat Detail */
+    .btn-aksi svg {
+        width: 20px;
+        height: 20px;
+        stroke: #fff;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vertical-align: middle;
+    }
+</style>
+
 @endsection
 
 
@@ -539,7 +553,10 @@ if ($dari && $sampai) {
                         title="Lihat Detail"
                         onclick="event.stopPropagation(); bukaDetail(this)"
                     >
-                        ✔
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
                     </button>
 
 

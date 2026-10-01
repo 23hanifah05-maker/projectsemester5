@@ -304,6 +304,99 @@
         }
         .kb-aksi-hapus { color: var(--kb-merah); }
         .kb-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
+
+        /* ===== Tab Radiologi ===== */
+        #tab-radiologi .rd-card {
+            padding: 20px 24px;
+            border: 1px solid var(--kb-garis);
+            border-radius: 10px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        #tab-radiologi .rd-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        #tab-radiologi .rd-sub {
+            font-weight: 600;
+            margin: 18px 0 8px;
+        }
+        #tab-radiologi .rd-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 40px;
+        }
+        #tab-radiologi .rd-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        #tab-radiologi .rd-item input[type=checkbox] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--kb-merah);
+        }
+        #tab-radiologi .rd-lainnya input[type=text] {
+            flex: 1;
+            min-width: 0;
+            height: 34px;
+            box-sizing: border-box;
+            padding: 0 10px;
+            font: inherit;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+        #tab-radiologi .rd-lainnya input[type=text]:disabled {
+            background: #f1f1f1;
+            cursor: not-allowed;
+        }
+        #tab-radiologi .rd-lainnya input[type=text]:focus,
+        #tab-radiologi .rd-hasil:focus {
+            outline: none;
+            border-color: var(--kb-merah);
+            box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+        }
+        #tab-radiologi .rd-upload {
+            padding: 24px 16px;
+            text-align: center;
+            color: #666;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+        }
+        #tab-radiologi .rd-upload:hover {
+            border-color: var(--kb-merah);
+        }
+        #tab-radiologi .rd-hint {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--kb-teks-samar);
+        }
+        #tab-radiologi .rd-nama-file {
+            margin-top: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+        #tab-radiologi .rd-hasil {
+            width: 100%;
+            min-height: 110px;
+            box-sizing: border-box;
+            padding: 12px 16px;
+            font: inherit;
+            line-height: 1.5;
+            resize: vertical;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        @media (max-width: 640px) {
+            #tab-radiologi .rd-grid { grid-template-columns: 1fr; }
+        }
     </style>
 
     {{-- Area cetak resep & cetak Clinical Pathway (hasil 1 lembar) --}}
@@ -551,6 +644,7 @@
     <div class="kb-tabs">
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assesment</div>
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
+        <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
     </div>
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
@@ -919,10 +1013,61 @@
         </div>
     </div>
 
+    {{-- ===== TAB RADIOLOGI (isi sama dengan Poli Obgyn) ===== --}}
+    @php
+        $radiologiOptions = ['Foto Thoraks', 'MRI', 'USG Abdomen', 'Rontgen', 'CT Scan'];
+    @endphp
+    <div id="tab-radiologi" class="kb-tab-content">
+        <div class="rd-card">
+            <div class="rd-title">Form Pemeriksaan</div>
+            <div class="rd-sub" style="margin-top:0;">Ceklist Periksa Radiologi</div>
+
+            <div class="rd-grid">
+                @foreach ($radiologiOptions as $opt)
+                    <label class="rd-item">
+                        <input type="checkbox" name="radiologi[]" value="{{ $opt }}"> {{ $opt }}
+                    </label>
+                @endforeach
+                <label class="rd-item rd-lainnya">
+                    <input type="checkbox" id="checkRadiologiLainnya" name="radiologi[]" value="Lainnya"> Lainnya
+                    <input type="text" id="radiologiLainnya" name="radiologi_lainnya" placeholder="(tuliskan)" disabled>
+                </label>
+            </div>
+
+            <div class="rd-sub">Scan Hasil (jika perlu)</div>
+            <div class="rd-upload" onclick="document.getElementById('scanHasil').click()">
+                Klik untuk mengunggah gambar/scan
+                <div class="rd-hint">(format: JPG, PNG, PDF &nbsp; Maks. 10 MB)</div>
+                <div class="rd-nama-file" id="namaFileScan"></div>
+                <input type="file" id="scanHasil" name="scan_hasil" accept=".jpg,.jpeg,.png,.pdf" style="display:none;"
+                       onchange="document.getElementById('namaFileScan').textContent = this.files.length ? this.files[0].name : ''">
+            </div>
+
+            <div class="rd-sub">Hasil Pemeriksaan Radiologi</div>
+            <textarea class="rd-hasil" name="hasil_radiologi" rows="5" placeholder="Masukkan hasil pemeriksaan radiologi di sini"></textarea>
+        </div>
+
+        <div class="kb-actions">
+            <button type="button" class="kb-btn kb-btn-rujuk" onclick="resetRadiologi()">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+            <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+                <i class="fa-solid fa-floppy-disk"></i> Simpan
+            </button>
+        </div>
+    </div>
+
 @endsection
 
 @section('extra-js')
 <script>
+    // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
+    const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+
+    // Kunci penyimpanan status periksa Poli Syaraf (dipakai juga di halaman Daftar Pasien & Pendaftaran)
+    const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
+    const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
+
     function gantiTab(tab, event) {
         document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
@@ -1103,8 +1248,52 @@
         document.body.classList.remove('cetak-cp-mode');
     });
 
+    // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)
     function simpanKunjunganBaru() {
-        alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        try {
+            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
+
+            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA)) || {};
+            status[kunci] = 'selesai';
+            localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
+
+            // Catat waktu selesai pemeriksaan (dipakai untuk mengurutkan di Daftar Pasien)
+            const waktu = JSON.parse(localStorage.getItem(KUNCI_WAKTU_SELESAI)) || {};
+            waktu[kunci] = Date.now();
+            localStorage.setItem(KUNCI_WAKTU_SELESAI, JSON.stringify(waktu));
+        } catch (e) {
+            console.error(e);
+        }
+
+        alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
+
+        // Kembali ke Daftar Pasien supaya perubahan warna langsung terlihat
+        window.location.href = "{{ route('poli.syaraf') }}";
+    }
+
+    // ===== Radiologi: kolom "Lainnya" aktif hanya kalau dicentang =====
+    const checkRadiologiLainnya = document.getElementById('checkRadiologiLainnya');
+    const radiologiLainnya = document.getElementById('radiologiLainnya');
+
+    if (checkRadiologiLainnya) {
+        checkRadiologiLainnya.addEventListener('change', function () {
+            radiologiLainnya.disabled = !this.checked;
+            if (!this.checked) radiologiLainnya.value = '';
+        });
+    }
+
+    function resetRadiologi() {
+        document.querySelectorAll('#tab-radiologi input[type=checkbox]').forEach(el => el.checked = false);
+        radiologiLainnya.value = '';
+        radiologiLainnya.disabled = true;
+        document.getElementById('scanHasil').value = '';
+        document.getElementById('namaFileScan').textContent = '';
+        document.querySelector('#tab-radiologi textarea[name="hasil_radiologi"]').value = '';
     }
 
     function rujukPasien() {
