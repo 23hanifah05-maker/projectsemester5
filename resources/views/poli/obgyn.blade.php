@@ -9,13 +9,12 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <style>
-        .nama-pasien-link {
-            color: #b81d24;
-            font-weight: 600;
-            text-decoration: none;
+        /* Baris pasien bisa diklik */
+        .row-pasien {
+             cursor: pointer;
         }
-        .nama-pasien-link:hover {
-            text-decoration: underline;
+        .row-pasien:hover td {
+             background-color: #fbeaea;
         }
 
         /* ===== Aksi: tombol mata + penanda status periksa ===== */
@@ -261,14 +260,13 @@
             </thead>
             <tbody>
                 @forelse (($pasien ?? []) as $index => $item)
-                    <tr class="row-pasien" data-pasien='@json($item)' title="Klik dua kali untuk melihat detail">
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->no_rm }}</td>
-                        <td>
-                            <a href="{{ route('poli.obgyn.kunjungan', $item->no_rm) }}" class="nama-pasien-link">
-                                {{ $item->nama_pasien }}
-                            </a>
-                        </td>
+                    <tr class="row-pasien" data-pasien='@json($item)'
+                        data-url="{{ route('poli.obgyn.kunjungan', $item->no_rm) }}"
+                        title="Klik untuk melihat riwayat kunjungan">
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $item->no_rm }}</td>
+                    <td>{{ $item->nama_pasien }}</td>
+
                         <td>{{ $item->nik }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
                         <td>{{ $item->jenis_kelamin }}</td>
@@ -727,12 +725,10 @@ document.addEventListener('DOMContentLoaded', function () {
     terapkanStatusPeriksa();
 
     document.querySelectorAll('.row-pasien').forEach(function (row) {
-        row.addEventListener('dblclick', function (event) {
-            // Hindari konflik saat mengklik link nama pasien atau tombol aksi
-            if (event.target.closest('a') || event.target.closest('button')) return;
-            const data = JSON.parse(this.getAttribute('data-pasien'));
-            isiDetail(data);
-            document.getElementById('pasienModal').classList.add('show');
+    row.addEventListener('click', function (event) {
+        // Klik tombol mata (Lihat Detail) tetap membuka modal, bukan pindah halaman
+        if (event.target.closest('button')) return;
+        window.location.href = this.dataset.url;
         });
     });
 
