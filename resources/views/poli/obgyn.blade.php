@@ -17,6 +17,38 @@
         .nama-pasien-link:hover {
             text-decoration: underline;
         }
+
+        /* ===== Aksi: tombol mata + penanda status periksa ===== */
+        .aksi-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-aksi svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            vertical-align: middle;
+        }
+        .badge-periksa {
+            display: inline-block;
+            min-width: 70px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            color: #fff;
+        }
+        .badge-periksa.periksa { background-color: #f4b400; color: #333; } /* kuning = periksa */
+        .badge-periksa.selesai { background-color: #2e9e4f; }              /* hijau = selesai */
+
+        .table-pendaftaran th:last-child { min-width: 170px; }
     </style>
 @endsection
 
@@ -28,6 +60,8 @@
          RM-0002, RM-0004, RM-0006, RM-0008, RM-0010)
          Data dilengkapi penuh (NIK, PJ, dll) agar modal Detail
          dan Edit bisa berfungsi sama seperti di Master Data.
+
+         status_periksa: 'periksa' (kuning) atau 'selesai' (hijau)
     ===================================================== --}}
     @php
         $pasien = $pasien ?? [
@@ -56,6 +90,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'selesai',
                 'pj_nama' => 'Budi Santoso',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -86,6 +121,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'selesai',
                 'pj_nama' => 'Andi Pratama',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -116,6 +152,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Rudi Hartono',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -146,6 +183,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Fajar Ramadhan',
                 'pj_hubungan' => 'Anak',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -176,6 +214,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Agus Setiawan',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -234,8 +273,20 @@
                         <td>{{ $item->alamat }}</td>
                         <td>{{ $item->status }}</td>
                         <td class="aksi-cell">
-                            <button type="button" class="btn-aksi" title="Lihat Detail"
-                                    onclick="event.stopPropagation(); bukaDetail(this)">✔</button>
+                            <div class="aksi-wrap">
+                                <button type="button" class="btn-aksi" title="Lihat Detail"
+                                        onclick="event.stopPropagation(); bukaDetail(this)">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+
+                                @php $sp = $item->status_periksa ?? 'periksa'; @endphp
+                                <span class="badge-periksa {{ $sp }}">
+                                    {{ $sp === 'selesai' ? 'Selesai' : 'Periksa' }}
+                                </span>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -251,7 +302,14 @@
                             <td></td>
                             <td></td>
                             <td class="aksi-cell">
-                                <span class="btn-aksi">✔</span>
+                                <div class="aksi-wrap">
+                                    <span class="btn-aksi">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                     @endfor
