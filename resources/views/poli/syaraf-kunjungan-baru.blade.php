@@ -628,12 +628,12 @@
         </div>
 
         <div class="kb-actions">
-            <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+                <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
+                <i class="fa-solid fa-right-from-bracket"></i> Rujuk
+            </button>
+                <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
                 <i class="fa-solid fa-floppy-disk"></i> Simpan
-            </button>
-            <button type="button" class="kb-btn kb-btn-reset" onclick="resetForm()">
-                <i class="fa-solid fa-rotate-left"></i> Reset
-            </button>
+             </button>
         </div>
     </div>
 
@@ -684,25 +684,13 @@
         alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
     }
 
+    function rujukPasien() {
+    alert('Fitur Rujuk belum tersambung ke database — masih dummy front-end.');
+    }
+
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';
 
-    function resetForm() {
-        document.querySelectorAll('#tab-assesment input[type=text], #tab-assesment textarea').forEach(el => el.value = '');
-        document.getElementById('chkVital').checked = false;
-        vitalTerakhir = '';
-
-        diagnosaTerpilih.penyakit = [];
-        diagnosaTerpilih.tindakan = [];
-        pilihan.penyakit = null;
-        pilihan.tindakan = null;
-        renderDiagnosa('penyakit');
-        renderDiagnosa('tindakan');
-        updateCentang('penyakit');
-        updateCentang('tindakan');
-        document.getElementById('dropdownPenyakit').style.display = 'none';
-        document.getElementById('dropdownTindakan').style.display = 'none';
-    }
 
     // ===== Tanda vital -> Objective (lewat checkbox) =====
     function bangunTeksVital() {
