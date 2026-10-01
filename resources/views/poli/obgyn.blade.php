@@ -17,6 +17,38 @@
         .nama-pasien-link:hover {
             text-decoration: underline;
         }
+
+        /* ===== Aksi: tombol mata + penanda status periksa ===== */
+        .aksi-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-aksi svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            vertical-align: middle;
+        }
+        .badge-periksa {
+            display: inline-block;
+            min-width: 70px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            color: #fff;
+        }
+        .badge-periksa.periksa { background-color: #f4b400; color: #333; } /* kuning = periksa */
+        .badge-periksa.selesai { background-color: #2e9e4f; }              /* hijau = selesai */
+
+        .table-pendaftaran th:last-child { min-width: 170px; }
     </style>
 @endsection
 
@@ -28,6 +60,10 @@
          RM-0002, RM-0004, RM-0006, RM-0008, RM-0010)
          Data dilengkapi penuh (NIK, PJ, dll) agar modal Detail
          dan Edit bisa berfungsi sama seperti di Master Data.
+
+         status_periksa: semua pasien otomatis 'periksa' (kuning) saat
+         masuk dari Pendaftaran. Berubah jadi 'selesai' (hijau) setelah
+         tombol Simpan di halaman kunjungan diklik.
     ===================================================== --}}
     @php
         $pasien = $pasien ?? [
@@ -56,6 +92,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Budi Santoso',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -86,6 +123,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Andi Pratama',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -116,6 +154,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Rudi Hartono',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -146,6 +185,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Fajar Ramadhan',
                 'pj_hubungan' => 'Anak',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -176,6 +216,7 @@
                 'poli' => 'Poli Obgyn',
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
+                'status_periksa' => 'periksa',
                 'pj_nama' => 'Agus Setiawan',
                 'pj_hubungan' => 'Suami',
                 'pj_jenis_kelamin' => 'Laki-laki',
@@ -234,8 +275,20 @@
                         <td>{{ $item->alamat }}</td>
                         <td>{{ $item->status }}</td>
                         <td class="aksi-cell">
-                            <button type="button" class="btn-aksi" title="Lihat Detail"
-                                    onclick="event.stopPropagation(); bukaDetail(this)">✔</button>
+                            <div class="aksi-wrap">
+                                <button type="button" class="btn-aksi" title="Lihat Detail"
+                                        onclick="event.stopPropagation(); bukaDetail(this)">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+
+                                @php $sp = $item->status_periksa ?? 'periksa'; @endphp
+                                <span class="badge-periksa {{ $sp }}">
+                                    {{ $sp === 'selesai' ? 'Selesai' : 'Periksa' }}
+                                </span>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -251,7 +304,14 @@
                             <td></td>
                             <td></td>
                             <td class="aksi-cell">
-                                <span class="btn-aksi">✔</span>
+                                <div class="aksi-wrap">
+                                    <span class="btn-aksi">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                     @endfor
@@ -419,6 +479,80 @@
 ===================================================== --}}
 @section('extra-js')
 <script>
+
+// Kunci penyimpanan status periksa (sama dengan halaman Kunjungan & Pendaftaran)
+const KUNCI_STATUS_PERIKSA = 'obgyn_status_periksa';
+
+function bacaStatusPeriksa() {
+    try {
+        return JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA)) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+// Waktu selesai pemeriksaan per pasien (timestamp), diisi saat Simpan di halaman kunjungan
+const KUNCI_WAKTU_SELESAI = 'obgyn_waktu_selesai';
+
+function bacaWaktuSelesai() {
+    try {
+        return JSON.parse(localStorage.getItem(KUNCI_WAKTU_SELESAI)) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+// Warna & teks badge mengikuti status tersimpan, lalu baris diurutkan:
+// - yang masih "Periksa" (kuning) di atas
+// - yang "Selesai" (hijau) di bawah, urut dari yang paling dulu selesai
+//   sampai yang paling baru selesai (paling baru ada di paling bawah)
+// Belum ada status tersimpan = 'periksa'.
+function terapkanStatusPeriksa() {
+    const tersimpan = bacaStatusPeriksa();
+    const waktu = bacaWaktuSelesai();
+    const rows = Array.from(document.querySelectorAll('.row-pasien'));
+    if (rows.length === 0) return;
+
+    rows.forEach(function (row, i) {
+        // Simpan urutan awal sekali saja, dipakai sebagai pembanding kalau waktunya sama
+        if (row.dataset.urutAwal === undefined) row.dataset.urutAwal = i;
+
+        const badge = row.querySelector('.badge-periksa');
+        let data;
+        try { data = JSON.parse(row.getAttribute('data-pasien')); } catch (e) { return; }
+
+        const kunci = String(data.no_rm).trim().toUpperCase();
+        const status = (tersimpan[kunci] || data.status_periksa || 'periksa') === 'selesai' ? 'selesai' : 'periksa';
+
+        row.dataset.statusPeriksa = status;
+        row.dataset.waktuSelesai = waktu[kunci] || 0;
+
+        if (badge) {
+            badge.classList.remove('periksa', 'selesai');
+            badge.classList.add(status);
+            badge.textContent = status === 'selesai' ? 'Selesai' : 'Periksa';
+        }
+    });
+
+    rows.sort(function (a, b) {
+        const selesaiA = a.dataset.statusPeriksa === 'selesai';
+        const selesaiB = b.dataset.statusPeriksa === 'selesai';
+
+        if (selesaiA !== selesaiB) return selesaiA ? 1 : -1; // periksa di atas
+
+        if (selesaiA) {
+            const selisih = Number(a.dataset.waktuSelesai) - Number(b.dataset.waktuSelesai);
+            if (selisih !== 0) return selisih; // selesai lebih dulu = lebih atas
+        }
+
+        return Number(a.dataset.urutAwal) - Number(b.dataset.urutAwal);
+    });
+
+    const tbody = rows[0].parentNode;
+    rows.forEach(function (row) { tbody.appendChild(row); });
+
+    perbaruiNomor();
+}
 
 function ambilDataBaris(button) {
     const row = button.closest('.row-pasien');
@@ -589,6 +723,9 @@ function perbaruiNomor() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Sesuaikan warna badge (kuning/hijau) dengan status terakhir
+    terapkanStatusPeriksa();
+
     document.querySelectorAll('.row-pasien').forEach(function (row) {
         row.addEventListener('dblclick', function (event) {
             // Hindari konflik saat mengklik link nama pasien atau tombol aksi
@@ -619,6 +756,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// Kalau halaman dibuka lewat tombol Back (dari cache), status tetap diperbarui
+window.addEventListener('pageshow', terapkanStatusPeriksa);
 
 document.getElementById('inputKeyword')?.addEventListener('input', function () {
     const keyword = this.value.trim().toLowerCase();

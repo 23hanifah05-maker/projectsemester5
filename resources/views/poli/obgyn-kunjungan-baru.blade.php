@@ -62,13 +62,41 @@
         .ob-diagnosa-list {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-top: 8px;
+            gap: 6px;
+            margin-top: 10px;
         }
         .ob-diagnosa-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 12px;
             font-size: 13px;
             color: #333;
+            background: #fdecea;
+            border: 1px solid #f3c2bd;
+            border-radius: 8px;
         }
+        .ob-diagnosa-aksi {
+            display: flex;
+            gap: 4px;
+            flex: 0 0 auto;
+        }
+        .ob-diagnosa-aksi button {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .ob-aksi-hapus { color: #b81d24; }
+        .ob-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
     </style>
 @endsection
 
@@ -450,6 +478,12 @@
 
 @section('extra-js')
 <script>
+    // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
+    const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+
+    // Kunci penyimpanan status periksa (dipakai juga di halaman Daftar Pasien & Pendaftaran)
+    const KUNCI_STATUS_PERIKSA = 'obgyn_status_periksa';
+
     function gantiTab(tab, event) {
         document.querySelectorAll('.ob-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.ob-tab-content').forEach(el => el.classList.remove('active'));
@@ -492,8 +526,31 @@
         document.getElementById('tab-radiologi').classList.add('active');
     }
 
+    // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)
     function simpanKunjunganBaru() {
-        alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end.');
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        try {
+            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA)) || {};
+            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
+            status[kunci] = 'selesai';
+            localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
+
+            // Catat waktu selesai pemeriksaan (dipakai untuk mengurutkan di Daftar Pasien)
+            const waktu = JSON.parse(localStorage.getItem('obgyn_waktu_selesai')) || {};
+            waktu[kunci] = Date.now();
+            localStorage.setItem('obgyn_waktu_selesai', JSON.stringify(waktu));
+        } catch (e) {
+            console.error(e);
+        }
+
+        alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
+
+        // Kembali ke Daftar Pasien supaya perubahan warna langsung terlihat
+        window.location.href = "{{ route('poli.obgyn') }}";
     }
 
     let vitalTerakhir = '';
@@ -505,6 +562,8 @@
         updateCentangVital();
         diagnosaTerpilih.penyakit = [];
         diagnosaTerpilih.tindakan = [];
+        pilihan.penyakit = null;
+        pilihan.tindakan = null;
         renderDiagnosa('penyakit');
         renderDiagnosa('tindakan');
         updateCentang('penyakit');
@@ -559,105 +618,175 @@
         objektif.focus();
     }
 
-    const daftarPenyakit = [
-        'Kehamilan Normal', 'Anemia pada Kehamilan', 'Preeklampsia', 'Eklampsia',
-        'Hiperemesis Gravidarum', 'Abortus', 'Kehamilan Ektopik', 'Plasenta Previa',
-        'Solusio Plasenta', 'Infeksi Saluran Kemih pada Kehamilan',
-    ];
+    // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
+    // Memakai route /cari-kode/{penyakit|tindakan} yang sama dengan Poli Syaraf.
+    const URL_CARI = "{{ url('/cari-kode') }}";
 
-    const daftarTindakan = [
-        'Pemeriksaan Kehamilan', 'Pemeriksaan USG', 'Pemeriksaan Laboratorium',
-        'Konsultasi Kehamilan', 'Pemeriksaan Leopold', 'Pemeriksaan Denyut Jantung Janin',
-        'Pemberian Terapi', 'Konsultasi Lanjutan', 'Rujukan Spesialis',
-    ];
+    const konfig = {
+        penyakit: { input: 'cariPenyakit', dropdown: 'dropdownPenyakit', icon: 'checkPenyakit', list: 'listPenyakit', name: 'penyakit_id[]' },
+        tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
+    };
 
-    // Centang hijau menyala selama kolom terisi, abu-abu jika kosong
+    // Item yang sedang dipilih dari dropdown (belum dicentang)
+    const pilihan = { penyakit: null, tindakan: null };
+    // Daftar yang sudah dicentang: [{id, kode, nama}]
+    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
+
+    const timerCari = {};
+    const urutanCari = { penyakit: 0, tindakan: 0 };
+
+    // Centang hijau menyala kalau ada item yang dipilih dari dropdown
     function updateCentang(jenis) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const iconId = jenis === 'penyakit' ? 'checkPenyakit' : 'checkTindakan';
-        const terisi = document.getElementById(inputId).value.trim() !== '';
-        document.getElementById(iconId).classList.toggle('aktif', terisi);
+        document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
     }
 
     function cariItem(jenis) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-        const daftar = jenis === 'penyakit' ? daftarPenyakit : daftarTindakan;
+        const k = konfig[jenis];
+        const input = document.getElementById(k.input);
+        const dropdown = document.getElementById(k.dropdown);
+        const keyword = input.value.trim();
 
-        const input = document.getElementById(inputId);
-        const dropdown = document.getElementById(dropdownId);
-        const keyword = input.value.trim().toLowerCase();
-
+        // Mengetik lagi = membatalkan pilihan sebelumnya
+        // (kecuali teks masih sama dengan item yang dipilih, mis. saat fokus ulang)
+        if (pilihan[jenis] && input.value === pilihan[jenis].kode + ' — ' + pilihan[jenis].nama) {
+            return;
+        }
+        pilihan[jenis] = null;
         updateCentang(jenis);
-        dropdown.innerHTML = '';
 
-        if (keyword === '') {
-            dropdown.style.display = 'none';
+        clearTimeout(timerCari[jenis]);
+
+        if (keyword.length < 2) {
+            tampilPesan(dropdown, keyword === '' ? null : 'Ketik minimal 2 karakter');
             return;
         }
 
-        const hasil = daftar.filter(item => item.toLowerCase().includes(keyword));
+        timerCari[jenis] = setTimeout(async function () {
+            const nomor = ++urutanCari[jenis];
+            try {
+                const res = await fetch(URL_CARI + '/' + jenis + '?q=' + encodeURIComponent(keyword), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if (nomor !== urutanCari[jenis]) return; // abaikan respons lama
+                renderDropdown(jenis, data);
+            } catch (e) {
+                tampilPesan(dropdown, 'Gagal memuat data');
+            }
+        }, 250);
+    }
 
-        if (hasil.length === 0) {
-            dropdown.innerHTML = '<div class="ob-dropdown-item ob-dropdown-empty">Tidak ditemukan</div>';
-        } else {
-            hasil.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'ob-dropdown-item';
-                div.textContent = item;
-                div.onclick = () => pilihItem(jenis, item);
-                dropdown.appendChild(div);
-            });
+    function tampilPesan(dropdown, teks) {
+        dropdown.innerHTML = '';
+        if (teks === null) {
+            dropdown.style.display = 'none';
+            return;
         }
+        const div = document.createElement('div');
+        div.className = 'ob-dropdown-item ob-dropdown-empty';
+        div.textContent = teks;
+        dropdown.appendChild(div);
+        dropdown.style.display = 'block';
+    }
 
+    function renderDropdown(jenis, data) {
+        const dropdown = document.getElementById(konfig[jenis].dropdown);
+        if (!data.length) {
+            tampilPesan(dropdown, 'Tidak ditemukan');
+            return;
+        }
+        dropdown.innerHTML = '';
+        data.forEach(function (item) {
+            const div = document.createElement('div');
+            div.className = 'ob-dropdown-item';
+
+            const kode = document.createElement('b');
+            kode.textContent = item.kode;
+            div.appendChild(kode);
+            div.appendChild(document.createTextNode(' — ' + item.nama));
+
+            div.onclick = function () { pilihItem(jenis, item); };
+            dropdown.appendChild(div);
+        });
         dropdown.style.display = 'block';
     }
 
     function pilihItem(jenis, item) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-
-        document.getElementById(inputId).value = item;
-        document.getElementById(dropdownId).style.display = 'none';
+        const k = konfig[jenis];
+        pilihan[jenis] = item;
+        document.getElementById(k.input).value = item.kode + ' — ' + item.nama;
+        document.getElementById(k.dropdown).style.display = 'none';
         updateCentang(jenis);
     }
 
-    // ===== Daftar Penyakit & Tindakan yang sudah dicentang (tampil di bawah kolom) =====
-    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
-
+    // ===== Klik ✓ : masukkan ke daftar di bawah kolom =====
     function tambahDiagnosa(jenis) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
+        const k = konfig[jenis];
+        const item = pilihan[jenis];
 
-        const input = document.getElementById(inputId);
-        const nilai = input.value.trim();
-
-        if (nilai === '') {
-            alert('Pilih atau tuliskan ' + jenis + ' terlebih dahulu.');
+        if (!item) {
+            alert('Pilih ' + jenis + ' dari daftar yang muncul terlebih dahulu.');
             return;
         }
 
-        if (!diagnosaTerpilih[jenis].includes(nilai)) {
-            diagnosaTerpilih[jenis].push(nilai);
+        if (diagnosaTerpilih[jenis].some(d => String(d.id) === String(item.id))) {
+            alert('Item ini sudah ada di daftar.');
+        } else {
+            diagnosaTerpilih[jenis].push(item);
         }
 
-        input.value = '';
-        document.getElementById(dropdownId).style.display = 'none';
+        pilihan[jenis] = null;
+        document.getElementById(k.input).value = '';
+        document.getElementById(k.dropdown).style.display = 'none';
         updateCentang(jenis);
         renderDiagnosa(jenis);
     }
 
     function renderDiagnosa(jenis) {
-        const listId = jenis === 'penyakit' ? 'listPenyakit' : 'listTindakan';
-        const list = document.getElementById(listId);
+        const k = konfig[jenis];
+        const list = document.getElementById(k.list);
         list.innerHTML = '';
 
         diagnosaTerpilih[jenis].forEach(function (item) {
             const baris = document.createElement('div');
             baris.className = 'ob-diagnosa-item';
-            baris.textContent = item;
+
+            const teks = document.createElement('span');
+            const kode = document.createElement('b');
+            kode.textContent = item.kode;
+            teks.appendChild(kode);
+            teks.appendChild(document.createTextNode(' — ' + item.nama));
+            baris.appendChild(teks);
+
+            // dikirim saat Simpan (kalau nanti dibungkus <form>)
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = k.name;
+            hidden.value = item.id;
+            baris.appendChild(hidden);
+
+            // tombol hapus
+            const aksi = document.createElement('span');
+            aksi.className = 'ob-diagnosa-aksi';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ob-aksi-hapus';
+            btn.title = 'Hapus';
+            btn.setAttribute('aria-label', 'Hapus');
+            btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            btn.onclick = function () { hapusDiagnosa(jenis, item.id); };
+            aksi.appendChild(btn);
+            baris.appendChild(aksi);
+
             list.appendChild(baris);
         });
+    }
+
+    // ===== Klik ikon hapus : keluarkan item dari daftar =====
+    function hapusDiagnosa(jenis, id) {
+        diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
+        renderDiagnosa(jenis);
     }
 
     document.addEventListener('click', function (e) {
