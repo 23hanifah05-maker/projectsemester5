@@ -304,6 +304,16 @@
         }
         .kb-aksi-hapus { color: var(--kb-merah); }
         .kb-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
+
+        /* ===== Tab Radiologi (isi menyusul) ===== */
+        #tab-radiologi .kb-radiologi-kosong {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--kb-teks-samar);
+            border: 1px dashed var(--kb-garis);
+            border-radius: 10px;
+            background: #fff;
+        }
     </style>
 
     {{-- Area cetak resep (hasil 1 lembar) --}}
@@ -489,6 +499,7 @@
     <div class="kb-tabs">
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assesment</div>
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
+        <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
     </div>
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
@@ -782,10 +793,24 @@
         </div>
     </div>
 
+    {{-- ===== TAB RADIOLOGI (isi form menyusul) ===== --}}
+    <div id="tab-radiologi" class="kb-tab-content">
+        <div class="kb-radiologi-kosong">
+            Form Radiologi akan ditambahkan di sini.
+        </div>
+    </div>
+
 @endsection
 
 @section('extra-js')
 <script>
+    // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
+    const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+
+    // Kunci penyimpanan status periksa Poli Syaraf (dipakai juga di halaman Daftar Pasien & Pendaftaran)
+    const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
+    const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
+
     function gantiTab(tab, event) {
         document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
@@ -821,8 +846,32 @@
         document.body.classList.remove('cetak-resep-mode');
     });
 
+    // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)
     function simpanKunjunganBaru() {
-        alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        try {
+            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
+
+            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA)) || {};
+            status[kunci] = 'selesai';
+            localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
+
+            // Catat waktu selesai pemeriksaan (dipakai untuk mengurutkan di Daftar Pasien)
+            const waktu = JSON.parse(localStorage.getItem(KUNCI_WAKTU_SELESAI)) || {};
+            waktu[kunci] = Date.now();
+            localStorage.setItem(KUNCI_WAKTU_SELESAI, JSON.stringify(waktu));
+        } catch (e) {
+            console.error(e);
+        }
+
+        alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
+
+        // Kembali ke Daftar Pasien supaya perubahan warna langsung terlihat
+        window.location.href = "{{ route('poli.syaraf') }}";
     }
 
     function rujukPasien() {
