@@ -642,6 +642,12 @@
 
 @section('extra-js')
 <script>
+    // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
+    const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+
+    // Kunci penyimpanan status periksa (dipakai juga di halaman Daftar Pasien & Pendaftaran)
+    const KUNCI_STATUS_PERIKSA = 'obgyn_status_periksa';
+
     function gantiTab(tab, event) {
         document.querySelectorAll('.ob-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.ob-tab-content').forEach(el => el.classList.remove('active'));
@@ -684,8 +690,31 @@
         document.getElementById('tab-radiologi').classList.add('active');
     }
 
+    // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)
     function simpanKunjunganBaru() {
-        alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end.');
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        try {
+            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA)) || {};
+            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
+            status[kunci] = 'selesai';
+            localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
+
+            // Catat waktu selesai pemeriksaan (dipakai untuk mengurutkan di Daftar Pasien)
+            const waktu = JSON.parse(localStorage.getItem('obgyn_waktu_selesai')) || {};
+            waktu[kunci] = Date.now();
+            localStorage.setItem('obgyn_waktu_selesai', JSON.stringify(waktu));
+        } catch (e) {
+            console.error(e);
+        }
+
+        alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
+
+        // Kembali ke Daftar Pasien supaya perubahan warna langsung terlihat
+        window.location.href = "{{ route('poli.obgyn') }}";
     }
 
     let vitalTerakhir = '';
