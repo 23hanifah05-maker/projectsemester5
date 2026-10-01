@@ -355,22 +355,24 @@
     // di halaman Daftar Pasien Poli Obgyn.
     document.getElementById('formPendaftaran').addEventListener('submit', function () {
         const poli = this.elements['poli'].value;
-        if (poli !== 'obgyn') return;
+        const awalan = { obgyn: 'obgyn', saraf: 'syaraf', jantung: 'jantung', jiwa: 'jiwa' }[poli];
+        if (!awalan) return;
 
         const noRm = (this.elements['no_rm'].value || this.elements['no_rekam_medis'].value || '')
             .trim().toUpperCase();
         if (noRm === '') return;
 
         try {
-            const kunci = 'obgyn_status_periksa';
+            const kunci = awalan + '_status_periksa';
             const status = JSON.parse(localStorage.getItem(kunci)) || {};
             status[noRm] = 'periksa';
             localStorage.setItem(kunci, JSON.stringify(status));
 
             // Daftar ulang = mulai periksa lagi, jadi waktu selesai sebelumnya dihapus
-            const waktu = JSON.parse(localStorage.getItem('obgyn_waktu_selesai')) || {};
+            const kunciWaktu = awalan + '_waktu_selesai';
+            const waktu = JSON.parse(localStorage.getItem(kunciWaktu)) || {};
             delete waktu[noRm];
-            localStorage.setItem('obgyn_waktu_selesai', JSON.stringify(waktu));
+            localStorage.setItem(kunciWaktu, JSON.stringify(waktu));
         } catch (e) {
             console.error(e);
         }
