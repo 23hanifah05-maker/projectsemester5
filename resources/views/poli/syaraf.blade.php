@@ -40,7 +40,7 @@
         .badge-periksa.periksa { background-color: #f4b400; color: #333; } /* kuning = periksa */
         .badge-periksa.selesai { background-color: #2e9e4f; }              /* hijau = selesai */
 
-        .table-pendaftaran th:last-child { min-width: 300px; }
+        .table-pendaftaran th:last-child { min-width: 170px; }
     </style>
 @endsection
 
@@ -276,13 +276,6 @@
                                 <span class="badge-periksa {{ $sp }}">
                                     {{ $sp === 'selesai' ? 'Selesai' : 'Periksa' }}
                                 </span>
-
-                                <button type="button" class="btn-aksi" title="Tambah Kunjungan"
-                                        onclick="event.stopPropagation(); bukaKunjungan(this)">+</button>
-                                <button type="button" class="btn-aksi" title="Edit Data"
-                                        onclick="event.stopPropagation(); bukaEdit(this)">✎</button>
-                                <button type="button" class="btn-aksi" title="Hapus Data"
-                                        onclick="event.stopPropagation(); hapusPasien(this)">🗑</button>
                             </div>
                         </td>
                     </tr>
@@ -306,9 +299,6 @@
                                             <circle cx="12" cy="12" r="3"/>
                                         </svg>
                                     </span>
-                                    <span class="btn-aksi">+</span>
-                                    <span class="btn-aksi">✎</span>
-                                    <span class="btn-aksi">🗑</span>
                                 </div>
                             </td>
                         </tr>
