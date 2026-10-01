@@ -545,12 +545,16 @@
             }
             .cp-print-table td.cp-print-ket,
             .cp-print-table td.cp-print-waktu {
-                white-space: pre-line;
+                white-space: pre;
                 line-height: 1.5;
             }
+            .cp-print-table td.cp-print-ket {
+                white-space: pre-line;
+            }
             .cp-print-table td.cp-print-waktu {
-                width: 10%;
+                width: 18%;
                 text-align: center;
+                font-size: 11px;
             }
             .cp-print-table td.cp-print-tarif {
                 width: 16%;
@@ -586,7 +590,7 @@
         #tab-pathway .cp-table td.cp-dx-label { font-weight: 400; font-size: 12px; color: #444; padding-left: 28px; }
 
         /* Kolom Waktu terisi otomatis */
-        #tab-pathway .cp-table input.cp-waktu { background: #f5f5f5; text-align: center; color: #333; cursor: default; }
+        #tab-pathway .cp-table input.cp-waktu { background: #f5f5f5; text-align: center; color: #333; cursor: default; font-size: 12px; padding: 5px 4px; }
     </style>
 @endsection
 
@@ -891,8 +895,8 @@
                     <thead>
                         <tr>
                             <th style="width:25%;">Aktivitas Pelayanan</th>
-                            <th style="width:45%;">Keterangan</th>
-                            <th style="width:15%;">Waktu</th>
+                            <th style="width:40%;">Keterangan</th>
+                            <th style="width:20%;">Waktu</th>
                             <th style="width:15%;">Tarif</th>
                         </tr>
                     </thead>
@@ -1062,7 +1066,9 @@
 @section('extra-js')
 <script>
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
-    const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+    // Ditulis sebagai string biasa supaya editor tidak menandainya error;
+    // string kosong dianggap null.
+    const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
 
     // Kunci penyimpanan status periksa Poli Syaraf (dipakai juga di halaman Daftar Pasien & Pendaftaran)
     const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
@@ -1111,7 +1117,12 @@
     // ===== Clinical Pathway: Waktu terisi otomatis saat baris diisi =====
     function jamSekarang() {
         const d = new Date();
-        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        const tgl = String(d.getDate()).padStart(2, '0') + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    d.getFullYear();
+        const jam = String(d.getHours()).padStart(2, '0') + ':' +
+                    String(d.getMinutes()).padStart(2, '0');
+        return tgl + ' ' + jam;
     }
 
     function perbaruiWaktuBaris(tr) {
