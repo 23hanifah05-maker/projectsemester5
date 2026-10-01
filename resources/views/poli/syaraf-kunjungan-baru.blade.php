@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}">
 
-    {{-- Kotak Assesment: Data Pasien, Tanda Vital, SOAP, Diagnosa --}}
+    {{-- Kotak Assesment: Data Pasien, Tanda Vital, SOAP, Diagnosa (dirapikan) --}}
     <style>
         :root {
             --kb-merah: #b81d24;
@@ -19,7 +19,7 @@
             --kb-teks-samar: #8a8f98;
         }
 
-        /* ===== Data Pasien ===== */
+        /* ===== Data Pasien: 2 kolom sama lebar, label & isi sejajar ===== */
         .kb-card .kb-fields {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -52,101 +52,74 @@
 
         /* ===== Kotak Tanda Vital: 2 baris x 3 kolom (6 isian) =====
            Ukuran disamakan dengan Poli Obgyn (kotak rapat, isian 34px).
-           9 kolom: [label | isian | satuan] x 3. Label & satuan selebar isinya,
-           sisa lebar dibagi rata ke 3 kolom isian (panjang menyesuaikan layar). */
-        .kb-vitals-box {
-            padding: 12px 14px 12px 18px;
+           Tiap isian = grid sendiri [label | isian | satuan], lebar menyesuaikan layar.
+           Memakai #tab-assesment + !important agar tidak tertimpa syaraf-kunjungan-baru.css */
+        #tab-assesment .kb-vitals-box {
+            padding: 12px 14px 12px 18px !important;
             border: 1px solid var(--kb-garis);
             border-radius: 10px;
             background: #fff;
             box-sizing: border-box;
         }
-        .kb-vitals-box .kb-vitals {
-            display: grid;
-            grid-template-columns:
-                max-content minmax(0, 1fr) max-content
-                max-content minmax(0, 1fr) max-content
-                max-content minmax(0, 1fr) max-content;
-            column-gap: 6px;
-            row-gap: 10px;
-            align-items: center;
+        #tab-assesment .kb-vitals-box .kb-vitals {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            column-gap: 28px !important;
+            row-gap: 10px !important;
+            align-items: center !important;
         }
-        .kb-vitals .kb-vital-row {
-<<<<<<< HEAD
-            display: contents;
-=======
-            display: grid;
-            grid-template-columns: 56px minmax(0, 1fr) 64px;
-            align-items: center;
-            gap: 10px;
-            margin: 0;
->>>>>>> 2f12c5c9ed13830015f622c52813c7b44f086c39
+        #tab-assesment .kb-vitals .kb-vital-row {
+            display: grid !important;
+            grid-template-columns: 70px minmax(0, 1fr) 62px !important;
+            align-items: center !important;
+            column-gap: 8px !important;
+            margin: 0 !important;
+            width: auto !important;
+            min-width: 0 !important;
         }
-        .kb-vitals .kb-vital-row label {
+        #tab-assesment .kb-vitals .kb-vital-row label {
             font-weight: 600;
-            margin: 0;
+            margin: 0 !important;
+            width: auto !important;
             white-space: nowrap;
-            box-sizing: border-box;
-            padding-right: 4px;
         }
-        /* jarak antar kelompok kolom (kolom ke-2 dan ke-3) */
-        .kb-vitals .kb-vital-row:nth-child(3n+2) label,
-        .kb-vitals .kb-vital-row:nth-child(3n) label {
-            padding-left: 14px;
-        }
-        .kb-vitals .kb-vital-row input[type=text] {
-            width: 100%;
-            min-width: 0;
-            height: 34px;
+        #tab-assesment .kb-vitals .kb-vital-row input[type=text] {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            height: 34px !important;
             box-sizing: border-box;
-            padding: 0 10px;
-            font-size: 14px;
+            padding: 0 10px !important;
+            font-size: 14px !important;
             font-family: inherit;
             border: 1px solid #ccc;
             border-radius: 6px;
             background: #fff;
         }
-        .kb-vitals .kb-vital-row input[type=text]:focus {
+        #tab-assesment .kb-vitals .kb-vital-row input[type=text]:focus {
             outline: none;
             border-color: var(--kb-merah);
             box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
         }
-        .kb-vitals .kb-vital-unit {
+        #tab-assesment .kb-vitals .kb-vital-unit {
             color: var(--kb-teks-samar);
             font-size: 13px;
             white-space: nowrap;
-            margin: 0;
+            margin: 0 !important;
         }
-
-<<<<<<< HEAD
-        /* Layar sedang: 2 kelompok kolom */
         @media (max-width: 1000px) {
-            .kb-vitals-box .kb-vitals {
-                grid-template-columns:
-                    max-content minmax(0, 1fr) max-content
-                    max-content minmax(0, 1fr) max-content;
-            }
-            .kb-vitals .kb-vital-row label { padding-left: 0; }
-            .kb-vitals .kb-vital-row:nth-child(even) label { padding-left: 14px; }
+            #tab-assesment .kb-vitals-box .kb-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
         }
-        /* Layar kecil: 1 kelompok kolom */
         @media (max-width: 640px) {
-            .kb-vitals-box .kb-vitals {
-                grid-template-columns: max-content minmax(0, 1fr) max-content;
-            }
-            .kb-vitals .kb-vital-row label,
-            .kb-vitals .kb-vital-row:nth-child(even) label { padding-left: 0; }
+            #tab-assesment .kb-vitals-box .kb-vitals { grid-template-columns: 1fr !important; }
         }
 
         /* Checkbox Alergi: sama dengan kotak centang Penyakit/Tindakan */
-=======
-        /* Checkbox Lainnya */
->>>>>>> 2f12c5c9ed13830015f622c52813c7b44f086c39
-        .kb-vital-row .kb-check-box {
+        #tab-assesment .kb-vital-row .kb-check-box {
             justify-self: start;
             flex: 0 0 auto;
-            width: 34px;
-            height: 34px;
+            width: 34px !important;
+            height: 34px !important;
             box-sizing: border-box;
             display: flex;
             align-items: center;
@@ -182,6 +155,10 @@
         }
         .kb-vital-row .kb-vital-check:checked::after {
             color: #fff;
+        }
+        .kb-vital-row .kb-vital-check:focus-visible {
+            outline: 2px solid var(--kb-merah);
+            outline-offset: 2px;
         }
 
         /* ===== Kotak SOAP ===== */
@@ -228,7 +205,7 @@
             min-width: 0;
         }
         .kb-plan-wrap textarea[name="plan"] {
-            padding-right: 110px;
+            padding-right: 110px; /* ruang untuk tombol Cetak */
         }
         .kb-plan-wrap .kb-cetak-plan {
             position: absolute;
@@ -288,6 +265,7 @@
             color: #fff;
         }
 
+        /* Daftar penyakit/tindakan yang sudah dicentang */
         .kb-diagnosa-list {
             display: flex;
             flex-direction: column;
@@ -328,14 +306,16 @@
         .kb-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
     </style>
 
-    {{-- Area cetak resep --}}
+    {{-- Area cetak resep (hasil 1 lembar) --}}
     <style>
         @page {
             size: A4;
-            margin: 0;
+            margin: 0; /* juga menghilangkan tanggal & URL bawaan browser di kertas */
         }
         @media screen {
-            .cetak-resep-only { display: none; }
+            .cetak-resep-only {
+                display: none;
+            }
         }
         @media print {
             body.cetak-resep-mode > *:not(#cetak-resep-area) {
@@ -379,22 +359,62 @@
                 flex-grow: 1;
                 text-align: center;
             }
-            .cetak-header-text h2 { margin: 0; font-size: 18px; }
-            .cetak-header-text p { margin: 3px 0; font-size: 12px; }
+            .cetak-header-text h2 {
+                margin: 0;
+                font-size: 18px;
+            }
+            .cetak-header-text p {
+                margin: 3px 0;
+                font-size: 12px;
+            }
             .cetak-info-table {
                 width: 100%;
                 font-size: 12px;
                 margin-bottom: 10px;
             }
-            .cetak-info-table td { padding: 3px 0; vertical-align: top; }
-            .cetak-divider { border-bottom: 2px solid #000; margin-bottom: 15px; }
-            .cetak-title { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 20px; }
-            .cetak-body { display: flex; gap: 15px; min-height: 250px; font-size: 14px; }
-            .resep-rp { font-weight: bold; font-size: 18px; margin: 0; }
-            .resep-isi { white-space: pre-wrap; flex-grow: 1; line-height: 1.5; min-height: 0; padding: 0; }
-            .cetak-footer { margin-top: 20px; text-align: right; font-size: 12px; }
-            .cetak-footer p { margin: 2px 0; }
-            .cetak-signature { margin-top: 70px; }
+            .cetak-info-table td {
+                padding: 3px 0;
+                vertical-align: top;
+            }
+            .cetak-divider {
+                border-bottom: 2px solid #000;
+                margin-bottom: 15px;
+            }
+            .cetak-title {
+                text-align: center;
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 20px;
+            }
+            .cetak-body {
+                display: flex;
+                gap: 15px;
+                min-height: 250px;
+                font-size: 14px;
+            }
+            .resep-rp {
+                font-weight: bold;
+                font-size: 18px;
+                margin: 0;
+            }
+            .resep-isi {
+                white-space: pre-wrap;
+                flex-grow: 1;
+                line-height: 1.5;
+                min-height: 0;
+                padding: 0;
+            }
+            .cetak-footer {
+                margin-top: 20px;
+                text-align: right;
+                font-size: 12px;
+            }
+            .cetak-footer p {
+                margin: 2px 0;
+            }
+            .cetak-signature {
+                margin-top: 70px; /* Jarak untuk tanda tangan manual */
+            }
         }
     </style>
 @endsection
@@ -453,8 +473,9 @@
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
     </div>
 
-    {{-- ===== AREA CETAK RESEP ===== --}}
+    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
     <div id="cetak-resep-area" class="cetak-resep-only">
+        <!-- Kop Resep -->
         <div class="cetak-header">
             <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
             <div class="cetak-header-text">
@@ -464,21 +485,33 @@
             </div>
         </div>
 
+        <!-- Informasi Pasien (menggunakan tabel agar titik dua sejajar) -->
         <table class="cetak-info-table">
-            <tr><td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td></tr>
-            <tr><td>No. R.M.</td><td>:</td><td>{{ $pasien->no_rm ?? '-' }}</td></tr>
-            <tr><td>Umur / JK</td><td>:</td><td>{{ $pasien->umur ?? '-' }} / {{ $pasien->jenis_kelamin ?? '-' }}</td></tr>
-            <tr><td>Pemberi Resep</td><td>:</td><td>Dokter Poli Syaraf</td></tr>
+            <tr>
+                <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>No. R.M.</td><td>:</td><td>{{ $pasien->no_rm ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Umur / JK</td><td>:</td><td>{{ $pasien->umur ?? '-' }} / {{ $pasien->jenis_kelamin ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Pemberi Resep</td><td>:</td><td>Dokter Poli Syaraf</td>
+            </tr>
         </table>
 
         <div class="cetak-divider"></div>
+
         <div class="cetak-title">RESEP</div>
 
+        <!-- Isi Resep -->
         <div class="cetak-body">
             <div class="resep-rp">R/</div>
             <div class="resep-isi" id="resep-isi-plan"></div>
         </div>
 
+        <!-- Tanda Tangan Dokter -->
         <div class="cetak-footer">
             <p>Ngawi, <span id="resep-tanggal"></span></p>
             <div class="cetak-signature">
@@ -487,7 +520,6 @@
         </div>
     </div>
 
-    {{-- TAB 1: ASSESMENT --}}
     <div id="tab-assesment" class="kb-tab-content active">
 
         {{-- ===== Kotak Vital Signs ===== --}}
@@ -552,6 +584,7 @@
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">P</div>
+                {{-- Plan: tombol Cetak berada di dalam kolom --}}
                 <div class="kb-plan-wrap">
                     <textarea name="plan" rows="4" placeholder="Rencana/plan..."></textarea>
                     <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
@@ -614,159 +647,8 @@
         </div>
     </div>
 
-    {{-- TAB 2: CLINICAL PATHWAY (Tabel Lengkap yang bisa di-scroll) --}}
     <div id="tab-pathway" class="kb-tab-content">
-        <div class="card shadow-sm border-danger mb-4 rounded-3 overflow-hidden">
-            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                <table class="table table-bordered mb-0 align-middle">
-                    <thead class="text-white text-center" style="background-color: #a31515;">
-                        <tr>
-                            <th style="width: 25%; color: white !important;">Aktivitas Pelayanan</th>
-                            <th style="width: 45%; color: white !important;">Keterangan</th>
-                            <th style="width: 15%; color: white !important;">Waktu</th>
-                            <th style="width: 15%; color: white !important;">Tarif</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Diagnosa -->
-                        <tr>
-                            <td class="fw-bold bg-light">
-                                Diagnosa
-                                <div class="fw-normal small ms-2 text-muted">
-                                    <div class="my-1">Dx Utama</div>
-                                    <div class="my-1">Dx Sekunder</div>
-                                    <div class="my-1">Dx Banding</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                            </td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-
-                        <!-- Asesmen Klinis -->
-                        <tr>
-                            <td class="fw-bold bg-light">Asesmen Klinis</td>
-                            <td><textarea class="form-control form-control-sm" rows="2"></textarea></td>
-                            <td>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                            </td>
-                            <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                        </tr>
-
-                        <!-- Pemeriksaan Fisik -->
-                        <tr>
-                            <td class="fw-bold bg-light">Pemeriksaan Fisik</td>
-                            <td>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Pemeriksaan tanda vital</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Inspeksi postur tulang belakang dan gerakan aktif volumna vertebralis</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Pemeriksaan motorik, reflek, dan sensorik dermatom</label></div>
-                                <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                            </td>
-                            <td>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                            </td>
-                            <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                        </tr>
-
-                        <!-- Pemeriksaan Penunjang -->
-                        <tr>
-                            <td class="fw-bold bg-light">Pemeriksaan Penunjang</td>
-                            <td>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Magnetic Resonance Imaging (MRI)</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Computerized Tomography (CT Scan)</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Foto polos lumbosakral (rontgen / X-ray)</label></div>
-                                <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                            </td>
-                            <td>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                            </td>
-                            <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                        </tr>
-
-                        <!-- Farmakologis -->
-                        <tr>
-                            <td class="fw-bold bg-light">Farmakologis</td>
-                            <td>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Antipiretik</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Analgesik Adjuvan</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> NSAID oral</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Muscle Relaxant</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Cairan IV kristaloid</label></div>
-                                <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                            </td>
-                            <td>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                            </td>
-                            <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                        </tr>
-
-                        <!-- Fisioterapi -->
-                        <tr>
-                            <td class="fw-bold bg-light">Fisioterapi</td>
-                            <td>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Terapi lampu hangat (Infra Red)</label></div>
-                                <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Stimulasi Listrik (TENS)</label></div>
-                            </td>
-                            <td>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                            </td>
-                            <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                        </tr>
-
-                        <!-- Edukasi -->
-                        <tr>
-                            <td class="fw-bold bg-light">Edukasi</td>
-                            <td>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi menjaga postur tubuh yang benar saat duduk dan berdiri</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi olahraga yang menguatkan tulang belakang</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi angkat beban berat</label></div>
-                                <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi menjaga berat badan ideal</label></div>
-                                <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                            </td>
-                            <td>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                            </td>
-                            <td></td>
-                        </tr>
-
-                        <!-- Variasi Pelayanan -->
-                        <tr>
-                            <td class="fw-bold bg-light">Variasi Pelayanan</td>
-                            <td><textarea class="form-control form-control-sm" rows="2"></textarea></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-
-                        <!-- Total -->
-                        <tr>
-                            <td class="fw-bold bg-light border-bottom-0">Total</td>
-                            <td class="border-bottom-0"></td>
-                            <td class="border-bottom-0"></td>
-                            <td class="fw-bold border-bottom-0">
-                                <span class="text-muted small">Rp</span> 
-                                <input type="text" class="form-control form-control-sm d-inline-block w-75 fw-bold bg-light" readonly>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="text-end mb-4">
-            <button type="button" class="btn btn-danger btn-lg px-5 py-2 fw-bold shadow-sm" style="background-color: #b81d24; border: none; border-radius: 8px;">
-                <i class="fa-solid fa-print me-2"></i> Cetak
-            </button>
-        </div>
+        <p style="color:#888;">Clinical Pathway belum tersedia.</p>
     </div>
 
 @endsection
@@ -796,12 +678,14 @@
             day: 'numeric', month: 'long', year: 'numeric'
         });
 
+        // Pindahkan area resep jadi anak langsung <body> agar elemen lain bisa disembunyikan total
         document.body.appendChild(area);
         document.body.classList.add('cetak-resep-mode');
 
         window.print();
     }
 
+    // Kembalikan tampilan normal setelah dialog cetak ditutup
     window.addEventListener('afterprint', function () {
         document.body.classList.remove('cetak-resep-mode');
     });
@@ -810,19 +694,18 @@
         alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
     }
 
-<<<<<<< HEAD
-=======
     function rujukPasien() {
         alert('Fitur Rujuk belum tersambung ke database — masih dummy front-end.');
     }
 
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
->>>>>>> 0c4ba4fdcc7c212ea42cb70f1abad07eae65712c
     let vitalTerakhir = '';
 
 
+    // ===== Tanda vital -> Objective (lewat checkbox) =====
     function bangunTeksVital() {
         const bagian = [];
+
         document.querySelectorAll('.kb-vitals .kb-vital-row').forEach(function (row) {
             const label = row.querySelector('label').textContent.trim();
             const nilai = row.querySelector('input[type=text]').value.trim();
@@ -833,9 +716,11 @@
                 bagian.push(label + ': ' + nilai + (unit ? ' ' + unit : ''));
             }
         });
+
         return bagian.join(', ');
     }
 
+    // Hapus hanya bagian yang diisi otomatis; tulisan manual tetap aman
     function hapusVitalDariObjektif() {
         const objektif = document.querySelector('textarea[name="objective"]');
         if (vitalTerakhir && objektif.value.startsWith(vitalTerakhir)) {
@@ -846,10 +731,13 @@
 
     function terapkanVitalKeObjektif(teks) {
         const objektif = document.querySelector('textarea[name="objective"]');
+
+        // Ganti bagian otomatis sebelumnya agar tidak terduplikasi
         let sisa = objektif.value;
         if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
             sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
         }
+
         objektif.value = sisa ? teks + '\n' + sisa : teks;
         vitalTerakhir = teks;
     }
@@ -857,11 +745,13 @@
     function toggleVitalKeObjektif(cb) {
         if (cb.checked) {
             const teks = bangunTeksVital();
+
             if (teks === '') {
                 alert('Isi minimal satu tanda vital terlebih dahulu.');
                 cb.checked = false;
                 return;
             }
+
             terapkanVitalKeObjektif(teks);
             document.querySelector('textarea[name="objective"]').focus();
         } else {
@@ -869,9 +759,11 @@
         }
     }
 
+    // Jika checkbox sudah dicentang lalu nilai vital diubah, Objective ikut diperbarui
     document.querySelectorAll('.kb-vitals input[type=text]').forEach(function (input) {
         input.addEventListener('input', function () {
             if (!document.getElementById('chkVital').checked) return;
+
             const teks = bangunTeksVital();
             if (teks === '') {
                 hapusVitalDariObjektif();
@@ -881,17 +773,23 @@
         });
     });
 
+    // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
     const URL_CARI = "{{ url('/cari-kode') }}";
+
     const konfig = {
         penyakit: { input: 'cariPenyakit', dropdown: 'dropdownPenyakit', icon: 'checkPenyakit', list: 'listPenyakit', name: 'penyakit_id[]' },
         tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
     };
 
+    // Item yang sedang dipilih dari dropdown (belum dicentang)
     const pilihan = { penyakit: null, tindakan: null };
+    // Daftar yang sudah dicentang: [{id, kode, nama}]
     const diagnosaTerpilih = { penyakit: [], tindakan: [] };
+
     const timerCari = {};
     const urutanCari = { penyakit: 0, tindakan: 0 };
 
+    // Centang hijau hanya menyala kalau ada item yang dipilih dari dropdown
     function updateCentang(jenis) {
         document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
     }
@@ -902,8 +800,10 @@
         const dropdown = document.getElementById(k.dropdown);
         const keyword = input.value.trim();
 
+        // mengetik lagi = membatalkan pilihan sebelumnya
         pilihan[jenis] = null;
         updateCentang(jenis);
+
         clearTimeout(timerCari[jenis]);
 
         if (keyword.length < 2) {
@@ -918,7 +818,7 @@
                     headers: { 'Accept': 'application/json' }
                 });
                 const data = await res.json();
-                if (nomor !== urutanCari[jenis]) return;
+                if (nomor !== urutanCari[jenis]) return; // abaikan respons lama
                 renderDropdown(jenis, data);
             } catch (e) {
                 tampilPesan(dropdown, 'Gagal memuat data');
@@ -949,10 +849,12 @@
         data.forEach(function (item) {
             const div = document.createElement('div');
             div.className = 'kb-dropdown-item';
+
             const kode = document.createElement('b');
             kode.textContent = item.kode;
             div.appendChild(kode);
             div.appendChild(document.createTextNode(' — ' + item.nama));
+
             div.onclick = function () { pilihItem(jenis, item); };
             dropdown.appendChild(div);
         });
@@ -967,6 +869,7 @@
         updateCentang(jenis);
     }
 
+    // ===== Klik ✓ : masukkan ke daftar di bawah kolom =====
     function tambahDiagnosa(jenis) {
         const k = konfig[jenis];
         const item = pilihan[jenis];
@@ -995,20 +898,6 @@
         renderDiagnosa(jenis);
     }
 
-<<<<<<< HEAD
-    function gantiDiagnosa(jenis, id) {
-        const item = diagnosaTerpilih[jenis].find(d => String(d.id) === String(id));
-        if (!item) return;
-
-        hapusDiagnosa(jenis, id);
-        const input = document.getElementById(konfig[jenis].input);
-        input.value = item.nama;
-        input.focus();
-        cariItem(jenis);
-    }
-
-=======
->>>>>>> 0c4ba4fdcc7c212ea42cb70f1abad07eae65712c
     function renderDiagnosa(jenis) {
         const k = konfig[jenis];
         const list = document.getElementById(k.list);
@@ -1025,6 +914,7 @@
             teks.appendChild(kode);
             teks.appendChild(document.createTextNode(' — ' + item.nama));
 
+            // dikirim saat Simpan (kalau nanti dibungkus <form>)
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
             hidden.name = k.name;
@@ -1033,20 +923,11 @@
             const aksi = document.createElement('span');
             aksi.className = 'kb-diagnosa-aksi';
 
-<<<<<<< HEAD
-            const btnGanti = document.createElement('button');
-            btnGanti.type = 'button';
-            btnGanti.className = 'kb-aksi-ganti';
-            btnGanti.title = 'Ganti';
-            btnGanti.innerHTML = '<i class="fa-solid fa-pen"></i>';
-            btnGanti.onclick = function () { gantiDiagnosa(jenis, item.id); };
-
-=======
->>>>>>> 0c4ba4fdcc7c212ea42cb70f1abad07eae65712c
             const btnHapus = document.createElement('button');
             btnHapus.type = 'button';
             btnHapus.className = 'kb-aksi-hapus';
             btnHapus.title = 'Hapus';
+            btnHapus.setAttribute('aria-label', 'Hapus');
             btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
             btnHapus.onclick = function () { hapusDiagnosa(jenis, item.id); };
 
