@@ -417,6 +417,24 @@
             }
         }
     </style>
+
+    {{-- Tabel Clinical Pathway --}}
+    <style>
+        #tab-pathway .cp-wrap { border: 1px solid #d9dce1; border-radius: 8px; overflow: hidden; background: #fff; }
+        #tab-pathway .cp-scroll { max-height: 600px; overflow: auto; }
+        #tab-pathway .cp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        #tab-pathway .cp-table thead th { background: #a31515; color: #fff; padding: 8px 12px; text-align: center; position: sticky; top: 0; z-index: 1; }
+        #tab-pathway .cp-table td { border: 1px solid #d9dce1; padding: 8px 12px; vertical-align: top; }
+        #tab-pathway .cp-table td.cp-aktivitas { width: 25%; font-weight: 700; background: #f5f5f5; }
+        #tab-pathway .cp-sub { font-weight: 400; font-size: 12px; color: #666; margin: 8px 0 0 8px; }
+        #tab-pathway .cp-table input[type=text],
+        #tab-pathway .cp-table textarea { width: 100%; box-sizing: border-box; padding: 5px 8px; margin: 2px 0; border: 1px solid #ccc; border-radius: 4px; font: inherit; }
+        #tab-pathway .cp-check { display: flex; align-items: flex-start; gap: 6px; margin: 3px 0; }
+        #tab-pathway .cp-check input { margin-top: 3px; }
+        #tab-pathway .cp-rp { display: flex; align-items: center; gap: 6px; color: #666; }
+        #tab-pathway .cp-footer { text-align: right; padding: 12px 16px; border-top: 1px solid #d9dce1; }
+        #tab-pathway .cp-cetak { background: #b81d24; color: #fff; font-weight: 700; border: none; border-radius: 6px; padding: 8px 22px; cursor: pointer; }
+    </style>
 @endsection
 
 @section('content')
@@ -648,7 +666,120 @@
     </div>
 
     <div id="tab-pathway" class="kb-tab-content">
-        <p style="color:#888;">Clinical Pathway belum tersedia.</p>
+        <div class="cp-wrap">
+            <div class="cp-scroll">
+                <table class="cp-table">
+                    <thead>
+                        <tr>
+                            <th style="width:25%;">Aktivitas Pelayanan</th>
+                            <th style="width:45%;">Keterangan</th>
+                            <th style="width:15%;">Waktu</th>
+                            <th style="width:15%;">Tarif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="cp-aktivitas">
+                                Diagnosa
+                                <div class="cp-sub">Dx Utama</div>
+                                <div class="cp-sub">Dx Sekunder</div>
+                                <div class="cp-sub">Dx Banding</div>
+                            </td>
+                            <td>
+                                <input type="text"><input type="text"><input type="text">
+                            </td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Asesmen Klinis</td>
+                            <td><textarea rows="2"></textarea></td>
+                            <td><input type="text"></td>
+                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Pemeriksaan Fisik</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Pemeriksaan tanda vital</label>
+                                <label class="cp-check"><input type="checkbox"> Inspeksi postur tulang belakang dan gerakan aktif volumna vertebralis</label>
+                                <label class="cp-check"><input type="checkbox"> Pemeriksaan motorik, reflek, dan sensorik dermatom</label>
+                                <label class="cp-check"><input type="checkbox"> ........</label>
+                            </td>
+                            <td><input type="text"></td>
+                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Pemeriksaan Penunjang</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Magnetic Resonance Imaging (MRI)</label>
+                                <label class="cp-check"><input type="checkbox"> Computerized Tomography (CT Scan)</label>
+                                <label class="cp-check"><input type="checkbox"> Foto polos lumbosakral (rontgen / X-ray)</label>
+                                <label class="cp-check"><input type="checkbox"> ........</label>
+                            </td>
+                            <td><input type="text"></td>
+                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Farmakologis</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Antipiretik</label>
+                                <label class="cp-check"><input type="checkbox"> Analgesik Adjuvan</label>
+                                <label class="cp-check"><input type="checkbox"> NSAID oral</label>
+                                <label class="cp-check"><input type="checkbox"> Muscle Relaxant</label>
+                                <label class="cp-check"><input type="checkbox"> Cairan IV kristaloid</label>
+                                <label class="cp-check"><input type="checkbox"> ........</label>
+                            </td>
+                            <td><input type="text"></td>
+                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Fisioterapi</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Terapi lampu hangat (Infra Red)</label>
+                                <label class="cp-check"><input type="checkbox"> Stimulasi Listrik (TENS)</label>
+                            </td>
+                            <td><input type="text"></td>
+                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Edukasi</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Edukasi menjaga postur tubuh yang benar saat duduk dan berdiri</label>
+                                <label class="cp-check"><input type="checkbox"> Edukasi olahraga yang menguatkan tulang belakang</label>
+                                <label class="cp-check"><input type="checkbox"> Edukasi angkat beban berat</label>
+                                <label class="cp-check"><input type="checkbox"> Edukasi menjaga berat badan ideal</label>
+                                <label class="cp-check"><input type="checkbox"> ........</label>
+                            </td>
+                            <td><input type="text"></td>
+                            <td></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Variasi Pelayanan</td>
+                            <td><textarea rows="2"></textarea></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Total</td>
+                            <td></td>
+                            <td></td>
+                            <td><div class="cp-rp">Rp <input type="text" readonly style="font-weight:700; background:#f5f5f5;"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="cp-footer">
+                <button type="button" class="cp-cetak"><i class="fa-solid fa-print"></i> Cetak</button>
+            </div>
+        </div>
     </div>
 
 @endsection

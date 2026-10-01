@@ -159,229 +159,42 @@
             @endif
         </div>
 
-        <!-- TOMBOL TAB: ASSESMENT & CLINICAL PATHWAY -->
-        <div class="d-flex gap-2 mb-4">
-            <button type="button" id="btn-assessment" class="btn btn-danger btn-sm px-3 py-2 rounded-2" onclick="showAssessment()">
-                <i class="fa-solid fa-pen-to-square me-1"></i> Assesment
-            </button>
-            <button type="button" id="btn-pathway" class="btn btn-secondary btn-sm px-4 py-2 rounded-2" onclick="showPathway()">
-                <i class="fa-solid fa-sitemap me-1"></i> Clinical Pathway
-            </button>
-        </div>
+        <!-- TABEL RIWAYAT KUNJUNGAN -->
+        <div class="kj-riwayat-box">
+            <div class="kj-riwayat-title">Riwayat Kunjungan</div>
 
-        <!-- KONTEN 1: TABEL RIWAYAT KUNJUNGAN (Bagian Assessment) -->
-        <div id="content-assessment">
-            <div class="kj-riwayat-box">
-                <div class="kj-riwayat-title">Riwayat Kunjungan</div>
-
-                <table class="kj-table">
-                    <thead>
-                        <tr><th>No</th><th>Tgl. Kunjungan</th><th>Riwayat Kunjungan</th></tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($riwayat as $i => $item)
-                            @php
-                                $urlDetail = route('poli.syaraf.kunjungan.detail', [
-                                    'no_rm'   => $noRmAktif,
-                                    'tanggal' => $item['tanggal'],
-                                ]);
-                            @endphp
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
-                                <td>
-                                    <a href="{{ $urlDetail }}" class="kj-link">
-                                        {{ \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y') }}
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="{{ $urlDetail }}" class="kj-link">
-                                        {{ $item['poli'] }}
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" style="text-align:center; color:#888;">Belum ada riwayat kunjungan</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- KONTEN 2: TABEL CLINICAL PATHWAY (Disembunyikan awalnya, muncul saat tombol Clinical Pathway diklik) -->
-        <div id="content-pathway" style="display: none;">
-            <div class="card shadow-sm border-danger mb-5 rounded-3 overflow-hidden">
-                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-bordered mb-0 align-middle">
-                        <thead class="text-white text-center" style="background-color: #a31515;">
-                            <tr>
-                                <th style="width: 25%;">Aktivitas Pelayanan</th>
-                                <th style="width: 45%;">Keterangan</th>
-                                <th style="width: 15%;">Waktu</th>
-                                <th style="width: 15%;">Tarif</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Diagnosa -->
-                            <tr>
-                                <td class="fw-bold bg-light">
-                                    Diagnosa
-                                    <div class="fw-normal small ms-2 text-muted">
-                                        <div class="my-1">Dx Utama</div>
-                                        <div class="my-1">Dx Sekunder</div>
-                                        <div class="my-1">Dx Banding</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                </td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-
-                            <!-- Asesmen Klinis -->
-                            <tr>
-                                <td class="fw-bold bg-light">Asesmen Klinis</td>
-                                <td><textarea class="form-control form-control-sm" rows="2"></textarea></td>
-                                <td>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                </td>
-                                <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                            </tr>
-
-                            <!-- Pemeriksaan Fisik -->
-                            <tr>
-                                <td class="fw-bold bg-light">Pemeriksaan Fisik</td>
-                                <td>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Pemeriksaan tanda vital</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Inspeksi postur tulang belakang dan gerakan aktif volumna vertebralis</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Pemeriksaan motorik, reflek, dan sensorik dermatom</label></div>
-                                    <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                                </td>
-                                <td>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                </td>
-                                <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                            </tr>
-
-                            <!-- Pemeriksaan Penunjang -->
-                            <tr>
-                                <td class="fw-bold bg-light">Pemeriksaan Penunjang</td>
-                                <td>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Magnetic Resonance Imaging (MRI)</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Computerized Tomography (CT Scan)</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Foto polos lumbosakral (rontgen / X-ray)</label></div>
-                                    <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                                </td>
-                                <td>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                </td>
-                                <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                            </tr>
-
-                            <!-- Farmakologis -->
-                            <tr>
-                                <td class="fw-bold bg-light">Farmakologis</td>
-                                <td>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Antipiretik</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Analgesik Adjuvan</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> NSAID oral</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Muscle Relaxant</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Cairan IV kristaloid</label></div>
-                                    <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                                </td>
-                                <td>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                </td>
-                                <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                            </tr>
-
-                            <!-- Fisioterapi -->
-                            <tr>
-                                <td class="fw-bold bg-light">Fisioterapi</td>
-                                <td>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Terapi lampu hangat (Infra Red)</label></div>
-                                    <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Stimulasi Listrik (TENS)</label></div>
-                                </td>
-                                <td>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                </td>
-                                <td><span class="text-muted small">Rp</span> <input type="text" class="form-control form-control-sm d-inline-block w-75"></td>
-                            </tr>
-
-                            <!-- Edukasi -->
-                            <tr>
-                                <td class="fw-bold bg-light">Edukasi</td>
-                                <td>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi menjaga postur tubuh yang benar saat duduk dan berdiri</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi olahraga yang menguatkan tulang belakang</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi angkat beban berat</label></div>
-                                    <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-small"> Edukasi menjaga berat badan ideal</label></div>
-                                    <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-small"> ........</label></div>
-                                </td>
-                                <td>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                    <div class="my-1"><input type="text" class="form-control form-control-sm"></div>
-                                </td>
-                                <td></td>
-                            </tr>
-
-                            <!-- Variasi Pelayanan -->
-                            <tr>
-                                <td class="fw-bold bg-light">Variasi Pelayanan</td>
-                                <td><textarea class="form-control form-control-sm" rows="2"></textarea></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-
-                            <!-- Total -->
-                            <tr>
-                                <td class="fw-bold bg-light">Total</td>
-                                <td></td>
-                                <td></td>
-                                <td class="fw-bold">
-                                    <span class="text-muted small">Rp</span> 
-                                    <input type="text" class="form-control form-control-sm d-inline-block w-75 fw-bold bg-light" readonly>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Tombol Cetak -->
-                <div class="card-footer bg-white text-end py-3">
-                    <button type="button" class="btn btn-danger px-4 fw-bold shadow-sm">
-                        <i class="fa-solid fa-print me-1"></i> Cetak
-                    </button>
-                </div>
-            </div>
+            <table class="kj-table">
+                <thead>
+                    <tr><th>No</th><th>Tgl. Kunjungan</th><th>Riwayat Kunjungan</th></tr>
+                </thead>
+                <tbody>
+                    @forelse ($riwayat as $i => $item)
+                        @php
+                            $urlDetail = route('poli.syaraf.kunjungan.detail', [
+                                'no_rm'   => $noRmAktif,
+                                'tanggal' => $item['tanggal'],
+                            ]);
+                        @endphp
+                        <tr>
+                            <td>{{ $i + 1 }}</td>
+                            <td>
+                                <a href="{{ $urlDetail }}" class="kj-link">
+                                    {{ \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y') }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{{ $urlDetail }}" class="kj-link">
+                                    {{ $item['poli'] }}
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="3" style="text-align:center; color:#888;">Belum ada riwayat kunjungan</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
     </div>
-
-    <!-- SKRIP JAVASCRIPT UNTUK TOMBOL INTERAKTIF -->
-    <script>
-        function showAssessment() {
-            document.getElementById('content-pathway').style.display = 'none';
-            document.getElementById('content-assessment').style.display = 'block';
-
-            document.getElementById('btn-assessment').className = 'btn btn-danger btn-sm px-3 py-2 rounded-2';
-            document.getElementById('btn-pathway').className = 'btn btn-secondary btn-sm px-4 py-2 rounded-2';
-        }
-
-        function showPathway() {
-            document.getElementById('content-assessment').style.display = 'none';
-            document.getElementById('content-pathway').style.display = 'block';
-
-            document.getElementById('btn-pathway').className = 'btn btn-danger btn-sm px-4 py-2 rounded-2';
-            document.getElementById('btn-assessment').className = 'btn btn-secondary btn-sm px-3 py-2 rounded-2';
-        }
-    </script>
 
 @endsection
