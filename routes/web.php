@@ -93,7 +93,10 @@ Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', function ($no_rm) {
     return view('poli.obgyn-kunjungan-baru', ['no_rm' => $no_rm]);
 })->name('poli.obgyn.kunjungan-baru');
 
-Route::get('/poli/jantung', [PoliController::class, 'jantung'])->name('poli.jantung');
+Route::get('/poli/jantung', function () {
+    return view('poli.jantung');
+})->name('poli.jantung');
+
 Route::get('/poli/jiwa', [PoliController::class, 'jiwa'])->name('poli.jiwa');
 
 /*
