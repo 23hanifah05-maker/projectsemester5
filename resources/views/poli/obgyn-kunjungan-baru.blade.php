@@ -97,6 +97,172 @@
         }
         .ob-aksi-hapus { color: #b81d24; }
         .ob-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
+
+        /* Tombol Rujuk di baris bawah (di samping Simpan) */
+        .ob-actions .ob-btn-rujuk {
+            color: #b81d24;
+            border: 1px solid #b81d24;
+            background: #fff;
+        }
+        .ob-actions .ob-btn-rujuk:hover {
+            background: #b81d24;
+            color: #fff;
+        }
+
+        /* ===== Data Pasien: 2 kolom sama lebar, label & isi sejajar ===== */
+        .ob-card .ob-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 40px;
+        }
+        .ob-card .ob-fields .ob-field {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+        }
+        .ob-card .ob-fields .ob-label {
+            font-weight: 600;
+        }
+        .ob-card .ob-fields .ob-value {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            min-height: 42px;
+            box-sizing: border-box;
+            padding: 0 14px;
+            border: 1px solid #d9dce1;
+            border-radius: 6px;
+            background: #fff;
+        }
+        @media (max-width: 900px) {
+            .ob-card .ob-fields { grid-template-columns: 1fr; }
+        }
+
+        /* ===== Kotak Tanda Vital: 2 baris x 4 kolom =====
+           12 kolom: [label | isian | satuan] x 4. Label & satuan selebar isinya,
+           sisa lebar dibagi rata ke 4 kolom isian (sejajar & mentok ke tepi kanan). */
+        .ob-vitals-box {
+            padding: 12px 14px 12px 18px;
+            border: 1px solid #d9dce1;
+            border-radius: 10px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        #tab-assessment .ob-vitals-box .ob-vitals-grid {
+            display: grid !important;
+            grid-template-columns:
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content !important;
+            column-gap: 6px !important;
+            row-gap: 10px !important;
+            align-items: center;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row {
+            display: contents !important;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row label {
+            font-weight: 600;
+            margin: 0 !important;
+            width: auto !important;
+            min-width: 0 !important;
+            white-space: nowrap;
+            box-sizing: border-box;
+            padding-right: 4px;
+        }
+        /* jarak antar kelompok kolom (kolom ke-2, 3, 4) */
+        #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n+2) label,
+        #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n+3) label,
+        #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n) label {
+            padding-left: 14px;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row input {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            flex: none !important;
+            height: 34px;
+            box-sizing: border-box;
+            padding: 0 10px;
+            font-size: 14px;
+            font-family: inherit;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row input[type=date] {
+            padding: 0 8px;
+            cursor: pointer;
+            color: #333;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row input:focus {
+            outline: none;
+            border-color: #b81d24;
+            box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-unit {
+            color: #8a8f98;
+            font-size: 13px;
+            white-space: nowrap;
+            width: auto !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row .ob-vital-check {
+            justify-self: start;
+            width: 34px;
+            height: 34px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .ob-vitals-grid .ob-vital-check .ob-check-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #555;
+            border-radius: 4px;
+            background: #fff;
+            color: transparent;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+        .ob-vitals-grid .ob-vital-check .ob-check-icon.aktif {
+            background: #1e9e4a;
+            border-color: #1e9e4a;
+            color: #fff;
+        }
+
+        /* Layar sedang: 2 kelompok kolom */
+        @media (max-width: 1100px) {
+            #tab-assessment .ob-vitals-box .ob-vitals-grid {
+                grid-template-columns:
+                    max-content minmax(0, 1fr) max-content
+                    max-content minmax(0, 1fr) max-content !important;
+            }
+            #tab-assessment .ob-vitals-grid .ob-vital-row label { padding-left: 0; }
+            #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(even) label { padding-left: 14px; }
+        }
+        /* Layar kecil: 1 kelompok kolom */
+        @media (max-width: 640px) {
+            #tab-assessment .ob-vitals-box .ob-vitals-grid {
+                grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+            }
+            #tab-assessment .ob-vitals-grid .ob-vital-row label,
+            #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(even) label { padding-left: 0; }
+        }
     </style>
 @endsection
 
@@ -117,16 +283,16 @@
         $vitalFields = [
             ['TD', 'td', 'mmHg', 'mis. 120/80'],
             ['HR', 'hr', 'x/menit', 'mis. 88'],
-            ['HPHT', 'hpht', '', 'cth. 10-01-2026'],
             ['SpO2', 'spo2', '%', 'mis. 98'],
             ['Suhu', 'suhu', '°C', 'mis. 36.5'],
             ['RR', 'rr', 'x/menit', 'mis. 20'],
+            ['HPHT', 'hpht', '', 'hh-bb-tttt'],
             ['UK', 'uk', 'minggu', 'mis. 12'],
         ];
 
         // Data untuk baris SOAP: [kode, name, tipe, placeholder]
         $soapRows = [
-            ['S', 'subjective', 'textarea', 'Diagnosis Masuk :'],
+            ['S', 'subjective', 'textarea', 'Subjektif...'],
             ['O', 'objective', 'textarea', 'Hasil pemeriksaan objektif...'],
             ['A', 'assessment', 'textarea', 'Assessment / analisa...'],
             ['P', 'plan', 'textarea', 'Rencana/plan...'],
@@ -347,13 +513,17 @@
                 @foreach ($vitalFields as [$label, $name, $unit, $placeholder])
                     <div class="ob-vital-row">
                         <label>{{ $label }}</label>
-                        <input type="text" name="{{ $name }}" placeholder="{{ $placeholder }}">
-                        @if ($unit)<span class="ob-vital-unit">{{ $unit }}</span>@endif
+                        @if ($name === 'hpht')
+                            <input type="date" name="{{ $name }}" max="{{ date('Y-m-d') }}" title="Pilih tanggal HPHT">
+                        @else
+                            <input type="text" name="{{ $name }}" placeholder="{{ $placeholder }}">
+                        @endif
+                        <span class="ob-vital-unit">{{ $unit }}</span>
                     </div>
                 @endforeach
                 <div class="ob-vital-row">
-                    <label>Lainnya</label>
-                    <input type="text" name="lainnya" placeholder="Catatan lainnya...">
+                    <label>Alergi</label>
+                    <input type="text" name="alergi" placeholder="mis. tidak ada">
                     <div class="ob-vital-check">
                         <span class="ob-check-icon" id="btnCentangVital" role="button" title="Masukkan tanda vital ke Objective" onclick="isiObjektifDariVital()">✓</span>
                     </div>
@@ -416,21 +586,15 @@
                         <div class="ob-diagnosa-list" id="list{{ $label }}"></div>
                     </div>
                 @endforeach
-
-                <div class="ob-soap-actions">
-                    <button type="button" class="ob-rujuk-btn" onclick="rujukKeRadiologi()">
-                        <i class="fa-solid fa-right-from-bracket"></i> Rujuk
-                    </button>
-                </div>
             </div>
         </div>
 
         <div class="ob-actions">
+            <button type="button" class="ob-btn ob-btn-reset ob-btn-rujuk" onclick="rujukKeRadiologi()">
+                <i class="fa-solid fa-right-from-bracket"></i> Rujuk
+            </button>
             <button type="button" class="ob-btn ob-btn-simpan" onclick="simpanKunjunganBaru()">
                 <i class="fa-solid fa-floppy-disk"></i> Simpan
-            </button>
-            <button type="button" class="ob-btn ob-btn-reset" onclick="resetForm()">
-                <i class="fa-solid fa-rotate-left"></i> Reset
             </button>
         </div>
     </div>
@@ -527,7 +691,7 @@
     let vitalTerakhir = '';
 
     function resetForm() {
-        document.querySelectorAll('#tab-assessment input[type=text], #tab-assessment textarea')
+        document.querySelectorAll('#tab-assessment input[type=text], #tab-assessment input[type=date], #tab-assessment textarea')
             .forEach(el => el.value = '');
         vitalTerakhir = '';
         updateCentangVital();
@@ -559,7 +723,11 @@
 
         document.querySelectorAll('.ob-vitals-grid .ob-vital-row').forEach(function (row) {
             const label = row.querySelector('label').textContent.trim();
-            const nilai = row.querySelector('input').value.trim();
+            const inputEl = row.querySelector('input');
+            let nilai = inputEl.value.trim();
+            if (inputEl.type === 'date' && nilai !== '') {
+                nilai = nilai.split('-').reverse().join('-'); // yyyy-mm-dd -> dd-mm-yyyy
+            }
             const unitEl = row.querySelector('.ob-vital-unit');
             const unit = unitEl ? unitEl.textContent.trim() : '';
 
