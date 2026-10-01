@@ -13,20 +13,6 @@
 <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
 <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
 
-<style>
-    /* Ikon mata pada tombol Lihat Detail */
-    .btn-aksi svg {
-        width: 20px;
-        height: 20px;
-        stroke: #fff;
-        fill: none;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        vertical-align: middle;
-    }
-</style>
-
 @endsection
 
 
@@ -605,11 +591,7 @@ if ($dari && $sampai) {
 
                 <td
                     colspan="8"
-                    style="
-                        text-align:center;
-                        padding:25px;
-                        color:#777;
-                    "
+                    class="td-kosong"
                 >
                     Data pasien tidak ditemukan.
 
@@ -1013,8 +995,8 @@ if ($dari && $sampai) {
                 <input
                     type="text"
                     id="editRm"
+                    class="input-terkunci"
                     readonly
-                    style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
                 >
 
             </div>
@@ -1028,8 +1010,7 @@ if ($dari && $sampai) {
                     type="text"
                     id="editNama"
                     readonly
-                    class="input-locked"
-                    style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
+                    class="input-locked input-terkunci"
                 >
 
             </div>
@@ -1044,8 +1025,7 @@ if ($dari && $sampai) {
                     id="editNik"
                     inputmode="numeric"
                     readonly
-                    class="input-locked"
-                    style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
+                    class="input-locked input-terkunci"
                 >
 
             </div>
@@ -1591,11 +1571,7 @@ function cekDataKosong()
             rowKosong.innerHTML = `
                 <td
                     colspan="8"
-                    style="
-                        text-align:center;
-                        padding:25px;
-                        color:#777;
-                    "
+                    class="td-kosong"
                 >
                     Data pasien tidak ditemukan.
                 </td>
@@ -2013,11 +1989,7 @@ document.addEventListener(
                     rowKosong.innerHTML = `
                         <td
                             colspan="8"
-                            style="
-                                text-align:center;
-                                padding:25px;
-                                color:#777;
-                            "
+                            class="td-kosong"
                         >
                             Data pasien tidak ditemukan.
                         </td>
