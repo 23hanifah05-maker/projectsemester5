@@ -7,6 +7,7 @@ use App\Http\Controllers\PoliController;
 use App\Http\Controllers\RadiologiController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PencarianKodeController;
+use App\Http\Controllers\AuditTrailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -116,3 +117,10 @@ Route::get('/cari-kode/{jenis}', [PencarianKodeController::class, 'cari'])
 |--------------------------------------------------------------------------
 */
 Route::get('/radiologi', [RadiologiController::class, 'index'])->name('radiologi.index');
+
+/*
+|--------------------------------------------------------------------------
+| Audit Trail
+|--------------------------------------------------------------------------
+*/
+Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('audit-trail.index');

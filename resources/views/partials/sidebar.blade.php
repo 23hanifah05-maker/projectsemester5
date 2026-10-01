@@ -31,7 +31,6 @@
     }
 
     .sidebar.hide {
-        left: -var(--sidebar-width);
         transform: translateX(-100%);
     }
 
@@ -185,7 +184,7 @@
     <div>
         <div class="sidebar-header">
             <img src="{{ asset('images/logo.png') }}" alt="Logo">
-            <h3>KLINIK RAWAT INAP<br>MERAH PUTIH</h3>
+            <h3>KLINIK UTAMA<br>MERAH PUTIH</h3>
         </div>
         
         <div class="menu-label">Menu Utama</div>
@@ -223,6 +222,11 @@
             <li>
                 <a href="{{ route('radiologi.index') }}" class="{{ request()->routeIs('radiologi*') ? 'active' : '' }}">
                     <div class="left-content"><i class="fa-solid fa-radiation icon-main"></i> Radiologi</div>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('audit-trail.index') }}" class="{{ request()->routeIs('audit-trail*') ? 'active' : '' }}">
+                    <div class="left-content"><i class="fa-solid fa-clock-rotate-left icon-main"></i> Audit Trail</div>
                 </a>
             </li>
         </ul>
