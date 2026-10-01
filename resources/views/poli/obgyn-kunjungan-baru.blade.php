@@ -62,12 +62,206 @@
         .ob-diagnosa-list {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-top: 8px;
+            gap: 6px;
+            margin-top: 10px;
         }
         .ob-diagnosa-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 12px;
             font-size: 13px;
             color: #333;
+            background: #fdecea;
+            border: 1px solid #f3c2bd;
+            border-radius: 8px;
+        }
+        .ob-diagnosa-aksi {
+            display: flex;
+            gap: 4px;
+            flex: 0 0 auto;
+        }
+        .ob-diagnosa-aksi button {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .ob-aksi-hapus { color: #b81d24; }
+        .ob-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
+
+        /* Tombol Rujuk di baris bawah (di samping Simpan) */
+        .ob-actions .ob-btn-rujuk {
+            color: #b81d24;
+            border: 1px solid #b81d24;
+            background: #fff;
+        }
+        .ob-actions .ob-btn-rujuk:hover {
+            background: #b81d24;
+            color: #fff;
+        }
+
+        /* ===== Data Pasien: 2 kolom sama lebar, label & isi sejajar ===== */
+        .ob-card .ob-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 40px;
+        }
+        .ob-card .ob-fields .ob-field {
+            display: grid;
+            grid-template-columns: 150px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+        }
+        .ob-card .ob-fields .ob-label {
+            font-weight: 600;
+        }
+        .ob-card .ob-fields .ob-value {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            min-height: 42px;
+            box-sizing: border-box;
+            padding: 0 14px;
+            border: 1px solid #d9dce1;
+            border-radius: 6px;
+            background: #fff;
+        }
+        @media (max-width: 900px) {
+            .ob-card .ob-fields { grid-template-columns: 1fr; }
+        }
+
+        /* ===== Kotak Tanda Vital: 2 baris x 4 kolom =====
+           12 kolom: [label | isian | satuan] x 4. Label & satuan selebar isinya,
+           sisa lebar dibagi rata ke 4 kolom isian (sejajar & mentok ke tepi kanan). */
+        .ob-vitals-box {
+            padding: 12px 14px 12px 18px;
+            border: 1px solid #d9dce1;
+            border-radius: 10px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        #tab-assessment .ob-vitals-box .ob-vitals-grid {
+            display: grid !important;
+            grid-template-columns:
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content !important;
+            column-gap: 6px !important;
+            row-gap: 10px !important;
+            align-items: center;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row {
+            display: contents !important;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row label {
+            font-weight: 600;
+            margin: 0 !important;
+            width: auto !important;
+            min-width: 0 !important;
+            white-space: nowrap;
+            box-sizing: border-box;
+            padding-right: 4px;
+        }
+        /* jarak antar kelompok kolom (kolom ke-2, 3, 4) */
+        #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n+2) label,
+        #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n+3) label,
+        #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n) label {
+            padding-left: 14px;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row input {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            flex: none !important;
+            height: 34px;
+            box-sizing: border-box;
+            padding: 0 10px;
+            font-size: 14px;
+            font-family: inherit;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row input[type=date] {
+            padding: 0 8px;
+            cursor: pointer;
+            color: #333;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row input:focus {
+            outline: none;
+            border-color: #b81d24;
+            box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-unit {
+            color: #8a8f98;
+            font-size: 13px;
+            white-space: nowrap;
+            width: auto !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+        #tab-assessment .ob-vitals-grid .ob-vital-row .ob-vital-check {
+            justify-self: start;
+            width: 34px;
+            height: 34px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .ob-vitals-grid .ob-vital-check .ob-check-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #555;
+            border-radius: 4px;
+            background: #fff;
+            color: transparent;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+        .ob-vitals-grid .ob-vital-check .ob-check-icon.aktif {
+            background: #1e9e4a;
+            border-color: #1e9e4a;
+            color: #fff;
+        }
+
+        /* Layar sedang: 2 kelompok kolom */
+        @media (max-width: 1100px) {
+            #tab-assessment .ob-vitals-box .ob-vitals-grid {
+                grid-template-columns:
+                    max-content minmax(0, 1fr) max-content
+                    max-content minmax(0, 1fr) max-content !important;
+            }
+            #tab-assessment .ob-vitals-grid .ob-vital-row label { padding-left: 0; }
+            #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(even) label { padding-left: 14px; }
+        }
+        /* Layar kecil: 1 kelompok kolom */
+        @media (max-width: 640px) {
+            #tab-assessment .ob-vitals-box .ob-vitals-grid {
+                grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+            }
+            #tab-assessment .ob-vitals-grid .ob-vital-row label,
+            #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(even) label { padding-left: 0; }
         }
     </style>
 @endsection
@@ -89,16 +283,16 @@
         $vitalFields = [
             ['TD', 'td', 'mmHg', 'mis. 120/80'],
             ['HR', 'hr', 'x/menit', 'mis. 88'],
-            ['HPHT', 'hpht', '', 'cth. 10-01-2026'],
             ['SpO2', 'spo2', '%', 'mis. 98'],
             ['Suhu', 'suhu', '°C', 'mis. 36.5'],
             ['RR', 'rr', 'x/menit', 'mis. 20'],
+            ['HPHT', 'hpht', '', 'hh-bb-tttt'],
             ['UK', 'uk', 'minggu', 'mis. 12'],
         ];
 
         // Data untuk baris SOAP: [kode, name, tipe, placeholder]
         $soapRows = [
-            ['S', 'subjective', 'textarea', 'Diagnosis Masuk :'],
+            ['S', 'subjective', 'textarea', 'Subjektif...'],
             ['O', 'objective', 'textarea', 'Hasil pemeriksaan objektif...'],
             ['A', 'assessment', 'textarea', 'Assessment / analisa...'],
             ['P', 'plan', 'textarea', 'Rencana/plan...'],
@@ -319,13 +513,17 @@
                 @foreach ($vitalFields as [$label, $name, $unit, $placeholder])
                     <div class="ob-vital-row">
                         <label>{{ $label }}</label>
-                        <input type="text" name="{{ $name }}" placeholder="{{ $placeholder }}">
-                        @if ($unit)<span class="ob-vital-unit">{{ $unit }}</span>@endif
+                        @if ($name === 'hpht')
+                            <input type="date" name="{{ $name }}" max="{{ date('Y-m-d') }}" title="Pilih tanggal HPHT">
+                        @else
+                            <input type="text" name="{{ $name }}" placeholder="{{ $placeholder }}">
+                        @endif
+                        <span class="ob-vital-unit">{{ $unit }}</span>
                     </div>
                 @endforeach
                 <div class="ob-vital-row">
-                    <label>Lainnya</label>
-                    <input type="text" name="lainnya" placeholder="Catatan lainnya...">
+                    <label>Alergi</label>
+                    <input type="text" name="alergi" placeholder="mis. tidak ada">
                     <div class="ob-vital-check">
                         <span class="ob-check-icon" id="btnCentangVital" role="button" title="Masukkan tanda vital ke Objective" onclick="isiObjektifDariVital()">✓</span>
                     </div>
@@ -388,21 +586,15 @@
                         <div class="ob-diagnosa-list" id="list{{ $label }}"></div>
                     </div>
                 @endforeach
-
-                <div class="ob-soap-actions">
-                    <button type="button" class="ob-rujuk-btn" onclick="rujukKeRadiologi()">
-                        <i class="fa-solid fa-right-from-bracket"></i> Rujuk
-                    </button>
-                </div>
             </div>
         </div>
 
         <div class="ob-actions">
+            <button type="button" class="ob-btn ob-btn-reset ob-btn-rujuk" onclick="rujukKeRadiologi()">
+                <i class="fa-solid fa-right-from-bracket"></i> Rujuk
+            </button>
             <button type="button" class="ob-btn ob-btn-simpan" onclick="simpanKunjunganBaru()">
                 <i class="fa-solid fa-floppy-disk"></i> Simpan
-            </button>
-            <button type="button" class="ob-btn ob-btn-reset" onclick="resetForm()">
-                <i class="fa-solid fa-rotate-left"></i> Reset
             </button>
         </div>
     </div>
@@ -450,6 +642,12 @@
 
 @section('extra-js')
 <script>
+    // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
+    const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+
+    // Kunci penyimpanan status periksa (dipakai juga di halaman Daftar Pasien & Pendaftaran)
+    const KUNCI_STATUS_PERIKSA = 'obgyn_status_periksa';
+
     function gantiTab(tab, event) {
         document.querySelectorAll('.ob-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.ob-tab-content').forEach(el => el.classList.remove('active'));
@@ -492,19 +690,44 @@
         document.getElementById('tab-radiologi').classList.add('active');
     }
 
+    // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)
     function simpanKunjunganBaru() {
-        alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end.');
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        try {
+            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA)) || {};
+            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
+            status[kunci] = 'selesai';
+            localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
+
+            // Catat waktu selesai pemeriksaan (dipakai untuk mengurutkan di Daftar Pasien)
+            const waktu = JSON.parse(localStorage.getItem('obgyn_waktu_selesai')) || {};
+            waktu[kunci] = Date.now();
+            localStorage.setItem('obgyn_waktu_selesai', JSON.stringify(waktu));
+        } catch (e) {
+            console.error(e);
+        }
+
+        alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
+
+        // Kembali ke Daftar Pasien supaya perubahan warna langsung terlihat
+        window.location.href = "{{ route('poli.obgyn') }}";
     }
 
     let vitalTerakhir = '';
 
     function resetForm() {
-        document.querySelectorAll('#tab-assessment input[type=text], #tab-assessment textarea')
+        document.querySelectorAll('#tab-assessment input[type=text], #tab-assessment input[type=date], #tab-assessment textarea')
             .forEach(el => el.value = '');
         vitalTerakhir = '';
         updateCentangVital();
         diagnosaTerpilih.penyakit = [];
         diagnosaTerpilih.tindakan = [];
+        pilihan.penyakit = null;
+        pilihan.tindakan = null;
         renderDiagnosa('penyakit');
         renderDiagnosa('tindakan');
         updateCentang('penyakit');
@@ -529,7 +752,11 @@
 
         document.querySelectorAll('.ob-vitals-grid .ob-vital-row').forEach(function (row) {
             const label = row.querySelector('label').textContent.trim();
-            const nilai = row.querySelector('input').value.trim();
+            const inputEl = row.querySelector('input');
+            let nilai = inputEl.value.trim();
+            if (inputEl.type === 'date' && nilai !== '') {
+                nilai = nilai.split('-').reverse().join('-'); // yyyy-mm-dd -> dd-mm-yyyy
+            }
             const unitEl = row.querySelector('.ob-vital-unit');
             const unit = unitEl ? unitEl.textContent.trim() : '';
 
@@ -559,105 +786,175 @@
         objektif.focus();
     }
 
-    const daftarPenyakit = [
-        'Kehamilan Normal', 'Anemia pada Kehamilan', 'Preeklampsia', 'Eklampsia',
-        'Hiperemesis Gravidarum', 'Abortus', 'Kehamilan Ektopik', 'Plasenta Previa',
-        'Solusio Plasenta', 'Infeksi Saluran Kemih pada Kehamilan',
-    ];
+    // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
+    // Memakai route /cari-kode/{penyakit|tindakan} yang sama dengan Poli Syaraf.
+    const URL_CARI = "{{ url('/cari-kode') }}";
 
-    const daftarTindakan = [
-        'Pemeriksaan Kehamilan', 'Pemeriksaan USG', 'Pemeriksaan Laboratorium',
-        'Konsultasi Kehamilan', 'Pemeriksaan Leopold', 'Pemeriksaan Denyut Jantung Janin',
-        'Pemberian Terapi', 'Konsultasi Lanjutan', 'Rujukan Spesialis',
-    ];
+    const konfig = {
+        penyakit: { input: 'cariPenyakit', dropdown: 'dropdownPenyakit', icon: 'checkPenyakit', list: 'listPenyakit', name: 'penyakit_id[]' },
+        tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
+    };
 
-    // Centang hijau menyala selama kolom terisi, abu-abu jika kosong
+    // Item yang sedang dipilih dari dropdown (belum dicentang)
+    const pilihan = { penyakit: null, tindakan: null };
+    // Daftar yang sudah dicentang: [{id, kode, nama}]
+    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
+
+    const timerCari = {};
+    const urutanCari = { penyakit: 0, tindakan: 0 };
+
+    // Centang hijau menyala kalau ada item yang dipilih dari dropdown
     function updateCentang(jenis) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const iconId = jenis === 'penyakit' ? 'checkPenyakit' : 'checkTindakan';
-        const terisi = document.getElementById(inputId).value.trim() !== '';
-        document.getElementById(iconId).classList.toggle('aktif', terisi);
+        document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
     }
 
     function cariItem(jenis) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-        const daftar = jenis === 'penyakit' ? daftarPenyakit : daftarTindakan;
+        const k = konfig[jenis];
+        const input = document.getElementById(k.input);
+        const dropdown = document.getElementById(k.dropdown);
+        const keyword = input.value.trim();
 
-        const input = document.getElementById(inputId);
-        const dropdown = document.getElementById(dropdownId);
-        const keyword = input.value.trim().toLowerCase();
-
+        // Mengetik lagi = membatalkan pilihan sebelumnya
+        // (kecuali teks masih sama dengan item yang dipilih, mis. saat fokus ulang)
+        if (pilihan[jenis] && input.value === pilihan[jenis].kode + ' — ' + pilihan[jenis].nama) {
+            return;
+        }
+        pilihan[jenis] = null;
         updateCentang(jenis);
-        dropdown.innerHTML = '';
 
-        if (keyword === '') {
-            dropdown.style.display = 'none';
+        clearTimeout(timerCari[jenis]);
+
+        if (keyword.length < 2) {
+            tampilPesan(dropdown, keyword === '' ? null : 'Ketik minimal 2 karakter');
             return;
         }
 
-        const hasil = daftar.filter(item => item.toLowerCase().includes(keyword));
+        timerCari[jenis] = setTimeout(async function () {
+            const nomor = ++urutanCari[jenis];
+            try {
+                const res = await fetch(URL_CARI + '/' + jenis + '?q=' + encodeURIComponent(keyword), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if (nomor !== urutanCari[jenis]) return; // abaikan respons lama
+                renderDropdown(jenis, data);
+            } catch (e) {
+                tampilPesan(dropdown, 'Gagal memuat data');
+            }
+        }, 250);
+    }
 
-        if (hasil.length === 0) {
-            dropdown.innerHTML = '<div class="ob-dropdown-item ob-dropdown-empty">Tidak ditemukan</div>';
-        } else {
-            hasil.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'ob-dropdown-item';
-                div.textContent = item;
-                div.onclick = () => pilihItem(jenis, item);
-                dropdown.appendChild(div);
-            });
+    function tampilPesan(dropdown, teks) {
+        dropdown.innerHTML = '';
+        if (teks === null) {
+            dropdown.style.display = 'none';
+            return;
         }
+        const div = document.createElement('div');
+        div.className = 'ob-dropdown-item ob-dropdown-empty';
+        div.textContent = teks;
+        dropdown.appendChild(div);
+        dropdown.style.display = 'block';
+    }
 
+    function renderDropdown(jenis, data) {
+        const dropdown = document.getElementById(konfig[jenis].dropdown);
+        if (!data.length) {
+            tampilPesan(dropdown, 'Tidak ditemukan');
+            return;
+        }
+        dropdown.innerHTML = '';
+        data.forEach(function (item) {
+            const div = document.createElement('div');
+            div.className = 'ob-dropdown-item';
+
+            const kode = document.createElement('b');
+            kode.textContent = item.kode;
+            div.appendChild(kode);
+            div.appendChild(document.createTextNode(' — ' + item.nama));
+
+            div.onclick = function () { pilihItem(jenis, item); };
+            dropdown.appendChild(div);
+        });
         dropdown.style.display = 'block';
     }
 
     function pilihItem(jenis, item) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
-
-        document.getElementById(inputId).value = item;
-        document.getElementById(dropdownId).style.display = 'none';
+        const k = konfig[jenis];
+        pilihan[jenis] = item;
+        document.getElementById(k.input).value = item.kode + ' — ' + item.nama;
+        document.getElementById(k.dropdown).style.display = 'none';
         updateCentang(jenis);
     }
 
-    // ===== Daftar Penyakit & Tindakan yang sudah dicentang (tampil di bawah kolom) =====
-    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
-
+    // ===== Klik ✓ : masukkan ke daftar di bawah kolom =====
     function tambahDiagnosa(jenis) {
-        const inputId = jenis === 'penyakit' ? 'cariPenyakit' : 'cariTindakan';
-        const dropdownId = jenis === 'penyakit' ? 'dropdownPenyakit' : 'dropdownTindakan';
+        const k = konfig[jenis];
+        const item = pilihan[jenis];
 
-        const input = document.getElementById(inputId);
-        const nilai = input.value.trim();
-
-        if (nilai === '') {
-            alert('Pilih atau tuliskan ' + jenis + ' terlebih dahulu.');
+        if (!item) {
+            alert('Pilih ' + jenis + ' dari daftar yang muncul terlebih dahulu.');
             return;
         }
 
-        if (!diagnosaTerpilih[jenis].includes(nilai)) {
-            diagnosaTerpilih[jenis].push(nilai);
+        if (diagnosaTerpilih[jenis].some(d => String(d.id) === String(item.id))) {
+            alert('Item ini sudah ada di daftar.');
+        } else {
+            diagnosaTerpilih[jenis].push(item);
         }
 
-        input.value = '';
-        document.getElementById(dropdownId).style.display = 'none';
+        pilihan[jenis] = null;
+        document.getElementById(k.input).value = '';
+        document.getElementById(k.dropdown).style.display = 'none';
         updateCentang(jenis);
         renderDiagnosa(jenis);
     }
 
     function renderDiagnosa(jenis) {
-        const listId = jenis === 'penyakit' ? 'listPenyakit' : 'listTindakan';
-        const list = document.getElementById(listId);
+        const k = konfig[jenis];
+        const list = document.getElementById(k.list);
         list.innerHTML = '';
 
         diagnosaTerpilih[jenis].forEach(function (item) {
             const baris = document.createElement('div');
             baris.className = 'ob-diagnosa-item';
-            baris.textContent = item;
+
+            const teks = document.createElement('span');
+            const kode = document.createElement('b');
+            kode.textContent = item.kode;
+            teks.appendChild(kode);
+            teks.appendChild(document.createTextNode(' — ' + item.nama));
+            baris.appendChild(teks);
+
+            // dikirim saat Simpan (kalau nanti dibungkus <form>)
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = k.name;
+            hidden.value = item.id;
+            baris.appendChild(hidden);
+
+            // tombol hapus
+            const aksi = document.createElement('span');
+            aksi.className = 'ob-diagnosa-aksi';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ob-aksi-hapus';
+            btn.title = 'Hapus';
+            btn.setAttribute('aria-label', 'Hapus');
+            btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            btn.onclick = function () { hapusDiagnosa(jenis, item.id); };
+            aksi.appendChild(btn);
+            baris.appendChild(aksi);
+
             list.appendChild(baris);
         });
+    }
+
+    // ===== Klik ikon hapus : keluarkan item dari daftar =====
+    function hapusDiagnosa(jenis, id) {
+        diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
+        renderDiagnosa(jenis);
     }
 
     document.addEventListener('click', function (e) {

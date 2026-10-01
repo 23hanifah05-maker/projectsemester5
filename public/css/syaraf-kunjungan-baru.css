@@ -126,5 +126,13 @@
 .kb-btn { border: none; border-radius: 5px; padding: 9px 22px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 .kb-btn-simpan { background: #b81d24; color: #fff; }
 .kb-btn-simpan:hover { background: #9c161c; }
-.kb-btn-reset { background: #fff; color: #333; border: 1px solid #ccc; }
-.kb-btn-reset:hover { background: #f1f1f1; }
+/* Tombol Rujuk: outline merah */
+.kb-btn-rujuk {
+    background: #fff;
+    color: #b81d24;
+    border: 1px solid #b81d24;
+}
+.kb-btn-rujuk:hover {
+    background: #b81d24;
+    color: #fff;
+}

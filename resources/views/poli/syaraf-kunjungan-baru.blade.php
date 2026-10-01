@@ -285,9 +285,7 @@
             cursor: pointer;
             transition: background .15s;
         }
-        .kb-aksi-ganti { color: #0d6efd; }
         .kb-aksi-hapus { color: var(--kb-merah); }
-        .kb-aksi-ganti:hover { background: rgba(13, 110, 253, 0.12); }
         .kb-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
     </style>
 
@@ -568,12 +566,12 @@
         </div>
 
         <div class="kb-actions">
-            <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+                <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
+                <i class="fa-solid fa-right-from-bracket"></i> Rujuk
+            </button>
+                <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
                 <i class="fa-solid fa-floppy-disk"></i> Simpan
-            </button>
-            <button type="button" class="kb-btn kb-btn-reset" onclick="resetForm()">
-                <i class="fa-solid fa-rotate-left"></i> Reset
-            </button>
+             </button>
         </div>
     </div>
 
@@ -773,24 +771,16 @@
         alert('Data kunjungan baru ini belum tersimpan ke database — masih dummy front-end. Beri tahu saya kalau mau disambungkan ke tabel kunjungan.');
     }
 
+<<<<<<< HEAD
+=======
+    function rujukPasien() {
+    alert('Fitur Rujuk belum tersambung ke database — masih dummy front-end.');
+    }
+
+    // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
+>>>>>>> 0c4ba4fdcc7c212ea42cb70f1abad07eae65712c
     let vitalTerakhir = '';
 
-    function resetForm() {
-        document.querySelectorAll('#tab-assesment input[type=text], #tab-assesment textarea').forEach(el => el.value = '');
-        document.getElementById('chkVital').checked = false;
-        vitalTerakhir = '';
-
-        diagnosaTerpilih.penyakit = [];
-        diagnosaTerpilih.tindakan = [];
-        pilihan.penyakit = null;
-        pilihan.tindakan = null;
-        renderDiagnosa('penyakit');
-        renderDiagnosa('tindakan');
-        updateCentang('penyakit');
-        updateCentang('tindakan');
-        document.getElementById('dropdownPenyakit').style.display = 'none';
-        document.getElementById('dropdownTindakan').style.display = 'none';
-    }
 
     function bangunTeksVital() {
         const bagian = [];
@@ -960,11 +950,13 @@
         renderDiagnosa(jenis);
     }
 
+    // ===== Klik ikon hapus : keluarkan item dari daftar =====
     function hapusDiagnosa(jenis, id) {
         diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
         renderDiagnosa(jenis);
     }
 
+<<<<<<< HEAD
     function gantiDiagnosa(jenis, id) {
         const item = diagnosaTerpilih[jenis].find(d => String(d.id) === String(id));
         if (!item) return;
@@ -976,6 +968,8 @@
         cariItem(jenis);
     }
 
+=======
+>>>>>>> 0c4ba4fdcc7c212ea42cb70f1abad07eae65712c
     function renderDiagnosa(jenis) {
         const k = konfig[jenis];
         const list = document.getElementById(k.list);
@@ -1000,6 +994,7 @@
             const aksi = document.createElement('span');
             aksi.className = 'kb-diagnosa-aksi';
 
+<<<<<<< HEAD
             const btnGanti = document.createElement('button');
             btnGanti.type = 'button';
             btnGanti.className = 'kb-aksi-ganti';
@@ -1007,6 +1002,8 @@
             btnGanti.innerHTML = '<i class="fa-solid fa-pen"></i>';
             btnGanti.onclick = function () { gantiDiagnosa(jenis, item.id); };
 
+=======
+>>>>>>> 0c4ba4fdcc7c212ea42cb70f1abad07eae65712c
             const btnHapus = document.createElement('button');
             btnHapus.type = 'button';
             btnHapus.className = 'kb-aksi-hapus';
@@ -1014,7 +1011,6 @@
             btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
             btnHapus.onclick = function () { hapusDiagnosa(jenis, item.id); };
 
-            aksi.appendChild(btnGanti);
             aksi.appendChild(btnHapus);
             baris.appendChild(teks);
             baris.appendChild(hidden);
