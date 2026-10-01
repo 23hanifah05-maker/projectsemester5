@@ -306,7 +306,7 @@
         .kb-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
     </style>
 
-    {{-- Area cetak resep (hasil 1 lembar) --}}
+    {{-- Area cetak resep & cetak Clinical Pathway (hasil 1 lembar) --}}
     <style>
         @page {
             size: A4;
@@ -321,7 +321,10 @@
             body.cetak-resep-mode > *:not(#cetak-resep-area) {
                 display: none !important;
             }
-            html, body.cetak-resep-mode {
+            body.cetak-cp-mode > *:not(#cetak-cp-area) {
+                display: none !important;
+            }
+            html, body.cetak-resep-mode, body.cetak-cp-mode {
                 margin: 0 !important;
                 padding: 0 !important;
                 height: auto !important;
@@ -339,7 +342,18 @@
                 color: #000;
                 page-break-inside: avoid;
             }
-            body.cetak-resep-mode #cetak-resep-area * {
+            body.cetak-cp-mode #cetak-cp-area {
+                display: block !important;
+                visibility: visible !important;
+                position: static !important;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 15mm 18mm;
+                font-family: Arial, sans-serif;
+                color: #000;
+            }
+            body.cetak-resep-mode #cetak-resep-area *,
+            body.cetak-cp-mode #cetak-cp-area * {
                 visibility: visible !important;
             }
             .cetak-header {
@@ -415,6 +429,44 @@
             .cetak-signature {
                 margin-top: 70px; /* Jarak untuk tanda tangan manual */
             }
+
+            /* Tabel hasil Clinical Pathway */
+            .cp-print-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+            }
+            .cp-print-table th,
+            .cp-print-table td {
+                border: 1px solid #000;
+                padding: 6px 8px;
+                vertical-align: top;
+            }
+            .cp-print-table th {
+                text-align: center;
+                font-weight: bold;
+            }
+            .cp-print-table td.cp-print-aktivitas {
+                width: 24%;
+                font-weight: bold;
+            }
+            .cp-print-table td.cp-print-ket,
+            .cp-print-table td.cp-print-waktu {
+                white-space: pre-line;
+                line-height: 1.5;
+            }
+            .cp-print-table td.cp-print-waktu {
+                width: 10%;
+                text-align: center;
+            }
+            .cp-print-table td.cp-print-tarif {
+                width: 16%;
+                text-align: right;
+                white-space: nowrap;
+            }
+            .cp-print-table tr {
+                page-break-inside: avoid;
+            }
         }
     </style>
 
@@ -426,7 +478,6 @@
         #tab-pathway .cp-table thead th { background: #a31515; color: #fff; padding: 8px 12px; text-align: center; position: sticky; top: 0; z-index: 1; }
         #tab-pathway .cp-table td { border: 1px solid #d9dce1; padding: 8px 12px; vertical-align: top; }
         #tab-pathway .cp-table td.cp-aktivitas { width: 25%; font-weight: 700; background: #f5f5f5; }
-        #tab-pathway .cp-sub { font-weight: 400; font-size: 12px; color: #666; margin: 8px 0 0 8px; }
         #tab-pathway .cp-table input[type=text],
         #tab-pathway .cp-table textarea { width: 100%; box-sizing: border-box; padding: 5px 8px; margin: 2px 0; border: 1px solid #ccc; border-radius: 4px; font: inherit; }
         #tab-pathway .cp-check { display: flex; align-items: flex-start; gap: 6px; margin: 3px 0; }
@@ -434,6 +485,15 @@
         #tab-pathway .cp-rp { display: flex; align-items: center; gap: 6px; color: #666; }
         #tab-pathway .cp-footer { text-align: right; padding: 12px 16px; border-top: 1px solid #d9dce1; }
         #tab-pathway .cp-cetak { background: #b81d24; color: #fff; font-weight: 700; border: none; border-radius: 6px; padding: 8px 22px; cursor: pointer; }
+
+        /* Baris Diagnosa: satu baris per Dx agar label dan isian sejajar */
+        #tab-pathway .cp-dx-head td { border-bottom: none; padding-bottom: 2px; }
+        #tab-pathway .cp-dx-row td { border-top: none; vertical-align: middle; padding-top: 3px; padding-bottom: 3px; }
+        #tab-pathway .cp-dx-mid td { border-bottom: none; }
+        #tab-pathway .cp-table td.cp-dx-label { font-weight: 400; font-size: 12px; color: #444; padding-left: 28px; }
+
+        /* Kolom Waktu terisi otomatis */
+        #tab-pathway .cp-table input.cp-waktu { background: #f5f5f5; text-align: center; color: #333; cursor: default; }
     </style>
 @endsection
 
@@ -449,6 +509,8 @@
         ];
 
         $pasien = collect($semuaPasien)->firstWhere('no_rm', $no_rm ?? request('no_rm'));
+
+        $tglKunjungan = request()->route('tanggal');
     @endphp
 
     <div class="kb-card">
@@ -532,6 +594,69 @@
         <!-- Tanda Tangan Dokter -->
         <div class="cetak-footer">
             <p>Ngawi, <span id="resep-tanggal"></span></p>
+            <div class="cetak-signature">
+                <p>dr. Poli Syaraf</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== AREA CETAK CLINICAL PATHWAY (tersembunyi, hanya muncul saat print) ===== --}}
+    <div id="cetak-cp-area" class="cetak-resep-only">
+        <!-- Kop -->
+        <div class="cetak-header">
+            <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
+            <div class="cetak-header-text">
+                <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
+                <p>Jl. Ronggo Warsito No. 98 A, Ngawi</p>
+                <p>Telp: (0351) 745596</p>
+            </div>
+        </div>
+
+        <!-- Informasi Pasien -->
+        <table class="cetak-info-table">
+            <tr>
+                <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>No. R.M.</td><td>:</td><td>{{ $pasien->no_rm ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Umur / JK</td><td>:</td><td>{{ $pasien->umur ?? '-' }} / {{ $pasien->jenis_kelamin ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Tgl. Kunjungan</td><td>:</td><td>{{ $tglKunjungan ? \Carbon\Carbon::parse($tglKunjungan)->format('d-m-Y') : '-' }}</td>
+            </tr>
+            <tr>
+                <td>Poli</td><td>:</td><td>Poli Syaraf</td>
+            </tr>
+        </table>
+
+        <div class="cetak-divider"></div>
+
+        <div class="cetak-title">CLINICAL PATHWAY</div>
+
+        <!-- Hasil isian Clinical Pathway (diisi lewat JavaScript) -->
+        <table class="cp-print-table">
+            <thead>
+                <tr>
+                    <th>Aktivitas Pelayanan</th>
+                    <th>Keterangan</th>
+                    <th>Waktu</th>
+                    <th>Tarif</th>
+                </tr>
+            </thead>
+            <tbody id="cp-cetak-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td class="cp-print-aktivitas" colspan="3" style="text-align:right;">Total</td>
+                    <td class="cp-print-tarif" id="cp-cetak-total"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Tanda Tangan Dokter -->
+        <div class="cetak-footer">
+            <p>Ngawi, <span id="cp-tanggal"></span></p>
             <div class="cetak-signature">
                 <p>dr. Poli Syaraf</p>
             </div>
@@ -678,53 +803,65 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="cp-aktivitas">
-                                Diagnosa
-                                <div class="cp-sub">Dx Utama</div>
-                                <div class="cp-sub">Dx Sekunder</div>
-                                <div class="cp-sub">Dx Banding</div>
-                            </td>
-                            <td>
-                                <input type="text"><input type="text"><input type="text">
-                            </td>
+                        {{-- Diagnosa: satu baris per Dx, tiap baris punya Waktu sendiri --}}
+                        <tr class="cp-dx-head">
+                            <td class="cp-aktivitas">Diagnosa</td>
+                            <td></td>
                             <td></td>
                             <td></td>
                         </tr>
+                        <tr class="cp-dx-row cp-dx-mid">
+                            <td class="cp-aktivitas cp-dx-label">Dx Utama</td>
+                            <td><input type="text" class="cp-dx-input" data-label="Dx Utama"></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+                        <tr class="cp-dx-row cp-dx-mid">
+                            <td class="cp-aktivitas cp-dx-label">Dx Sekunder</td>
+                            <td><input type="text" class="cp-dx-input" data-label="Dx Sekunder"></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+                        <tr class="cp-dx-row">
+                            <td class="cp-aktivitas cp-dx-label">Dx Banding</td>
+                            <td><input type="text" class="cp-dx-input" data-label="Dx Banding"></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
 
-                        <tr>
-                            <td class="cp-aktivitas">Asesmen Klinis</td>
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Asesmen Klinis">Asesmen Klinis</td>
                             <td><textarea rows="2"></textarea></td>
-                            <td><input type="text"></td>
-                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
                         </tr>
 
-                        <tr>
-                            <td class="cp-aktivitas">Pemeriksaan Fisik</td>
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Pemeriksaan Fisik">Pemeriksaan Fisik</td>
                             <td>
                                 <label class="cp-check"><input type="checkbox"> Pemeriksaan tanda vital</label>
                                 <label class="cp-check"><input type="checkbox"> Inspeksi postur tulang belakang dan gerakan aktif volumna vertebralis</label>
                                 <label class="cp-check"><input type="checkbox"> Pemeriksaan motorik, reflek, dan sensorik dermatom</label>
                                 <label class="cp-check"><input type="checkbox"> ........</label>
                             </td>
-                            <td><input type="text"></td>
-                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
                         </tr>
 
-                        <tr>
-                            <td class="cp-aktivitas">Pemeriksaan Penunjang</td>
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Pemeriksaan Penunjang">Pemeriksaan Penunjang</td>
                             <td>
                                 <label class="cp-check"><input type="checkbox"> Magnetic Resonance Imaging (MRI)</label>
                                 <label class="cp-check"><input type="checkbox"> Computerized Tomography (CT Scan)</label>
                                 <label class="cp-check"><input type="checkbox"> Foto polos lumbosakral (rontgen / X-ray)</label>
                                 <label class="cp-check"><input type="checkbox"> ........</label>
                             </td>
-                            <td><input type="text"></td>
-                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
                         </tr>
 
-                        <tr>
-                            <td class="cp-aktivitas">Farmakologis</td>
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Farmakologis">Farmakologis</td>
                             <td>
                                 <label class="cp-check"><input type="checkbox"> Antipiretik</label>
                                 <label class="cp-check"><input type="checkbox"> Analgesik Adjuvan</label>
@@ -733,22 +870,22 @@
                                 <label class="cp-check"><input type="checkbox"> Cairan IV kristaloid</label>
                                 <label class="cp-check"><input type="checkbox"> ........</label>
                             </td>
-                            <td><input type="text"></td>
-                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
                         </tr>
 
-                        <tr>
-                            <td class="cp-aktivitas">Fisioterapi</td>
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Fisioterapi">Fisioterapi</td>
                             <td>
                                 <label class="cp-check"><input type="checkbox"> Terapi lampu hangat (Infra Red)</label>
                                 <label class="cp-check"><input type="checkbox"> Stimulasi Listrik (TENS)</label>
                             </td>
-                            <td><input type="text"></td>
-                            <td><div class="cp-rp">Rp <input type="text"></div></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
                         </tr>
 
-                        <tr>
-                            <td class="cp-aktivitas">Edukasi</td>
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Edukasi">Edukasi</td>
                             <td>
                                 <label class="cp-check"><input type="checkbox"> Edukasi menjaga postur tubuh yang benar saat duduk dan berdiri</label>
                                 <label class="cp-check"><input type="checkbox"> Edukasi olahraga yang menguatkan tulang belakang</label>
@@ -756,14 +893,14 @@
                                 <label class="cp-check"><input type="checkbox"> Edukasi menjaga berat badan ideal</label>
                                 <label class="cp-check"><input type="checkbox"> ........</label>
                             </td>
-                            <td><input type="text"></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
                             <td></td>
                         </tr>
 
-                        <tr>
-                            <td class="cp-aktivitas">Variasi Pelayanan</td>
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Variasi Pelayanan">Variasi Pelayanan</td>
                             <td><textarea rows="2"></textarea></td>
-                            <td></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
                             <td></td>
                         </tr>
 
@@ -771,13 +908,13 @@
                             <td class="cp-aktivitas">Total</td>
                             <td></td>
                             <td></td>
-                            <td><div class="cp-rp">Rp <input type="text" readonly style="font-weight:700; background:#f5f5f5;"></div></td>
+                            <td><div class="cp-rp">Rp <input type="text" id="cpTotal" readonly style="font-weight:700; background:#f5f5f5;"></div></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <div class="cp-footer">
-                <button type="button" class="cp-cetak"><i class="fa-solid fa-print"></i> Cetak</button>
+                <button type="button" class="cp-cetak" onclick="cetakCP()"><i class="fa-solid fa-print"></i> Cetak</button>
             </div>
         </div>
     </div>
@@ -816,9 +953,154 @@
         window.print();
     }
 
+    // ===== Clinical Pathway: total tarif otomatis =====
+    function hitungTotalCP() {
+        let total = 0;
+        document.querySelectorAll('#tab-pathway .cp-tarif').forEach(function (input) {
+            const angka = parseInt(input.value.replace(/\D/g, ''), 10);
+            if (!isNaN(angka)) total += angka;
+        });
+        document.getElementById('cpTotal').value = total ? total.toLocaleString('id-ID') : '';
+    }
+
+    // ===== Clinical Pathway: Waktu terisi otomatis saat baris diisi =====
+    function jamSekarang() {
+        const d = new Date();
+        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function perbaruiWaktuBaris(tr) {
+        const waktu = tr.querySelector('.cp-waktu');
+        if (!waktu) return;
+
+        let terisi = false;
+        tr.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
+            if (cb.checked) terisi = true;
+        });
+        tr.querySelectorAll('input[type=text]:not(.cp-waktu), textarea').forEach(function (f) {
+            if (f.value.trim() !== '') terisi = true;
+        });
+
+        if (terisi) {
+            // jam hanya dicatat saat pertama kali baris diisi
+            if (waktu.value === '') waktu.value = jamSekarang();
+        } else {
+            waktu.value = '';
+        }
+    }
+
+    // Event delegation: tetap berfungsi walau skrip dimuat sebelum tabel tampil
+    document.addEventListener('input', function (e) {
+        const tr = e.target.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
+        if (tr) perbaruiWaktuBaris(tr);
+
+        if (e.target.classList && e.target.classList.contains('cp-tarif')) {
+            hitungTotalCP();
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        const tr = e.target.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
+        if (tr) perbaruiWaktuBaris(tr);
+    });
+
+    // ===== Clinical Pathway: cetak hasil isian =====
+    function cetakCP() {
+        const tbody = document.getElementById('cp-cetak-body');
+        tbody.innerHTML = '';
+        let adaIsi = false;
+
+        function tambahBaris(aktivitas, ketList, waktu, tarif) {
+            const baris = document.createElement('tr');
+
+            const tdA = document.createElement('td');
+            tdA.className = 'cp-print-aktivitas';
+            tdA.textContent = aktivitas;
+
+            const tdK = document.createElement('td');
+            tdK.className = 'cp-print-ket';
+            tdK.textContent = ketList.length ? ketList.join('\n') : '-';
+
+            const tdW = document.createElement('td');
+            tdW.className = 'cp-print-waktu';
+            tdW.textContent = waktu !== '' ? waktu : '-';
+
+            const tdT = document.createElement('td');
+            tdT.className = 'cp-print-tarif';
+            tdT.textContent = tarif !== '' ? 'Rp ' + tarif : '-';
+
+            baris.appendChild(tdA);
+            baris.appendChild(tdK);
+            baris.appendChild(tdW);
+            baris.appendChild(tdT);
+            tbody.appendChild(baris);
+        }
+
+        // Diagnosa (Dx Utama, Dx Sekunder, Dx Banding) beserta waktunya masing-masing
+        const dx = [];
+        const dxWaktu = [];
+        document.querySelectorAll('#tab-pathway tr.cp-dx-row').forEach(function (tr) {
+            const f = tr.querySelector('.cp-dx-input');
+            const w = tr.querySelector('.cp-waktu');
+            const v = f ? f.value.trim() : '';
+            if (v !== '') {
+                dx.push(f.dataset.label + ': ' + v);
+                dxWaktu.push(w && w.value.trim() !== '' ? w.value.trim() : '-');
+            }
+        });
+        if (dx.length) adaIsi = true;
+        tambahBaris('Diagnosa', dx, dxWaktu.join('\n'), '');
+
+        // Baris lainnya
+        document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
+            const sel = tr.querySelectorAll(':scope > td');
+            const aktivitas = sel[0].dataset.nama || sel[0].textContent.trim();
+
+            // Keterangan: item yang dicentang + isian teks
+            const ket = [];
+            sel[1].querySelectorAll('label.cp-check').forEach(function (label) {
+                const cb = label.querySelector('input[type=checkbox]');
+                const teks = label.textContent.trim();
+                if (cb && cb.checked && teks !== '........') ket.push('- ' + teks);
+            });
+            sel[1].querySelectorAll('input[type=text], textarea').forEach(function (f) {
+                const v = f.value.trim();
+                if (v !== '') ket.push(v);
+            });
+
+            // Waktu & Tarif
+            const waktuEl = sel[2].querySelector('input');
+            const tarifEl = sel[3].querySelector('input');
+            const waktu = waktuEl ? waktuEl.value.trim() : '';
+            const tarif = tarifEl ? tarifEl.value.trim() : '';
+
+            if (ket.length || waktu || tarif) adaIsi = true;
+
+            tambahBaris(aktivitas, ket, waktu, tarif);
+        });
+
+        if (!adaIsi) {
+            alert('Isi Clinical Pathway dulu sebelum mencetak.');
+            return;
+        }
+
+        const total = document.getElementById('cpTotal').value.trim();
+        document.getElementById('cp-cetak-total').textContent = total !== '' ? 'Rp ' + total : '-';
+        document.getElementById('cp-tanggal').innerText = new Date().toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        const area = document.getElementById('cetak-cp-area');
+        document.body.appendChild(area);
+        document.body.classList.add('cetak-cp-mode');
+
+        window.print();
+    }
+
     // Kembalikan tampilan normal setelah dialog cetak ditutup
     window.addEventListener('afterprint', function () {
         document.body.classList.remove('cetak-resep-mode');
+        document.body.classList.remove('cetak-cp-mode');
     });
 
     function simpanKunjunganBaru() {
@@ -891,17 +1173,18 @@
     }
 
     // Jika checkbox sudah dicentang lalu nilai vital diubah, Objective ikut diperbarui
-    document.querySelectorAll('.kb-vitals input[type=text]').forEach(function (input) {
-        input.addEventListener('input', function () {
-            if (!document.getElementById('chkVital').checked) return;
+    document.addEventListener('input', function (e) {
+        if (!e.target.matches('.kb-vitals input[type=text]')) return;
 
-            const teks = bangunTeksVital();
-            if (teks === '') {
-                hapusVitalDariObjektif();
-            } else {
-                terapkanVitalKeObjektif(teks);
-            }
-        });
+        const chk = document.getElementById('chkVital');
+        if (!chk || !chk.checked) return;
+
+        const teks = bangunTeksVital();
+        if (teks === '') {
+            hapusVitalDariObjektif();
+        } else {
+            terapkanVitalKeObjektif(teks);
+        }
     });
 
     // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
