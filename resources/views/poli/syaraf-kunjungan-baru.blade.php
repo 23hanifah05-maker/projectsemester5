@@ -50,9 +50,12 @@
             .kb-card .kb-fields { grid-template-columns: 1fr; }
         }
 
-        /* ===== Kotak Tanda Vital ===== */
+        /* ===== Kotak Tanda Vital: 2 baris x 3 kolom (6 isian) =====
+           Ukuran disamakan dengan Poli Obgyn (kotak rapat, isian 34px).
+           9 kolom: [label | isian | satuan] x 3. Label & satuan selebar isinya,
+           sisa lebar dibagi rata ke 3 kolom isian (panjang menyesuaikan layar). */
         .kb-vitals-box {
-            padding: 20px 24px;
+            padding: 12px 14px 12px 18px;
             border: 1px solid var(--kb-garis);
             border-radius: 10px;
             background: #fff;
@@ -60,27 +63,36 @@
         }
         .kb-vitals-box .kb-vitals {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 16px 36px;
+            grid-template-columns:
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content
+                max-content minmax(0, 1fr) max-content;
+            column-gap: 6px;
+            row-gap: 10px;
             align-items: center;
         }
         .kb-vitals .kb-vital-row {
-            display: grid;
-            grid-template-columns: 56px minmax(0, 1fr) 64px; /* label | input | satuan */
-            align-items: center;
-            gap: 10px;
-            margin: 0;
+            display: contents;
         }
         .kb-vitals .kb-vital-row label {
             font-weight: 600;
             margin: 0;
+            white-space: nowrap;
+            box-sizing: border-box;
+            padding-right: 4px;
+        }
+        /* jarak antar kelompok kolom (kolom ke-2 dan ke-3) */
+        .kb-vitals .kb-vital-row:nth-child(3n+2) label,
+        .kb-vitals .kb-vital-row:nth-child(3n) label {
+            padding-left: 14px;
         }
         .kb-vitals .kb-vital-row input[type=text] {
             width: 100%;
-            height: 40px;
+            min-width: 0;
+            height: 34px;
             box-sizing: border-box;
-            padding: 0 12px;
-            font-size: 15px;
+            padding: 0 10px;
+            font-size: 14px;
             font-family: inherit;
             border: 1px solid #ccc;
             border-radius: 6px;
@@ -93,27 +105,42 @@
         }
         .kb-vitals .kb-vital-unit {
             color: var(--kb-teks-samar);
-            font-size: 14px;
+            font-size: 13px;
             white-space: nowrap;
-        }
-        @media (max-width: 1000px) {
-            .kb-vitals-box .kb-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-        @media (max-width: 640px) {
-            .kb-vitals-box .kb-vitals { grid-template-columns: 1fr; }
+            margin: 0;
         }
 
-        /* Checkbox Lainnya: sama dengan kotak centang Penyakit/Tindakan */
+        /* Layar sedang: 2 kelompok kolom */
+        @media (max-width: 1000px) {
+            .kb-vitals-box .kb-vitals {
+                grid-template-columns:
+                    max-content minmax(0, 1fr) max-content
+                    max-content minmax(0, 1fr) max-content;
+            }
+            .kb-vitals .kb-vital-row label { padding-left: 0; }
+            .kb-vitals .kb-vital-row:nth-child(even) label { padding-left: 14px; }
+        }
+        /* Layar kecil: 1 kelompok kolom */
+        @media (max-width: 640px) {
+            .kb-vitals-box .kb-vitals {
+                grid-template-columns: max-content minmax(0, 1fr) max-content;
+            }
+            .kb-vitals .kb-vital-row label,
+            .kb-vitals .kb-vital-row:nth-child(even) label { padding-left: 0; }
+        }
+
+        /* Checkbox Alergi: sama dengan kotak centang Penyakit/Tindakan */
         .kb-vital-row .kb-check-box {
             justify-self: start;
             flex: 0 0 auto;
-            width: 40px;
-            height: 38px;
+            width: 34px;
+            height: 34px;
+            box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 6px;
             background: #fff;
         }
         .kb-vital-row .kb-vital-check {
@@ -539,8 +566,8 @@
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row kb-vital-lainnya">
-                    <label for="chkVital">Lainnya</label>
-                    <input type="text" placeholder="Catatan lainnya..." autocomplete="off">
+                    <label for="chkVital">Alergi</label>
+                    <input type="text" placeholder="mis. tidak ada" autocomplete="off">
                     <span class="kb-check-box">
                         <input type="checkbox" class="kb-vital-check" id="chkVital"
                                title="Centang untuk memasukkan tanda vital ke Objective"
@@ -557,7 +584,7 @@
         <div class="kb-soap-box">
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">S</div>
-                <textarea name="subjective" rows="4" placeholder="Diagnosis Masuk :"></textarea>
+                <textarea name="subjective" rows="4" placeholder="Subjektif..."></textarea>
             </div>
 
             <div class="kb-soap-row">
@@ -626,12 +653,12 @@
         </div>
 
         <div class="kb-actions">
-                <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
+            <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
                 <i class="fa-solid fa-right-from-bracket"></i> Rujuk
             </button>
-                <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+            <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
                 <i class="fa-solid fa-floppy-disk"></i> Simpan
-             </button>
+            </button>
         </div>
     </div>
 
@@ -683,7 +710,7 @@
     }
 
     function rujukPasien() {
-    alert('Fitur Rujuk belum tersambung ke database — masih dummy front-end.');
+        alert('Fitur Rujuk belum tersambung ke database — masih dummy front-end.');
     }
 
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
