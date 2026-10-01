@@ -77,6 +77,11 @@ Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', function ($no_rm) {
     return view('poli.syaraf-kunjungan-baru', ['no_rm' => $no_rm]);
 })->name('poli.syaraf.kunjungan-baru');
 
+/* ----------------------------------------------------
+ * Rute Clinical Pathway Poli Saraf (Tambahan Baru)
+ * ---------------------------------------------------- */
+Route::get('/poli/saraf/clinical-pathway', [PoliController::class, 'clinicalPathway'])->name('poli.clinical_pathway');
+
 Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])->name('poli.obgyn');
 Route::get('/poli/obgyn/kunjungan/{no_rm}', function ($no_rm) {
     return view('poli.obgyn-kunjungan', ['no_rm' => $no_rm]);
@@ -85,7 +90,7 @@ Route::get('/poli/obgyn/kunjungan/{no_rm}/{tanggal}', function ($no_rm, $tanggal
     return view('poli.obgyn-kunjungan-baru', compact('no_rm', 'tanggal'));
 })->name('poli.obgyn.kunjungan.detail');
 Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', function ($no_rm) {
-    return view('poli.obgyn-kunjungan-baru', compact('no_rm'));
+    return view('poli.obgyn-kunjungan-baru', ['no_rm' => $no_rm]);
 })->name('poli.obgyn.kunjungan-baru');
 
 Route::get('/poli/jantung', [PoliController::class, 'jantung'])->name('poli.jantung');

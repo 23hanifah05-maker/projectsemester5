@@ -50,70 +50,82 @@
             .kb-card .kb-fields { grid-template-columns: 1fr; }
         }
 
-        /* ===== Kotak Tanda Vital ===== */
-        .kb-vitals-box {
-            padding: 20px 24px;
+        /* ===== Kotak Tanda Vital: 2 baris x 3 kolom (6 isian) =====
+           Ukuran disamakan dengan Poli Obgyn (kotak rapat, isian 34px).
+           Tiap isian = grid sendiri [label | isian | satuan], lebar menyesuaikan layar.
+           Memakai #tab-assesment + !important agar tidak tertimpa syaraf-kunjungan-baru.css */
+        #tab-assesment .kb-vitals-box {
+            padding: 12px 14px 12px 18px !important;
             border: 1px solid var(--kb-garis);
             border-radius: 10px;
             background: #fff;
             box-sizing: border-box;
         }
-        .kb-vitals-box .kb-vitals {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 16px 36px;
-            align-items: center;
+        #tab-assesment .kb-vitals-box .kb-vitals {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            column-gap: 28px !important;
+            row-gap: 10px !important;
+            align-items: center !important;
         }
-        .kb-vitals .kb-vital-row {
-            display: grid;
-            grid-template-columns: 56px minmax(0, 1fr) 64px; /* label | input | satuan */
-            align-items: center;
-            gap: 10px;
-            margin: 0;
+        #tab-assesment .kb-vitals .kb-vital-row {
+            display: grid !important;
+            grid-template-columns: 70px minmax(0, 1fr) 62px !important;
+            align-items: center !important;
+            column-gap: 8px !important;
+            margin: 0 !important;
+            width: auto !important;
+            min-width: 0 !important;
         }
-        .kb-vitals .kb-vital-row label {
+        #tab-assesment .kb-vitals .kb-vital-row label {
             font-weight: 600;
-            margin: 0;
+            margin: 0 !important;
+            width: auto !important;
+            white-space: nowrap;
         }
-        .kb-vitals .kb-vital-row input[type=text] {
-            width: 100%;
-            height: 40px;
+        #tab-assesment .kb-vitals .kb-vital-row input[type=text] {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            height: 34px !important;
             box-sizing: border-box;
-            padding: 0 12px;
-            font-size: 15px;
+            padding: 0 10px !important;
+            font-size: 14px !important;
             font-family: inherit;
             border: 1px solid #ccc;
             border-radius: 6px;
             background: #fff;
         }
-        .kb-vitals .kb-vital-row input[type=text]:focus {
+        #tab-assesment .kb-vitals .kb-vital-row input[type=text]:focus {
             outline: none;
             border-color: var(--kb-merah);
             box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
         }
-        .kb-vitals .kb-vital-unit {
+        #tab-assesment .kb-vitals .kb-vital-unit {
             color: var(--kb-teks-samar);
-            font-size: 14px;
+            font-size: 13px;
             white-space: nowrap;
+            margin: 0 !important;
         }
         @media (max-width: 1000px) {
-            .kb-vitals-box .kb-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            #tab-assesment .kb-vitals-box .kb-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
         }
         @media (max-width: 640px) {
-            .kb-vitals-box .kb-vitals { grid-template-columns: 1fr; }
+            #tab-assesment .kb-vitals-box .kb-vitals { grid-template-columns: 1fr !important; }
         }
 
-        /* Checkbox Lainnya: sama dengan kotak centang Penyakit/Tindakan */
-        .kb-vital-row .kb-check-box {
+        /* Checkbox Alergi: sama dengan kotak centang Penyakit/Tindakan */
+        #tab-assesment .kb-vital-row .kb-check-box {
             justify-self: start;
             flex: 0 0 auto;
-            width: 40px;
-            height: 38px;
+            width: 34px !important;
+            height: 34px !important;
+            box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 6px;
             background: #fff;
         }
         .kb-vital-row .kb-vital-check {
@@ -539,8 +551,8 @@
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row kb-vital-lainnya">
-                    <label for="chkVital">Lainnya</label>
-                    <input type="text" placeholder="Catatan lainnya..." autocomplete="off">
+                    <label for="chkVital">Alergi</label>
+                    <input type="text" placeholder="mis. tidak ada" autocomplete="off">
                     <span class="kb-check-box">
                         <input type="checkbox" class="kb-vital-check" id="chkVital"
                                title="Centang untuk memasukkan tanda vital ke Objective"
@@ -557,7 +569,7 @@
         <div class="kb-soap-box">
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">S</div>
-                <textarea name="subjective" rows="4" placeholder="Diagnosis Masuk :"></textarea>
+                <textarea name="subjective" rows="4" placeholder="Subjektif..."></textarea>
             </div>
 
             <div class="kb-soap-row">
@@ -626,12 +638,12 @@
         </div>
 
         <div class="kb-actions">
-                <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
+            <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
                 <i class="fa-solid fa-right-from-bracket"></i> Rujuk
             </button>
-                <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+            <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
                 <i class="fa-solid fa-floppy-disk"></i> Simpan
-             </button>
+            </button>
         </div>
     </div>
 
@@ -683,7 +695,7 @@
     }
 
     function rujukPasien() {
-    alert('Fitur Rujuk belum tersambung ke database — masih dummy front-end.');
+        alert('Fitur Rujuk belum tersambung ke database — masih dummy front-end.');
     }
 
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
