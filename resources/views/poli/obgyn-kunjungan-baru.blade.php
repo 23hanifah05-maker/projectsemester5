@@ -12,6 +12,11 @@
 
     {{-- Ukuran kolom SOAP, tombol Cetak di kolom Plan, dan daftar diagnosa di bawah kolom --}}
     <style>
+        :root {
+            --kb-merah: #b81d24;
+            --kb-garis: #d9dce1;
+        }
+
         .ob-soap-box {
             gap: 16px;
             padding: 18px 20px;
@@ -264,6 +269,115 @@
             #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(even) label { padding-left: 0; }
         }
     </style>
+
+    {{-- Form Rujukan (disalin dari Poli Syaraf) --}}
+    <style>
+        #view-rujukan { display: none; }
+        body.mode-rujukan #view-rujukan { display: block; }
+        body.mode-rujukan #kartu-pasien-utama,
+        body.mode-rujukan .ob-tabs,
+        body.mode-rujukan .ob-tab-content { display: none !important; }
+
+        #view-rujukan .rj-box {
+            border: 1px solid var(--kb-garis);
+            border-radius: 8px;
+            background: #fff;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        #view-rujukan .rj-back {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--kb-garis);
+        }
+        #view-rujukan .rj-back button {
+            border: none;
+            background: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+        }
+        #view-rujukan .rj-body { padding: 16px 20px; }
+        #view-rujukan .rj-title {
+            color: var(--kb-merah);
+            font-weight: 700;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--kb-garis);
+        }
+        #view-rujukan .rj-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 40px;
+        }
+        #view-rujukan .rj-field {
+            display: grid;
+            grid-template-columns: 130px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+        }
+        #view-rujukan .rj-field.rj-top { align-items: start; }
+        #view-rujukan .rj-field label { font-size: 13px; font-weight: 600; }
+        #view-rujukan .rj-field input[type=text],
+        #view-rujukan .rj-field input[type=date],
+        #view-rujukan .rj-field select,
+        #view-rujukan .rj-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            height: 34px;
+            padding: 0 10px;
+            font: inherit;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+        #view-rujukan .rj-field textarea { height: 110px; padding: 8px 10px; resize: vertical; }
+        #view-rujukan .rj-field input[readonly] { background: #f7f7f7; }
+        #view-rujukan .rj-field input:focus,
+        #view-rujukan .rj-field select:focus,
+        #view-rujukan .rj-field textarea:focus {
+            outline: none;
+            border-color: var(--kb-merah);
+            box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+        }
+        #view-rujukan .rj-cek-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+        #view-rujukan .rj-cek-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            margin: 6px 0;
+            cursor: pointer;
+        }
+        #view-rujukan .rj-cek-item input[type=checkbox] { accent-color: var(--kb-merah); margin: 0; }
+        #view-rujukan .rj-cek-item input[type=text] {
+            flex: 1;
+            min-width: 0;
+            height: 30px;
+            padding: 0 10px;
+            font: inherit;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        #view-rujukan .rj-cek-item input[type=text]:disabled { background: #f1f1f1; cursor: not-allowed; }
+        #view-rujukan .rj-actions { display: flex; justify-content: flex-end; }
+        #view-rujukan .rj-kirim {
+            background: var(--kb-merah);
+            color: #fff;
+            font-weight: 700;
+            font-size: 11px;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 20px;
+            cursor: pointer;
+        }
+        @media (max-width: 900px) {
+            #view-rujukan .rj-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            #view-rujukan .rj-field { grid-template-columns: 1fr; gap: 4px; }
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -309,7 +423,7 @@
     @endphp
 
     {{-- ===== DATA PASIEN ===== --}}
-    <div class="ob-card">
+    <div class="ob-card" id="kartu-pasien-utama">
         <div class="ob-section-title">Data Pasien</div>
 
         @if ($pasien)
@@ -590,7 +704,7 @@
         </div>
 
         <div class="ob-actions">
-            <button type="button" class="ob-btn ob-btn-reset ob-btn-rujuk" onclick="rujukKeRadiologi()">
+            <button type="button" class="ob-btn ob-btn-reset ob-btn-rujuk" onclick="rujukPasien()">
                 <i class="fa-solid fa-right-from-bracket"></i> Rujuk
             </button>
             <button type="button" class="ob-btn ob-btn-simpan" onclick="simpanKunjunganBaru()">
@@ -599,7 +713,7 @@
         </div>
     </div>
 
-    {{-- ===== TAB RADIOLOGI ===== --}}
+    {{-- ===== TAB RADIOLOGI (tidak diubah) ===== --}}
     <div id="tab-radiologi" class="ob-tab-content">
         <div class="ob-radio-card">
             <div class="ob-radio-title">Form Pemeriksaan</div>
@@ -638,12 +752,95 @@
         </div>
     </div>
 
+    {{-- ===== FORM RUJUKAN (muncul saat tombol Rujuk diklik, sama dengan Poli Syaraf) ===== --}}
+    <div id="view-rujukan">
+
+        <div class="rj-box">
+            <div class="rj-back">
+                <button type="button" onclick="tutupRujukan()" aria-label="Kembali"><i class="fa-solid fa-arrow-left"></i></button>
+            </div>
+            <div class="rj-body">
+                <div class="rj-grid">
+                    <div class="rj-field">
+                        <label>Poli Asal</label>
+                        <input type="text" id="rjPoliAsal" value="Poli Obgyn" readonly>
+                    </div>
+                    <div class="rj-field">
+                        <label>Tujuan</label>
+                        <select id="rjTujuan">
+                            <option value="">-- Pilih Poli --</option>
+                            <option>Poli Syaraf</option>
+                            <option>Poli Jantung</option>
+                            <option>Poli Jiwa</option>
+                        </select>
+                    </div>
+                    <div class="rj-field">
+                        <label>Dokter</label>
+                        <input type="text" id="rjDokter" autocomplete="off">
+                    </div>
+                    <div class="rj-field">
+                        <label>Tanggal Rujuk</label>
+                        <input type="date" id="rjTanggal">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rj-box">
+            <div class="rj-title">Data Pasien</div>
+            <div class="rj-body">
+                @if ($pasien)
+                    <div class="rj-grid">
+                        <div class="rj-field"><label>No RM</label><input type="text" value="{{ $pasien->no_rm }}" readonly></div>
+                        <div class="rj-field"><label>Tempat, Tgl Lahir</label><input type="text" value="{{ $pasien->tempat_lahir }}, {{ \Carbon\Carbon::parse($pasien->tgl_lahir)->format('Y-m-d') }}" readonly></div>
+                        <div class="rj-field"><label>Nama</label><input type="text" value="{{ $pasien->nama_pasien }}" readonly></div>
+                        <div class="rj-field"><label>Umur</label><input type="text" value="{{ $pasien->umur }}" readonly></div>
+                        <div class="rj-field"><label>Jenis Kelamin</label><input type="text" value="{{ $pasien->jenis_kelamin }}" readonly></div>
+                        <div class="rj-field"><label>No Hp</label><input type="text" value="{{ $pasien->no_hp }}" readonly></div>
+                    </div>
+                @else
+                    <p style="color:#888;">Data pasien tidak ditemukan.</p>
+                @endif
+
+                <div class="rj-grid" style="margin-top:22px;">
+                    <div>
+                        <div class="rj-field" style="margin-bottom:14px;">
+                            <label>Diagnosa</label>
+                            <input type="text" id="rjDiagnosa" autocomplete="off">
+                        </div>
+                        <div class="rj-field rj-top">
+                            <label>Alasan Rujuk</label>
+                            <textarea id="rjAlasan"></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="rj-cek-title">Checklist Periksa Radiologi</div>
+                        @foreach (['Foto Thoraks', 'USG Abdomen', 'CT Scan', 'MRI', 'Rontgen'] as $opt)
+                            <label class="rj-cek-item">
+                                <input type="checkbox" name="rujuk_radiologi[]" value="{{ $opt }}"> {{ $opt }}
+                            </label>
+                        @endforeach
+                        <label class="rj-cek-item">
+                            <input type="checkbox" id="rjCekLainnya" name="rujuk_radiologi[]" value="Lainnya"> Lainnya
+                            <input type="text" id="rjLainnya" placeholder="(tuliskan)" disabled>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rj-actions">
+            <button type="button" class="rj-kirim" onclick="kirimRujukan()">KIRIM RUJUKAN</button>
+        </div>
+    </div>
+
 @endsection
 
 @section('extra-js')
 <script>
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
-    const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+    const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
 
     // Kunci penyimpanan status periksa (dipakai juga di halaman Daftar Pasien & Pendaftaran)
     const KUNCI_STATUS_PERIKSA = 'obgyn_status_periksa';
@@ -683,11 +880,60 @@
         document.body.classList.remove('cetak-resep-mode');
     });
 
-    function rujukKeRadiologi() {
-        document.querySelectorAll('.ob-tab').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.ob-tab-content').forEach(el => el.classList.remove('active'));
-        document.getElementById('ob-tab-btn-radiologi').classList.add('active');
-        document.getElementById('tab-radiologi').classList.add('active');
+    // ===== Rujukan: buka / tutup form =====
+    function rujukPasien() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        // Tanggal rujuk otomatis hari ini (masih bisa diubah)
+        const tgl = document.getElementById('rjTanggal');
+        if (!tgl.value) {
+            const d = new Date();
+            tgl.value = d.getFullYear() + '-' +
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(d.getDate()).padStart(2, '0');
+        }
+
+        document.body.classList.add('mode-rujukan');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function tutupRujukan() {
+        document.body.classList.remove('mode-rujukan');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Kolom "Lainnya" pada form rujukan aktif hanya kalau dicentang
+    const rjCekLainnya = document.getElementById('rjCekLainnya');
+    const rjLainnya = document.getElementById('rjLainnya');
+    if (rjCekLainnya) {
+        rjCekLainnya.addEventListener('change', function () {
+            rjLainnya.disabled = !this.checked;
+            if (!this.checked) rjLainnya.value = '';
+        });
+    }
+
+    function kirimRujukan() {
+        if (document.getElementById('rjTujuan').value === '') {
+            alert('Pilih poli tujuan rujukan terlebih dahulu.');
+            return;
+        }
+        if (document.getElementById('rjAlasan').value.trim() === '') {
+            alert('Isi alasan rujuk terlebih dahulu.');
+            return;
+        }
+
+        // TODO: kirim ke backend. Sementara masih dummy front-end (sama seperti Poli Syaraf).
+        alert('Rujukan berhasil dikirim.');
+
+        // Reset form lalu kembali ke halaman pemeriksaan
+        ['rjDokter', 'rjDiagnosa', 'rjAlasan', 'rjLainnya'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('rjTujuan').value = '';
+        document.querySelectorAll('#view-rujukan input[type=checkbox]').forEach(cb => cb.checked = false);
+        rjLainnya.disabled = true;
+        tutupRujukan();
     }
 
     // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)

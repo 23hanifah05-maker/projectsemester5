@@ -12,10 +12,6 @@
 
     <div class="panel">
 
-        <div class="panel-head">
-            <a href="{{ route('pendaftaran.index') }}" class="master-data-title">&larr; Master Data</a>
-        </div>
-
         @if ($errors->any())
             <div class="form-alert">
                 <ul>
@@ -26,271 +22,240 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('pendaftaran.store') }}" id="formPendaftaran">
+        @php
+            // $noRmBaru dikirim dari controller (nomor urut berikutnya). Fallback jika belum ada.
+            $noRmOtomatis = $noRmBaru ?? old('no_rm', 'E000001');
+            $tglOtomatis  = date('Y-m-d');
+        @endphp
+
+        <form method="POST" action="{{ route('pendaftaran.store') }}" id="formPendaftaran" autocomplete="off">
             @csrf
 
             {{-- ================= INPUT DATA ================= --}}
-            <div class="section-title">Input Data</div>
-            <div class="form-grid">
-                <div class="field">
-                    <label>Tgl Registrasi</label>
-                    <input type="date" name="tgl_registrasi" value="{{ old('tgl_registrasi', date('Y-m-d')) }}">
-                </div>
-                <div class="field">
-                    <label>Poli</label>
-                    <select name="poli">
-                        <option value="">-- Pilih Poli --</option>
-                        <option value="saraf" {{ old('poli') == 'saraf' ? 'selected' : '' }}>Poli Saraf</option>
-                        <option value="obgyn" {{ old('poli') == 'obgyn' ? 'selected' : '' }}>Poli Obgyn</option>
-                        <option value="jantung" {{ old('poli') == 'jantung' ? 'selected' : '' }}>Poli Jantung</option>
-                        <option value="jiwa" {{ old('poli') == 'jiwa' ? 'selected' : '' }}>Poli Jiwa</option>
-                    </select>
-                </div>
+            <div class="title-underline">Input Data</div>
+            <div class="box">
+                <div class="top-grid">
+                    <div class="field">
+                        <label>Tgl Registrasi</label>
+                        {{-- tampil dd-mm-yyyy, yang dikirim ke server yyyy-mm-dd --}}
+                        <input type="text" value="{{ date('d-m-Y') }}" readonly>
+                        <input type="hidden" name="tgl_registrasi" value="{{ $tglOtomatis }}">
+                    </div>
+                    <div class="field">
+                        <label>Poli</label>
+                        <select name="poli">
+                            <option value="">JANTUNG</option>
+                            <option value="saraf" {{ old('poli') == 'saraf' ? 'selected' : '' }}>Poli Saraf</option>
+                            <option value="obgyn" {{ old('poli') == 'obgyn' ? 'selected' : '' }}>Poli Obgyn</option>
+                            <option value="jantung" {{ old('poli') == 'jantung' ? 'selected' : '' }}>Poli Jantung</option>
+                            <option value="jiwa" {{ old('poli') == 'jiwa' ? 'selected' : '' }}>Poli Jiwa</option>
+                        </select>
+                    </div>
 
-                <div class="field">
-                    <label>No RM</label>
-                    <input type="text" name="no_rm" value="{{ old('no_rm') }}" placeholder="Contoh: 123456">
-                </div>
-                <div class="field">
-                    <label>Dokter</label>
-                    <select name="dokter">
-                        <option value="">-- Pilih Dokter --</option>
-                        <option value="dr_indah" {{ old('dokter') == 'dr_indah' ? 'selected' : '' }}>dr. Indah</option>
-                        <option value="dr_bagus" {{ old('dokter') == 'dr_bagus' ? 'selected' : '' }}>dr. Bagus</option>
-                        <option value="dr_wulan" {{ old('dokter') == 'dr_wulan' ? 'selected' : '' }}>dr. Wulan</option>
-                    </select>
+                    <div class="field">
+                        <label>No RM</label>
+                        <input type="text" name="no_rm" id="no_rm" value="{{ $noRmOtomatis }}" readonly>
+                    </div>
+                    <div class="field">
+                        <label>Dokter</label>
+                        <select name="dokter">
+                            <option value="">dr. INDAH</option>
+                            <option value="dr_indah" {{ old('dokter') == 'dr_indah' ? 'selected' : '' }}>dr. Indah</option>
+                            <option value="dr_bagus" {{ old('dokter') == 'dr_bagus' ? 'selected' : '' }}>dr. Bagus</option>
+                            <option value="dr_wulan" {{ old('dokter') == 'dr_wulan' ? 'selected' : '' }}>dr. Wulan</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
             {{-- ================= IDENTITAS PASIEN ================= --}}
-            <div class="section-title">Identitas Pasien</div>
-            <div class="form-grid">
-                <div class="field">
-                    <label>No. Rekam Medis</label>
-                    <input
-                        type="text"
-                        name="no_rekam_medis"
-                        value="{{ old('no_rekam_medis') }}"
-                        inputmode="numeric"
-                        maxlength="6"
-                        id="no_rekam_medis"
-                        oninput="cekNoRekamMedis(this, 'noRekamMedisError')"
-                    >
-                    <small id="noRekamMedisError" style="display:none; color:red;">
-                        No. Rekam Medis harus 6 digit angka.
-                    </small>
-                </div>
-                <div class="field">
-                    <label>No HP</label>
+            <div class="box">
+                <div class="box-title">Identitas Pasien</div>
+                <div class="cols">
 
-                    <input
-                        type="text"
-                        name="no_hp"
-                        value="{{ old('no_hp') }}"
-                        inputmode="numeric"
-                        id="no_hp"
-                        oninput="cekAngkaSaja(this, 'noHpError')"
-                    >
-
-                    <small id="noHpError" style="display:none; color:red;">
-                        No HP hanya boleh berisi angka.
-                    </small>
-                </div>
-
-                <div class="field">
-                    <label>Nama Lengkap</label>
-                    <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}">
-                </div>
-                <div class="field">
-                    <label>Suku</label>
-                    <input
-                        type="text"
-                        name="suku"
-                        value="{{ old('suku') }}"
-                        id="suku"
-                        oninput="cekHurufSaja(this, 'sukuError')"
-                    >
-                    <small id="sukuError" style="display:none; color:red;">
-                        Suku hanya boleh berisi huruf.
-                    </small>
-                </div>
-
-                <div class="field">
-                    <label>NIK</label>
-                    <input type="text" name="nik" value="{{ old('nik') }}" maxlength="16">
-                </div>
-                <div class="field">
-                    <label>Bangsa</label>
-                    <input type="text" name="bangsa" value="{{ old('bangsa', 'Indonesia') }}">
-                </div>
-
-                <div class="field">
-                    <label>Tempat/Tgl Lahir</label>
-                    <div class="split-2">
-                        <input type="text" name="tempat_lahir" value="{{ old('tempat_lahir') }}" placeholder="Tempat lahir">
-                        <input type="date" name="tgl_lahir" value="{{ old('tgl_lahir') }}">
-                    </div>
-                </div>
-                <div class="field">
-                    <label>Bahasa</label>
-                    <select name="bahasa">
-                        <option value="indonesia" {{ old('bahasa') == 'indonesia' ? 'selected' : '' }}>Indonesia</option>
-                        <option value="jawa" {{ old('bahasa') == 'jawa' ? 'selected' : '' }}>Jawa</option>
-                        <option value="lainnya" {{ old('bahasa') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Umur</label>
-                    <div class="umur-group">
-                        <input type="number" name="umur_tahun" value="{{ old('umur_tahun') }}" placeholder="Th" min="0">
-                        <input type="number" name="umur_bulan" value="{{ old('umur_bulan') }}" placeholder="Bl" min="0" max="11">
-                        <input type="number" name="umur_hari" value="{{ old('umur_hari') }}" placeholder="Hr" min="0" max="30">
-                    </div>
-                </div>
-                <div class="field">
-                    <label>Alamat</label>
-                    <textarea name="alamat">{{ old('alamat') }}</textarea>
-                </div>
-
-                <div class="field">
-                    <label>Jenis Kelamin</label>
-                    <select name="jenis_kelamin">
-                        <option value="">-- Pilih --</option>
-                        <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                        <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <div class="split-2">
-                        <div class="field">
-                            <label>Kelurahan</label>
-                            <input type="text" name="kelurahan" value="{{ old('kelurahan') }}">
+                    {{-- ---------- KOLOM KIRI ---------- --}}
+                    <div class="col-left">
+                        <div class="row">
+                            <label>No. Rekam Medis</label>
+                            <input type="text" name="no_rekam_medis" id="no_rekam_medis" value="{{ $noRmOtomatis }}" readonly>
                         </div>
-                        <div class="field">
-                            <label>Kecamatan</label>
-                            <input type="text" name="kecamatan" value="{{ old('kecamatan') }}">
+                        <div class="row">
+                            <label>Nama Lengkap</label>
+                            <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}" placeholder="NAILA SAFRINA">
+                        </div>
+                        <div class="row">
+                            <label>NIK</label>
+                            <input type="text" name="nik" id="nik" value="{{ old('nik') }}"
+                                   placeholder="3521124508900001" inputmode="numeric" maxlength="16" minlength="16" pattern="[0-9]{16}"
+                                   title="NIK harus 16 angka"
+                                   oninput="batasiAngka(this, 16, 'nikError', 'NIK harus 16 digit angka.', true)">
+                            <small class="err" id="nikError"></small>
+                        </div>
+                        <div class="row">
+                            <label>Tempat/Tgl Lahir</label>
+                            <div class="split-2">
+                                <input type="text" name="tempat_lahir" value="{{ old('tempat_lahir') }}" placeholder="NGAWI">
+                                <input type="date" name="tgl_lahir" id="tgl_lahir" value="{{ old('tgl_lahir') }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label>Umur</label>
+                            <div class="umur-group">
+                                <input type="number" name="umur_tahun" id="umur_tahun" value="{{ old('umur_tahun') }}" placeholder="12 Th" min="0" readonly>
+                                <input type="number" name="umur_bulan" id="umur_bulan" value="{{ old('umur_bulan') }}" placeholder="11 Bl" min="0" max="11" readonly>
+                                <input type="number" name="umur_hari" id="umur_hari" value="{{ old('umur_hari') }}" placeholder="30 Hr" min="0" max="30" readonly>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label>Jenis Kelamin</label>
+                            <select name="jenis_kelamin">
+                                <option value="">PEREMPUAN</option>
+                                <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>Agama</label>
+                            <select name="agama">
+                                <option value="">ISLAM</option>
+                                <option value="islam" {{ old('agama') == 'islam' ? 'selected' : '' }}>Islam</option>
+                                <option value="kristen" {{ old('agama') == 'kristen' ? 'selected' : '' }}>Kristen</option>
+                                <option value="katolik" {{ old('agama') == 'katolik' ? 'selected' : '' }}>Katolik</option>
+                                <option value="hindu" {{ old('agama') == 'hindu' ? 'selected' : '' }}>Hindu</option>
+                                <option value="buddha" {{ old('agama') == 'buddha' ? 'selected' : '' }}>Buddha</option>
+                                <option value="konghucu" {{ old('agama') == 'konghucu' ? 'selected' : '' }}>Konghucu</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>Pendidikan</label>
+                            <select name="pendidikan">
+                                <option value="">SMA</option>
+                                <option value="sd" {{ old('pendidikan') == 'sd' ? 'selected' : '' }}>SD</option>
+                                <option value="smp" {{ old('pendidikan') == 'smp' ? 'selected' : '' }}>SMP</option>
+                                <option value="sma" {{ old('pendidikan') == 'sma' ? 'selected' : '' }}>SMA</option>
+                                <option value="d3" {{ old('pendidikan') == 'd3' ? 'selected' : '' }}>D3</option>
+                                <option value="s1" {{ old('pendidikan') == 's1' ? 'selected' : '' }}>S1</option>
+                                <option value="s2" {{ old('pendidikan') == 's2' ? 'selected' : '' }}>S2</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>Pekerjaan</label>
+                            <select name="pekerjaan">
+                                <option value="">BELUM BEKERJA</option>
+                                <option value="belum_bekerja" {{ old('pekerjaan') == 'belum_bekerja' ? 'selected' : '' }}>Belum Bekerja</option>
+                                <option value="pelajar" {{ old('pekerjaan') == 'pelajar' ? 'selected' : '' }}>Pelajar/Mahasiswa</option>
+                                <option value="pns" {{ old('pekerjaan') == 'pns' ? 'selected' : '' }}>PNS</option>
+                                <option value="wiraswasta" {{ old('pekerjaan') == 'wiraswasta' ? 'selected' : '' }}>Wiraswasta</option>
+                                <option value="lainnya" {{ old('pekerjaan') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            </select>
                         </div>
                     </div>
-                </div>
 
-                <div class="field">
-                    <label>Agama</label>
-                    <select name="agama">
-                        <option value="">-- Pilih --</option>
-                        <option value="islam" {{ old('agama') == 'islam' ? 'selected' : '' }}>Islam</option>
-                        <option value="kristen" {{ old('agama') == 'kristen' ? 'selected' : '' }}>Kristen</option>
-                        <option value="katolik" {{ old('agama') == 'katolik' ? 'selected' : '' }}>Katolik</option>
-                        <option value="hindu" {{ old('agama') == 'hindu' ? 'selected' : '' }}>Hindu</option>
-                        <option value="buddha" {{ old('agama') == 'buddha' ? 'selected' : '' }}>Buddha</option>
-                        <option value="konghucu" {{ old('agama') == 'konghucu' ? 'selected' : '' }}>Konghucu</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <div class="split-2">
-                        <div class="field">
-                            <label>Kabupaten</label>
-                            <input type="text" name="kabupaten" value="{{ old('kabupaten') }}">
+                    {{-- ---------- KOLOM KANAN ---------- --}}
+                    <div class="col-right">
+                        <div class="row">
+                            <label>No Hp</label>
+                            <input type="text" name="no_hp" id="no_hp" value="{{ old('no_hp') }}"
+                                   placeholder="082534636626" inputmode="numeric" maxlength="13"
+                                   oninput="batasiAngka(this, 13, 'noHpError', 'No HP hanya boleh angka, maksimal 13 digit.')">
+                            <small class="err" id="noHpError"></small>
                         </div>
-                        <div class="field">
-                            <label>Provinsi</label>
-                            <input type="text" name="provinsi" value="{{ old('provinsi') }}">
+                        <div class="row">
+                            <label>Suku</label>
+                            <div class="pair-suku">
+                                <input type="text" name="suku" id="suku" value="{{ old('suku') }}" placeholder="JAWA"
+                                       oninput="cekHurufSaja(this, 'sukuError')">
+                                <label>Bangsa</label>
+                                <input type="text" name="bangsa" value="{{ old('bangsa', 'Indonesia') }}">
+                            </div>
+                            <small class="err" id="sukuError">Suku hanya boleh berisi huruf.</small>
+                        </div>
+                        <div class="row">
+                            <label>Bahasa</label>
+                            <select name="bahasa">
+                                <option value="indonesia" {{ old('bahasa') == 'indonesia' ? 'selected' : '' }}>Indonesia</option>
+                                <option value="jawa" {{ old('bahasa') == 'jawa' ? 'selected' : '' }}>Jawa</option>
+                                <option value="lainnya" {{ old('bahasa') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="row top">
+                            <label>Alamat</label>
+                            <textarea name="alamat" placeholder="JL. DIPONEGORO RT 5 RW 2 NO. 2">{{ old('alamat') }}</textarea>
+                        </div>
+                        <div class="row">
+                            <label></label>
+                            <div class="split-2">
+                                <input type="text" name="kelurahan" value="{{ old('kelurahan') }}" placeholder="Kelurahan">
+                                <input type="text" name="kecamatan" value="{{ old('kecamatan') }}" placeholder="Kecamatan">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label></label>
+                            <div class="split-2">
+                                <input type="text" name="kabupaten" value="{{ old('kabupaten') }}" placeholder="Kabupaten">
+                                <input type="text" name="provinsi" value="{{ old('provinsi') }}" placeholder="Provinsi">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label>Kode Pos</label>
+                            <input type="text" name="kode_pos" id="kode_pos" value="{{ old('kode_pos') }}"
+                                   placeholder="63211" inputmode="numeric" maxlength="5"
+                                   oninput="batasiAngka(this, 5, 'kodePosError', 'Kode Pos hanya boleh angka, maksimal 5 digit.')">
+                            <small class="err" id="kodePosError"></small>
+                        </div>
+                        <div class="row">
+                            <label>Pembayaran</label>
+                            <select name="pembayaran">
+                                <option value="">BPJS</option>
+                                <option value="bpjs" {{ old('pembayaran') == 'bpjs' ? 'selected' : '' }}>BPJS</option>
+                                <option value="umum" {{ old('pembayaran') == 'umum' ? 'selected' : '' }}>Umum</option>
+                                <option value="asuransi" {{ old('pembayaran') == 'asuransi' ? 'selected' : '' }}>Asuransi</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="field">
-                    <label>Pendidikan</label>
-                    <select name="pendidikan">
-                        <option value="">-- Pilih --</option>
-                        <option value="sd" {{ old('pendidikan') == 'sd' ? 'selected' : '' }}>SD</option>
-                        <option value="smp" {{ old('pendidikan') == 'smp' ? 'selected' : '' }}>SMP</option>
-                        <option value="sma" {{ old('pendidikan') == 'sma' ? 'selected' : '' }}>SMA</option>
-                        <option value="d3" {{ old('pendidikan') == 'd3' ? 'selected' : '' }}>D3</option>
-                        <option value="s1" {{ old('pendidikan') == 's1' ? 'selected' : '' }}>S1</option>
-                        <option value="s2" {{ old('pendidikan') == 's2' ? 'selected' : '' }}>S2</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Kode Pos</label>
-                    <input
-                        type="text"
-                        name="kode_pos"
-                        value="{{ old('kode_pos') }}"
-                        inputmode="numeric"
-                        maxlength="5"
-                        id="kode_pos"
-                        oninput="cekAngkaSaja(this, 'kodePosError')"
-                    >
-                    <small id="kodePosError" style="display:none; color:red;">
-                        Kode Pos hanya boleh berisi angka.
-                    </small>
-                </div>
-
-                <div class="field">
-                    <label>Pekerjaan</label>
-                    <select name="pekerjaan">
-                        <option value="">-- Pilih --</option>
-                        <option value="belum_bekerja" {{ old('pekerjaan') == 'belum_bekerja' ? 'selected' : '' }}>Belum Bekerja</option>
-                        <option value="pelajar" {{ old('pekerjaan') == 'pelajar' ? 'selected' : '' }}>Pelajar/Mahasiswa</option>
-                        <option value="pns" {{ old('pekerjaan') == 'pns' ? 'selected' : '' }}>PNS</option>
-                        <option value="wiraswasta" {{ old('pekerjaan') == 'wiraswasta' ? 'selected' : '' }}>Wiraswasta</option>
-                        <option value="lainnya" {{ old('pekerjaan') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Pembayaran</label>
-                    <select name="pembayaran">
-                        <option value="">-- Pilih --</option>
-                        <option value="bpjs" {{ old('pembayaran') == 'bpjs' ? 'selected' : '' }}>BPJS</option>
-                        <option value="umum" {{ old('pembayaran') == 'umum' ? 'selected' : '' }}>Umum</option>
-                        <option value="asuransi" {{ old('pembayaran') == 'asuransi' ? 'selected' : '' }}>Asuransi</option>
-                    </select>
                 </div>
             </div>
 
             {{-- ================= PENANGGUNG JAWAB ================= --}}
-            <div class="section-title">Penanggung Jawab</div>
-            <div class="form-grid">
-                <div class="field">
-                    <label>Nama</label>
-                    <input type="text" name="pj_nama" value="{{ old('pj_nama') }}">
-                </div>
-                <div class="field">
-                    <label>Hubungan</label>
-                    <select name="pj_hubungan">
-                        <option value="">-- Pilih --</option>
-                        <option value="ayah" {{ old('pj_hubungan') == 'ayah' ? 'selected' : '' }}>Ayah</option>
-                        <option value="ibu" {{ old('pj_hubungan') == 'ibu' ? 'selected' : '' }}>Ibu</option>
-                        <option value="suami" {{ old('pj_hubungan') == 'suami' ? 'selected' : '' }}>Suami</option>
-                        <option value="istri" {{ old('pj_hubungan') == 'istri' ? 'selected' : '' }}>Istri</option>
-                        <option value="anak" {{ old('pj_hubungan') == 'anak' ? 'selected' : '' }}>Anak</option>
-                        <option value="saudara" {{ old('pj_hubungan') == 'saudara' ? 'selected' : '' }}>Saudara</option>
-                        <option value="lainnya" {{ old('pj_hubungan') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Jenis Kelamin</label>
-                    <select name="pj_jenis_kelamin">
-                        <option value="">-- Pilih --</option>
-                        <option value="L" {{ old('pj_jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                        <option value="P" {{ old('pj_jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>No Hp</label>
-                    <input
-                        type="text"
-                        name="pj_no_hp"
-                        value="{{ old('pj_no_hp') }}"
-                        inputmode="numeric"
-                        id="pj_no_hp"
-                        oninput="cekAngkaSaja(this, 'pjNoHpError')"
-                    >
-                    <small id="pjNoHpError" style="display:none; color:red;">
-                        No HP hanya boleh berisi angka.
-                    </small>
+            <div class="box">
+                <div class="box-title">Penanggung Jawab</div>
+                <div class="cols">
+                    <div class="col-left">
+                        <div class="row">
+                            <label>Nama</label>
+                            <input type="text" name="pj_nama" value="{{ old('pj_nama') }}" placeholder="ANDI PRATAMA">
+                        </div>
+                        <div class="row">
+                            <label>Jenis Kelamin</label>
+                            <select name="pj_jenis_kelamin">
+                                <option value="">LAKI-LAKI</option>
+                                <option value="L" {{ old('pj_jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="P" {{ old('pj_jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-right">
+                        <div class="row">
+                            <label>Hubungan</label>
+                            <select name="pj_hubungan">
+                                <option value="">AYAH</option>
+                                <option value="ayah" {{ old('pj_hubungan') == 'ayah' ? 'selected' : '' }}>Ayah</option>
+                                <option value="ibu" {{ old('pj_hubungan') == 'ibu' ? 'selected' : '' }}>Ibu</option>
+                                <option value="suami" {{ old('pj_hubungan') == 'suami' ? 'selected' : '' }}>Suami</option>
+                                <option value="istri" {{ old('pj_hubungan') == 'istri' ? 'selected' : '' }}>Istri</option>
+                                <option value="anak" {{ old('pj_hubungan') == 'anak' ? 'selected' : '' }}>Anak</option>
+                                <option value="saudara" {{ old('pj_hubungan') == 'saudara' ? 'selected' : '' }}>Saudara</option>
+                                <option value="lainnya" {{ old('pj_hubungan') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>No Hp</label>
+                            <input type="text" name="pj_no_hp" id="pj_no_hp" value="{{ old('pj_no_hp') }}"
+                                   placeholder="085234512890" inputmode="numeric" maxlength="13"
+                                   oninput="batasiAngka(this, 13, 'pjNoHpError', 'No HP hanya boleh angka, maksimal 13 digit.')">
+                            <small class="err" id="pjNoHpError"></small>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -309,51 +274,82 @@
 
     {{-- ================= VALIDASI INPUT (JS) ================= --}}
     <script>
-    // Hanya boleh angka (No HP, Kode Pos, dll)
-    function cekAngkaSaja(input, errorId) {
+    // Hanya angka, dengan batas panjang. Huruf/simbol langsung dihapus (termasuk saat paste).
+    // wajibPenuh = true → tampilkan pesan bila angka belum mencapai batas (dipakai NIK).
+    function batasiAngka(input, maks, errorId, pesan, wajibPenuh) {
         const error = document.getElementById(errorId);
+        const adaNonAngka = /[^0-9]/.test(input.value);
 
-        if (/[^0-9]/.test(input.value)) {
-            if (error) error.style.display = 'block';
-            input.style.border = '1px solid red';
-            input.value = input.value.replace(/[^0-9]/g, '');
+        input.value = input.value.replace(/[^0-9]/g, '').slice(0, maks);
+
+        const kurang = wajibPenuh && input.value.length > 0 && input.value.length < maks;
+
+        if (adaNonAngka || kurang) {
+            if (error) { error.textContent = pesan; error.style.display = 'block'; }
+            input.style.borderColor = 'red';
         } else {
             if (error) error.style.display = 'none';
-            input.style.border = '';
+            input.style.borderColor = '';
         }
     }
 
-    // Hanya boleh huruf & spasi (Suku, dll)
+    // Hanya huruf & spasi (Suku)
     function cekHurufSaja(input, errorId) {
         const error = document.getElementById(errorId);
-
         if (/[^a-zA-Z\s]/.test(input.value)) {
             if (error) error.style.display = 'block';
-            input.style.border = '1px solid red';
+            input.style.borderColor = 'red';
             input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
         } else {
             if (error) error.style.display = 'none';
-            input.style.border = '';
+            input.style.borderColor = '';
         }
     }
 
-    // Khusus No. Rekam Medis: angka, maksimal 6 digit
-    function cekNoRekamMedis(input, errorId) {
-        const error = document.getElementById(errorId);
-        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 6);
+    // Select yang masih kosong tampil abu-abu (contoh), hitam bila sudah dipilih
+    document.querySelectorAll('.box select').forEach(function (sel) {
+        const tandai = () => sel.classList.toggle('kosong', sel.value === '');
+        sel.addEventListener('change', tandai);
+        tandai();
+    });
+    document.getElementById('formPendaftaran').addEventListener('reset', function () {
+        setTimeout(() => document.querySelectorAll('.box select').forEach(s => s.dispatchEvent(new Event('change'))), 0);
+    });
 
-        if (input.value.length > 0 && input.value.length < 6) {
-            if (error) error.style.display = 'block';
-            input.style.border = '1px solid red';
-        } else {
-            if (error) error.style.display = 'none';
-            input.style.border = '';
+    // Umur otomatis dari tanggal lahir
+    function hitungUmur() {
+        const val = document.getElementById('tgl_lahir').value;
+        if (!val) return;
+        const lahir = new Date(val), now = new Date();
+        let th = now.getFullYear() - lahir.getFullYear();
+        let bl = now.getMonth() - lahir.getMonth();
+        let hr = now.getDate() - lahir.getDate();
+        if (hr < 0) {
+            bl--;
+            hr += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
         }
+        if (bl < 0) { th--; bl += 12; }
+        if (th < 0) { th = bl = hr = 0; }
+        document.getElementById('umur_tahun').value = th;
+        document.getElementById('umur_bulan').value = bl;
+        document.getElementById('umur_hari').value = Math.min(hr, 30);
     }
+    document.getElementById('tgl_lahir').addEventListener('change', hitungUmur);
+    hitungUmur();
 
-    // Saat Simpan dengan Poli Obgyn: status pasien otomatis "Periksa" (kuning)
-    // di halaman Daftar Pasien Poli Obgyn.
-    document.getElementById('formPendaftaran').addEventListener('submit', function () {
+    // Cegah simpan jika NIK belum 16 digit
+    document.getElementById('formPendaftaran').addEventListener('submit', function (e) {
+        const nik = document.getElementById('nik');
+        if (nik.value.length > 0 && nik.value.length !== 16) {
+            e.preventDefault();
+            batasiAngka(nik, 16, 'nikError', 'NIK harus 16 digit angka.', true);
+            nik.focus();
+        }
+    });
+
+    // Saat Simpan: status pasien otomatis "Periksa" (kuning) di halaman Daftar Pasien tiap poli.
+    document.getElementById('formPendaftaran').addEventListener('submit', function (e) {
+        if (e.defaultPrevented) return;
         const poli = this.elements['poli'].value;
         const awalan = { obgyn: 'obgyn', saraf: 'syaraf', jantung: 'jantung', jiwa: 'jiwa' }[poli];
         if (!awalan) return;
@@ -373,8 +369,8 @@
             const waktu = JSON.parse(localStorage.getItem(kunciWaktu)) || {};
             delete waktu[noRm];
             localStorage.setItem(kunciWaktu, JSON.stringify(waktu));
-        } catch (e) {
-            console.error(e);
+        } catch (err) {
+            console.error(err);
         }
     });
     </script>
