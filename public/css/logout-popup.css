@@ -1,0 +1,56 @@
+/* =========================================
+   POPUP KONFIRMASI LOGOUT
+========================================= */
+
+#logoutPopup {
+    display: none;
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+}
+
+#logoutPopup .logout-popup-box {
+    width: 380px;
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px 30px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    border-top: 5px solid #d12027;
+}
+
+#logoutPopup h3 {
+    margin: 5px 0 10px;
+    color: #d12027;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+#logoutPopup p {
+    margin: 0 0 22px;
+    color: #555;
+    font-size: 14px;
+}
+
+#logoutPopup button {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 25px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0 5px;
+}
+
+#logoutPopup .btn-batal {
+    background: #eeeeee;
+    color: #555;
+}
+
+#logoutPopup .btn-keluar {
+    background: #d12027;
+    color: #ffffff;
+}

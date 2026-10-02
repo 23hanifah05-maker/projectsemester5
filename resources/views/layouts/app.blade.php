@@ -13,6 +13,7 @@
     {{-- CSS UTAMA --}}
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     @yield('extra-css')
+    <link rel="stylesheet" href="{{ asset('css/logout-popup.css') }}">
 
     <style>
         body {

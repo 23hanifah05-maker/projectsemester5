@@ -174,9 +174,93 @@
         flex-shrink: 0;
         margin-top: auto;
     }
-    .sidebar-footer hr { border: none; border-top: 1px solid rgba(255, 255, 255, 0.4); margin-bottom: 10px; }
-    .sidebar-footer a { color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
-    .sidebar-footer a:hover { opacity: 0.8; }
+
+    .sidebar-footer hr {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        margin-bottom: 10px;
+    }
+
+    .sidebar-footer a {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .sidebar-footer a:hover {
+        opacity: 0.8;
+    }
+
+
+    /* =====================================================
+       TAMBAHAN: POPUP KONFIRMASI LOGOUT
+       Tidak mengubah CSS sidebar yang sudah ada
+    ===================================================== */
+
+    #logoutPopup {
+        display: none;
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 99999;
+    }
+
+    #logoutPopup .logout-popup-box {
+        width: 380px;
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 25px 30px;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+        border-top: 5px solid #d12027;
+    }
+
+    #logoutPopup h3 {
+        margin: 5px 0 10px;
+        color: #d12027;
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    #logoutPopup p {
+        margin: 0 0 22px;
+        color: #555;
+        font-size: 14px;
+    }
+
+    #logoutPopup button {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 25px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin: 0 5px;
+    }
+
+    #logoutPopup .btn-batal {
+        background: #eeeeee;
+        color: #555;
+    }
+
+    #logoutPopup .btn-batal:hover {
+        background: #dddddd;
+    }
+
+    #logoutPopup .btn-keluar {
+        background: #d12027;
+        color: #ffffff;
+    }
+
+    #logoutPopup .btn-keluar:hover {
+        background: #b51b21;
+    }
 </style>
 
 <!-- STRUKTUR SIDEBAR -->
@@ -195,11 +279,13 @@
                     <div class="left-content"><i class="fa-solid fa-house icon-main"></i> Dashboard</div>
                 </a>
             </li>
+
             <li>
                 <a href="{{ route('pendaftaran.index') }}" class="{{ request()->routeIs('pendaftaran*') ? 'active' : '' }}">
                     <div class="left-content"><i class="fa-solid fa-address-book icon-main"></i> Pendaftaran</div>
                 </a>
             </li>
+
             <li class="has-dropdown">
                 @php
                     $isSyaraf  = request()->routeIs('poli.syaraf*')  || request()->is('*syaraf*');
@@ -208,25 +294,54 @@
                     $isJiwa    = request()->routeIs('poli.jiwa*')    || request()->is('*jiwa*');
                     $poliOpen  = $isSyaraf || $isObgyn || $isJantung || $isJiwa || request()->routeIs('poli.*');
                 @endphp
+
                 <a href="#" id="btnPoli" class="{{ $poliOpen ? 'expanded' : '' }}">
-                    <div class="left-content"><i class="fa-solid fa-stethoscope icon-main"></i> Poli</div>
+                    <div class="left-content">
+                        <i class="fa-solid fa-stethoscope icon-main"></i> Poli
+                    </div>
                     <i class="fa-solid fa-chevron-down dropdown-icon"></i>
                 </a>
+
                 <ul class="submenu {{ $poliOpen ? 'show' : '' }}" id="menuPoli">
-                    <li><a href="{{ route('poli.syaraf') }}" class="{{ $isSyaraf ? 'active' : '' }}"><i class="fa-solid fa-brain"></i> Poli Syaraf</a></li>
-                    <li><a href="{{ route('poli.obgyn') }}" class="{{ $isObgyn ? 'active' : '' }}"><i class="fa-solid fa-person-dress"></i> Poli Obgyn</a></li>
-                    <li><a href="{{ route('poli.jantung') }}" class="{{ $isJantung ? 'active' : '' }}"><i class="fa-solid fa-heart-pulse"></i> Poli Jantung</a></li>
-                    <li><a href="{{ route('poli.jiwa') }}" class="{{ $isJiwa ? 'active' : '' }}"><i class="fa-solid fa-head-side-virus"></i> Poli Jiwa</a></li>
+                    <li>
+                        <a href="{{ route('poli.syaraf') }}" class="{{ $isSyaraf ? 'active' : '' }}">
+                            <i class="fa-solid fa-brain"></i> Poli Syaraf
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('poli.obgyn') }}" class="{{ $isObgyn ? 'active' : '' }}">
+                            <i class="fa-solid fa-person-dress"></i> Poli Obgyn
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('poli.jantung') }}" class="{{ $isJantung ? 'active' : '' }}">
+                            <i class="fa-solid fa-heart-pulse"></i> Poli Jantung
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('poli.jiwa') }}" class="{{ $isJiwa ? 'active' : '' }}">
+                            <i class="fa-solid fa-head-side-virus"></i> Poli Jiwa
+                        </a>
+                    </li>
                 </ul>
             </li>
+
             <li>
                 <a href="{{ route('radiologi.index') }}" class="{{ request()->routeIs('radiologi*') ? 'active' : '' }}">
-                    <div class="left-content"><i class="fa-solid fa-radiation icon-main"></i> Radiologi</div>
+                    <div class="left-content">
+                        <i class="fa-solid fa-radiation icon-main"></i> Radiologi
+                    </div>
                 </a>
             </li>
+
             <li>
                 <a href="{{ route('audit-trail.index') }}" class="{{ request()->routeIs('audit-trail*') ? 'active' : '' }}">
-                    <div class="left-content"><i class="fa-solid fa-clock-rotate-left icon-main"></i> Audit Trail</div>
+                    <div class="left-content">
+                        <i class="fa-solid fa-clock-rotate-left icon-main"></i> Audit Trail
+                    </div>
                 </a>
             </li>
         </ul>
@@ -234,16 +349,56 @@
 
     <div class="sidebar-footer">
         <hr>
-        <form method="POST" action="{{ route('logout') }}">
+
+        <form id="logoutForm" method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" style="background:none; border:none; padding:0; cursor:pointer; width:100%;">
-                <a href="#" onclick="event.preventDefault(); this.closest('form').submit();">
+
+            <button
+                type="button"
+                onclick="showLogoutPopup()"
+                style="background:none; border:none; padding:0; cursor:pointer; width:100%;"
+            >
+                <a href="#" onclick="event.preventDefault();">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
                 </a>
             </button>
         </form>
     </div>
 </div>
+
+
+<!-- =====================================================
+     POPUP LOGOUT
+     Diletakkan DI LUAR SIDEBAR
+     agar muncul di atas halaman
+===================================================== -->
+
+<div id="logoutPopup">
+    <div class="logout-popup-box">
+
+        <h3>Konfirmasi Keluar</h3>
+
+        <p>
+            Apakah Anda yakin ingin keluar dari sistem?
+        </p>
+
+        <button
+            type="button"
+            class="btn-batal"
+            onclick="closeLogoutPopup()">
+            Batal
+        </button>
+
+        <button
+            type="button"
+            class="btn-keluar"
+            onclick="confirmLogout()">
+            Keluar
+        </button>
+
+    </div>
+</div>
+
 
 <script>
     document.getElementById('btnPoli').addEventListener('click', function(e) {
@@ -256,5 +411,22 @@
         const sidebar = document.getElementById('mySidebar');
         sidebar.classList.toggle('hide');
         document.body.classList.toggle('sidebar-collapsed');
+    }
+
+
+    /* =====================================================
+       TAMBAHAN: FUNGSI POPUP LOGOUT
+    ===================================================== */
+
+    function showLogoutPopup() {
+        document.getElementById('logoutPopup').style.display = 'block';
+    }
+
+    function closeLogoutPopup() {
+        document.getElementById('logoutPopup').style.display = 'none';
+    }
+
+    function confirmLogout() {
+        document.getElementById('logoutForm').submit();
     }
 </script>
