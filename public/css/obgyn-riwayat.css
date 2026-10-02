@@ -1,4 +1,3 @@
-
 .obr-card {
     border: 1px solid #d9d9d9;
     border-radius: 8px;
@@ -154,4 +153,28 @@
     .obr-fields {
         grid-template-columns: 1fr;
     }
+}
+
+
+/* =====================================================================
+   DIPINDAHKAN DARI BLADE
+   ===================================================================== */
+
+/* ---------- Dari <style> internal ---------- */
+.obr-link {
+    color: #b81d24;
+    font-weight: 600;
+    text-decoration: none;
+}
+.obr-link:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Pengganti atribut style="..." (inline) ---------- */
+p.obr-kosong {
+    color: #888;                  /* was style="color:#888;" */
+}
+.obr-table td.obr-kosong {
+    text-align: center;           /* was style="text-align:center; color:#888;" */
+    color: #888;
 }

@@ -163,10 +163,10 @@ Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])
     ->name('poli.obgyn');
 
 
-// Kunjungan Poli Obgyn
+// Kunjungan Poli Obgyn (halaman riwayat)
 Route::get('/poli/obgyn/kunjungan/{no_rm}', function ($no_rm) {
 
-    return view('poli.obgyn-kunjungan', [
+    return view('poli.obgyn-riwayat', [
         'no_rm' => $no_rm
     ]);
 

@@ -8,16 +8,6 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/obgyn-riwayat.css') }}">
-    <style>
-        .obr-link {
-            color: #b81d24;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .obr-link:hover {
-            text-decoration: underline;
-        }
-    </style>
 @endsection
 
 @section('content')
@@ -110,7 +100,7 @@
 
                 </div>
             @else
-                <p style="color:#888;">Data pasien tidak ditemukan.</p>
+                <p class="obr-kosong">Data pasien tidak ditemukan.</p>
             @endif
         </div>
 
@@ -149,7 +139,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" style="text-align:center; color:#888;">
+                            <td colspan="3" class="obr-kosong">
                                 Belum ada riwayat kunjungan
                             </td>
                         </tr>
