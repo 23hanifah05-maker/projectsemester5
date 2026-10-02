@@ -1,8 +1,12 @@
 @extends('layouts.app')
 
 @section('title', 'Audit Trail - Klinik Utama Merah Putih')
-@section('header-icon', '↩')
+
 @section('header-title', 'Audit Trail')
+
+@section('header-icon')
+    <i class="fa-solid fa-clock-rotate-left"></i>
+@endsection
 
 @section('extra-css')
 <link rel="stylesheet" href="{{ asset('css/audit-trail.css') }}">
