@@ -3,6 +3,9 @@
 @section('title', 'Dashboard - Klinik Utama Merah Putih')
 
 @section('header-title', 'Dashboard')
+@section('header-icon')
+    <i class="fa-solid fa-house icon-main"></i>
+@endsection)
 
 @section('header-icon')
     <svg viewBox="0 0 24 24"
