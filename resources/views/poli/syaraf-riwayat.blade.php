@@ -7,11 +7,12 @@
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/syaraf-detail.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/syaraf-riwayat.css') }}">
 @endsection
 
 @section('content')
 
+    {{-- Data dummy pasien Poli Syaraf --}}
     @php
         $semuaPasien = $semuaPasien ?? [
             (object)['no_rm'=>'RM-0001','nama_pasien'=>'Budi Santoso','jenis_kelamin'=>'Laki-laki','tempat_lahir'=>'Sidoarjo','tgl_lahir'=>'1980-01-01','umur'=>'46 Tahun','no_hp'=>'081234567890'],
@@ -21,42 +22,43 @@
             (object)['no_rm'=>'RM-0009','nama_pasien'=>'Agus Setiawan','jenis_kelamin'=>'Laki-laki','tempat_lahir'=>'Surabaya','tgl_lahir'=>'1970-06-22','umur'=>'56 Tahun','no_hp'=>'081245678901'],
         ];
 
-        $pasien = collect($semuaPasien)->firstWhere('no_rm', $no_rm ?? request('no_rm'));
+        $noRmAktif = $no_rm ?? request('no_rm');
+        $pasien = collect($semuaPasien)->firstWhere('no_rm', $noRmAktif);
 
-        // Dummy riwayat kunjungan — BEDA per pasien (no_rm), tanggal tidak numpuk
         $riwayatPerPasien = [
             'RM-0001' => [
-                ['tanggal' => '2026-09-12', 'poli' => 'Poli Syaraf'],
+                ['tanggal' => '2026-09-12', 'poli' => 'Poli Saraf'],
                 ['tanggal' => '2026-06-03', 'poli' => 'Poli Jantung'],
-                ['tanggal' => '2026-02-18', 'poli' => 'Poli Syaraf'],
+                ['tanggal' => '2026-02-18', 'poli' => 'Poli Saraf'],
                 ['tanggal' => '2025-10-25', 'poli' => 'Poli Radiologi'],
             ],
             'RM-0003' => [
-                ['tanggal' => '2026-08-20', 'poli' => 'Poli Syaraf'],
+                ['tanggal' => '2026-08-20', 'poli' => 'Poli Saraf'],
                 ['tanggal' => '2026-03-11', 'poli' => 'Poli Jiwa'],
             ],
             'RM-0005' => [
                 ['tanggal' => '2026-09-01', 'poli' => 'Poli Jantung'],
-                ['tanggal' => '2026-07-15', 'poli' => 'Poli Syaraf'],
-                ['tanggal' => '2026-04-02', 'poli' => 'Poli Syaraf'],
+                ['tanggal' => '2026-07-15', 'poli' => 'Poli Saraf'],
+                ['tanggal' => '2026-04-02', 'poli' => 'Poli Saraf'],
                 ['tanggal' => '2025-12-09', 'poli' => 'Poli Radiologi'],
                 ['tanggal' => '2025-08-22', 'poli' => 'Poli Jantung'],
             ],
             'RM-0007' => [
-                ['tanggal' => '2026-05-30', 'poli' => 'Poli Syaraf'],
+                ['tanggal' => '2026-05-30', 'poli' => 'Poli Saraf'],
             ],
             'RM-0009' => [
                 ['tanggal' => '2026-09-05', 'poli' => 'Poli Jantung'],
-                ['tanggal' => '2026-06-27', 'poli' => 'Poli Syaraf'],
+                ['tanggal' => '2026-06-27', 'poli' => 'Poli Saraf'],
                 ['tanggal' => '2026-01-14', 'poli' => 'Poli Jantung'],
             ],
         ];
 
-        $riwayat = $riwayatPerPasien[$no_rm ?? request('no_rm')] ?? [];
+        $riwayat = $riwayatPerPasien[$noRmAktif] ?? [];
     @endphp
 
     <div class="kj-card">
 
+        <!-- KOTAK DATA PASIEN -->
         <div class="kj-datapasien-box">
             <div class="kj-section-title">Data Pasien</div>
 
@@ -88,10 +90,11 @@
                     </div>
                 </div>
             @else
-                <p style="color:#888;">Data pasien tidak ditemukan.</p>
+                <p class="kj-kosong">Data pasien tidak ditemukan.</p>
             @endif
         </div>
 
+        <!-- TABEL RIWAYAT KUNJUNGAN -->
         <div class="kj-riwayat-box">
             <div class="kj-riwayat-title">Riwayat Kunjungan</div>
 
@@ -101,22 +104,30 @@
                 </thead>
                 <tbody>
                     @forelse ($riwayat as $i => $item)
+                        @php
+                            $urlDetail = route('poli.syaraf.kunjungan.detail', [
+                                'no_rm'   => $noRmAktif,
+                                'tanggal' => $item['tanggal'],
+                            ]);
+                        @endphp
                         <tr>
                             <td>{{ $i + 1 }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y') }}</td>
-                            <td>{{ $item['poli'] }}</td>
+                            <td>
+                                <a href="{{ $urlDetail }}" class="kj-link">
+                                    {{ \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y') }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{{ $urlDetail }}" class="kj-link">
+                                    {{ $item['poli'] }}
+                                </a>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" style="text-align:center; color:#888;">Belum ada riwayat kunjungan</td></tr>
+                        <tr><td colspan="3" class="kj-kosong">Belum ada riwayat kunjungan</td></tr>
                     @endforelse
                 </tbody>
             </table>
-
-            <div class="kj-riwayat-actions">
-                <a href="{{ route('poli.syaraf.kunjungan-baru', $no_rm ?? request('no_rm')) }}" class="kj-new-btn">
-                    + Kunjungan Baru
-                </a>
-            </div>
         </div>
 
     </div>
