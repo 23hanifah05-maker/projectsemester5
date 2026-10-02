@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Pendaftaran - Klinik Utama Merah Putih')
-@section('header-icon', '📋')
+@section('header-icon')
+    <i class="fa-solid fa-clipboard-list"></i>
+@endsection
 @section('header-title', 'Pendaftaran')
 
 

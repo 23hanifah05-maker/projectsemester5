@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Poli Jantung - Klinik Utama Merah Putih')
-@section('header-icon', '❤️')
+@section('header-icon')
+    <i class="fa-solid fa-stethoscope"></i>
+@endsection
 @section('header-title', 'Poli Jantung')
 
 @section('extra-css')
