@@ -1,0 +1,49 @@
+/* Baris pasien bisa diklik */
+.row-pasien {
+     cursor: pointer;
+}
+.row-pasien:hover td {
+     background-color: #fbeaea;
+}
+
+/* ===== Aksi: tombol mata + penanda status periksa ===== */
+.aksi-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-aksi svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: middle;
+}
+.badge-periksa {
+    display: inline-block;
+    min-width: 70px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: #fff;
+}
+.badge-periksa.periksa { background-color: #f4b400; color: #333; } /* kuning = periksa */
+.badge-periksa.selesai { background-color: #2e9e4f; }              /* hijau = selesai */
+
+.table-pendaftaran th:last-child { min-width: 170px; }
+
+/* ---------- Pengganti atribut style="..." (inline) ---------- */
+/* was style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
+   pada input editRm, editNama, editNik (modal Edit).
+   !important dipakai agar tetap menang seperti inline style sebelumnya. */
+.input-readonly-abu {
+    background-color: #e9e9e9 !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+}

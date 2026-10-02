@@ -10,47 +10,7 @@
     {{-- Pakai CSS yang sama dengan halaman Pendaftaran karena struktur tabel & modalnya sama --}}
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
-    <style>
-        /* Baris pasien bisa diklik */
-        .row-pasien {
-             cursor: pointer;
-        }
-        .row-pasien:hover td {
-             background-color: #fbeaea;
-        }
-
-        /* ===== Aksi: tombol mata + penanda status periksa ===== */
-        .aksi-wrap {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-aksi svg {
-            width: 20px;
-            height: 20px;
-            stroke: #fff;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            vertical-align: middle;
-        }
-        .badge-periksa {
-            display: inline-block;
-            min-width: 70px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            text-align: center;
-            color: #fff;
-        }
-        .badge-periksa.periksa { background-color: #f4b400; color: #333; } /* kuning = periksa */
-        .badge-periksa.selesai { background-color: #2e9e4f; }              /* hijau = selesai */
-
-        .table-pendaftaran th:last-child { min-width: 170px; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/obgyn.css') }}?v={{ @filemtime(public_path('css/obgyn.css')) }}">
 @endsection
 
 @section('content')
@@ -435,21 +395,19 @@
 
                 <div class="form-group">
                     <label>No. Rekam Medis</label>
-                    <input type="text" id="editRm" readonly style="background-color:#e9e9e9; color:#666; cursor:not-allowed;">
+                    <input type="text" id="editRm" readonly class="input-readonly-abu">
                 </div>
 
                 <div class="form-group">
                     <label>Nama Pasien</label>
-                    <input type="text" id="editNama" readonly class="input-locked"
-                           title="Nama tidak dapat diubah dari sini"
-                           style="background-color:#e9e9e9; color:#666; cursor:not-allowed;">
+                    <input type="text" id="editNama" readonly class="input-locked input-readonly-abu"
+                           title="Nama tidak dapat diubah dari sini">
                 </div>
 
                 <div class="form-group">
                     <label>NIK</label>
-                    <input type="text" id="editNik" inputmode="numeric" readonly class="input-locked"
-                           title="NIK tidak dapat diubah dari sini"
-                           style="background-color:#e9e9e9; color:#666; cursor:not-allowed;">
+                    <input type="text" id="editNik" inputmode="numeric" readonly class="input-locked input-readonly-abu"
+                           title="NIK tidak dapat diubah dari sini">
                 </div>
 
                 <div class="form-group">
