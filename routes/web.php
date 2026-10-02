@@ -113,7 +113,7 @@ Route::get('/poli/syaraf', [PoliController::class, 'saraf'])
 // Detail pasien Poli Syaraf
 Route::get('/poli/syaraf/detail/{no_rm}', function ($no_rm) {
 
-    return view('poli.syaraf-detail', [
+    return view('poli.syaraf-riwayat', [
         'no_rm' => $no_rm
     ]);
 
