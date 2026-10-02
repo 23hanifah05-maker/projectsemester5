@@ -93,19 +93,24 @@
     font-size: 12px;
 }
 
+/* [DIUBAH] text-align: center, nowrap, dan padding dirapatkan */
 .table-pendaftaran thead th {
     background: #c8161d;
     color: white;
     font-weight: 700;
-    text-align: left;
-    padding: 10px 12px;
+    text-align: center;
+    padding: 10px 8px;
     border: 1px solid #c8161d;
+    white-space: nowrap;
 }
 
+/* [DIUBAH] text-align: center, nowrap, dan padding dirapatkan */
 .table-pendaftaran tbody td {
-    padding: 10px 12px;
+    padding: 10px 8px;
     border: 1px solid #e5e5e5;
     vertical-align: middle;
+    white-space: nowrap;
+    text-align: center;
 }
 
 .table-pendaftaran tbody tr:nth-child(even) {
@@ -137,8 +142,20 @@
    KOLOM AKSI
 ===================================================== */
 
+/* display:flex, align-items, dan gap dihapus dari <td>
+   karena merusak sel tabel (garis dan tinggi tidak sejajar).
+   Penataan tombol dipindah ke .aksi-wrap (Obgyn) atau margin
+   antar tombol (halaman lain). */
 .aksi-cell {
     white-space: nowrap;
+}
+
+.aksi-cell > .btn-aksi {
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.aksi-wrap {
     display: flex;
     align-items: center;
     gap: 6px;
