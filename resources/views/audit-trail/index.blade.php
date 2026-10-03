@@ -18,29 +18,16 @@
 
     <h3 class="audit-title">Log Aktivitas</h3>
 
-    <form method="GET"
-          action="{{ route('audit-trail.index') }}"
-          class="filter"
-          id="formFilter">
+    <form class="filter" id="formFilter" onsubmit="return false;">
 
         <div class="filter-left">
             <span>Periode</span>
 
-            <input
-                type="date"
-                name="dari"
-                id="inpDari"
-                value="{{ request('dari') }}"
-            >
+            <input type="date" id="inpDari">
 
             <span class="sd">s.d</span>
 
-            <input
-                type="date"
-                name="sampai"
-                id="inpSampai"
-                value="{{ request('sampai') }}"
-            >
+            <input type="date" id="inpSampai">
         </div>
 
         <div class="filter-right">
@@ -48,18 +35,12 @@
 
             <input
                 type="text"
-                name="keyword"
                 id="inpKeyword"
-                value="{{ request('keyword') }}"
                 autocomplete="off"
                 placeholder="Cari aktivitas..."
             >
 
-            <a
-                href="{{ route('audit-trail.index') }}"
-                class="btn-refresh"
-                title="Reset / Refresh"
-            >
+            <a href="#" class="btn-refresh" id="btnReset" title="Reset / Refresh">
                 <i class="fa-solid fa-rotate-right"></i>
             </a>
         </div>
@@ -83,41 +64,7 @@
                 </tr>
             </thead>
 
-            <tbody>
-
-                @forelse ($logs as $log)
-
-                    @php
-                        $detail = $log;
-                        $detail['waktu'] = \Carbon\Carbon::parse($log['waktu'])->format('d/m/Y H.i');
-                    @endphp
-
-                    <tr
-                        class="row-log"
-                        data-log='@json($detail)'
-                    >
-                        <td>{{ $log['id'] }}</td>
-                        <td>{{ $log['username'] }}</td>
-                        <td>{{ $log['role'] }}</td>
-                        <td>{{ $log['aktivitas'] }}</td>
-                        <td>{{ $log['modul'] }}</td>
-                        <td>
-                            {{ \Carbon\Carbon::parse($log['waktu'])->format('d/m/Y H.i') }}
-                        </td>
-                        <td>{{ $log['ip'] }}</td>
-                    </tr>
-
-                @empty
-
-                    <tr>
-                        <td colspan="7" class="empty">
-                            Tidak ada data log.
-                        </td>
-                    </tr>
-
-                @endforelse
-
-            </tbody>
+            <tbody id="tbodyLog"></tbody>
 
         </table>
 
@@ -126,9 +73,7 @@
 </div>
 
 
-{{-- =====================================================
-     MODAL DETAIL LOG AKTIVITAS
-===================================================== --}}
+{{-- MODAL DETAIL LOG AKTIVITAS --}}
 
 <div class="modal-overlay" id="modalDetail">
 
@@ -136,16 +81,9 @@
 
         <div class="modal-header">
 
-            <span>
-                Detail Log Aktivitas
-            </span>
+            <span>Detail Log Aktivitas</span>
 
-            <button
-                type="button"
-                class="modal-close"
-                id="btnTutup"
-                aria-label="Tutup"
-            >
+            <button type="button" class="modal-close" id="btnTutup" aria-label="Tutup">
                 &times;
             </button>
 
@@ -155,77 +93,26 @@
 
             <div class="detail-box">
 
-                <div class="detail-row">
-                    <div class="label">ID</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-id"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Username</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-username"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Role</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-role"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Aktivitas</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-aktivitas"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Modul</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-modul"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Waktu</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-waktu"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">IP Adress</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-ip"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Nomor RM</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-no_rm"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Bidang Kolom</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-kolom"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Sebelum</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-sebelum"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Sesudah</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-sesudah"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="label">Status</div>
-                    <div class="sep">:</div>
-                    <div class="value" id="d-status"></div>
-                </div>
+                @foreach ([
+                    'id' => 'ID',
+                    'username' => 'Username',
+                    'role' => 'Role',
+                    'aktivitas' => 'Aktivitas',
+                    'modul' => 'Modul',
+                    'waktu' => 'Waktu',
+                    'ip' => 'IP Adress',
+                    'no_rm' => 'Nomor RM',
+                    'kolom' => 'Bidang Kolom',
+                    'sebelum' => 'Sebelum',
+                    'sesudah' => 'Sesudah',
+                    'status' => 'Status',
+                ] as $key => $label)
+                    <div class="detail-row">
+                        <div class="label">{{ $label }}</div>
+                        <div class="sep">:</div>
+                        <div class="value" id="d-{{ $key }}"></div>
+                    </div>
+                @endforeach
 
             </div>
 
@@ -235,141 +122,158 @@
 
 </div>
 
+@endsection
+
+
+@section('extra-js')
+
+<script src="{{ asset('js/audit-log.js') }}"></script>
 
 <script>
 
     const modal = document.getElementById('modalDetail');
+    const tbody = document.getElementById('tbodyLog');
+
+    const inpDari    = document.getElementById('inpDari');
+    const inpSampai  = document.getElementById('inpSampai');
+    const inpKeyword = document.getElementById('inpKeyword');
 
     const fields = [
-        'id',
-        'username',
-        'role',
-        'aktivitas',
-        'modul',
-        'waktu',
-        'ip',
-        'no_rm',
-        'kolom',
-        'sebelum',
-        'sesudah',
-        'status'
+        'id', 'username', 'role', 'aktivitas', 'modul', 'waktu',
+        'ip', 'no_rm', 'kolom', 'sebelum', 'sesudah', 'status'
     ];
 
 
-    document.querySelectorAll('.row-log').forEach(function (row) {
+    // 2026-10-01 09:23:00 -> 01/10/2026 09.23
+    function formatWaktu(w) {
+        const m = String(w).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+        return m ? m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + '.' + m[5] : w;
+    }
 
-        row.addEventListener('click', function () {
 
-            const data = JSON.parse(this.dataset.log);
+    function bukaDetail(log) {
 
-            fields.forEach(function (f) {
+        fields.forEach(function (f) {
 
-                document.getElementById('d-' + f).textContent =
-                    data[f] ?? '-';
+            const nilai = log[f];
 
-            });
-
-            const st = document.getElementById('d-status');
-
-            st.className =
-                'value ' +
-                (data.status === 'Berhasil'
-                    ? 'status-berhasil'
-                    : 'status-gagal');
-
-            modal.classList.add('show');
+            document.getElementById('d-' + f).textContent =
+                f === 'waktu'
+                    ? formatWaktu(nilai)
+                    : (nilai !== undefined && nilai !== '' ? nilai : '-');
 
         });
 
-    });
+        document.getElementById('d-status').className =
+            'value ' +
+            (log.status === 'Berhasil' ? 'status-berhasil' : 'status-gagal');
+
+        modal.classList.add('show');
+    }
 
 
-    // ===== FILTER OTOMATIS =====
+    function tampilkan() {
 
-    const formFilter =
-        document.getElementById('formFilter');
+        const dari    = inpDari.value;
+        const sampai  = inpSampai.value;
+        const keyword = inpKeyword.value.trim().toLowerCase();
 
-    const inpKeyword =
-        document.getElementById('inpKeyword');
+        const hasil = AuditLog.ambil()
+            .filter(function (log) {
 
-    let timer;
+                const tanggal = String(log.waktu).substring(0, 10);
 
+                if (dari && tanggal < dari) return false;
+                if (sampai && tanggal > sampai) return false;
 
-    // Ganti tanggal -> langsung filter
+                if (keyword !== '') {
+                    const gabung = Object.values(log).join(' ').toLowerCase();
+                    if (!gabung.includes(keyword)) return false;
+                }
 
-    ['inpDari', 'inpSampai'].forEach(function (id) {
+                return true;
+            })
+            .sort(function (a, b) {
+                return String(b.waktu).localeCompare(String(a.waktu)) || (b.id - a.id);
+            });
 
-        document.getElementById(id)
-            .addEventListener('change', function () {
+        tbody.innerHTML = '';
 
-                formFilter.submit();
+        if (hasil.length === 0) {
+
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+
+            td.colSpan = 7;
+            td.className = 'empty';
+            td.textContent = 'Tidak ada data log.';
+
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+
+            return;
+        }
+
+        hasil.forEach(function (log) {
+
+            const tr = document.createElement('tr');
+            tr.className = 'row-log';
+
+            [
+                log.id,
+                log.username,
+                log.role,
+                log.aktivitas,
+                log.modul,
+                formatWaktu(log.waktu),
+                log.ip
+            ].forEach(function (isi) {
+
+                const td = document.createElement('td');
+                td.textContent = isi;
+                tr.appendChild(td);
 
             });
 
-    });
+            tr.addEventListener('click', function () {
+                bukaDetail(log);
+            });
 
+            tbody.appendChild(tr);
 
-    // Ketik keyword -> filter setelah berhenti mengetik 500ms
-
-    inpKeyword.addEventListener('input', function () {
-
-        clearTimeout(timer);
-
-        timer = setTimeout(function () {
-
-            formFilter.submit();
-
-        }, 500);
-
-    });
-
-
-    // Setelah reload, cursor tetap di keyword
-
-    if (inpKeyword.value !== '') {
-
-        inpKeyword.focus();
-
-        inpKeyword.setSelectionRange(
-            inpKeyword.value.length,
-            inpKeyword.value.length
-        );
-
+        });
     }
+
+
+    inpDari.addEventListener('change', tampilkan);
+    inpSampai.addEventListener('change', tampilkan);
+    inpKeyword.addEventListener('input', tampilkan);
+
+    document.getElementById('btnReset').addEventListener('click', function (e) {
+        e.preventDefault();
+        inpDari.value = '';
+        inpSampai.value = '';
+        inpKeyword.value = '';
+        tampilkan();
+    });
 
 
     function tutupModal() {
-
         modal.classList.remove('show');
-
     }
 
-
-    document
-        .getElementById('btnTutup')
-        .addEventListener('click', tutupModal);
-
+    document.getElementById('btnTutup').addEventListener('click', tutupModal);
 
     modal.addEventListener('click', function (e) {
-
-        if (e.target === modal) {
-
-            tutupModal();
-
-        }
-
+        if (e.target === modal) tutupModal();
     });
-
 
     document.addEventListener('keydown', function (e) {
-
-        if (e.key === 'Escape') {
-
-            tutupModal();
-
-        }
-
+        if (e.key === 'Escape') tutupModal();
     });
+
+
+    tampilkan();
 
 </script>
 

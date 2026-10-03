@@ -112,7 +112,6 @@
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
     <div id="cetak-resep-area" class="cetak-resep-only">
-        <!-- Kop Resep -->
         <div class="cetak-header">
             <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
             <div class="cetak-header-text">
@@ -122,7 +121,6 @@
             </div>
         </div>
 
-        <!-- Informasi Pasien (menggunakan tabel agar titik dua sejajar) -->
         <table class="cetak-info-table">
             <tr>
                 <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
@@ -142,13 +140,11 @@
 
         <div class="cetak-title">RESEP</div>
 
-        <!-- Isi Resep -->
         <div class="cetak-body">
             <div class="resep-rp">R/</div>
             <div class="resep-isi" id="resep-isi-plan"></div>
         </div>
 
-        <!-- Tanda Tangan Dokter -->
         <div class="cetak-footer">
             <p>Ngawi, <span id="resep-tanggal"></span></p>
             <div class="cetak-signature">
@@ -194,7 +190,6 @@
                     @if ($tipe === 'input')
                         <input type="text" name="{{ $name }}" placeholder="{{ $placeholder }}">
                     @elseif ($name === 'plan')
-                        {{-- Plan: tombol Cetak berada di dalam kolom --}}
                         <div class="ob-plan-wrap">
                             <textarea name="{{ $name }}" rows="4" placeholder="{{ $placeholder }}"></textarea>
                             <button type="button" class="ob-cetak-btn ob-cetak-plan" onclick="cetakResep()">
@@ -251,7 +246,7 @@
         </div>
     </div>
 
-    {{-- ===== TAB RADIOLOGI (tidak diubah) ===== --}}
+    {{-- ===== TAB RADIOLOGI ===== --}}
     <div id="tab-radiologi" class="ob-tab-content">
         <div class="ob-radio-card">
             <div class="ob-radio-title">Form Pemeriksaan</div>
@@ -290,7 +285,7 @@
         </div>
     </div>
 
-    {{-- ===== TAB INFORMED CONSENT (sesuai Figma) ===== --}}
+    {{-- ===== TAB INFORMED CONSENT ===== --}}
     <div id="tab-informed" class="ob-tab-content">
         <div class="ob-ic-card">
             <div class="ob-ic-title">Informed Consent</div>
@@ -362,7 +357,7 @@
         </div>
     </div>
 
-    {{-- ===== FORM RUJUKAN (muncul saat tombol Rujuk diklik, sama dengan Poli Syaraf) ===== --}}
+    {{-- ===== FORM RUJUKAN (muncul saat tombol Rujuk diklik) ===== --}}
     <div id="view-rujukan">
 
         <div class="rj-box">
@@ -382,6 +377,7 @@
                             <option>Poli Syaraf</option>
                             <option>Poli Jantung</option>
                             <option>Poli Jiwa</option>
+                            <option>Radiologi</option>
                         </select>
                     </div>
                     <div class="rj-field">
@@ -433,7 +429,7 @@
                         @endforeach
                         <label class="rj-cek-item">
                             <input type="checkbox" id="rjCekLainnya" name="rujuk_radiologi[]" value="Lainnya"> Lainnya
-                            <input type="text" id="rjLainnya" placeholder="(tuliskan)" disabled>
+                            <input type="text" id="rjLainnya" placeholder="(tuliskan)" autocomplete="off">
                         </label>
                     </div>
                 </div>
@@ -452,7 +448,7 @@
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
     const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
 
-    // Kunci penyimpanan status periksa (dipakai juga di halaman Daftar Pasien & Pendaftaran)
+    // Kunci penyimpanan status periksa
     const KUNCI_STATUS_PERIKSA = 'obgyn_status_periksa';
 
     function gantiTab(tab, event) {
@@ -478,14 +474,12 @@
             day: 'numeric', month: 'long', year: 'numeric'
         });
 
-        // Pindahkan area resep jadi anak langsung <body> agar elemen lain bisa disembunyikan total
         document.body.appendChild(area);
         document.body.classList.add('cetak-resep-mode');
 
         window.print();
     }
 
-    // Kembalikan tampilan normal setelah dialog cetak ditutup
     window.addEventListener('afterprint', function () {
         document.body.classList.remove('cetak-resep-mode');
     });
@@ -497,7 +491,6 @@
             return;
         }
 
-        // Tanggal rujuk otomatis hari ini (masih bisa diubah)
         const tgl = document.getElementById('rjTanggal');
         if (!tgl.value) {
             const d = new Date();
@@ -515,13 +508,23 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Kolom "Lainnya" pada form rujukan aktif hanya kalau dicentang
+    // ===== Rujukan: kolom "Lainnya" bisa langsung diketik =====
     const rjCekLainnya = document.getElementById('rjCekLainnya');
     const rjLainnya = document.getElementById('rjLainnya');
-    if (rjCekLainnya) {
+
+    if (rjCekLainnya && rjLainnya) {
+        // centang "Lainnya" -> kursor langsung ke kolom; hapus centang -> kolom dikosongkan
         rjCekLainnya.addEventListener('change', function () {
-            rjLainnya.disabled = !this.checked;
-            if (!this.checked) rjLainnya.value = '';
+            if (this.checked) {
+                rjLainnya.focus();
+            } else {
+                rjLainnya.value = '';
+            }
+        });
+
+        // mengetik di kolom -> kotak "Lainnya" otomatis tercentang
+        rjLainnya.addEventListener('input', function () {
+            rjCekLainnya.checked = this.value.trim() !== '';
         });
     }
 
@@ -535,18 +538,30 @@
             return;
         }
 
-        // TODO: kirim ke backend. Sementara masih dummy front-end (sama seperti Poli Syaraf).
+        // TODO: kirim ke backend. Sementara masih dummy front-end.
         alert('Rujukan berhasil dikirim.');
 
-        // Reset form lalu kembali ke halaman pemeriksaan
-        ['rjDokter', 'rjDiagnosa', 'rjAlasan', 'rjLainnya'].forEach(id => document.getElementById(id).value = '');
+        // Reset form rujukan
+        ['rjDokter', 'rjDiagnosa', 'rjAlasan', 'rjLainnya', 'rjTanggal'].forEach(function (id) {
+            document.getElementById(id).value = '';
+        });
         document.getElementById('rjTujuan').value = '';
-        document.querySelectorAll('#view-rujukan input[type=checkbox]').forEach(cb => cb.checked = false);
-        rjLainnya.disabled = true;
+        document.querySelectorAll('#view-rujukan input[type=checkbox]').forEach(function (cb) {
+            cb.checked = false;
+        });
+
+        // Kembali ke halaman Assessment (pastikan tab Assessment yang aktif)
+        document.querySelectorAll('.ob-tab').forEach(function (el, i) {
+            el.classList.toggle('active', i === 0);
+        });
+        document.querySelectorAll('.ob-tab-content').forEach(function (el) {
+            el.classList.toggle('active', el.id === 'tab-assessment');
+        });
+
         tutupRujukan();
     }
 
-    // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)
+    // Klik Simpan: status pasien berubah dari "Periksa" menjadi "Selesai"
     function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -559,7 +574,6 @@
             status[kunci] = 'selesai';
             localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
 
-            // Catat waktu selesai pemeriksaan (dipakai untuk mengurutkan di Daftar Pasien)
             const waktu = JSON.parse(localStorage.getItem('obgyn_waktu_selesai')) || {};
             waktu[kunci] = Date.now();
             localStorage.setItem('obgyn_waktu_selesai', JSON.stringify(waktu));
@@ -569,7 +583,6 @@
 
         alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
 
-        // Kembali ke Daftar Pasien supaya perubahan warna langsung terlihat
         window.location.href = "{{ route('poli.obgyn') }}";
     }
 
@@ -673,8 +686,6 @@
         const teks = bagian.join(', ');
         const objektif = document.querySelector('textarea[name="objective"]');
 
-        // Jika sebelumnya sudah pernah diisi otomatis, ganti bagian itu saja
-        // agar tulisan manual di bawahnya tidak hilang dan tidak terduplikasi.
         let sisa = objektif.value;
         if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
             sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
@@ -687,7 +698,6 @@
     }
 
     // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
-    // Memakai route /cari-kode/{penyakit|tindakan} yang sama dengan Poli Syaraf.
     const URL_CARI = "{{ url('/cari-kode') }}";
 
     const konfig = {
@@ -695,15 +705,12 @@
         tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
     };
 
-    // Item yang sedang dipilih dari dropdown (belum dicentang)
     const pilihan = { penyakit: null, tindakan: null };
-    // Daftar yang sudah dicentang: [{id, kode, nama}]
     const diagnosaTerpilih = { penyakit: [], tindakan: [] };
 
     const timerCari = {};
     const urutanCari = { penyakit: 0, tindakan: 0 };
 
-    // Centang hijau menyala kalau ada item yang dipilih dari dropdown
     function updateCentang(jenis) {
         document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
     }
@@ -714,8 +721,7 @@
         const dropdown = document.getElementById(k.dropdown);
         const keyword = input.value.trim();
 
-        // Mengetik lagi = membatalkan pilihan sebelumnya
-        // (kecuali teks masih sama dengan item yang dipilih, mis. saat fokus ulang)
+        // Teks masih sama dengan item yang dipilih (mis. saat fokus ulang): jangan batalkan pilihan
         if (pilihan[jenis] && input.value === pilihan[jenis].kode + ' — ' + pilihan[jenis].nama) {
             return;
         }
@@ -736,7 +742,7 @@
                     headers: { 'Accept': 'application/json' }
                 });
                 const data = await res.json();
-                if (nomor !== urutanCari[jenis]) return; // abaikan respons lama
+                if (nomor !== urutanCari[jenis]) return;
                 renderDropdown(jenis, data);
             } catch (e) {
                 tampilPesan(dropdown, 'Gagal memuat data');
@@ -787,7 +793,6 @@
         updateCentang(jenis);
     }
 
-    // ===== Klik ✓ : masukkan ke daftar di bawah kolom =====
     function tambahDiagnosa(jenis) {
         const k = konfig[jenis];
         const item = pilihan[jenis];
@@ -826,14 +831,12 @@
             teks.appendChild(document.createTextNode(' — ' + item.nama));
             baris.appendChild(teks);
 
-            // dikirim saat Simpan (kalau nanti dibungkus <form>)
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
             hidden.name = k.name;
             hidden.value = item.id;
             baris.appendChild(hidden);
 
-            // tombol hapus
             const aksi = document.createElement('span');
             aksi.className = 'ob-diagnosa-aksi';
 
@@ -851,7 +854,6 @@
         });
     }
 
-    // ===== Klik ikon hapus : keluarkan item dari daftar =====
     function hapusDiagnosa(jenis, id) {
         diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
         renderDiagnosa(jenis);

@@ -70,7 +70,6 @@
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
     <div id="cetak-resep-area" class="cetak-resep-only">
-        <!-- Kop Resep -->
         <div class="cetak-header">
             <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
             <div class="cetak-header-text">
@@ -80,7 +79,6 @@
             </div>
         </div>
 
-        <!-- Informasi Pasien (menggunakan tabel agar titik dua sejajar) -->
         <table class="cetak-info-table">
             <tr>
                 <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
@@ -100,13 +98,11 @@
 
         <div class="cetak-title">RESEP</div>
 
-        <!-- Isi Resep -->
         <div class="cetak-body">
             <div class="resep-rp">R/</div>
             <div class="resep-isi" id="resep-isi-plan"></div>
         </div>
 
-        <!-- Tanda Tangan Dokter -->
         <div class="cetak-footer">
             <p>Ngawi, <span id="resep-tanggal"></span></p>
             <div class="cetak-signature">
@@ -117,7 +113,6 @@
 
     {{-- ===== AREA CETAK CLINICAL PATHWAY (tersembunyi, hanya muncul saat print) ===== --}}
     <div id="cetak-cp-area" class="cetak-resep-only">
-        <!-- Kop -->
         <div class="cetak-header">
             <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
             <div class="cetak-header-text">
@@ -127,7 +122,6 @@
             </div>
         </div>
 
-        <!-- Informasi Pasien -->
         <table class="cetak-info-table">
             <tr>
                 <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
@@ -150,7 +144,6 @@
 
         <div class="cetak-title">CLINICAL PATHWAY</div>
 
-        <!-- Hasil isian Clinical Pathway (diisi lewat JavaScript) -->
         <table class="cp-print-table">
             <thead>
                 <tr>
@@ -169,7 +162,6 @@
             </tfoot>
         </table>
 
-        <!-- Tanda Tangan Dokter -->
         <div class="cetak-footer">
             <p>Ngawi, <span id="cp-tanggal"></span></p>
             <div class="cetak-signature">
@@ -242,7 +234,6 @@
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">P</div>
-                {{-- Plan: tombol Cetak berada di dalam kolom --}}
                 <div class="kb-plan-wrap">
                     <textarea name="plan" rows="4" placeholder="Rencana/plan..."></textarea>
                     <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
@@ -305,7 +296,7 @@
         </div>
     </div>
 
-    {{-- ===== TAB RADIOLOGI (isi sama dengan Poli Obgyn) ===== --}}
+    {{-- ===== TAB RADIOLOGI ===== --}}
     @php
         $radiologiOptions = ['Foto Thoraks', 'MRI', 'USG Abdomen', 'Rontgen', 'CT Scan'];
     @endphp
@@ -349,6 +340,7 @@
         </div>
     </div>
 
+    {{-- ===== TAB CLINICAL PATHWAY ===== --}}
     <div id="tab-pathway" class="kb-tab-content">
         <div class="cp-wrap">
             <div class="cp-scroll">
@@ -362,7 +354,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- Diagnosa: satu baris per Dx, tiap baris punya Waktu sendiri --}}
                         <tr class="cp-dx-head">
                             <td class="cp-aktivitas">Diagnosa</td>
                             <td></td>
@@ -388,7 +379,6 @@
                             <td></td>
                         </tr>
 
-                        {{-- Asesmen Klinis: tanpa tarif --}}
                         <tr class="cp-row">
                             <td class="cp-aktivitas" data-nama="Asesmen Klinis">Asesmen Klinis</td>
                             <td><textarea rows="2"></textarea></td>
@@ -499,6 +489,7 @@
                             <option>Poli Obgyn</option>
                             <option>Poli Jantung</option>
                             <option>Poli Jiwa</option>
+                            <option>Radiologi</option>
                         </select>
                     </div>
                     <div class="rj-field">
@@ -550,7 +541,7 @@
                         @endforeach
                         <label class="rj-cek-item">
                             <input type="checkbox" id="rjCekLainnya" name="rujuk_radiologi[]" value="Lainnya"> Lainnya
-                            <input type="text" id="rjLainnya" placeholder="(tuliskan)" disabled>
+                            <input type="text" id="rjLainnya" placeholder="(tuliskan)" autocomplete="off">
                         </label>
                     </div>
                 </div>
@@ -567,11 +558,9 @@
 @section('extra-js')
 <script>
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
-    // Ditulis sebagai string biasa supaya editor tidak menandainya error;
-    // string kosong dianggap null.
     const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
 
-    // Kunci penyimpanan status periksa Poli Syaraf (dipakai juga di halaman Daftar Pasien & Pendaftaran)
+    // Kunci penyimpanan status periksa Poli Syaraf
     const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
     const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
 
@@ -598,7 +587,6 @@
             day: 'numeric', month: 'long', year: 'numeric'
         });
 
-        // Pindahkan area resep jadi anak langsung <body> agar elemen lain bisa disembunyikan total
         document.body.appendChild(area);
         document.body.classList.add('cetak-resep-mode');
 
@@ -639,22 +627,18 @@
         });
 
         if (terisi) {
-            // jam hanya dicatat saat pertama kali baris diisi
             if (waktu.value === '') waktu.value = jamSekarang();
         } else {
             waktu.value = '';
         }
     }
 
-    // Event delegation: tetap berfungsi walau skrip dimuat sebelum tabel tampil
     document.addEventListener('input', function (e) {
-        // Isian manual pada item tambahan: otomatis mencentang kotaknya
         if (e.target.classList && e.target.classList.contains('cp-lain-teks')) {
             const label = e.target.closest('label');
             const cb = label.querySelector('input[type=checkbox]');
             if (cb) cb.checked = e.target.value.trim() !== '';
 
-            // Kalau ini baris isian terakhir dan sudah terisi, tambahkan baris baru di bawahnya
             const semua = label.parentElement.querySelectorAll('.cp-lain-teks');
             if (e.target === semua[semua.length - 1] && e.target.value.trim() !== '') {
                 const baru = label.cloneNode(true);
@@ -664,7 +648,6 @@
             }
         }
 
-        // Tarif hanya boleh angka
         if (e.target.classList && e.target.classList.contains('cp-tarif')) {
             e.target.value = e.target.value.replace(/\D/g, '');
             hitungTotalCP();
@@ -679,7 +662,6 @@
         if (tr) perbaruiWaktuBaris(tr);
     });
 
-    // Baris isian tambahan yang dibiarkan kosong akan dihapus (baris terakhir selalu dipertahankan)
     document.addEventListener('focusout', function (e) {
         if (!e.target.classList || !e.target.classList.contains('cp-lain-teks')) return;
 
@@ -725,7 +707,6 @@
             tbody.appendChild(baris);
         }
 
-        // Diagnosa (Dx Utama, Dx Sekunder, Dx Banding) beserta waktunya masing-masing
         const dx = [];
         const dxWaktu = [];
         document.querySelectorAll('#tab-pathway tr.cp-dx-row').forEach(function (tr) {
@@ -740,12 +721,10 @@
         if (dx.length) adaIsi = true;
         tambahBaris('Diagnosa', dx, dxWaktu.join('\n'), '');
 
-        // Baris lainnya
         document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
             const sel = tr.querySelectorAll(':scope > td');
             const aktivitas = sel[0].dataset.nama || sel[0].textContent.trim();
 
-            // Keterangan: item yang dicentang + isian teks
             const ket = [];
             sel[1].querySelectorAll('label.cp-check').forEach(function (label) {
                 const cb = label.querySelector('input[type=checkbox]');
@@ -758,7 +737,6 @@
                 if (v !== '') ket.push(v);
             });
 
-            // Waktu & Tarif
             const waktuEl = sel[2].querySelector('input');
             const tarifEl = sel[3].querySelector('input');
             const waktu = waktuEl ? waktuEl.value.trim() : '';
@@ -787,13 +765,12 @@
         window.print();
     }
 
-    // Kembalikan tampilan normal setelah dialog cetak ditutup
     window.addEventListener('afterprint', function () {
         document.body.classList.remove('cetak-resep-mode');
         document.body.classList.remove('cetak-cp-mode');
     });
 
-    // Klik Simpan: status pasien berubah dari "Periksa" (kuning) menjadi "Selesai" (hijau)
+    // Klik Simpan: status pasien berubah dari "Periksa" menjadi "Selesai"
     function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -807,7 +784,6 @@
             status[kunci] = 'selesai';
             localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
 
-            // Catat waktu selesai pemeriksaan (dipakai untuk mengurutkan di Daftar Pasien)
             const waktu = JSON.parse(localStorage.getItem(KUNCI_WAKTU_SELESAI)) || {};
             waktu[kunci] = Date.now();
             localStorage.setItem(KUNCI_WAKTU_SELESAI, JSON.stringify(waktu));
@@ -817,7 +793,6 @@
 
         alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
 
-        // Kembali ke Daftar Pasien supaya perubahan warna langsung terlihat
         window.location.href = "{{ route('poli.syaraf') }}";
     }
 
@@ -848,7 +823,6 @@
             return;
         }
 
-        // Tanggal rujuk otomatis hari ini (masih bisa diubah)
         const tgl = document.getElementById('rjTanggal');
         if (!tgl.value) {
             const d = new Date();
@@ -866,13 +840,23 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Kolom "Lainnya" pada form rujukan aktif hanya kalau dicentang
+    // ===== Rujukan: kolom "Lainnya" bisa langsung diketik =====
     const rjCekLainnya = document.getElementById('rjCekLainnya');
     const rjLainnya = document.getElementById('rjLainnya');
-    if (rjCekLainnya) {
+
+    if (rjCekLainnya && rjLainnya) {
+        // centang "Lainnya" -> kursor langsung ke kolom; hapus centang -> kolom dikosongkan
         rjCekLainnya.addEventListener('change', function () {
-            rjLainnya.disabled = !this.checked;
-            if (!this.checked) rjLainnya.value = '';
+            if (this.checked) {
+                rjLainnya.focus();
+            } else {
+                rjLainnya.value = '';
+            }
+        });
+
+        // mengetik di kolom -> kotak "Lainnya" otomatis tercentang
+        rjLainnya.addEventListener('input', function () {
+            rjCekLainnya.checked = this.value.trim() !== '';
         });
     }
 
@@ -889,17 +873,28 @@
         // TODO: kirim ke backend. Sementara masih dummy front-end.
         alert('Rujukan berhasil dikirim.');
 
-        // Reset form lalu kembali ke halaman pemeriksaan
-        ['rjDokter', 'rjDiagnosa', 'rjAlasan', 'rjLainnya'].forEach(id => document.getElementById(id).value = '');
+        // Reset form rujukan
+        ['rjDokter', 'rjDiagnosa', 'rjAlasan', 'rjLainnya', 'rjTanggal'].forEach(function (id) {
+            document.getElementById(id).value = '';
+        });
         document.getElementById('rjTujuan').value = '';
-        document.querySelectorAll('#view-rujukan input[type=checkbox]').forEach(cb => cb.checked = false);
-        rjLainnya.disabled = true;
+        document.querySelectorAll('#view-rujukan input[type=checkbox]').forEach(function (cb) {
+            cb.checked = false;
+        });
+
+        // Kembali ke halaman Assesment (pastikan tab Assesment yang aktif)
+        document.querySelectorAll('.kb-tab').forEach(function (el, i) {
+            el.classList.toggle('active', i === 0);
+        });
+        document.querySelectorAll('.kb-tab-content').forEach(function (el) {
+            el.classList.toggle('active', el.id === 'tab-assesment');
+        });
+
         tutupRujukan();
     }
 
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';
-
 
     // ===== Tanda vital -> Objective (lewat checkbox) =====
     function bangunTeksVital() {
@@ -919,7 +914,6 @@
         return bagian.join(', ');
     }
 
-    // Hapus hanya bagian yang diisi otomatis; tulisan manual tetap aman
     function hapusVitalDariObjektif() {
         const objektif = document.querySelector('textarea[name="objective"]');
         if (vitalTerakhir && objektif.value.startsWith(vitalTerakhir)) {
@@ -931,7 +925,6 @@
     function terapkanVitalKeObjektif(teks) {
         const objektif = document.querySelector('textarea[name="objective"]');
 
-        // Ganti bagian otomatis sebelumnya agar tidak terduplikasi
         let sisa = objektif.value;
         if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
             sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
@@ -958,7 +951,6 @@
         }
     }
 
-    // Jika checkbox sudah dicentang lalu nilai vital diubah, Objective ikut diperbarui
     document.addEventListener('input', function (e) {
         if (!e.target.matches('.kb-vitals input[type=text]')) return;
 
@@ -981,15 +973,12 @@
         tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
     };
 
-    // Item yang sedang dipilih dari dropdown (belum dicentang)
     const pilihan = { penyakit: null, tindakan: null };
-    // Daftar yang sudah dicentang: [{id, kode, nama}]
     const diagnosaTerpilih = { penyakit: [], tindakan: [] };
 
     const timerCari = {};
     const urutanCari = { penyakit: 0, tindakan: 0 };
 
-    // Centang hijau hanya menyala kalau ada item yang dipilih dari dropdown
     function updateCentang(jenis) {
         document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
     }
@@ -1000,7 +989,6 @@
         const dropdown = document.getElementById(k.dropdown);
         const keyword = input.value.trim();
 
-        // mengetik lagi = membatalkan pilihan sebelumnya
         pilihan[jenis] = null;
         updateCentang(jenis);
 
@@ -1018,7 +1006,7 @@
                     headers: { 'Accept': 'application/json' }
                 });
                 const data = await res.json();
-                if (nomor !== urutanCari[jenis]) return; // abaikan respons lama
+                if (nomor !== urutanCari[jenis]) return;
                 renderDropdown(jenis, data);
             } catch (e) {
                 tampilPesan(dropdown, 'Gagal memuat data');
@@ -1069,7 +1057,6 @@
         updateCentang(jenis);
     }
 
-    // ===== Klik ✓ : masukkan ke daftar di bawah kolom =====
     function tambahDiagnosa(jenis) {
         const k = konfig[jenis];
         const item = pilihan[jenis];
@@ -1092,7 +1079,6 @@
         renderDiagnosa(jenis);
     }
 
-    // ===== Klik ikon hapus : keluarkan item dari daftar =====
     function hapusDiagnosa(jenis, id) {
         diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
         renderDiagnosa(jenis);
@@ -1114,7 +1100,6 @@
             teks.appendChild(kode);
             teks.appendChild(document.createTextNode(' — ' + item.nama));
 
-            // dikirim saat Simpan (kalau nanti dibungkus <form>)
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
             hidden.name = k.name;
