@@ -51,6 +51,22 @@
 
         // Urutan checklist radiologi mengikuti tata letak 2 kolom (kiri-kanan, atas-bawah)
         $radiologiOptions = ['Foto Thoraks', 'MRI', 'USG Abdomen', 'Rontgen', 'CT Scan'];
+
+        // Baris tabel Informed Consent: [kategori, isi informasi]
+        $informedRows = [
+            ['Diagnosis/ Tindakan',    'KB IUD'],
+            ['Tindakan Kedokteran',    'Pemasangan IUD'],
+            ['Indikasi Tindakan',      'Mengatur jumlah kelahiran bayi'],
+            ['Tata Cara',              'Pengukuran rahim, penyiapan iud, persiapan alat'],
+            ['Tujuan',                 'Mencegah kehamilan dan mengatur jarak kelahiran'],
+            ['Manfaat',                'Mencegah kehamilan jangka panjang'],
+            ['Risiko',                 'Kram perut, perdarahan (flek), atau infeksi rahim'],
+            ['Komplikasi',             'IUD bergeser/ keluar, infeksi, panggul berat, robekan rahim dan barang hilang/ putus'],
+            ['Prognosis',              'Dubia ad sanam'],
+            ['Alternatif',             'KB yang lain'],
+            ['Pertimbangan Pelayanan', '-'],
+            ['Lain-lain',              '-'],
+        ];
     @endphp
 
     {{-- ===== DATA PASIEN ===== --}}
@@ -88,6 +104,9 @@
         </div>
         <div class="ob-tab" id="ob-tab-btn-radiologi" onclick="gantiTab('radiologi', event)">
             <i class="fa-solid fa-x-ray"></i> Radiologi
+        </div>
+        <div class="ob-tab" id="ob-tab-btn-informed" onclick="gantiTab('informed', event)">
+            <i class="fa-solid fa-file-signature"></i> Informed Consent
         </div>
     </div>
 
@@ -268,6 +287,78 @@
             <button type="button" class="ob-btn ob-btn-reset" onclick="resetForm()">
                 <i class="fa-solid fa-rotate-left"></i> Reset
             </button>
+        </div>
+    </div>
+
+    {{-- ===== TAB INFORMED CONSENT (sesuai Figma) ===== --}}
+    <div id="tab-informed" class="ob-tab-content">
+        <div class="ob-ic-card">
+            <div class="ob-ic-title">Informed Consent</div>
+
+            <div class="ob-ic-table-wrap">
+                <table class="ob-ic-table">
+                    <thead>
+                        <tr>
+                            <th class="ob-ic-col-kategori">Informed Consent</th>
+                            <th>Isi Informasi</th>
+                            <th class="ob-ic-col-cek">Checklist</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($informedRows as [$kategori, $isi])
+                            <tr>
+                                <td>{{ $kategori }}</td>
+                                <td>{{ $isi }}</td>
+                                <td class="ob-ic-cek">
+                                    <input type="checkbox" name="informed_cek[]" value="{{ $kategori }}">
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="ob-ic-persetujuan">
+                <div class="ob-ic-subtitle">Pernyataan Persetujuan dan/ Penolakan</div>
+                <div class="ob-ic-radio">
+                    <label><input type="radio" name="informed_keputusan" value="setuju" checked> Setuju</label>
+                    <label><input type="radio" name="informed_keputusan" value="menolak"> Menolak</label>
+                </div>
+                <div class="ob-ic-pernyataan">
+                    Dengan ini menyatakan telah memahami informasi yang telah diberikan.
+                </div>
+
+                <div class="ob-ic-form">
+                    <div class="ob-ic-field">
+                        <label>Nama Dokter</label>
+                        <div class="ob-ic-input-icon">
+                            <input type="text" id="icDokter" name="informed_dokter" autocomplete="off">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                    </div>
+                    <div class="ob-ic-field">
+                        <label>Nama Pasien/ Keluarga</label>
+                        <input type="text" id="icPasien" name="informed_pasien" value="{{ $pasien->nama_pasien ?? '' }}" autocomplete="off">
+                    </div>
+                    <div class="ob-ic-field">
+                        <label>Nama Saksi Klinik</label>
+                        <input type="text" id="icSaksi" name="informed_saksi" autocomplete="off">
+                    </div>
+                    <div class="ob-ic-field">
+                        <label>Tanggal Tindakan</label>
+                        <input type="date" id="icTanggal" name="informed_tanggal">
+                    </div>
+                    <div class="ob-ic-field">
+                        <label>Pukul</label>
+                        <input type="time" id="icPukul" name="informed_pukul">
+                    </div>
+                    <div class="ob-ic-aksi">
+                        <button type="button" class="ob-btn ob-btn-simpan" onclick="simpanInformedConsent()">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -482,6 +573,46 @@
         window.location.href = "{{ route('poli.obgyn') }}";
     }
 
+    // ===== Informed Consent =====
+    // Tanggal tindakan otomatis hari ini (masih bisa diubah)
+    (function () {
+        const d = new Date();
+        const tgl = document.getElementById('icTanggal');
+        if (tgl && !tgl.value) {
+            tgl.value = d.getFullYear() + '-' +
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(d.getDate()).padStart(2, '0');
+        }
+    })();
+
+    function simpanInformedConsent() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        const wajib = [
+            ['icDokter',  'Nama Dokter'],
+            ['icPasien',  'Nama Pasien/ Keluarga'],
+            ['icSaksi',   'Nama Saksi Klinik'],
+            ['icTanggal', 'Tanggal Tindakan'],
+            ['icPukul',   'Pukul'],
+        ];
+        for (const [id, nama] of wajib) {
+            const el = document.getElementById(id);
+            if (el.value.trim() === '') {
+                alert('Isi ' + nama + ' terlebih dahulu.');
+                el.focus();
+                return;
+            }
+        }
+
+        const keputusan = document.querySelector('input[name="informed_keputusan"]:checked').value;
+
+        // TODO: kirim ke backend. Sementara masih dummy front-end.
+        alert('Informed Consent berhasil disimpan (' + (keputusan === 'setuju' ? 'Setuju' : 'Menolak') + ').');
+    }
+
     let vitalTerakhir = '';
 
     function resetForm() {
@@ -499,6 +630,10 @@
         updateCentang('tindakan');
         document.getElementById('dropdownPenyakit').style.display = 'none';
         document.getElementById('dropdownTindakan').style.display = 'none';
+
+        // Reset tab Informed Consent
+        document.querySelectorAll('#tab-informed input[type=checkbox]').forEach(cb => cb.checked = false);
+        ['icDokter', 'icSaksi', 'icPukul'].forEach(id => document.getElementById(id).value = '');
     }
 
     // Centang TTV hijau jika minimal satu tanda vital terisi

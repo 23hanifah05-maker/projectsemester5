@@ -388,11 +388,12 @@
                             <td></td>
                         </tr>
 
+                        {{-- Asesmen Klinis: tanpa tarif --}}
                         <tr class="cp-row">
                             <td class="cp-aktivitas" data-nama="Asesmen Klinis">Asesmen Klinis</td>
                             <td><textarea rows="2"></textarea></td>
                             <td><input type="text" class="cp-waktu" readonly></td>
-                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
+                            <td></td>
                         </tr>
 
                         <tr class="cp-row">
@@ -401,10 +402,10 @@
                                 <label class="cp-check"><input type="checkbox"> Pemeriksaan tanda vital</label>
                                 <label class="cp-check"><input type="checkbox"> Inspeksi postur tulang belakang dan gerakan aktif volumna vertebralis</label>
                                 <label class="cp-check"><input type="checkbox"> Pemeriksaan motorik, reflek, dan sensorik dermatom</label>
-                                <label class="cp-check"><input type="checkbox"> ........</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
                             </td>
                             <td><input type="text" class="cp-waktu" readonly></td>
-                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
                         </tr>
 
                         <tr class="cp-row">
@@ -413,10 +414,10 @@
                                 <label class="cp-check"><input type="checkbox"> Magnetic Resonance Imaging (MRI)</label>
                                 <label class="cp-check"><input type="checkbox"> Computerized Tomography (CT Scan)</label>
                                 <label class="cp-check"><input type="checkbox"> Foto polos lumbosakral (rontgen / X-ray)</label>
-                                <label class="cp-check"><input type="checkbox"> ........</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
                             </td>
                             <td><input type="text" class="cp-waktu" readonly></td>
-                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
                         </tr>
 
                         <tr class="cp-row">
@@ -427,10 +428,10 @@
                                 <label class="cp-check"><input type="checkbox"> NSAID oral</label>
                                 <label class="cp-check"><input type="checkbox"> Muscle Relaxant</label>
                                 <label class="cp-check"><input type="checkbox"> Cairan IV kristaloid</label>
-                                <label class="cp-check"><input type="checkbox"> ........</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
                             </td>
                             <td><input type="text" class="cp-waktu" readonly></td>
-                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
                         </tr>
 
                         <tr class="cp-row">
@@ -440,7 +441,7 @@
                                 <label class="cp-check"><input type="checkbox"> Stimulasi Listrik (TENS)</label>
                             </td>
                             <td><input type="text" class="cp-waktu" readonly></td>
-                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif"></div></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
                         </tr>
 
                         <tr class="cp-row">
@@ -450,7 +451,7 @@
                                 <label class="cp-check"><input type="checkbox"> Edukasi olahraga yang menguatkan tulang belakang</label>
                                 <label class="cp-check"><input type="checkbox"> Edukasi angkat beban berat</label>
                                 <label class="cp-check"><input type="checkbox"> Edukasi menjaga berat badan ideal</label>
-                                <label class="cp-check"><input type="checkbox"> ........</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
                             </td>
                             <td><input type="text" class="cp-waktu" readonly></td>
                             <td></td>
@@ -647,17 +648,49 @@
 
     // Event delegation: tetap berfungsi walau skrip dimuat sebelum tabel tampil
     document.addEventListener('input', function (e) {
-        const tr = e.target.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
-        if (tr) perbaruiWaktuBaris(tr);
+        // Isian manual pada item tambahan: otomatis mencentang kotaknya
+        if (e.target.classList && e.target.classList.contains('cp-lain-teks')) {
+            const label = e.target.closest('label');
+            const cb = label.querySelector('input[type=checkbox]');
+            if (cb) cb.checked = e.target.value.trim() !== '';
 
+            // Kalau ini baris isian terakhir dan sudah terisi, tambahkan baris baru di bawahnya
+            const semua = label.parentElement.querySelectorAll('.cp-lain-teks');
+            if (e.target === semua[semua.length - 1] && e.target.value.trim() !== '') {
+                const baru = label.cloneNode(true);
+                baru.querySelector('input[type=checkbox]').checked = false;
+                baru.querySelector('.cp-lain-teks').value = '';
+                label.after(baru);
+            }
+        }
+
+        // Tarif hanya boleh angka
         if (e.target.classList && e.target.classList.contains('cp-tarif')) {
+            e.target.value = e.target.value.replace(/\D/g, '');
             hitungTotalCP();
         }
+
+        const tr = e.target.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
+        if (tr) perbaruiWaktuBaris(tr);
     });
 
     document.addEventListener('change', function (e) {
         const tr = e.target.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
         if (tr) perbaruiWaktuBaris(tr);
+    });
+
+    // Baris isian tambahan yang dibiarkan kosong akan dihapus (baris terakhir selalu dipertahankan)
+    document.addEventListener('focusout', function (e) {
+        if (!e.target.classList || !e.target.classList.contains('cp-lain-teks')) return;
+
+        const label = e.target.closest('label');
+        const tr = label.closest('tr');
+        const semua = label.parentElement.querySelectorAll('.cp-lain-teks');
+
+        if (e.target.value.trim() === '' && semua.length > 1 && e.target !== semua[semua.length - 1]) {
+            label.remove();
+            if (tr) perbaruiWaktuBaris(tr);
+        }
     });
 
     // ===== Clinical Pathway: cetak hasil isian =====
@@ -716,10 +749,11 @@
             const ket = [];
             sel[1].querySelectorAll('label.cp-check').forEach(function (label) {
                 const cb = label.querySelector('input[type=checkbox]');
-                const teks = label.textContent.trim();
-                if (cb && cb.checked && teks !== '........') ket.push('- ' + teks);
+                const lain = label.querySelector('.cp-lain-teks');
+                const teks = lain ? lain.value.trim() : label.textContent.trim();
+                if (cb && cb.checked && teks !== '') ket.push('- ' + teks);
             });
-            sel[1].querySelectorAll('input[type=text], textarea').forEach(function (f) {
+            sel[1].querySelectorAll('input[type=text]:not(.cp-lain-teks), textarea').forEach(function (f) {
                 const v = f.value.trim();
                 if (v !== '') ket.push(v);
             });
