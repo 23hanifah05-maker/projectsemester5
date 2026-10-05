@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Poli Syaraf - Klinik Utama Merah Putih')
+@section('title', ($poli->nama_poli ?? 'Poli Syaraf') . ' - Klinik Utama Merah Putih')
 @section('header-icon')
     <i class="fa-solid fa-stethoscope"></i>
 @endsection
-@section('header-title', 'Poli Syaraf')
+@section('header-title', $poli->nama_poli ?? 'Poli Syaraf')
 
 @section('extra-css')
     {{-- Pakai CSS yang sama dengan halaman Pendaftaran karena struktur tabel & modalnya sama --}}

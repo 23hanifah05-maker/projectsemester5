@@ -9,26 +9,25 @@ class PoliController extends Controller
 {
     public function saraf()
     {
-        // Mengambil data poli yang namanya mengandung kata 'saraf' atau 'syaraf'
-        $data_poli = Poli::where('nama_poli', 'like', '%saraf%')->first();
-        return view('poli.syaraf', compact('data_poli'));
+        $poli = Poli::where('slug', 'syaraf')->first();
+        return view('poli.syaraf', compact('poli'));
     }
 
     public function obgyn()
     {
-        $data_poli = Poli::where('nama_poli', 'like', '%obgyn%')->first();
-        return view('poli.obgyn', compact('data_poli'));
+        $poli = Poli::where('slug', 'obgyn')->first();
+        return view('poli.obgyn', compact('poli'));
     }
 
     public function jantung()
     {
-        $data_poli = Poli::where('nama_poli', 'like', '%jantung%')->first();
-        return view('poli.jantung', compact('data_poli'));
+        $poli = Poli::where('slug', 'jantung')->first();
+        return view('poli.jantung', compact('poli'));
     }
 
     public function jiwa()
     {
-        $data_poli = Poli::where('nama_poli', 'like', '%jiwa%')->first();
-        return view('poli.jiwa', compact('data_poli'));
+        $poli = Poli::where('slug', 'jiwa')->first();
+        return view('poli.jiwa', compact('poli'));
     }
 }

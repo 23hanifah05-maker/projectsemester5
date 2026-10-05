@@ -200,11 +200,8 @@ Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', function ($no_rm) {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/poli/jantung', function () {
-
-    return view('poli.jantung');
-
-})->name('poli.jantung');
+Route::get('/poli/jantung', [PoliController::class, 'jantung'])
+    ->name('poli.jantung');
 
 
 /*

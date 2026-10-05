@@ -18,6 +18,7 @@ class Poli extends Model
     // Daftarkan kolom yang boleh diisi sesuai database
     protected $fillable = [
         'nama_poli',
+        'slug',
         'nama_dokter',
     ];
 }
