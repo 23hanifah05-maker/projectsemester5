@@ -6,6 +6,7 @@
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-input.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/general-consent.css') }}">
 @endsection
 
 @section('content')
@@ -261,7 +262,8 @@
 
             {{-- ================= ACTIONS ================= --}}
             <div class="form-actions">
-                <button type="button" class="btn-consent">General Consent</button>
+                <button type="button" class="btn-consent" id="btnConsent" onclick="bukaConsent()">General Consent</button>
+                <input type="hidden" name="general_consent" id="general_consent" value="0">
                 <div class="form-actions-right">
                     <button type="submit" class="btn-simpan">💾 Simpan</button>
                     <button type="reset" class="btn-reset">↺ Reset</button>
@@ -347,6 +349,16 @@
         }
     });
 
+    // Wajib General Consent sebelum simpan
+    document.getElementById('formPendaftaran').addEventListener('submit', function (e) {
+        if (e.defaultPrevented) return;
+        if (document.getElementById('general_consent').value !== '1') {
+            e.preventDefault();
+            alert('General Consent belum ditandatangani.');
+            bukaConsent();
+        }
+    });
+
     // Saat Simpan: status pasien otomatis "Periksa" (kuning) di halaman Daftar Pasien tiap poli.
     document.getElementById('formPendaftaran').addEventListener('submit', function (e) {
         if (e.defaultPrevented) return;
@@ -373,6 +385,79 @@
             console.error(err);
         }
     });
+
+    // ================= GENERAL CONSENT =================
+    let gcMenggambar = false, gcAdaTtd = false;
+
+    function gcInitCanvas() {
+        const c = document.getElementById('gcTtd');
+        const ctx = c.getContext('2d');
+        ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+        const pos = e => {
+            const r = c.getBoundingClientRect();
+            return { x: (e.clientX - r.left) * c.width / r.width, y: (e.clientY - r.top) * c.height / r.height };
+        };
+        c.onpointerdown = e => { gcMenggambar = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); c.setPointerCapture(e.pointerId); };
+        c.onpointermove = e => { if (!gcMenggambar) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); gcAdaTtd = true; };
+        c.onpointerup = () => { gcMenggambar = false; };
+    }
+
+    function gcHapusTtd() {
+        const c = document.getElementById('gcTtd');
+        c.getContext('2d').clearRect(0, 0, c.width, c.height);
+        gcAdaTtd = false;
+    }
+
+    function bukaConsent() {
+        const f = document.getElementById('formPendaftaran').elements;
+        const jk = f['jenis_kelamin'].value;
+        const tgl = f['tgl_lahir'].value ? f['tgl_lahir'].value.split('-').reverse().join('-') : '';
+        const sekarang = new Date();
+
+        document.getElementById('gc-norm').value = f['no_rm'].value || '-';
+        document.getElementById('gc-nama').value = f['nama_lengkap'].value || '-';
+        document.getElementById('gc-jk').value = jk === 'L' ? 'Laki-laki' : (jk === 'P' ? 'Perempuan' : '-');
+        document.getElementById('gc-ttl').value = [f['tempat_lahir'].value, tgl].filter(Boolean).join(', ') || '-';
+        document.getElementById('gc-umur').value = f['umur_tahun'].value ? f['umur_tahun'].value + ' Tahun' : '-';
+        document.getElementById('gc-hp').value = f['no_hp'].value || '-';
+        document.getElementById('gc-tgl').value = sekarang.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        document.getElementById('gc-jam').value = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        document.getElementById('consentModal').classList.add('show');
+        gcInitCanvas();
+    }
+
+    function tutupConsent() {
+        document.getElementById('consentModal').classList.remove('show');
+    }
+
+    function simpanConsent() {
+        const semuaSetuju = Array.from(document.querySelectorAll('.gc-cek')).every(c => c.checked);
+
+        if (!semuaSetuju) { alert('Semua butir harus dicentang "Setuju".'); return; }
+        if (!document.getElementById('gc-semua').checked) { alert('Centang pernyataan persetujuan di bagian bawah.'); return; }
+        if (!gcAdaTtd) { alert('Tanda tangan pasien/keluarga belum diisi.'); return; }
+
+        document.getElementById('general_consent').value = '1';
+        const btn = document.getElementById('btnConsent');
+        btn.textContent = '✔ General Consent';
+        btn.classList.add('sudah');
+        tutupConsent();
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') tutupConsent(); });
+
+    document.getElementById('formPendaftaran').addEventListener('reset', function () {
+        const btn = document.getElementById('btnConsent');
+        btn.textContent = 'General Consent';
+        btn.classList.remove('sudah');
+        document.getElementById('general_consent').value = '0';
+        gcHapusTtd();
+        document.querySelectorAll('.gc-cek, #gc-semua').forEach(c => c.checked = false);
+    });
     </script>
+
+    {{-- ================= MODAL GENERAL CONSENT ================= --}}
+    @include('pendaftaran.partials.general-consent')
 
 @endsection
