@@ -177,35 +177,35 @@
             <div class="kb-vitals">
                 <div class="kb-vital-row">
                     <label>TD</label>
-                    <input type="text" placeholder="mis. 120/80" inputmode="numeric" autocomplete="off">
+                    <input type="text" id="tekanan_darah" data-field="tekanan_darah" placeholder="mis. 120/80" inputmode="text" autocomplete="off">
                     <span class="kb-vital-unit">mmHg</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>HR</label>
-                    <input type="text" placeholder="mis. 80" inputmode="numeric" autocomplete="off">
+                    <input type="text" id="heart_rate" data-field="heart_rate" placeholder="mis. 80" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>SpO2</label>
-                    <input type="text" placeholder="mis. 98" inputmode="numeric" autocomplete="off">
+                    <input type="text" id="spo2" data-field="spo2" placeholder="mis. 98" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">%</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>Suhu</label>
-                    <input type="text" placeholder="mis. 36.5" inputmode="decimal" autocomplete="off">
+                    <input type="text" id="suhu" data-field="suhu" placeholder="mis. 36.5" inputmode="decimal" autocomplete="off">
                     <span class="kb-vital-unit">°C</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>RR</label>
-                    <input type="text" placeholder="mis. 20" inputmode="numeric" autocomplete="off">
+                    <input type="text" id="respiratory_rate" data-field="respiratory_rate" placeholder="mis. 20" inputmode="numeric" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row kb-vital-lainnya">
                     <label for="chkVital">Alergi</label>
-                    <input type="text" placeholder="mis. tidak ada" autocomplete="off">
+                    <input type="text" id="alergi" data-field="alergi" placeholder="mis. tidak ada" autocomplete="off">
                     <span class="kb-check-box">
                         <input type="checkbox" class="kb-vital-check" id="chkVital"
-                               title="Centang untuk memasukkan tanda vital ke Objective"
+                               title="Centang untuk menyimpan TTV ke database dan memasukkannya ke Objective"
                                onchange="toggleVitalKeObjektif(this)">
                     </span>
                 </div>
@@ -934,7 +934,7 @@
         vitalTerakhir = teks;
     }
 
-    function toggleVitalKeObjektif(cb) {
+    async function toggleVitalKeObjektif(cb) {
         if (cb.checked) {
             const teks = bangunTeksVital();
 
@@ -944,10 +944,68 @@
                 return;
             }
 
+            const tersimpan = await simpanTTVKeDatabase();
+            if (!tersimpan) {
+                cb.checked = false;
+                return;
+            }
+
             terapkanVitalKeObjektif(teks);
             document.querySelector('textarea[name="objective"]').focus();
+            alert('Data TTV berhasil disimpan.');
         } else {
             hapusVitalDariObjektif();
+        }
+    }
+
+    // ===== Simpan TTV ke database =====
+    async function simpanTTVKeDatabase() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan. TTV tidak dapat disimpan.');
+            return false;
+        }
+
+        const data = {
+            no_rm: NO_RM_PASIEN,
+            tekanan_darah: document.getElementById('tekanan_darah').value.trim(),
+            suhu: document.getElementById('suhu').value.trim(),
+            heart_rate: document.getElementById('heart_rate').value.trim(),
+            respiratory_rate: document.getElementById('respiratory_rate').value.trim(),
+            spo2: document.getElementById('spo2').value.trim(),
+            alergi: document.getElementById('alergi').value.trim()
+        };
+
+        const adaIsi = Object.keys(data).some(function (key) {
+            return key !== 'no_rm' && data[key] !== '';
+        });
+
+        if (!adaIsi) {
+            alert('Isi minimal satu data TTV terlebih dahulu.');
+            return false;
+        }
+
+        try {
+            const response = await fetch("{{ url('/ttv') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const hasil = await response.json();
+
+            if (!response.ok || !hasil.success) {
+                throw new Error(hasil.message || 'Gagal menyimpan TTV.');
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Gagal menyimpan TTV:', error);
+            alert(error.message || 'TTV gagal disimpan ke database.');
+            return false;
         }
     }
 
