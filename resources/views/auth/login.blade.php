@@ -23,7 +23,7 @@
         <div class="welcome">
             <h1>Selamat <em>Datang</em></h1>
             <div class="bar"></div>
-            <p>Silahkan masuk untuk mengakses sitem.</p>
+            <p>Silakan masuk untuk mengakses sistem.</p>
         </div>
 
         <div class="card">
@@ -59,7 +59,6 @@
                 </div>
 
                 <div class="row">
-                    <label><input type="checkbox" name="remember"> Ingat saya</label>
                     <a href="#">Lupa password?</a>
                 </div>
 
