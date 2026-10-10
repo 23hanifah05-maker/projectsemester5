@@ -82,7 +82,7 @@
                         </div>
                         <div class="row">
                             <label>Nama Lengkap</label>
-                            <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}" placeholder="NAILA SAFRINA">
+                            <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}">
                         </div>
                         <div class="row">
                             <label>NIK</label>
