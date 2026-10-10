@@ -107,50 +107,111 @@
                                 <input type="number" name="umur_hari" id="umur_hari" value="{{ old('umur_hari') }}" placeholder="30 Hr" min="0" max="30" readonly>
                             </div>
                         </div>
-                        <div class="row">
-                            <label>Jenis Kelamin</label>
-                            <select name="jenis_kelamin">
-                                <option value="">PEREMPUAN</option>
-                                <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                                <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
-                            </select>
-                        </div>
+                            <div class="row">
+                                <label>Jenis Kelamin</label>
+                                <select name="jenis_kelamin">
+                                    <option value="" disabled
+                                        {{ old('jenis_kelamin', '') == '' ? 'selected' : '' }}>
+                                        PEREMPUAN
+                                    </option>
+                                    <option value="0" {{ old('jenis_kelamin') == '0' ? 'selected' : '' }}>
+                                        Tidak diketahui
+                                    </option>
+                                    <option value="1" {{ old('jenis_kelamin') == '1' ? 'selected' : '' }}>
+                                        Laki-laki
+                                    </option>
+                                    <option value="2" {{ old('jenis_kelamin') == '2' ? 'selected' : '' }}>
+                                        Perempuan
+                                    </option>
+                                    <option value="3" {{ old('jenis_kelamin') == '3' ? 'selected' : '' }}>
+                                        Tidak dapat ditemukan
+                                    </option>
+                                    <option value="4" {{ old('jenis_kelamin') == '4' ? 'selected' : '' }}>
+                                        Tidak mengisi
+                                    </option>
+                                </select>
+                            </div>
                         <div class="row">
                             <label>Agama</label>
                             <select name="agama">
                                 <option value="">ISLAM</option>
                                 <option value="islam" {{ old('agama') == 'islam' ? 'selected' : '' }}>Islam</option>
-                                <option value="kristen" {{ old('agama') == 'kristen' ? 'selected' : '' }}>Kristen</option>
+                                <option value="kristen" {{ old('agama') == 'kristen' ? 'selected' : '' }}>Kristen (Protestan)</option>
                                 <option value="katolik" {{ old('agama') == 'katolik' ? 'selected' : '' }}>Katolik</option>
                                 <option value="hindu" {{ old('agama') == 'hindu' ? 'selected' : '' }}>Hindu</option>
-                                <option value="buddha" {{ old('agama') == 'buddha' ? 'selected' : '' }}>Buddha</option>
+                                <option value="buddha" {{ old('agama') == 'buddha' ? 'selected' : '' }}>Budha</option>
                                 <option value="konghucu" {{ old('agama') == 'konghucu' ? 'selected' : '' }}>Konghucu</option>
+                                <option value="penghayat" {{ old('agama') == 'penghayat' ? 'selected' : '' }}>Penghayat</option>
                             </select>
                         </div>
                         <div class="row">
                             <label>Pendidikan</label>
                             <select name="pendidikan">
-                                <option value="">SMA</option>
+                                <option value="" disabled
+                                    {{ old('pendidikan', '') == '' ? 'selected' : '' }}>
+                                    SMA
+                                </option>
+                                <option value="tidak_sekolah" {{ old('pendidikan') == 'tidak_sekolah' ? 'selected' : '' }}>Tidak sekolah</option>
                                 <option value="sd" {{ old('pendidikan') == 'sd' ? 'selected' : '' }}>SD</option>
-                                <option value="smp" {{ old('pendidikan') == 'smp' ? 'selected' : '' }}>SMP</option>
-                                <option value="sma" {{ old('pendidikan') == 'sma' ? 'selected' : '' }}>SMA</option>
-                                <option value="d3" {{ old('pendidikan') == 'd3' ? 'selected' : '' }}>D3</option>
+                                <option value="sltp" {{ old('pendidikan') == 'sltp' ? 'selected' : '' }}>SLTP sederajat</option>
+                                <option value="slta" {{ old('pendidikan') == 'slta' ? 'selected' : '' }}>SLTA sederajat</option>
+                                <option value="d1_d3" {{ old('pendidikan') == 'd1_d3' ? 'selected' : '' }}>D1-D3</option>
+                                <option value="d4" {{ old('pendidikan') == 'd4' ? 'selected' : '' }}>D4</option>
                                 <option value="s1" {{ old('pendidikan') == 's1' ? 'selected' : '' }}>S1</option>
                                 <option value="s2" {{ old('pendidikan') == 's2' ? 'selected' : '' }}>S2</option>
+                                <option value="s3" {{ old('pendidikan') == 's3' ? 'selected' : '' }}>S3</option>
                             </select>
                         </div>
-                        <div class="row">
-                            <label>Pekerjaan</label>
-                            <select name="pekerjaan">
-                                <option value="">BELUM BEKERJA</option>
-                                <option value="belum_bekerja" {{ old('pekerjaan') == 'belum_bekerja' ? 'selected' : '' }}>Belum Bekerja</option>
-                                <option value="pelajar" {{ old('pekerjaan') == 'pelajar' ? 'selected' : '' }}>Pelajar/Mahasiswa</option>
-                                <option value="pns" {{ old('pekerjaan') == 'pns' ? 'selected' : '' }}>PNS</option>
-                                <option value="wiraswasta" {{ old('pekerjaan') == 'wiraswasta' ? 'selected' : '' }}>Wiraswasta</option>
-                                <option value="lainnya" {{ old('pekerjaan') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
-                            </select>
-                        </div>
-                    </div>
+<div class="row pekerjaan-row">
+    <label for="pekerjaan">Pekerjaan</label>
+    <select name="pekerjaan" id="pekerjaan">
+        <option value="" disabled {{ old('pekerjaan', '') == '' ? 'selected' : '' }}>BELUM BEKERJA</option>
+        <option value="belum_bekerja" {{ old('pekerjaan') == 'belum_bekerja' ? 'selected' : '' }}>Tidak bekerja</option>
+        <option value="pns" {{ old('pekerjaan') == 'pns' ? 'selected' : '' }}>PNS</option>
+        <option value="tni_polri" {{ old('pekerjaan') == 'tni_polri' ? 'selected' : '' }}>TNI/POLRI</option>
+        <option value="bumn" {{ old('pekerjaan') == 'bumn' ? 'selected' : '' }}>BUMN</option>
+        <option value="swasta_wirausaha" {{ old('pekerjaan') == 'swasta_wirausaha' ? 'selected' : '' }}>Pegawai swasta/wirausaha</option>
+        <option value="lainnya" {{ old('pekerjaan') == 'lainnya' ? 'selected' : '' }}>Lain-lain</option>
+    </select>
+</div>
+    <input
+        type="text"
+        name="pekerjaan_lainnya"
+        id="pekerjaan_lainnya"
+        placeholder="Tuliskan pekerjaan"
+        value="{{ old('pekerjaan_lainnya') }}"
+        style="display: none;"
+    >
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const pekerjaanSelect = document.getElementById('pekerjaan');
+    const pekerjaanInput = document.getElementById('pekerjaan_lainnya');
+
+    function tampilkanPekerjaanLainnya() {
+        if (pekerjaanSelect.value === 'lainnya') {
+            pekerjaanSelect.style.display = 'none';
+            pekerjaanInput.style.display = '';
+            pekerjaanInput.focus();
+        } else {
+            pekerjaanSelect.style.display = '';
+            pekerjaanInput.style.display = 'none';
+        }
+    }
+
+    pekerjaanSelect.addEventListener('change', function () {
+        if (this.value === 'lainnya') {
+            pekerjaanInput.value = '';
+        }
+
+        tampilkanPekerjaanLainnya();
+    });
+
+    tampilkanPekerjaanLainnya();
+});
+</script>
+
 
                     {{-- ---------- KOLOM KANAN ---------- --}}
                     <div class="col-right">
@@ -250,14 +311,30 @@
                             <label>Nama</label>
                             <input type="text" name="pj_nama" value="{{ old('pj_nama') }}" placeholder="ANDI PRATAMA">
                         </div>
-                        <div class="row">
-                            <label>Jenis Kelamin</label>
-                            <select name="pj_jenis_kelamin">
-                                <option value="">LAKI-LAKI</option>
-                                <option value="L" {{ old('pj_jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                                <option value="P" {{ old('pj_jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
-                            </select>
-                        </div>
+                    <div class="row">
+                        <label>Jenis Kelamin</label>
+                        <select name="pj_jenis_kelamin">
+                            <option value="" disabled
+                                {{ old('pj_jenis_kelamin', '') == '' ? 'selected' : '' }}>
+                                LAKI-LAKI
+                            </option>
+                            <option value="0" {{ old('pj_jenis_kelamin') == '0' ? 'selected' : '' }}>
+                                Tidak diketahui
+                            </option>
+                            <option value="1" {{ old('pj_jenis_kelamin') == '1' ? 'selected' : '' }}>
+                                Laki-laki
+                            </option>
+                            <option value="2" {{ old('pj_jenis_kelamin') == '2' ? 'selected' : '' }}>
+                                Perempuan
+                            </option>
+                            <option value="3" {{ old('pj_jenis_kelamin') == '3' ? 'selected' : '' }}>
+                                Tidak dapat ditemukan
+                            </option>
+                            <option value="4" {{ old('pj_jenis_kelamin') == '4' ? 'selected' : '' }}>
+                                Tidak mengisi
+                            </option>
+                        </select>
+                    </div>
                     </div>
                     <div class="col-right">
                         <div class="row">

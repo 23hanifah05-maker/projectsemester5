@@ -7,7 +7,7 @@
 :root {
     --merah: #c0392b;
     --merah-tua: #a93226;
-    --merah-terang: #d90000;   /* merah sesuai desain */
+    --merah-terang: #d90000;
     --abu-border: #d9d9d9;
     --abu-bg: #f4f4f4;
 }
@@ -22,7 +22,11 @@
     margin-bottom: 16px;
     font-size: 13px;
 }
-.form-alert ul { margin: 0; padding-left: 18px; }
+
+.form-alert ul {
+    margin: 0;
+    padding-left: 18px;
+}
 
 /* ================= JUDUL & KOTAK ================= */
 .title-underline {
@@ -40,6 +44,7 @@
     margin-bottom: 12px;
     background: #fff;
 }
+
 .box-title {
     color: var(--merah-terang);
     font-weight: 700;
@@ -47,14 +52,20 @@
     margin: 0 0 10px;
 }
 
-/* ================= KOTAK "INPUT DATA" (label di atas input) ================= */
+/* ================= KOTAK INPUT DATA ================= */
 .top-grid {
     display: grid;
     grid-template-columns: 180px 400px;
     column-gap: 62px;
     row-gap: 8px;
 }
-.field { display: flex; flex-direction: column; gap: 4px; }
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .field label {
     display: block;
     font-weight: 600;
@@ -63,25 +74,31 @@
     margin-bottom: 2px;
 }
 
-/* ================= KOTAK LAIN (label di kiri, 2 kolom) ================= */
+/* ================= KOTAK LAIN (2 KOLOM) ================= */
 .cols {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     column-gap: 48px;
 }
+
 .row {
     display: grid;
-    grid-template-columns: 150px 1fr;
+    grid-template-columns: 150px minmax(0, 1fr);
     align-items: center;
     margin-bottom: 8px;
 }
-.row.top { align-items: start; }
+
+.row.top {
+    align-items: start;
+}
+
 .row > label {
     font-weight: 600;
     font-size: 14px;
     color: #333;
     text-align: left;
 }
+
 .cols .col-right .row > label {
     text-align: right;
     padding-right: 14px;
@@ -92,6 +109,7 @@
 .box select,
 .box textarea {
     width: 100%;
+    min-width: 0;
     box-sizing: border-box;
     height: 32px;
     padding: 0 10px;
@@ -101,12 +119,17 @@
     font-family: inherit;
     background: #fff;
 }
+
 .box textarea {
     height: 70px;
     padding: 8px 10px;
     resize: none;
 }
-.box input[readonly] { background: #fafafa; cursor: default; }
+
+.box input[readonly] {
+    background: #fafafa;
+    cursor: default;
+}
 
 .box input:focus,
 .box select:focus,
@@ -116,15 +139,23 @@
     box-shadow: 0 0 0 2px rgba(217, 0, 0, 0.15);
 }
 
-/* Contoh isian suram (abu-abu) */
+/* Placeholder */
 .box input::placeholder,
 .box textarea::placeholder {
     color: #c4c4c4;
     opacity: 1;
     text-transform: uppercase;
 }
-.box select.kosong { color: #c4c4c4; text-transform: uppercase; }
-.box select option { color: #000; text-transform: none; }
+
+.box select.kosong {
+    color: #c4c4c4;
+    text-transform: uppercase;
+}
+
+.box select option {
+    color: #000;
+    text-transform: none;
+}
 
 /* ================= SUSUNAN KHUSUS ================= */
 .split-2 {
@@ -132,16 +163,19 @@
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
+
 .umur-group {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
 }
+
 .pair-suku {
     display: grid;
     grid-template-columns: 1fr 70px 1fr;
     align-items: center;
 }
+
 .pair-suku label {
     text-align: right;
     padding: 0 10px;
@@ -157,12 +191,14 @@
     margin-top: 2px;
     grid-column: 2;
 }
+
 .error-message {
     display: none;
     color: #dc3545;
     font-size: 13px;
     margin-top: 5px;
 }
+
 .input-error {
     border: 1px solid #dc3545 !important;
     background-color: #fff5f5;
@@ -175,7 +211,11 @@
     align-items: center;
     margin-top: 8px;
 }
-.form-actions-right { display: flex; gap: 10px; }
+
+.form-actions-right {
+    display: flex;
+    gap: 10px;
+}
 
 .btn-consent,
 .btn-simpan,
@@ -188,13 +228,17 @@
     cursor: pointer;
     font-family: inherit;
 }
+
 .btn-consent,
 .btn-simpan {
     background: var(--merah-terang);
     color: #fff;
 }
+
 .btn-consent:hover,
-.btn-simpan:hover { background: var(--merah-tua); }
+.btn-simpan:hover {
+    background: var(--merah-tua);
+}
 
 .btn-reset {
     background: #fff;
@@ -202,18 +246,80 @@
     border: 1px solid #cfcfcf;
     padding: 6px 18px;
 }
-.btn-reset:hover { background: var(--abu-bg); }
+
+.btn-reset:hover {
+    background: var(--abu-bg);
+}
 
 /* ================= RESPONSIF ================= */
 @media (max-width: 900px) {
     .cols,
-    .top-grid { grid-template-columns: 1fr; }
-    .row { grid-template-columns: 1fr; }
-    .cols .col-right .row > label { text-align: left; padding-right: 0; }
-    .err { grid-column: 1; }
-    .pair-suku { grid-template-columns: 1fr; }
-    .pair-suku label { text-align: left; padding: 6px 0 2px; }
-    .split-2 { grid-template-columns: 1fr; }
-    .form-actions { flex-direction: column; gap: 12px; align-items: stretch; }
-    .form-actions-right { justify-content: flex-end; }
+    .top-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .row {
+        grid-template-columns: 1fr;
+    }
+
+    .cols .col-right .row > label {
+        text-align: left;
+        padding-right: 0;
+    }
+
+    .err {
+        grid-column: 1;
+    }
+
+    .pair-suku {
+        grid-template-columns: 1fr;
+    }
+
+    .pair-suku label {
+        text-align: left;
+        padding: 6px 0 2px;
+    }
+
+    .split-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .form-actions-right {
+        justify-content: flex-end;
+    }
+}
+
+/* ================= KHUSUS PEKERJAAN ================= */
+/* Berlaku di dalam maupun di luar media query.
+   Label di kiri, input di sampingnya. */
+
+.col-left .row.pekerjaan-row {
+    display: grid !important;
+    grid-template-columns: 150px minmax(0, 1fr) !important;
+    column-gap: 0 !important;
+    align-items: center !important;
+}
+
+.col-left .row.pekerjaan-row > label {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    text-align: left !important;
+    padding-right: 0 !important;
+}
+
+.col-left .row.pekerjaan-row > #pekerjaan,
+.col-left .row.pekerjaan-row > #pekerjaan_lainnya {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    max-width: 300px !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
 }
