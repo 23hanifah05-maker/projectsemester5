@@ -156,9 +156,9 @@
                     <div class="col-right">
                         <div class="row">
                             <label>No Hp</label>
-                            <input type="text" name="no_hp" id="no_hp" value="{{ old('no_hp') }}"
-                                   placeholder="082534636626" inputmode="numeric" maxlength="13"
-                                   oninput="batasiAngka(this, 13, 'noHpError', 'No HP hanya boleh angka, maksimal 13 digit.')">
+                            <input type="text" name="no_hp" id="no_hp" value="{{ old('no_hp', '+62') }}"
+                                   inputmode="numeric" maxlength="15"
+                                   oninput="formatHp(this, 'noHpError')">
                             <small class="err" id="noHpError"></small>
                         </div>
                         <div class="row">
@@ -193,9 +193,26 @@
                         <div class="row">
                             <label></label>
                             <div class="split-2">
-                                <input type="text" name="kabupaten" value="{{ old('kabupaten') }}" placeholder="Kabupaten">
-                                <input type="text" name="provinsi" value="{{ old('provinsi') }}" placeholder="Provinsi">
+                                <input type="text" name="kabupaten" id="kabupaten" list="daftarKabupaten"
+                                       value="{{ old('kabupaten', 'Ngawi') }}" placeholder="Kabupaten"
+                                       onfocus="bukaPilihan(this)" onblur="pulihkanPilihan(this)">
+                                <input type="text" name="provinsi" value="{{ old('provinsi', 'Jawa Timur') }}" placeholder="Provinsi">
                             </div>
+                            <datalist id="daftarKabupaten">
+                                <option value="Bangkalan"><option value="Banyuwangi"><option value="Blitar">
+                                <option value="Bojonegoro"><option value="Bondowoso"><option value="Gresik">
+                                <option value="Jember"><option value="Jombang"><option value="Kediri">
+                                <option value="Lamongan"><option value="Lumajang"><option value="Madiun">
+                                <option value="Magetan"><option value="Malang"><option value="Mojokerto">
+                                <option value="Nganjuk"><option value="Ngawi"><option value="Pacitan">
+                                <option value="Pamekasan"><option value="Pasuruan"><option value="Ponorogo">
+                                <option value="Probolinggo"><option value="Sampang"><option value="Sidoarjo">
+                                <option value="Situbondo"><option value="Sumenep"><option value="Trenggalek">
+                                <option value="Tuban"><option value="Tulungagung">
+                                <option value="Kota Batu"><option value="Kota Blitar"><option value="Kota Kediri">
+                                <option value="Kota Madiun"><option value="Kota Malang"><option value="Kota Mojokerto">
+                                <option value="Kota Pasuruan"><option value="Kota Probolinggo"><option value="Kota Surabaya">
+                            </datalist>
                         </div>
                         <div class="row">
                             <label>Kode Pos</label>
@@ -212,6 +229,13 @@
                                 <option value="umum" {{ old('pembayaran') == 'umum' ? 'selected' : '' }}>Umum</option>
                                 <option value="asuransi" {{ old('pembayaran') == 'asuransi' ? 'selected' : '' }}>Asuransi</option>
                             </select>
+                        </div>
+                        <div class="row">
+                            <label>No. BPJS</label>
+                            <input type="text" name="no_bpjs" id="no_bpjs" value="{{ old('no_bpjs') }}"
+                                   inputmode="numeric" maxlength="13"
+                                   oninput="batasiAngka(this, 13, 'noBpjsError', 'No. BPJS hanya boleh angka, maksimal 13 digit.')">
+                            <small class="err" id="noBpjsError"></small>
                         </div>
                     </div>
                 </div>
@@ -251,9 +275,9 @@
                         </div>
                         <div class="row">
                             <label>No Hp</label>
-                            <input type="text" name="pj_no_hp" id="pj_no_hp" value="{{ old('pj_no_hp') }}"
-                                   placeholder="085234512890" inputmode="numeric" maxlength="13"
-                                   oninput="batasiAngka(this, 13, 'pjNoHpError', 'No HP hanya boleh angka, maksimal 13 digit.')">
+                            <input type="text" name="pj_no_hp" id="pj_no_hp" value="{{ old('pj_no_hp', '+62') }}"
+                                   inputmode="numeric" maxlength="15"
+                                   oninput="formatHp(this, 'pjNoHpError')">
                             <small class="err" id="pjNoHpError"></small>
                         </div>
                     </div>
@@ -293,6 +317,46 @@
             if (error) error.style.display = 'none';
             input.style.borderColor = '';
         }
+    }
+
+    // No HP: awalan +62 selalu terkunci, 0 di depan otomatis dibuang, maksimal 12 digit setelah +62.
+    function formatHp(input, errorId) {
+        const error = document.getElementById(errorId);
+        let v = input.value;
+        let sisa;
+
+        if (v.startsWith('+62')) {
+            sisa = v.slice(3);
+        } else if (v.length <= 3 && '+62'.startsWith(v)) {
+            sisa = '';              // user menghapus awalan, kembalikan
+        } else {
+            sisa = v;               // hasil paste tanpa +62
+        }
+
+        const adaNonAngka = /[^0-9]/.test(sisa);
+        let digit = sisa.replace(/[^0-9]/g, '').replace(/^0+/, '');
+        if (digit.startsWith('62')) digit = digit.slice(2);
+        digit = digit.slice(0, 12);
+
+        input.value = '+62' + digit;
+
+        if (adaNonAngka) {
+            if (error) { error.textContent = 'No HP hanya boleh angka.'; error.style.display = 'block'; }
+            input.style.borderColor = 'red';
+        } else {
+            if (error) error.style.display = 'none';
+            input.style.borderColor = '';
+        }
+    }
+
+    // Kabupaten: saat diklik, isi dikosongkan sementara supaya semua pilihan muncul.
+    // Kalau tidak jadi memilih, nilai lama dikembalikan. Tetap bisa diketik manual.
+    function bukaPilihan(input) {
+        input.dataset.lama = input.value;
+        input.value = '';
+    }
+    function pulihkanPilihan(input) {
+        if (input.value.trim() === '') input.value = input.dataset.lama || '';
     }
 
     // Hanya huruf & spasi (Suku)
@@ -419,7 +483,7 @@
         document.getElementById('gc-jk').value = jk === 'L' ? 'Laki-laki' : (jk === 'P' ? 'Perempuan' : '-');
         document.getElementById('gc-ttl').value = [f['tempat_lahir'].value, tgl].filter(Boolean).join(', ') || '-';
         document.getElementById('gc-umur').value = f['umur_tahun'].value ? f['umur_tahun'].value + ' Tahun' : '-';
-        document.getElementById('gc-hp').value = f['no_hp'].value || '-';
+        document.getElementById('gc-hp').value = f['no_hp'].value.length > 3 ? f['no_hp'].value : '-';
         document.getElementById('gc-tgl').value = sekarang.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
         document.getElementById('gc-jam').value = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
