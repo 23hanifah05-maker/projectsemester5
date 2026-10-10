@@ -9,6 +9,41 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/obgyn-kunjungan-baru.css')) }}">
+
+    {{-- CSS kotak tanda tangan (langsung di sini, tidak perlu edit file CSS) --}}
+    <style>
+        .ob-ttd-wrap {
+            display: flex;
+            gap: 24px;
+            margin: 24px 0 8px;
+            padding: 20px;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+        }
+        .ob-ttd-item { flex: 1; text-align: center; }
+        .ob-ttd-judul { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+        .ob-ttd-canvas {
+            display: block;
+            width: 100%;
+            height: 160px;
+            background: #fff;
+            border: 1px solid #999;
+            border-radius: 4px;
+            touch-action: none;
+            cursor: crosshair;
+        }
+        .ob-ttd-hapus {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 13px;
+            color: #c1121f;
+            text-decoration: underline;
+        }
+        .ob-ttd-aksi { text-align: right; margin-top: 16px; }
+        @media (max-width: 900px) {
+            .ob-ttd-wrap { flex-direction: column; }
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -301,9 +336,18 @@
                     </thead>
                     <tbody>
                         @foreach ($informedRows as [$kategori, $isi])
+                            @php $bisaDiisi = in_array($kategori, ['Pertimbangan Pelayanan', 'Lain-lain']); @endphp
                             <tr>
                                 <td>{{ $kategori }}</td>
-                                <td>{{ $isi }}</td>
+                                <td>
+                                    @if ($bisaDiisi)
+                                        <input type="text" class="ob-ic-isi-bebas" name="informed_isi[{{ $kategori }}]"
+                                               autocomplete="off" placeholder="Tuliskan di sini..."
+                                               style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font:inherit;">
+                                    @else
+                                        {{ $isi }}
+                                    @endif
+                                </td>
                                 <td class="ob-ic-cek">
                                     <input type="checkbox" name="informed_cek[]" value="{{ $kategori }}">
                                 </td>
@@ -347,11 +391,31 @@
                         <label>Pukul</label>
                         <input type="time" id="icPukul" name="informed_pukul">
                     </div>
-                    <div class="ob-ic-aksi">
-                        <button type="button" class="ob-btn ob-btn-simpan" onclick="simpanInformedConsent()">
-                            <i class="fa-solid fa-floppy-disk"></i> Simpan
-                        </button>
+                </div>
+
+                {{-- ===== KOTAK TANDA TANGAN ===== --}}
+                <div class="ob-ttd-wrap">
+                    <div class="ob-ttd-item">
+                        <div class="ob-ttd-judul">Pemberi Informasi (Dokter)</div>
+                        <canvas id="ttdDokter" class="ob-ttd-canvas" width="500" height="200"></canvas>
+                        <a href="#" class="ob-ttd-hapus" onclick="hapusTtd('ttdDokter'); return false;">Hapus tanda tangan</a>
                     </div>
+                    <div class="ob-ttd-item">
+                        <div class="ob-ttd-judul">Tanda Tangan Pasien/ Keluarga</div>
+                        <canvas id="ttdPasien" class="ob-ttd-canvas" width="500" height="200"></canvas>
+                        <a href="#" class="ob-ttd-hapus" onclick="hapusTtd('ttdPasien'); return false;">Hapus tanda tangan</a>
+                    </div>
+                    <div class="ob-ttd-item">
+                        <div class="ob-ttd-judul">Saksi Klinik</div>
+                        <canvas id="ttdSaksi" class="ob-ttd-canvas" width="500" height="200"></canvas>
+                        <a href="#" class="ob-ttd-hapus" onclick="hapusTtd('ttdSaksi'); return false;">Hapus tanda tangan</a>
+                    </div>
+                </div>
+
+                <div class="ob-ttd-aksi">
+                    <button type="button" class="ob-btn ob-btn-simpan" onclick="simpanInformedConsent()">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan
+                    </button>
                 </div>
             </div>
         </div>
@@ -598,6 +662,67 @@
         }
     })();
 
+    // Baris Informed Consent yang bisa diisi: centang otomatis saat diisi
+    document.querySelectorAll('.ob-ic-isi-bebas').forEach(function (input) {
+        input.addEventListener('input', function () {
+            const cek = this.closest('tr').querySelector('input[type=checkbox]');
+            if (cek) cek.checked = this.value.trim() !== '';
+        });
+    });
+
+    // ===== Tanda tangan (gambar di kotak pakai mouse / jari / pen) =====
+    const ID_TTD = ['ttdDokter', 'ttdPasien', 'ttdSaksi'];
+    const ttdTerisi = {};   // true = sudah ada coretan
+
+    ID_TTD.forEach(function (id) {
+        const canvas = document.getElementById(id);
+        const ctx = canvas.getContext('2d');
+        let gambar = false;
+        ttdTerisi[id] = false;
+
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#000';
+
+        // posisi kursor -> koordinat canvas
+        function posisi(e) {
+            const r = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - r.left) * (canvas.width / r.width),
+                y: (e.clientY - r.top) * (canvas.height / r.height)
+            };
+        }
+
+        canvas.addEventListener('pointerdown', function (e) {
+            gambar = true;
+            ttdTerisi[id] = true;
+            canvas.setPointerCapture(e.pointerId);
+            const p = posisi(e);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + 0.1, p.y + 0.1);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('pointermove', function (e) {
+            if (!gambar) return;
+            const p = posisi(e);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+        });
+
+        ['pointerup', 'pointercancel'].forEach(function (ev) {
+            canvas.addEventListener(ev, function () { gambar = false; });
+        });
+    });
+
+    function hapusTtd(id) {
+        const canvas = document.getElementById(id);
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        ttdTerisi[id] = false;
+    }
+
     function simpanInformedConsent() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -620,9 +745,25 @@
             }
         }
 
+        // Tanda tangan dokter & pasien/keluarga wajib (saksi opsional)
+        if (!ttdTerisi['ttdDokter']) {
+            alert('Tanda tangan dokter (pemberi informasi) belum diisi.');
+            return;
+        }
+        if (!ttdTerisi['ttdPasien']) {
+            alert('Tanda tangan pasien/ keluarga belum diisi.');
+            return;
+        }
+
+        // Hasil tanda tangan dalam bentuk gambar (siap dikirim ke backend nanti)
+        const dataTtd = {};
+        ID_TTD.forEach(function (id) {
+            dataTtd[id] = ttdTerisi[id] ? document.getElementById(id).toDataURL('image/png') : '';
+        });
+
         const keputusan = document.querySelector('input[name="informed_keputusan"]:checked').value;
 
-        // TODO: kirim ke backend. Sementara masih dummy front-end.
+        // TODO: kirim ke backend (termasuk dataTtd). Sementara masih dummy front-end.
         alert('Informed Consent berhasil disimpan (' + (keputusan === 'setuju' ? 'Setuju' : 'Menolak') + ').');
     }
 
@@ -647,6 +788,8 @@
         // Reset tab Informed Consent
         document.querySelectorAll('#tab-informed input[type=checkbox]').forEach(cb => cb.checked = false);
         ['icDokter', 'icSaksi', 'icPukul'].forEach(id => document.getElementById(id).value = '');
+        document.querySelectorAll('.ob-ic-isi-bebas').forEach(el => el.value = '');
+        ID_TTD.forEach(hapusTtd);
     }
 
     // Centang TTV hijau jika minimal satu tanda vital terisi
@@ -820,7 +963,7 @@
         const list = document.getElementById(k.list);
         list.innerHTML = '';
 
-        diagnosaTerpilih[jenis].forEach(function (item) {
+        diagnosaTerpilih[jenis].forEach(function (item, urutan) {
             const baris = document.createElement('div');
             baris.className = 'ob-diagnosa-item';
 
@@ -829,6 +972,15 @@
             kode.textContent = item.kode;
             teks.appendChild(kode);
             teks.appendChild(document.createTextNode(' — ' + item.nama));
+
+            // Diagnosa pertama yang dicentang otomatis menjadi Diagnosa Utama
+            if (jenis === 'penyakit' && urutan === 0) {
+                const badge = document.createElement('span');
+                badge.textContent = 'Diagnosa Utama';
+                badge.style.cssText = 'display:inline-block;margin-left:10px;padding:2px 10px;background:#c1121f;color:#fff;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;vertical-align:middle;';
+                teks.appendChild(badge);
+            }
+
             baris.appendChild(teks);
 
             const hidden = document.createElement('input');

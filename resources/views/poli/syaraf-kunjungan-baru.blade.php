@@ -9,6 +9,15 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/syaraf-kunjungan-baru.css')) }}">
+    <style>
+        .kb-tab.terkunci{opacity:.5;cursor:not-allowed}
+        .kb-tab .kb-tab-wajib{display:none;margin-left:8px;padding:1px 8px;background:#c1121f;color:#fff;border-radius:10px;font-size:11px;font-weight:600}
+        .kb-tab.wajib-isi .kb-tab-wajib{display:inline-block}
+        .kb-banner-cp{display:none;margin:12px 0;padding:10px 14px;background:#fff4e5;border:1px solid #f5c26b;border-radius:6px;font-size:13px;align-items:center;justify-content:space-between;gap:12px}
+        .kb-banner-cp.tampil{display:flex}
+        .kb-banner-cp button{background:#c1121f;color:#fff;border:0;padding:6px 14px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+        .cp-dx-input[readonly]{background:#f3f3f3}
+    </style>
 @endsection
 
 @section('content')
@@ -65,7 +74,7 @@
     <div class="kb-tabs">
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assesment</div>
         <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
-        <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
+        <div class="kb-tab terkunci" id="tabPathway" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway <span class="kb-tab-wajib">Wajib diisi</span></div>
     </div>
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
@@ -286,6 +295,11 @@
             </div>
         </div>
 
+        <div class="kb-banner-cp" id="bannerCP">
+            <span><b>Diagnosa utama HNP.</b> Clinical Pathway wajib diisi untuk pasien ini.</span>
+            <button type="button" onclick="bukaTabPathway()">Isi Clinical Pathway</button>
+        </div>
+
         <div class="kb-actions">
             <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
                 <i class="fa-solid fa-right-from-bracket"></i> Rujuk
@@ -362,7 +376,7 @@
                         </tr>
                         <tr class="cp-dx-row cp-dx-mid">
                             <td class="cp-aktivitas cp-dx-label">Dx Utama</td>
-                            <td><input type="text" class="cp-dx-input" data-label="Dx Utama"></td>
+                            <td><input type="text" class="cp-dx-input" data-label="Dx Utama" readonly></td>
                             <td><input type="text" class="cp-waktu" readonly></td>
                             <td></td>
                         </tr>
@@ -565,6 +579,11 @@
     const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
 
     function gantiTab(tab, event) {
+        if (tab === 'pathway' && !cpBolehDiisi()) {
+            alert('Clinical Pathway hanya dapat diisi untuk pasien dengan diagnosa utama HNP. Tambahkan diagnosa HNP sebagai diagnosa pertama di tab Assesment.');
+            return;
+        }
+
         document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
         event.currentTarget.classList.add('active');
@@ -774,6 +793,12 @@
     function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        if (cpBolehDiisi() && !cpTerisi()) {
+            alert('Diagnosa utama pasien adalah HNP. Clinical Pathway wajib diisi sebelum menyimpan.');
+            bukaTabPathway();
             return;
         }
 
@@ -1089,7 +1114,7 @@
         const list = document.getElementById(k.list);
         list.innerHTML = '';
 
-        diagnosaTerpilih[jenis].forEach(function (item) {
+        diagnosaTerpilih[jenis].forEach(function (item, urutan) {
             const baris = document.createElement('div');
             baris.className = 'kb-diagnosa-item';
 
@@ -1099,6 +1124,15 @@
             kode.textContent = item.kode;
             teks.appendChild(kode);
             teks.appendChild(document.createTextNode(' — ' + item.nama));
+
+            // Diagnosa pertama yang dicentang otomatis menjadi Diagnosa Utama
+            if (jenis === 'penyakit' && urutan === 0) {
+                const badge = document.createElement('span');
+                badge.className = 'kb-badge-utama';
+                badge.textContent = 'Diagnosa Utama';
+                badge.style.cssText = 'display:inline-block;margin-left:10px;padding:2px 10px;background:#c1121f;color:#fff;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;vertical-align:middle;';
+                teks.appendChild(badge);
+            }
 
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
@@ -1122,6 +1156,72 @@
             baris.appendChild(aksi);
             list.appendChild(baris);
         });
+
+        if (jenis === 'penyakit') perbaruiStatusCP();
+    }
+
+    // ===== Clinical Pathway khusus HNP =====
+    // Awalan kode ICD-10 yang dianggap HNP (M51 = diskus lumbal/torakolumbal, M50 = diskus servikal)
+    const KODE_HNP = ['M50', 'M51'];
+
+    function diagnosaUtama() {
+        return diagnosaTerpilih.penyakit.length ? diagnosaTerpilih.penyakit[0] : null;
+    }
+
+    function cpBolehDiisi() {
+        const dx = diagnosaUtama();
+        if (!dx) return false;
+        const kode = String(dx.kode).trim().toUpperCase();
+        return KODE_HNP.some(function (awalan) { return kode.startsWith(awalan); });
+    }
+
+    function cpTerisi() {
+        let terisi = false;
+        document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
+            tr.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
+                if (cb.checked) terisi = true;
+            });
+            tr.querySelectorAll('input[type=text]:not(.cp-waktu), textarea').forEach(function (f) {
+                if (f.value.trim() !== '') terisi = true;
+            });
+        });
+        return terisi;
+    }
+
+    function perbaruiStatusCP() {
+        const boleh = cpBolehDiisi();
+        const dx = diagnosaUtama();
+        const tab = document.getElementById('tabPathway');
+        const banner = document.getElementById('bannerCP');
+        const dxInput = document.querySelector('#tab-pathway .cp-dx-input[data-label="Dx Utama"]');
+
+        tab.classList.toggle('terkunci', !boleh);
+        tab.classList.toggle('wajib-isi', boleh);
+        banner.classList.toggle('tampil', boleh);
+
+        if (dxInput) {
+            dxInput.readOnly = true;
+            dxInput.value = boleh ? dx.kode + ' — ' + dx.nama : '';
+            perbaruiWaktuBaris(dxInput.closest('tr'));
+        }
+
+        // Jika CP sedang terbuka tetapi diagnosa utama bukan HNP lagi, kembali ke Assesment
+        if (!boleh && document.getElementById('tab-pathway').classList.contains('active')) {
+            document.querySelectorAll('.kb-tab').forEach(function (el, i) {
+                el.classList.toggle('active', i === 0);
+            });
+            document.querySelectorAll('.kb-tab-content').forEach(function (el) {
+                el.classList.toggle('active', el.id === 'tab-assesment');
+            });
+        }
+    }
+
+    function bukaTabPathway() {
+        document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('tabPathway').classList.add('active');
+        document.getElementById('tab-pathway').classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     document.addEventListener('click', function (e) {
