@@ -216,7 +216,7 @@
                     <th>Tgl. Lahir</th>
                     <th>Jenis Kelamin</th>
                     <th>Alamat</th>
-                    <th>Status</th>
+                    <th>Pembayaran</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -230,7 +230,7 @@
                         <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
                         <td>{{ $item->jenis_kelamin }}</td>
                         <td>{{ $item->alamat }}</td>
-                        <td>{{ $item->status }}</td>
+                        <td>{{ $item->pembayaran }}</td>
                         <td class="aksi-cell">
                             <div class="aksi-wrap">
                                 <button type="button" class="btn-aksi" title="Lihat Detail"
