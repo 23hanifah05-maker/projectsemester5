@@ -1,13 +1,15 @@
+```blade
 @extends('layouts.app')
 
 @section('title', ($poli->nama_poli ?? 'Poli Syaraf') . ' - Klinik Utama Merah Putih')
+
 @section('header-icon')
     <i class="fa-solid fa-stethoscope"></i>
 @endsection
+
 @section('header-title', $poli->nama_poli ?? 'Poli Syaraf')
 
 @section('extra-css')
-    {{-- Pakai CSS yang sama dengan halaman Pendaftaran karena struktur tabel & modalnya sama --}}
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/syaraf.css') }}?v={{ @filemtime(public_path('css/syaraf.css')) }}">
@@ -15,17 +17,7 @@
 
 @section('content')
 
-    {{-- =====================================================
-         DATA DUMMY PASIEN POLI SYARAF
-         (5 pasien laki-laki dari Master Data Pendaftaran:
-         RM-0001, RM-0003, RM-0005, RM-0007, RM-0009)
-         Data dilengkapi penuh (NIK, PJ, dll) agar modal Detail
-         dan Edit bisa berfungsi sama seperti di Master Data.
-
-         status_periksa: semua pasien otomatis 'periksa' (kuning) saat
-         masuk dari Pendaftaran. Berubah jadi 'selesai' (hijau) setelah
-         tombol Simpan di halaman detail/kunjungan diklik.
-    ===================================================== --}}
+    {{-- DATA DUMMY PASIEN POLI SYARAF --}}
     @php
         $pasien = $pasien ?? [
             (object) [
@@ -187,7 +179,6 @@
     @endphp
 
     <div class="panel">
-
         <div class="panel-head">
             <a href="#" class="master-data-title">Daftar Pasien</a>
         </div>
@@ -202,7 +193,13 @@
 
             <div class="filter-item filter-keyword">
                 <label>Keyword</label>
-                <input type="text" id="inputKeyword" name="keyword" value="{{ request('keyword') }}" placeholder="Cari nama, NIK, atau No. RM">
+                <input
+                    type="text"
+                    id="inputKeyword"
+                    name="keyword"
+                    value="{{ request('keyword') }}"
+                    placeholder="Cari nama, NIK, atau No. RM"
+                >
             </div>
         </form>
 
@@ -220,28 +217,42 @@
                     <th>Aksi</th>
                 </tr>
             </thead>
+
             <tbody>
                 @forelse (($pasien ?? []) as $index => $item)
-                    <tr class="row-pasien" data-pasien='@json($item)' title="Klik dua kali untuk melihat detail">
+                    <tr
+                        class="row-pasien"
+                        data-pasien='@json($item)'
+                        title="Klik dua kali untuk melihat detail"
+                    >
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->no_rm }}</td>
                         <td>{{ $item->nama_pasien }}</td>
                         <td>{{ $item->nik }}</td>
-                        <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
+                        <td>
+                            {{ $item->tgl_lahir ? \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') : '-' }}
+                        </td>
                         <td>{{ $item->jenis_kelamin }}</td>
                         <td>{{ $item->alamat }}</td>
                         <td>{{ $item->pembayaran }}</td>
                         <td class="aksi-cell">
                             <div class="aksi-wrap">
-                                <button type="button" class="btn-aksi" title="Lihat Detail"
-                                        onclick="event.stopPropagation(); bukaDetail(this)">
+                                <button
+                                    type="button"
+                                    class="btn-aksi"
+                                    title="Lihat Detail"
+                                    onclick="event.stopPropagation(); bukaDetail(this)"
+                                >
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
                                 </button>
 
-                                @php $sp = $item->status_periksa ?? 'periksa'; @endphp
+                                @php
+                                    $sp = $item->status_periksa ?? 'periksa';
+                                @endphp
+
                                 <span class="badge-periksa {{ $sp }}">
                                     {{ $sp === 'selesai' ? 'Selesai' : 'Periksa' }}
                                 </span>
@@ -249,7 +260,6 @@
                         </td>
                     </tr>
                 @empty
-                    {{-- Baris kosong sebagai placeholder, selama belum ada data --}}
                     @for ($i = 0; $i < 6; $i++)
                         <tr>
                             <td>{{ $i + 1 }}</td>
@@ -275,13 +285,9 @@
                 @endforelse
             </tbody>
         </table>
-
     </div>
 
-
-    {{-- =====================================================
-         MODAL DETAIL PASIEN
-    ===================================================== --}}
+    {{-- MODAL DETAIL PASIEN --}}
     <div class="modal-overlay" id="pasienModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -290,6 +296,7 @@
             </div>
 
             <div class="modal-section-title">Identitas Pasien</div>
+
             <div class="modal-grid">
                 <div class="modal-row"><span class="modal-label">No. Rekam Medis</span><span>:</span><span id="m-no-rm"></span></div>
                 <div class="modal-row"><span class="modal-label">No. HP</span><span>:</span><span id="m-hp"></span></div>
@@ -316,6 +323,7 @@
             </div>
 
             <div class="modal-section-title">Penanggung Jawab</div>
+
             <div class="modal-grid">
                 <div class="modal-row"><span class="modal-label">Nama</span><span>:</span><span id="m-pj-nama"></span></div>
                 <div class="modal-row"><span class="modal-label">Hubungan</span><span>:</span><span id="m-pj-hubungan"></span></div>
@@ -325,10 +333,7 @@
         </div>
     </div>
 
-
-    {{-- =====================================================
-         MODAL TAMBAH KUNJUNGAN
-    ===================================================== --}}
+    {{-- MODAL TAMBAH KUNJUNGAN --}}
     <div class="custom-modal-overlay" id="kunjunganModal">
         <div class="custom-modal-box">
             <div class="custom-modal-header">
@@ -341,14 +346,17 @@
                     <label>No. Rekam Medis</label>
                     <input type="text" id="kunjunganRm" readonly>
                 </div>
+
                 <div class="form-group">
                     <label>Nama Pasien</label>
                     <input type="text" id="kunjunganNama" readonly>
                 </div>
+
                 <div class="form-group">
                     <label>Tanggal Kunjungan</label>
                     <input type="date" id="kunjunganTanggal">
                 </div>
+
                 <div class="form-group">
                     <label>Poli</label>
                     <select id="kunjunganPoli">
@@ -361,6 +369,7 @@
                         <option value="Poli Mata">Poli Mata</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Keluhan</label>
                     <textarea id="kunjunganKeluhan" placeholder="Masukkan keluhan pasien..."></textarea>
@@ -374,12 +383,7 @@
         </div>
     </div>
 
-
-    {{-- =====================================================
-         MODAL EDIT
-         Nama Pasien dan NIK dibuat READONLY (terkunci).
-         Hanya Alamat dan No. HP yang bisa diubah.
-    ===================================================== --}}
+    {{-- MODAL EDIT PASIEN --}}
     <div class="custom-modal-overlay" id="editModal">
         <div class="custom-modal-box">
             <div class="custom-modal-header">
@@ -397,20 +401,22 @@
 
                 <div class="form-group">
                     <label>Nama Pasien</label>
-                    <input type="text" id="editNama" readonly class="input-locked input-readonly-abu"
-                           title="Nama tidak dapat diubah dari sini">
+                    <input type="text" id="editNama" readonly class="input-locked input-readonly-abu">
                 </div>
 
                 <div class="form-group">
                     <label>NIK</label>
-                    <input type="text" id="editNik" inputmode="numeric" readonly class="input-locked input-readonly-abu"
-                           title="NIK tidak dapat diubah dari sini">
+                    <input type="text" id="editNik" inputmode="numeric" readonly class="input-locked input-readonly-abu">
                 </div>
 
                 <div class="form-group">
                     <label>No. HP</label>
-                    <input type="text" id="editHp" inputmode="numeric"
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <input
+                        type="text"
+                        id="editHp"
+                        inputmode="numeric"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    >
                 </div>
 
                 <div class="form-group">
@@ -428,15 +434,8 @@
 
 @endsection
 
-
-{{-- =====================================================
-     JAVASCRIPT
-===================================================== --}}
 @section('extra-js')
 <script>
-
-// Kunci penyimpanan status periksa Poli Syaraf
-// (diisi oleh halaman Pendaftaran & halaman detail/kunjungan Poli Syaraf)
 const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
 const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
 
@@ -456,27 +455,31 @@ function bacaWaktuSelesai() {
     }
 }
 
-// Warna & teks badge mengikuti status tersimpan, lalu baris diurutkan:
-// - yang masih "Periksa" (kuning) di atas
-// - yang "Selesai" (hijau) di bawah, urut dari yang paling dulu selesai
-//   sampai yang paling baru selesai (paling baru ada di paling bawah)
-// Belum ada status tersimpan = 'periksa'.
 function terapkanStatusPeriksa() {
     const tersimpan = bacaStatusPeriksa();
     const waktu = bacaWaktuSelesai();
     const rows = Array.from(document.querySelectorAll('.row-pasien'));
+
     if (rows.length === 0) return;
 
     rows.forEach(function (row, i) {
-        // Simpan urutan awal sekali saja, dipakai sebagai pembanding kalau waktunya sama
-        if (row.dataset.urutAwal === undefined) row.dataset.urutAwal = i;
+        if (row.dataset.urutAwal === undefined) {
+            row.dataset.urutAwal = i;
+        }
 
         const badge = row.querySelector('.badge-periksa');
         let data;
-        try { data = JSON.parse(row.getAttribute('data-pasien')); } catch (e) { return; }
 
-        const kunci = String(data.no_rm).trim().toUpperCase();
-        const status = (tersimpan[kunci] || data.status_periksa || 'periksa') === 'selesai' ? 'selesai' : 'periksa';
+        try {
+            data = JSON.parse(row.getAttribute('data-pasien'));
+        } catch (e) {
+            return;
+        }
+
+        const kunci = String(data.no_rm || '').trim().toUpperCase();
+        const status = (tersimpan[kunci] || data.status_periksa || 'periksa') === 'selesai'
+            ? 'selesai'
+            : 'periksa';
 
         row.dataset.statusPeriksa = status;
         row.dataset.waktuSelesai = waktu[kunci] || 0;
@@ -492,27 +495,36 @@ function terapkanStatusPeriksa() {
         const selesaiA = a.dataset.statusPeriksa === 'selesai';
         const selesaiB = b.dataset.statusPeriksa === 'selesai';
 
-        if (selesaiA !== selesaiB) return selesaiA ? 1 : -1; // periksa di atas
+        if (selesaiA !== selesaiB) {
+            return selesaiA ? 1 : -1;
+        }
 
         if (selesaiA) {
             const selisih = Number(a.dataset.waktuSelesai) - Number(b.dataset.waktuSelesai);
-            if (selisih !== 0) return selisih; // selesai lebih dulu = lebih atas
+            if (selisih !== 0) return selisih;
         }
 
         return Number(a.dataset.urutAwal) - Number(b.dataset.urutAwal);
     });
 
     const tbody = rows[0].parentNode;
-    rows.forEach(function (row) { tbody.appendChild(row); });
+    rows.forEach(function (row) {
+        tbody.appendChild(row);
+    });
 
     perbaruiNomor();
 }
 
 function ambilDataBaris(button) {
     const row = button.closest('.row-pasien');
+
     if (!row) return null;
+
     try {
-        return { row: row, data: JSON.parse(row.getAttribute('data-pasien')) };
+        return {
+            row: row,
+            data: JSON.parse(row.getAttribute('data-pasien'))
+        };
     } catch (error) {
         console.error(error);
         return null;
@@ -521,9 +533,16 @@ function ambilDataBaris(button) {
 
 function formatTanggal(tanggal) {
     if (!tanggal) return '-';
+
     const d = new Date(tanggal);
+
     if (isNaN(d.getTime())) return tanggal;
-    return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
 }
 
 function isiDetail(data) {
@@ -533,7 +552,8 @@ function isiDetail(data) {
     document.getElementById('m-suku').textContent = data.suku ?? '-';
     document.getElementById('m-nik').textContent = data.nik ?? '-';
     document.getElementById('m-bangsa').textContent = data.bangsa ?? '-';
-    document.getElementById('m-ttl').textContent = (data.tempat_lahir ?? '-') + ' / ' + formatTanggal(data.tgl_lahir);
+    document.getElementById('m-ttl').textContent =
+        (data.tempat_lahir ?? '-') + ' / ' + formatTanggal(data.tgl_lahir);
     document.getElementById('m-bahasa').textContent = data.bahasa ?? '-';
     document.getElementById('m-umur').textContent = data.umur ?? '-';
     document.getElementById('m-alamat').textContent = data.alamat ?? '-';
@@ -548,7 +568,8 @@ function isiDetail(data) {
     document.getElementById('m-kodepos').textContent = data.kode_pos ?? '-';
     document.getElementById('m-pembayaran').textContent = data.pembayaran ?? '-';
     document.getElementById('m-poli').textContent = data.poli ?? '-';
-    document.getElementById('m-dokter').textContent = (data.dokter && data.dokter.length > 0) ? data.dokter : '-';
+    document.getElementById('m-dokter').textContent =
+        data.dokter && data.dokter.length > 0 ? data.dokter : '-';
     document.getElementById('m-pj-nama').textContent = data.pj_nama ?? '-';
     document.getElementById('m-pj-hubungan').textContent = data.pj_hubungan ?? '-';
     document.getElementById('m-pj-jk').textContent = data.pj_jenis_kelamin ?? '-';
@@ -557,7 +578,9 @@ function isiDetail(data) {
 
 function bukaDetail(button) {
     const hasil = ambilDataBaris(button);
+
     if (!hasil) return;
+
     isiDetail(hasil.data);
     document.getElementById('pasienModal').classList.add('show');
 }
@@ -568,14 +591,19 @@ function closePasienModal() {
 
 function bukaKunjungan(button) {
     const hasil = ambilDataBaris(button);
+
     if (!hasil) return;
+
     const data = hasil.data;
 
     document.getElementById('kunjunganRm').value = data.no_rm ?? '';
     document.getElementById('kunjunganNama').value = data.nama_pasien ?? '';
 
     const today = new Date();
-    const tanggal = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const tanggal = today.getFullYear() + '-' +
+        String(today.getMonth() + 1).padStart(2, '0') + '-' +
+        String(today.getDate()).padStart(2, '0');
+
     document.getElementById('kunjunganTanggal').value = tanggal;
     document.getElementById('kunjunganPoli').value = data.poli ?? '';
     document.getElementById('kunjunganKeluhan').value = '';
@@ -594,8 +622,15 @@ function simpanKunjungan() {
     const poli = document.getElementById('kunjunganPoli').value;
     const keluhan = document.getElementById('kunjunganKeluhan').value;
 
-    if (!tanggal) { alert('Tanggal kunjungan wajib diisi.'); return; }
-    if (!poli) { alert('Silakan pilih poli.'); return; }
+    if (!tanggal) {
+        alert('Tanggal kunjungan wajib diisi.');
+        return;
+    }
+
+    if (!poli) {
+        alert('Silakan pilih poli.');
+        return;
+    }
 
     alert(
         'Kunjungan berhasil dibuat.\n\n' +
@@ -611,11 +646,14 @@ function simpanKunjungan() {
 
 function bukaEdit(button) {
     const hasil = ambilDataBaris(button);
+
     if (!hasil) return;
+
     const data = hasil.data;
     const row = hasil.row;
 
-    document.getElementById('editRow').value = Array.from(document.querySelectorAll('.row-pasien')).indexOf(row);
+    document.getElementById('editRow').value =
+        Array.from(document.querySelectorAll('.row-pasien')).indexOf(row);
     document.getElementById('editRm').value = data.no_rm ?? '';
     document.getElementById('editNama').value = data.nama_pasien ?? '';
     document.getElementById('editNik').value = data.nik ?? '';
@@ -630,22 +668,24 @@ function tutupEdit() {
 }
 
 function simpanEdit() {
-    const index = parseInt(document.getElementById('editRow').value);
+    const index = parseInt(document.getElementById('editRow').value, 10);
     const rows = document.querySelectorAll('.row-pasien');
     const row = rows[index];
 
-    if (!row) { alert('Data pasien tidak ditemukan.'); return; }
+    if (!row) {
+        alert('Data pasien tidak ditemukan.');
+        return;
+    }
 
     const data = JSON.parse(row.getAttribute('data-pasien'));
 
-    // Hanya Alamat & No. HP yang boleh diubah. Nama & NIK sengaja tidak disentuh.
     data.no_hp = document.getElementById('editHp').value;
     data.alamat = document.getElementById('editAlamat').value;
 
     row.setAttribute('data-pasien', JSON.stringify(data));
 
     const kolom = row.querySelectorAll('td');
-    kolom[6].textContent = data.alamat; // kolom Alamat
+    kolom[6].textContent = data.alamat;
 
     alert('Data pasien berhasil diperbarui.');
     tutupEdit();
@@ -653,7 +693,9 @@ function simpanEdit() {
 
 function hapusPasien(button) {
     const hasil = ambilDataBaris(button);
+
     if (!hasil) return;
+
     const data = hasil.data;
     const row = hasil.row;
 
@@ -677,13 +719,13 @@ function perbaruiNomor() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Sesuaikan warna badge (kuning/hijau) & urutan baris dengan status terakhir
     terapkanStatusPeriksa();
 
     document.querySelectorAll('.row-pasien').forEach(function (row) {
         row.addEventListener('click', function () {
             const data = JSON.parse(this.getAttribute('data-pasien'));
-            window.location.href = "/poli/syaraf/detail/" + encodeURIComponent(data.no_rm);
+            window.location.href =
+                '/poli/syaraf/detail/' + encodeURIComponent(data.no_rm);
         });
     });
 
@@ -708,19 +750,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Kalau halaman dibuka lewat tombol Back (dari cache), status tetap diperbarui
 window.addEventListener('pageshow', terapkanStatusPeriksa);
 
 document.getElementById('inputKeyword')?.addEventListener('input', function () {
     const keyword = this.value.trim().toLowerCase();
+
     document.querySelectorAll('.row-pasien').forEach(function (row) {
         const data = JSON.parse(row.getAttribute('data-pasien'));
-        const gabungan = (data.nama_pasien + ' ' + data.nik + ' ' + data.no_rm).toLowerCase();
+        const gabungan = (
+            (data.nama_pasien || '') + ' ' +
+            (data.nik || '') + ' ' +
+            (data.no_rm || '')
+        ).toLowerCase();
+
         row.style.display = gabungan.includes(keyword) ? '' : 'none';
     });
 });
 
-document.querySelector('.filter-row')?.addEventListener('submit', e => e.preventDefault());
-
+document.querySelector('.filter-row')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+});
 </script>
 @endsection
+```
