@@ -12,37 +12,42 @@ use Illuminate\Validation\Rule;
 class PendaftaranController extends Controller
 {
     /**
-     * Menampilkan daftar pendaftaran.
+     * Menampilkan master data pasien dari database.
      */
     public function index(Request $request)
     {
-        $keyword = $request->input('keyword');
+        $keyword = trim($request->input('keyword', ''));
         $dari = $request->input('dari');
         $sampai = $request->input('sampai');
 
-        $query = Pendaftaran::with(['pasien', 'poli']);
+        $query = Pasien::query();
 
-        if (!empty($keyword)) {
-            $query->whereHas('pasien', function ($q) use ($keyword) {
+        // Pencarian berdasarkan nama, nomor RM, NIK, atau nomor HP.
+        if ($keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
                 $q->where('nama_pasien', 'like', '%' . $keyword . '%')
-                  ->orWhere('no_rm', 'like', '%' . $keyword . '%');
+                    ->orWhere('no_rm', 'like', '%' . $keyword . '%')
+                    ->orWhere('nik', 'like', '%' . $keyword . '%')
+                    ->orWhere('no_hp', 'like', '%' . $keyword . '%');
             });
         }
 
+        // Filter berdasarkan tanggal lahir.
         if (!empty($dari)) {
-            $query->whereDate('tgl_registrasi', '>=', $dari);
+            $query->whereDate('tgl_lahir', '>=', $dari);
         }
 
         if (!empty($sampai)) {
-            $query->whereDate('tgl_registrasi', '<=', $sampai);
+            $query->whereDate('tgl_lahir', '<=', $sampai);
         }
 
-        $pasien = $query
-            ->orderByDesc('tgl_registrasi')
+        // Ambil data pasien dari database.
+        $dataPasien = $query
+            ->orderByDesc('no_rm')
             ->get();
 
         return view('pendaftaran.index', compact(
-            'pasien',
+            'dataPasien',
             'keyword',
             'dari',
             'sampai'
@@ -116,10 +121,8 @@ class PendaftaranController extends Controller
         )->firstOrFail();
 
         /*
-         * Kolom jenis_pembayaran saat ini menggunakan enum:
-         * umum dan asuransi swasta.
-         *
-         * Pilihan bpjs sementara dipetakan ke asuransi swasta.
+         * Mempertahankan pemetaan pembayaran yang digunakan
+         * oleh struktur kolom jenis_pembayaran saat ini.
          */
         $jenisPembayaran = $validated['pembayaran'] === 'umum'
             ? 'umum'
@@ -153,10 +156,7 @@ class PendaftaranController extends Controller
                 'nik' => $validated['nik'],
                 'nama_pasien' => $validated['nama_pasien'],
                 'tempat_lahir' => $validated['tempat_lahir'],
-
-                // Nama kolom database: tgl_lahir.
                 'tgl_lahir' => $validated['tgl_lahir'],
-
                 'jenis_kelamin' => $validated['jenis_kelamin'],
                 'agama' => $validated['agama'],
                 'pendidikan' => $validated['pendidikan'],
