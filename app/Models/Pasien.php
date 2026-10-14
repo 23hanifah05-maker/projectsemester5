@@ -33,6 +33,7 @@ class Pasien extends Model
         'alamat',
         'kelurahan',
         'kabupaten',
+        'provinsi',
         'kecamatan',
         'kode_pos',
         'pj_nama',

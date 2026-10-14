@@ -28,55 +28,48 @@
         </a>
     </div>
 
-    {{-- FILTER DATA --}}
-    <form
-        method="GET"
-        action="{{ route('pendaftaran.index') }}"
-        class="filter-row"
-        id="filterForm"
-    >
-        <div class="filter-item">
-            <label>Periode</label>
+   
+{{-- FILTER DATA --}}
+<form
+    method="GET"
+    action="{{ route('pendaftaran.index') }}"
+    class="filter-row"
+    id="filterForm"
+>
+    <div class="filter-item">
+        <label>Periode</label>
 
-            <input
-                type="date"
-                name="dari"
-                value="{{ $dari ?? request('dari') }}"
-            >
-
-            <span>s.d</span>
-
-            <input
-                type="date"
-                name="sampai"
-                value="{{ $sampai ?? request('sampai') }}"
-            >
-        </div>
-
-        <div class="filter-item filter-keyword">
-            <label>Keyword</label>
-
-            <input
-                type="text"
-                name="keyword"
-                id="keywordInput"
-                value="{{ $keyword ?? request('keyword') }}"
-                placeholder="Cari nama, NIK, No. RM, atau No. HP"
-                autocomplete="off"
-            >
-        </div>
-
-        <button type="submit" class="btn-input">
-            Cari
-        </button>
-
-        <a
-            href="{{ route('pendaftaran.index') }}"
-            class="btn-input"
+        <input
+            type="date"
+            name="dari"
+            id="filterDari"
+            value="{{ $dari ?? request('dari') }}"
         >
-            Reset
-        </a>
-    </form>
+
+        <span>s.d</span>
+
+        <input
+            type="date"
+            name="sampai"
+            id="filterSampai"
+            value="{{ $sampai ?? request('sampai') }}"
+        >
+    </div>
+
+    <div class="filter-item filter-keyword">
+        <label>Keyword</label>
+
+        <input
+            type="text"
+            name="keyword"
+            id="keywordInput"
+            value="{{ $keyword ?? request('keyword') }}"
+            placeholder="Cari nama, NIK, No. RM, atau No. HP"
+            autocomplete="off"
+        >
+    </div>
+</form>
+
 
     {{-- TABEL MASTER DATA PASIEN --}}
     <div style="width: 100%; overflow-x: auto;">
@@ -98,37 +91,95 @@
             <tbody>
                 @forelse ($dataPasien as $index => $item)
 
-                    @php
-                        $dataDetail = [
-                            'no_rm' => $item->no_rm ?? '',
-                            'nama_pasien' => $item->nama_pasien ?? '',
-                            'nik' => $item->nik ?? '',
-                            'tgl_lahir' => $item->tgl_lahir ?? '',
-                            'jenis_kelamin' => $item->jenis_kelamin ?? '',
-                            'alamat' => $item->alamat ?? '',
-                            'no_hp' => $item->no_hp ?? '',
-                            'tempat_lahir' => $item->tempat_lahir ?? '',
-                            'suku' => $item->suku ?? '',
-                            'bangsa' => $item->bangsa ?? '',
-                            'bahasa' => $item->bahasa ?? '',
-                            'umur' => $item->umur ?? '',
-                            'kelurahan' => $item->kelurahan ?? '',
-                            'agama' => $item->agama ?? '',
-                            'kecamatan' => $item->kecamatan ?? '',
-                            'pendidikan' => $item->pendidikan ?? '',
-                            'kabupaten' => $item->kabupaten ?? '',
-                            'pekerjaan' => $item->pekerjaan ?? '',
-                            'provinsi' => $item->provinsi ?? '',
-                            'kode_pos' => $item->kode_pos ?? '',
-                            'pembayaran' => $item->pembayaran ?? '',
-                            'poli' => $item->poli ?? '',
-                            'dokter' => $item->dokter ?? '',
-                            'pj_nama' => $item->pj_nama ?? '',
-                            'pj_hubungan' => $item->pj_hubungan ?? '',
-                            'pj_jenis_kelamin' => $item->pj_jenis_kelamin ?? '',
-                            'pj_no_hp' => $item->pj_no_hp ?? '',
-                        ];
-                    @endphp
+                    
+@php
+    $petaJenisKelamin = [
+        0 => 'Tidak diketahui',
+        1 => 'Laki-laki',
+        2 => 'Perempuan',
+        3 => 'Tidak dapat ditentukan',
+        4 => 'Tidak mengisi',
+    ];
+
+    $petaAgama = [
+        1 => 'Islam',
+        2 => 'Protestan',
+        3 => 'Katolik',
+        4 => 'Hindu',
+        5 => 'Buddha',
+        6 => 'Khonghucu',
+        7 => 'Penghayat',
+        8 => 'Lain-lain',
+    ];
+
+    $petaPendidikan = [
+        0 => 'Tidak sekolah',
+        1 => 'SD',
+        2 => 'SLTP sederajat',
+        3 => 'SLTA sederajat',
+        4 => 'D1-D3 sederajat',
+        5 => 'D4',
+        6 => 'S1',
+        7 => 'S2',
+        8 => 'S3',
+    ];
+
+    $petaPekerjaan = [
+        0 => 'Tidak bekerja',
+        1 => 'PNS',
+        2 => 'TNI/POLRI',
+        3 => 'BUMN',
+        4 => 'Pegawai Swasta/Wirausaha',
+        5 => 'Lain-lain',
+    ];
+
+    $jk = $petaJenisKelamin[(int) $item->jenis_kelamin]
+        ?? 'Tidak diketahui';
+
+    $agama = $petaAgama[(int) $item->agama] ?? '-';
+
+    $pendidikan = $petaPendidikan[(int) $item->pendidikan]
+        ?? '-';
+
+    $pekerjaan = $petaPekerjaan[(int) $item->pekerjaan]
+        ?? '-';
+
+    $umur = $item->tgl_lahir
+        ? \Carbon\Carbon::parse($item->tgl_lahir)->age . ' tahun'
+        : '-';
+
+    $dataDetail = [
+        'no_rm' => $item->no_rm ?? '',
+        'nama_pasien' => $item->nama_pasien ?? '',
+        'nik' => $item->nik ?? '',
+        'tgl_lahir' => $item->tgl_lahir ?? '',
+        'jenis_kelamin' => $jk,
+        'agama' => $agama,
+        'pendidikan' => $pendidikan,
+        'pekerjaan' => $pekerjaan,
+        'umur' => $umur,
+        'alamat' => $item->alamat ?? '',
+        'no_hp' => $item->no_hp ?? '',
+        'tempat_lahir' => $item->tempat_lahir ?? '',
+        'suku' => $item->suku ?? '',
+        'bangsa' => $item->bangsa ?? '',
+        'bahasa' => $item->bahasa ?? '',
+        'kelurahan' => $item->kelurahan ?? '',
+        'kecamatan' => $item->kecamatan ?? '',
+        'kabupaten' => $item->kabupaten ?? '',
+        'provinsi' => $item->provinsi ?? '',
+        'kode_pos' => $item->kode_pos ?? '',
+        'pembayaran' => $item->pembayaran ?? '',
+        'poli' => $item->nama_poli ?? '',
+        'dokter' => $item->dokter ?? '',
+        'pj_nama' => $item->pj_nama ?? '',
+        'pj_hubungan' => $item->pj_hubungan ?? '',
+        'pj_jenis_kelamin' =>
+            $petaJenisKelamin[(int) $item->pj_jenis_kelamin] ?? '-',
+        'pj_no_hp' => $item->pj_no_hp ?? '',
+    ];
+@endphp
+
 
                     <tr
                         class="row-pasien"
@@ -151,7 +202,7 @@
                             @endif
                         </td>
 
-                        <td>{{ $item->jenis_kelamin ?? '-' }}</td>
+                        <td>{{ $jk }}</td>
 
                         <td>{{ $item->alamat ?? '-' }}</td>
 
@@ -397,16 +448,43 @@
 
 @section('extra-js')
 
-<script>
-    window.AUDIT_USER = {
-        username: @json(optional(auth()->user())->username ?? optional(auth()->user())->name ?? 'admin2'),
-        role: @json(optional(auth()->user())->role ?? 'admin')
-    };
-</script>
-
-<script src="{{ asset('js/audit-log.js') }}"></script>
 
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('filterForm');
+    const keyword = document.getElementById('keywordInput');
+    const dari = document.getElementById('filterDari');
+    const sampai = document.getElementById('filterSampai');
+
+    if (!form) return;
+
+    let timer;
+
+    function kirimFilter() {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            form.requestSubmit();
+        }, 400);
+    }
+
+    if (keyword) {
+        keyword.addEventListener('input', kirimFilter);
+    }
+
+    if (dari) {
+        dari.addEventListener('change', function () {
+            form.requestSubmit();
+        });
+    }
+
+    if (sampai) {
+        sampai.addEventListener('change', function () {
+            form.requestSubmit();
+        });
+    }
+});
+
+
 function ambilDataBaris(button) {
     const row = button.closest('.row-pasien');
 

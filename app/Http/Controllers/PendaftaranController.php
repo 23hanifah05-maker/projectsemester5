@@ -14,45 +14,78 @@ class PendaftaranController extends Controller
     /**
      * Menampilkan master data pasien dari database.
      */
-    public function index(Request $request)
-    {
-        $keyword = trim($request->input('keyword', ''));
-        $dari = $request->input('dari');
-        $sampai = $request->input('sampai');
+    
+public function index(Request $request)
+{
+    $keyword = trim($request->input('keyword', ''));
+    $dari = $request->input('dari');
+    $sampai = $request->input('sampai');
 
-        $query = Pasien::query();
+    // Ambil ID pendaftaran terakhir untuk setiap pasien.
+    $pendaftaranTerakhir = DB::table('pendaftaran')
+        ->select('no_rm', DB::raw('MAX(id_pendaftaran) as id_pendaftaran'))
+        ->groupBy('no_rm');
 
-        // Pencarian berdasarkan nama, nomor RM, NIK, atau nomor HP.
-        if ($keyword !== '') {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('nama_pasien', 'like', '%' . $keyword . '%')
-                    ->orWhere('no_rm', 'like', '%' . $keyword . '%')
-                    ->orWhere('nik', 'like', '%' . $keyword . '%')
-                    ->orWhere('no_hp', 'like', '%' . $keyword . '%');
-            });
-        }
+    $query = Pasien::query()
+        ->leftJoinSub(
+            $pendaftaranTerakhir,
+            'pt',
+            function ($join) {
+                $join->on('pasien.no_rm', '=', 'pt.no_rm');
+            }
+        )
+        ->leftJoin(
+            'pendaftaran as p',
+            'p.id_pendaftaran',
+            '=',
+            'pt.id_pendaftaran'
+        )
+        ->leftJoin(
+            'poli as po',
+            'po.id_poli',
+            '=',
+            'p.id_poli'
+        )
+        ->select(
+            'pasien.*',
+            'p.tgl_registrasi',
+            'p.jenis_pembayaran as pembayaran',
+            'p.dpjp as dokter',
+            'po.nama_poli as nama_poli'
+        );
 
-        // Filter berdasarkan tanggal lahir.
-        if (!empty($dari)) {
-            $query->whereDate('tgl_lahir', '>=', $dari);
-        }
-
-        if (!empty($sampai)) {
-            $query->whereDate('tgl_lahir', '<=', $sampai);
-        }
-
-        // Ambil data pasien dari database.
-        $dataPasien = $query
-            ->orderByDesc('no_rm')
-            ->get();
-
-        return view('pendaftaran.index', compact(
-            'dataPasien',
-            'keyword',
-            'dari',
-            'sampai'
-        ));
+    // Filter berdasarkan tanggal registrasi.
+    if ($dari) {
+        $query->whereDate('p.tgl_registrasi', '>=', $dari);
     }
+
+    if ($sampai) {
+        $query->whereDate('p.tgl_registrasi', '<=', $sampai);
+    }
+
+    // Pencarian otomatis berdasarkan keyword.
+    if ($keyword !== '') {
+        $query->where(function ($q) use ($keyword) {
+            $q->where('pasien.nama_pasien', 'like', "%{$keyword}%")
+                ->orWhere('pasien.no_rm', 'like', "%{$keyword}%")
+                ->orWhere('pasien.nik', 'like', "%{$keyword}%")
+                ->orWhere('pasien.no_hp', 'like', "%{$keyword}%");
+        });
+    }
+
+    $dataPasien = $query
+        ->orderByDesc('p.tgl_registrasi')
+        ->orderByDesc('pasien.no_rm')
+        ->get();
+
+    return view('pendaftaran.index', compact(
+        'dataPasien',
+        'keyword',
+        'dari',
+        'sampai'
+    ));
+}
+
 
     /**
      * Menampilkan formulir pendaftaran.
@@ -73,6 +106,7 @@ class PendaftaranController extends Controller
      */
     public function store(Request $request)
     {
+        
         $validated = $request->validate([
             'no_rm' => [
                 'required',
@@ -97,10 +131,11 @@ class PendaftaranController extends Controller
             'bahasa' => 'required|string|max:30',
 
             'alamat' => 'required|string',
-            'kelurahan' => 'required|string|max:255',
-            'kecamatan' => 'required|string',
-            'kabupaten' => 'required|string',
-            'kode_pos' => 'required|digits_between:1,10',
+'kelurahan' => 'required|string|max:255',
+'kecamatan' => 'required|string',
+'kabupaten' => 'required|string',
+'provinsi' => 'required|string|max:100',
+'kode_pos' => 'required|digits_between:1,10',
 
             'pj_nama' => 'required|string|max:100',
             'pj_hubungan' => 'required|string|max:20',
@@ -166,10 +201,11 @@ class PendaftaranController extends Controller
                 'bangsa' => $validated['bangsa'],
                 'bahasa' => $validated['bahasa'],
                 'alamat' => $validated['alamat'],
-                'kelurahan' => $validated['kelurahan'],
-                'kabupaten' => $validated['kabupaten'],
-                'kecamatan' => $validated['kecamatan'],
-                'kode_pos' => $validated['kode_pos'],
+'kelurahan' => $validated['kelurahan'],
+'kabupaten' => $validated['kabupaten'],
+'provinsi' => $validated['provinsi'],
+'kecamatan' => $validated['kecamatan'],
+'kode_pos' => $validated['kode_pos'],
                 'pj_nama' => $validated['pj_nama'],
                 'pj_hubungan' => $validated['pj_hubungan'],
                 'pj_jenis_kelamin' => $validated['pj_jenis_kelamin'],
