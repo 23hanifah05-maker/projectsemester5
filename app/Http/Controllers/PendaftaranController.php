@@ -14,78 +14,107 @@ class PendaftaranController extends Controller
     /**
      * Menampilkan master data pasien dari database.
      */
-    
-public function index(Request $request)
-{
-    $keyword = trim($request->input('keyword', ''));
-    $dari = $request->input('dari');
-    $sampai = $request->input('sampai');
+    public function index(Request $request)
+    {
+        $keyword = trim($request->input('keyword', ''));
+        $dari = $request->input('dari');
+        $sampai = $request->input('sampai');
 
-    // Ambil ID pendaftaran terakhir untuk setiap pasien.
-    $pendaftaranTerakhir = DB::table('pendaftaran')
-        ->select('no_rm', DB::raw('MAX(id_pendaftaran) as id_pendaftaran'))
-        ->groupBy('no_rm');
+        // Mengambil ID pendaftaran terakhir untuk setiap pasien.
+        $pendaftaranTerakhir = DB::table('pendaftaran')
+            ->select(
+                'no_rm',
+                DB::raw('MAX(id_pendaftaran) as id_pendaftaran')
+            )
+            ->groupBy('no_rm');
 
-    $query = Pasien::query()
-        ->leftJoinSub(
-            $pendaftaranTerakhir,
-            'pt',
-            function ($join) {
-                $join->on('pasien.no_rm', '=', 'pt.no_rm');
-            }
-        )
-        ->leftJoin(
-            'pendaftaran as p',
-            'p.id_pendaftaran',
-            '=',
-            'pt.id_pendaftaran'
-        )
-        ->leftJoin(
-            'poli as po',
-            'po.id_poli',
-            '=',
-            'p.id_poli'
-        )
-        ->select(
-            'pasien.*',
-            'p.tgl_registrasi',
-            'p.jenis_pembayaran as pembayaran',
-            'p.dpjp as dokter',
-            'po.nama_poli as nama_poli'
-        );
+        $query = Pasien::query()
+            ->leftJoinSub(
+                $pendaftaranTerakhir,
+                'pt',
+                function ($join) {
+                    $join->on(
+                        'pasien.no_rm',
+                        '=',
+                        'pt.no_rm'
+                    );
+                }
+            )
+            ->leftJoin(
+                'pendaftaran as p',
+                'p.id_pendaftaran',
+                '=',
+                'pt.id_pendaftaran'
+            )
+            ->leftJoin(
+                'poli as po',
+                'po.id_poli',
+                '=',
+                'p.id_poli'
+            )
+            ->select(
+                'pasien.*',
+                'p.tgl_registrasi',
+                'p.jenis_pembayaran as pembayaran',
+                'p.dpjp as dokter',
+                'po.nama_poli as nama_poli'
+            );
 
-    // Filter berdasarkan tanggal registrasi.
-    if ($dari) {
-        $query->whereDate('p.tgl_registrasi', '>=', $dari);
+        // Filter tanggal berdasarkan tanggal registrasi.
+        if ($dari) {
+            $query->whereDate(
+                'p.tgl_registrasi',
+                '>=',
+                $dari
+            );
+        }
+
+        if ($sampai) {
+            $query->whereDate(
+                'p.tgl_registrasi',
+                '<=',
+                $sampai
+            );
+        }
+
+        // Pencarian berdasarkan nama, nomor RM, NIK, atau HP.
+        if ($keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
+                $q->where(
+                    'pasien.nama_pasien',
+                    'like',
+                    "%{$keyword}%"
+                )
+                ->orWhere(
+                    'pasien.no_rm',
+                    'like',
+                    "%{$keyword}%"
+                )
+                ->orWhere(
+                    'pasien.nik',
+                    'like',
+                    "%{$keyword}%"
+                )
+                ->orWhere(
+                    'pasien.no_hp',
+                    'like',
+                    "%{$keyword}%"
+                );
+            });
+        }
+
+        $dataPasien = $query
+            ->orderByDesc('p.tgl_registrasi')
+            ->orderByDesc('pasien.no_rm')
+            ->get();
+
+        return view('pendaftaran.index', compact(
+            'dataPasien',
+            'keyword',
+            'dari',
+            'sampai'
+        ));
     }
-
-    if ($sampai) {
-        $query->whereDate('p.tgl_registrasi', '<=', $sampai);
-    }
-
-    // Pencarian otomatis berdasarkan keyword.
-    if ($keyword !== '') {
-        $query->where(function ($q) use ($keyword) {
-            $q->where('pasien.nama_pasien', 'like', "%{$keyword}%")
-                ->orWhere('pasien.no_rm', 'like', "%{$keyword}%")
-                ->orWhere('pasien.nik', 'like', "%{$keyword}%")
-                ->orWhere('pasien.no_hp', 'like', "%{$keyword}%");
-        });
-    }
-
-    $dataPasien = $query
-        ->orderByDesc('p.tgl_registrasi')
-        ->orderByDesc('pasien.no_rm')
-        ->get();
-
-    return view('pendaftaran.index', compact(
-        'dataPasien',
-        'keyword',
-        'dari',
-        'sampai'
-    ));
-}
-
 
     /**
      * Menampilkan formulir pendaftaran.
@@ -106,7 +135,6 @@ public function index(Request $request)
      */
     public function store(Request $request)
     {
-        
         $validated = $request->validate([
             'no_rm' => [
                 'required',
@@ -131,11 +159,11 @@ public function index(Request $request)
             'bahasa' => 'required|string|max:30',
 
             'alamat' => 'required|string',
-'kelurahan' => 'required|string|max:255',
-'kecamatan' => 'required|string',
-'kabupaten' => 'required|string',
-'provinsi' => 'required|string|max:100',
-'kode_pos' => 'required|digits_between:1,10',
+            'kelurahan' => 'required|string|max:255',
+            'kecamatan' => 'required|string',
+            'kabupaten' => 'required|string',
+            'provinsi' => 'required|string|max:100',
+            'kode_pos' => 'required|digits_between:1,10',
 
             'pj_nama' => 'required|string|max:100',
             'pj_hubungan' => 'required|string|max:20',
@@ -144,21 +172,21 @@ public function index(Request $request)
 
             'poli' => 'required|string|exists:poli,slug',
 
+            'dokter' => 'required|string|max:100',
+
             'pembayaran' => [
                 'required',
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
         ]);
 
+        // Pastikan poli yang dipilih tersedia di database.
         $dataPoli = Poli::where(
             'slug',
             $validated['poli']
         )->firstOrFail();
 
-        /*
-         * Mempertahankan pemetaan pembayaran yang digunakan
-         * oleh struktur kolom jenis_pembayaran saat ini.
-         */
+        // Pertahankan pemetaan pembayaran yang digunakan saat ini.
         $jenisPembayaran = $validated['pembayaran'] === 'umum'
             ? 'umum'
             : 'asuransi swasta';
@@ -186,6 +214,7 @@ public function index(Request $request)
             $noHp,
             $pjNoHp
         ) {
+            // Simpan identitas pasien, termasuk provinsi.
             Pasien::create([
                 'no_rm' => $validated['no_rm'],
                 'nik' => $validated['nik'],
@@ -201,22 +230,23 @@ public function index(Request $request)
                 'bangsa' => $validated['bangsa'],
                 'bahasa' => $validated['bahasa'],
                 'alamat' => $validated['alamat'],
-'kelurahan' => $validated['kelurahan'],
-'kabupaten' => $validated['kabupaten'],
-'provinsi' => $validated['provinsi'],
-'kecamatan' => $validated['kecamatan'],
-'kode_pos' => $validated['kode_pos'],
+                'kelurahan' => $validated['kelurahan'],
+                'kabupaten' => $validated['kabupaten'],
+                'provinsi' => $validated['provinsi'],
+                'kecamatan' => $validated['kecamatan'],
+                'kode_pos' => $validated['kode_pos'],
                 'pj_nama' => $validated['pj_nama'],
                 'pj_hubungan' => $validated['pj_hubungan'],
                 'pj_jenis_kelamin' => $validated['pj_jenis_kelamin'],
                 'pj_no_hp' => $pjNoHp,
             ]);
 
+            // Simpan pendaftaran poli.
             Pendaftaran::create([
                 'tgl_registrasi' => now(),
                 'no_rm' => $validated['no_rm'],
                 'id_poli' => $dataPoli->id_poli,
-                'dpjp' => $dataPoli->nama_dokter,
+                'dpjp' => $validated['dokter'],
                 'jenis_pembayaran' => $jenisPembayaran,
             ]);
         });
