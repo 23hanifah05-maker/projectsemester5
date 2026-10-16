@@ -179,6 +179,7 @@ class PendaftaranController extends Controller
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
         ]);
+        
 
         // Pastikan poli yang dipilih tersedia di database.
         $dataPoli = Poli::where(
@@ -187,9 +188,12 @@ class PendaftaranController extends Controller
         )->firstOrFail();
 
         // Pertahankan pemetaan pembayaran yang digunakan saat ini.
-        $jenisPembayaran = $validated['pembayaran'] === 'umum'
-            ? 'umum'
-            : 'asuransi swasta';
+        // Pemetaan jenis pembayaran sesuai pilihan pada formulir.
+$jenisPembayaran = match ($validated['pembayaran']) {
+    'umum' => 'Umum',
+    'asuransi' => 'Asuransi Swasta',
+    'bpjs' => 'BPJS',
+};
 
         $noHp = $this->normalisasiNomorHp(
             $validated['no_hp']
