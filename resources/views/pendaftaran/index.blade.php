@@ -169,7 +169,12 @@
         'kabupaten' => $item->kabupaten ?? '',
         'provinsi' => $item->provinsi ?? '',
         'kode_pos' => $item->kode_pos ?? '',
-        'pembayaran' => $item->pembayaran ?? '',
+        'pembayaran' => match (strtolower($item->pembayaran ?? '')) {
+    'umum' => 'Umum',
+    'asuransi swasta' => 'Asuransi swasta',
+    'bpjs' => 'BPJS',
+    default => $item->pembayaran ?? '',
+},
         'poli' => $item->nama_poli ?? '',
         'dokter' => $item->dokter ?? '',
         'pj_nama' => $item->pj_nama ?? '',
@@ -681,4 +686,3 @@ document.addEventListener('keydown', function(event) {
 </script>
 
 @endsection
-```

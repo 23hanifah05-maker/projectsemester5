@@ -851,3 +851,72 @@ input.sembunyi { display: none; }
 /* was style="margin-top:22px;" dan style="margin-bottom:14px;" pada form Rujukan */
 #view-rujukan .rj-grid.rj-grid-mt { margin-top: 22px; }
 #view-rujukan .rj-field.rj-mb { margin-bottom: 14px; }
+
+
+/* PERBAIKAN KONSISTENSI INPUT TTV */
+#tab-assesment .kb-vitals-box .kb-vital-row input,
+#tab-assesment .kb-vitals-box .kb-vital-row select {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    padding: 8px 10px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    color: #334155 !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    line-height: normal !important;
+    box-shadow: none !important;
+    outline-offset: 1px;
+}
+
+#tab-assesment .kb-vitals-box .kb-vital-row input:focus,
+#tab-assesment .kb-vitals-box .kb-vital-row select:focus {
+    border-color: #64748b !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.12) !important;
+}
+
+#tab-assesment .kb-vitals-box .kb-vital-row input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+#tab-assesment .kb-vitals-box .kb-vital-row input[type="number"]::-webkit-inner-spin-button,
+#tab-assesment .kb-vitals-box .kb-vital-row input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Checkbox TTV: tampilan standar, satu centang hitam */
+#chkVital.kb-vital-check {
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
+
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    position: static !important;
+    transform: none !important;
+
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+
+    margin: 0 6px 0 0 !important;
+    padding: 0 !important;
+
+    border: initial !important;
+    border-radius: 2px !important;
+    background: initial !important;
+    box-shadow: none !important;
+
+    accent-color: #222 !important;
+    cursor: pointer !important;
+}
+

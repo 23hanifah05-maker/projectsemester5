@@ -9,15 +9,6 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/syaraf-kunjungan-baru.css')) }}">
-    <style>
-        .kb-tab.terkunci{opacity:.5;cursor:not-allowed}
-        .kb-tab .kb-tab-wajib{display:none;margin-left:8px;padding:1px 8px;background:#c1121f;color:#fff;border-radius:10px;font-size:11px;font-weight:600}
-        .kb-tab.wajib-isi .kb-tab-wajib{display:inline-block}
-        .kb-banner-cp{display:none;margin:12px 0;padding:10px 14px;background:#fff4e5;border:1px solid #f5c26b;border-radius:6px;font-size:13px;align-items:center;justify-content:space-between;gap:12px}
-        .kb-banner-cp.tampil{display:flex}
-        .kb-banner-cp button{background:#c1121f;color:#fff;border:0;padding:6px 14px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
-        .cp-dx-input[readonly]{background:#f3f3f3}
-    </style>
 @endsection
 
 @section('content')
@@ -74,7 +65,7 @@
     <div class="kb-tabs">
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assesment</div>
         <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
-        <div class="kb-tab terkunci" id="tabPathway" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway <span class="kb-tab-wajib">Wajib diisi</span></div>
+        <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
     </div>
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
@@ -180,41 +171,43 @@
     </div>
 
     <div id="tab-assesment" class="kb-tab-content active">
+        <input type="hidden" id="id_pendaftaran" value="{{ $id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? '') }}">
+        <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
 
         {{-- ===== Kotak Vital Signs ===== --}}
         <div class="kb-vitals-box">
             <div class="kb-vitals">
                 <div class="kb-vital-row">
                     <label>TD</label>
-                    <input type="text" placeholder="mis. 120/80" inputmode="numeric" autocomplete="off">
+                    <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" autocomplete="off">
                     <span class="kb-vital-unit">mmHg</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>HR</label>
-                    <input type="text" placeholder="mis. 80" inputmode="numeric" autocomplete="off">
+                    <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 80" min="0" max="300" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>SpO2</label>
-                    <input type="text" placeholder="mis. 98" inputmode="numeric" autocomplete="off">
+                    <input type="number" id="spo2" name="spo2" data-field="spo2" value="{{ old('spo2', $ttv->spo2 ?? '') }}" placeholder="mis. 98" min="0" max="100" autocomplete="off">
                     <span class="kb-vital-unit">%</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>Suhu</label>
-                    <input type="text" placeholder="mis. 36.5" inputmode="decimal" autocomplete="off">
+                    <input type="number" id="suhu" name="suhu" data-field="suhu" value="{{ old('suhu', $ttv->suhu ?? '') }}" placeholder="mis. 36.5" min="20" max="50" step="0.1" autocomplete="off">
                     <span class="kb-vital-unit">°C</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>RR</label>
-                    <input type="text" placeholder="mis. 20" inputmode="numeric" autocomplete="off">
+                    <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row kb-vital-lainnya">
                     <label for="chkVital">Alergi</label>
-                    <input type="text" placeholder="mis. tidak ada" autocomplete="off">
+                    <input type="text" id="alergi" name="alergi" data-field="alergi" value="{{ old('alergi', $ttv->alergi ?? '') }}" placeholder="mis. tidak ada" autocomplete="off">
                     <span class="kb-check-box">
                         <input type="checkbox" class="kb-vital-check" id="chkVital"
-                               title="Centang untuk memasukkan tanda vital ke Objective"
+                               title="Centang untuk menyimpan TTV ke database dan memasukkannya ke Objective"
                                onchange="toggleVitalKeObjektif(this)">
                     </span>
                 </div>
@@ -295,11 +288,6 @@
             </div>
         </div>
 
-        <div class="kb-banner-cp" id="bannerCP">
-            <span><b>Diagnosa utama HNP.</b> Clinical Pathway wajib diisi untuk pasien ini.</span>
-            <button type="button" onclick="bukaTabPathway()">Isi Clinical Pathway</button>
-        </div>
-
         <div class="kb-actions">
             <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
                 <i class="fa-solid fa-right-from-bracket"></i> Rujuk
@@ -376,7 +364,7 @@
                         </tr>
                         <tr class="cp-dx-row cp-dx-mid">
                             <td class="cp-aktivitas cp-dx-label">Dx Utama</td>
-                            <td><input type="text" class="cp-dx-input" data-label="Dx Utama" readonly></td>
+                            <td><input type="text" class="cp-dx-input" data-label="Dx Utama"></td>
                             <td><input type="text" class="cp-waktu" readonly></td>
                             <td></td>
                         </tr>
@@ -579,11 +567,6 @@
     const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
 
     function gantiTab(tab, event) {
-        if (tab === 'pathway' && !cpBolehDiisi()) {
-            alert('Clinical Pathway hanya dapat diisi untuk pasien dengan diagnosa utama HNP. Tambahkan diagnosa HNP sebagai diagnosa pertama di tab Assesment.');
-            return;
-        }
-
         document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
         event.currentTarget.classList.add('active');
@@ -789,36 +772,50 @@
         document.body.classList.remove('cetak-cp-mode');
     });
 
-    // Klik Simpan: status pasien berubah dari "Periksa" menjadi "Selesai"
-    function simpanKunjunganBaru() {
+    // Klik Simpan: simpan TTV, SOAP, dan ICD sebelum mengubah status pasien.
+    async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
             return;
         }
 
-        if (cpBolehDiisi() && !cpTerisi()) {
+        if (typeof cpBolehDiisi === 'function' &&
+            typeof cpTerisi === 'function' &&
+            cpBolehDiisi() && !cpTerisi()) {
             alert('Diagnosa utama pasien adalah HNP. Clinical Pathway wajib diisi sebelum menyimpan.');
-            bukaTabPathway();
+            if (typeof bukaTabPathway === 'function') bukaTabPathway();
             return;
         }
 
-        try {
-            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
+        const tombolSimpan = document.querySelectorAll('[onclick*="simpanKunjunganBaru"]');
+        tombolSimpan.forEach(tombol => tombol.disabled = true);
 
-            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA)) || {};
+        try {
+            // TTV tetap menggunakan endpoint yang sudah ada.
+            const ttvTersimpan = await simpanTTVKeDatabase();
+            if (!ttvTersimpan) return;
+
+            // SOAP dan ICD disimpan ke tabel assesmen serta tabel detail.
+            const soapIcdTersimpan = await simpanSOAPdanICDKeDatabase();
+            if (!soapIcdTersimpan) return;
+
+            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
+            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA) || '{}');
             status[kunci] = 'selesai';
             localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
 
-            const waktu = JSON.parse(localStorage.getItem(KUNCI_WAKTU_SELESAI)) || {};
+            const waktu = JSON.parse(localStorage.getItem(KUNCI_WAKTU_SELESAI) || '{}');
             waktu[kunci] = Date.now();
             localStorage.setItem(KUNCI_WAKTU_SELESAI, JSON.stringify(waktu));
-        } catch (e) {
-            console.error(e);
+
+            alert('Data TTV, SOAP, dan ICD berhasil disimpan. Status pasien berubah menjadi Selesai.');
+            window.location.href = "{{ route('poli.syaraf') }}";
+        } catch (error) {
+            console.error('Gagal menyimpan kunjungan:', error);
+            alert('Data kunjungan gagal disimpan. Periksa kembali data dan koneksi server.');
+        } finally {
+            tombolSimpan.forEach(tombol => tombol.disabled = false);
         }
-
-        alert('Data kunjungan berhasil disimpan. Status pasien berubah menjadi Selesai.');
-
-        window.location.href = "{{ route('poli.syaraf') }}";
     }
 
     // ===== Radiologi: kolom "Lainnya" aktif hanya kalau dicentang =====
@@ -918,6 +915,7 @@
         tutupRujukan();
     }
 
+    
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';
 
@@ -926,9 +924,14 @@
         const bagian = [];
 
         document.querySelectorAll('.kb-vitals .kb-vital-row').forEach(function (row) {
-            const label = row.querySelector('label').textContent.trim();
-            const nilai = row.querySelector('input[type=text]').value.trim();
+            const labelEl = row.querySelector('label');
+            const input = row.querySelector('input:not([type="checkbox"])');
             const unitEl = row.querySelector('.kb-vital-unit');
+
+            if (!labelEl || !input) return;
+
+            const label = labelEl.textContent.trim();
+            const nilai = input.value.trim();
             const unit = unitEl ? unitEl.textContent.trim() : '';
 
             if (nilai !== '') {
@@ -941,16 +944,23 @@
 
     function hapusVitalDariObjektif() {
         const objektif = document.querySelector('textarea[name="objective"]');
+        if (!objektif) return;
+
         if (vitalTerakhir && objektif.value.startsWith(vitalTerakhir)) {
-            objektif.value = objektif.value.slice(vitalTerakhir.length).replace(/^\n/, '');
+            objektif.value = objektif.value
+                .slice(vitalTerakhir.length)
+                .replace(/^\n/, '');
         }
+
         vitalTerakhir = '';
     }
 
     function terapkanVitalKeObjektif(teks) {
         const objektif = document.querySelector('textarea[name="objective"]');
+        if (!objektif) return;
 
         let sisa = objektif.value;
+
         if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
             sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
         }
@@ -959,7 +969,7 @@
         vitalTerakhir = teks;
     }
 
-    function toggleVitalKeObjektif(cb) {
+    async function toggleVitalKeObjektif(cb) {
         if (cb.checked) {
             const teks = bangunTeksVital();
 
@@ -969,10 +979,170 @@
                 return;
             }
 
+            // Simpan TTV terlebih dahulu ke database.
+            const tersimpan = await simpanTTVKeDatabase();
+
+            if (!tersimpan) {
+                cb.checked = false;
+                return;
+            }
+
+            // Masukkan TTV ke Objective setelah penyimpanan berhasil.
             terapkanVitalKeObjektif(teks);
-            document.querySelector('textarea[name="objective"]').focus();
+
+            const objektif = document.querySelector('textarea[name="objective"]');
+            if (objektif) objektif.focus();
+
+            alert('Data TTV berhasil disimpan dan dimasukkan ke Objective.');
         } else {
             hapusVitalDariObjektif();
+        }
+    }
+
+    // Perbarui teks TTV di Objective ketika nilai TTV berubah
+    // dan checkbox masih tercentang.
+    document.addEventListener('input', function (e) {
+        if (!e.target.closest('.kb-vitals')) return;
+
+        if (!e.target.matches('.kb-vitals input:not([type="checkbox"])')) {
+            return;
+        }
+
+        const chk = document.getElementById('chkVital');
+        if (!chk || !chk.checked) return;
+
+        const teks = bangunTeksVital();
+
+        if (teks === '') {
+            hapusVitalDariObjektif();
+        } else {
+            terapkanVitalKeObjektif(teks);
+        }
+    });
+
+    // ===== Simpan SOAP dan ICD ke database =====
+    async function simpanSOAPdanICDKeDatabase() {
+        const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
+        const csrfToken = document.getElementById('csrf_token')?.value;
+
+        if (!idPendaftaran) {
+            alert('ID pendaftaran tidak ditemukan. Buka pasien dari kunjungan Poli Saraf.');
+            return false;
+        }
+
+        const ambilTeks = (nama) => {
+            const elemen = document.querySelector(`textarea[name="${nama}"]`);
+            return elemen ? elemen.value.trim() : '';
+        };
+
+        const data = {
+            id_pendaftaran: Number(idPendaftaran),
+            subjective: ambilTeks('subjective'),
+            objective: ambilTeks('objective'),
+            assessment: ambilTeks('assessment'),
+            plan: ambilTeks('plan'),
+            penyakit_id: diagnosaTerpilih.penyakit.map(item => Number(item.id)),
+            tindakan_id: diagnosaTerpilih.tindakan.map(item => Number(item.id))
+        };
+
+        try {
+            const response = await fetch("{{ route('poli.syaraf.assesmen.store') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+
+            const teksRespons = await response.text();
+            let hasil;
+
+            try {
+                hasil = JSON.parse(teksRespons);
+            } catch (e) {
+                console.error('Respons penyimpanan SOAP/ICD bukan JSON:', response.status, teksRespons);
+                throw new Error('Server tidak mengirim respons JSON. Periksa rute dan log Laravel.');
+            }
+
+            if (!response.ok || hasil.success !== true) {
+                let pesan = hasil.message || 'SOAP dan ICD gagal disimpan.';
+                if (hasil.errors) {
+                    const daftarError = Object.values(hasil.errors).flat();
+                    if (daftarError.length) pesan = daftarError.join('\n');
+                }
+                throw new Error(pesan);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Gagal menyimpan SOAP dan ICD:', error);
+            alert(error.message || 'SOAP dan ICD gagal disimpan ke database.');
+            return false;
+        }
+    }
+
+    // ===== Simpan TTV ke database =====
+    async function simpanTTVKeDatabase() {
+        const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
+        const csrfToken = document.getElementById('csrf_token')?.value;
+
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan. TTV tidak dapat disimpan.');
+            return false;
+        }
+
+        if (!idPendaftaran) {
+            alert('ID pendaftaran tidak ditemukan. Buka pasien dari kunjungan Poli Saraf.');
+            return false;
+        }
+
+        const ambilNilai = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            const nilai = el.value.trim();
+            return nilai === '' ? null : nilai;
+        };
+
+        const data = {
+            id_pendaftaran: Number(idPendaftaran),
+            tekanan_darah: ambilNilai('tekanan_darah'),
+            suhu: ambilNilai('suhu'),
+            heart_rate: ambilNilai('heart_rate'),
+            respiratory_rate: ambilNilai('respiratory_rate'),
+            spo2: ambilNilai('spo2'),
+            alergi: ambilNilai('alergi')
+        };
+
+        try {
+            const response = await fetch("{{ route('poli.syaraf.ttv.store') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+
+            const hasil = await response.json();
+
+            if (!response.ok) {
+                let pesan = hasil.message || 'Gagal menyimpan TTV.';
+                if (hasil.errors) {
+                    const daftarError = Object.values(hasil.errors).flat();
+                    if (daftarError.length) pesan = daftarError.join('\n');
+                }
+                throw new Error(pesan);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Gagal menyimpan TTV:', error);
+            alert(error.message || 'TTV gagal disimpan ke database.');
+            return false;
         }
     }
 
@@ -1114,7 +1284,7 @@
         const list = document.getElementById(k.list);
         list.innerHTML = '';
 
-        diagnosaTerpilih[jenis].forEach(function (item, urutan) {
+        diagnosaTerpilih[jenis].forEach(function (item) {
             const baris = document.createElement('div');
             baris.className = 'kb-diagnosa-item';
 
@@ -1124,15 +1294,6 @@
             kode.textContent = item.kode;
             teks.appendChild(kode);
             teks.appendChild(document.createTextNode(' — ' + item.nama));
-
-            // Diagnosa pertama yang dicentang otomatis menjadi Diagnosa Utama
-            if (jenis === 'penyakit' && urutan === 0) {
-                const badge = document.createElement('span');
-                badge.className = 'kb-badge-utama';
-                badge.textContent = 'Diagnosa Utama';
-                badge.style.cssText = 'display:inline-block;margin-left:10px;padding:2px 10px;background:#c1121f;color:#fff;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;vertical-align:middle;';
-                teks.appendChild(badge);
-            }
 
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
@@ -1156,72 +1317,6 @@
             baris.appendChild(aksi);
             list.appendChild(baris);
         });
-
-        if (jenis === 'penyakit') perbaruiStatusCP();
-    }
-
-    // ===== Clinical Pathway khusus HNP =====
-    // Awalan kode ICD-10 yang dianggap HNP (M51 = diskus lumbal/torakolumbal, M50 = diskus servikal)
-    const KODE_HNP = ['M50', 'M51'];
-
-    function diagnosaUtama() {
-        return diagnosaTerpilih.penyakit.length ? diagnosaTerpilih.penyakit[0] : null;
-    }
-
-    function cpBolehDiisi() {
-        const dx = diagnosaUtama();
-        if (!dx) return false;
-        const kode = String(dx.kode).trim().toUpperCase();
-        return KODE_HNP.some(function (awalan) { return kode.startsWith(awalan); });
-    }
-
-    function cpTerisi() {
-        let terisi = false;
-        document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
-            tr.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
-                if (cb.checked) terisi = true;
-            });
-            tr.querySelectorAll('input[type=text]:not(.cp-waktu), textarea').forEach(function (f) {
-                if (f.value.trim() !== '') terisi = true;
-            });
-        });
-        return terisi;
-    }
-
-    function perbaruiStatusCP() {
-        const boleh = cpBolehDiisi();
-        const dx = diagnosaUtama();
-        const tab = document.getElementById('tabPathway');
-        const banner = document.getElementById('bannerCP');
-        const dxInput = document.querySelector('#tab-pathway .cp-dx-input[data-label="Dx Utama"]');
-
-        tab.classList.toggle('terkunci', !boleh);
-        tab.classList.toggle('wajib-isi', boleh);
-        banner.classList.toggle('tampil', boleh);
-
-        if (dxInput) {
-            dxInput.readOnly = true;
-            dxInput.value = boleh ? dx.kode + ' — ' + dx.nama : '';
-            perbaruiWaktuBaris(dxInput.closest('tr'));
-        }
-
-        // Jika CP sedang terbuka tetapi diagnosa utama bukan HNP lagi, kembali ke Assesment
-        if (!boleh && document.getElementById('tab-pathway').classList.contains('active')) {
-            document.querySelectorAll('.kb-tab').forEach(function (el, i) {
-                el.classList.toggle('active', i === 0);
-            });
-            document.querySelectorAll('.kb-tab-content').forEach(function (el) {
-                el.classList.toggle('active', el.id === 'tab-assesment');
-            });
-        }
-    }
-
-    function bukaTabPathway() {
-        document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
-        document.getElementById('tabPathway').classList.add('active');
-        document.getElementById('tab-pathway').classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     document.addEventListener('click', function (e) {

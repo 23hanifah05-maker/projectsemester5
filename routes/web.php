@@ -8,6 +8,8 @@ use App\Http\Controllers\RadiologiController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PencarianKodeController;
 use App\Http\Controllers\AuditTrailController;
+use App\Http\Controllers\TtvController;
+use App\Http\Controllers\AssesmenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,40 +107,34 @@ Route::get('/poli/show/{slug}', function ($slug) {
 |--------------------------------------------------------------------------
 */
 
-// Halaman utama Poli Syaraf
+// Halaman utama Poli Saraf
 Route::get('/poli/syaraf', [PoliController::class, 'saraf'])
     ->name('poli.syaraf');
 
+Route::get('/poli/syaraf/detail/{no_rm}', [
+    PoliController::class,
+    'riwayatSaraf'
+])->name('poli.syaraf.detail');
 
-// Detail pasien Poli Syaraf
-Route::get('/poli/syaraf/detail/{no_rm}', function ($no_rm) {
+Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', [
+    PoliController::class,
+    'kunjunganSaraf'
+])->name('poli.syaraf.kunjungan-baru');
 
-    return view('poli.syaraf-riwayat', [
-        'no_rm' => $no_rm
-    ]);
+Route::get('/poli/syaraf/detail/{no_rm}/{tanggal}', [
+    PoliController::class,
+    'kunjunganSarafDetail'
+])->name('poli.syaraf.kunjungan.detail');
 
-})->name('poli.syaraf.detail');
+Route::post('/poli/syaraf/ttv', [
+    TtvController::class,
+    'store'
+])->name('poli.syaraf.ttv.store');
 
-
-// Detail kunjungan Poli Syaraf
-Route::get('/poli/syaraf/detail/{no_rm}/{tanggal}', function ($no_rm, $tanggal) {
-
-    return view('poli.syaraf-kunjungan-baru', [
-        'no_rm' => $no_rm,
-        'tanggal' => $tanggal
-    ]);
-
-})->name('poli.syaraf.kunjungan.detail');
-
-
-// Kunjungan baru Poli Syaraf
-Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', function ($no_rm) {
-
-    return view('poli.syaraf-kunjungan-baru', [
-        'no_rm' => $no_rm
-    ]);
-
-})->name('poli.syaraf.kunjungan-baru');
+Route::post('/poli/syaraf/assesmen', [
+    AssesmenController::class,
+    'store'
+])->name('poli.syaraf.assesmen.store');
 
 
 /*
