@@ -1,4 +1,3 @@
-```blade
 @extends('layouts.app')
 
 @section('title', ($poli->nama_poli ?? 'Poli Syaraf') . ' - Klinik Utama Merah Putih')
@@ -772,4 +771,3 @@ document.querySelector('.filter-row')?.addEventListener('submit', function (e) {
 });
 </script>
 @endsection
-```

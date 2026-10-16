@@ -1,4 +1,3 @@
-```php
 @extends('layouts.app')
 
 @section('title', 'Input Data Pendaftaran - Klinik Utama Merah Putih')
@@ -179,7 +178,7 @@
                                value="{{ old('agama_lainnya') }}"
                                placeholder="Tuliskan agama"
                                maxlength="100"
-                               style="{{ old('agama') === '8' ? '' : 'display:none;' }}">
+                               @if (old('agama') !== '8') style="display:none;" @endif>
                     </div>
 
                     <div class="row">
@@ -214,7 +213,7 @@
                                value="{{ old('pekerjaan_lainnya') }}"
                                placeholder="Tuliskan pekerjaan"
                                maxlength="100"
-                               style="{{ old('pekerjaan') === '5' ? '' : 'display:none;' }}">
+                               @if (old('pekerjaan') !== '5') style="display:none;" @endif>
                     </div>
                 </div>
 
@@ -760,4 +759,3 @@ document.addEventListener('keydown', e => {
 @include('pendaftaran.partials.general-consent')
 
 @endsection
-```
