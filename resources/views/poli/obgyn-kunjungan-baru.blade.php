@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/obgyn-kunjungan-baru.css')) }}">
 
-    {{-- CSS kotak tanda tangan (langsung di sini, tidak perlu edit file CSS) --}}
+    {{-- CSS kotak tanda tangan & tab Radiologi read-only (langsung di sini, tidak perlu edit file CSS) --}}
     <style>
         .ob-ttd-wrap {
             display: flex;
@@ -43,6 +43,18 @@
         @media (max-width: 900px) {
             .ob-ttd-wrap { flex-direction: column; }
         }
+
+        /* Tab Radiologi: hanya untuk dilihat (read-only) */
+        .ob-radio-note { margin: -6px 0 14px; font-size: 12px; color: #777; }
+        .ob-radio-readonly .ob-checklist-item { cursor: default; }
+        .ob-radio-readonly .ob-checklist-item input[type=checkbox]:disabled { opacity: 1; cursor: default; accent-color: #b81d24; }
+        .ob-radio-readonly .ob-checklist-lainnya input[type=text]:disabled { background: #f7f7f7; color: #333; cursor: default; }
+        .ob-radio-readonly .ob-upload-box { cursor: default; border-style: solid; }
+        .ob-radio-readonly .ob-upload-box:hover { border-color: #ccc; color: #777; }
+        .ob-radio-readonly .ob-hasil-textarea { background: #f7f7f7; cursor: default; }
+        .ob-scan-img { display: block; max-width: 100%; max-height: 320px; margin: 0 auto 10px; border-radius: 6px; }
+        .ob-scan-link { color: #b81d24; font-weight: 600; text-decoration: none; }
+        .ob-scan-link:hover { text-decoration: underline; }
     </style>
 @endsection
 
@@ -86,6 +98,14 @@
 
         // Urutan checklist radiologi mengikuti tata letak 2 kolom (kiri-kanan, atas-bawah)
         $radiologiOptions = ['Foto Thoraks', 'MRI', 'USG Abdomen', 'Rontgen', 'CT Scan'];
+
+        // Data hasil radiologi yang hanya ditampilkan (dikirim dari controller sebagai $radiologi):
+        //   pemeriksaan (array nama pemeriksaan), lainnya (teks), file_scan (URL file), hasil (teks)
+        $radiologi      = $radiologi ?? null;
+        $radPemeriksaan = (array) data_get($radiologi, 'pemeriksaan', []);
+        $radLainnya     = trim((string) data_get($radiologi, 'lainnya', ''));
+        $radFile        = data_get($radiologi, 'file_scan');
+        $radHasil       = (string) data_get($radiologi, 'hasil', '');
 
         // Baris tabel Informed Consent: [kategori, isi informasi]
         $informedRows = [
@@ -281,42 +301,43 @@
         </div>
     </div>
 
-    {{-- ===== TAB RADIOLOGI ===== --}}
+    {{-- ===== TAB RADIOLOGI (hanya untuk dilihat, tidak bisa diisi) ===== --}}
     <div id="tab-radiologi" class="ob-tab-content">
-        <div class="ob-radio-card">
+        <div class="ob-radio-card ob-radio-readonly">
             <div class="ob-radio-title">Form Pemeriksaan</div>
+            <div class="ob-radio-note">Halaman ini hanya untuk melihat hasil radiologi.</div>
             <div class="ob-radio-sub">Ceklist Periksa Radiologi</div>
 
             <div class="ob-checklist-grid">
                 @foreach ($radiologiOptions as $opt)
                     <label class="ob-checklist-item">
-                        <input type="checkbox" name="radiologi[]" value="{{ $opt }}"> {{ $opt }}
+                        <input type="checkbox" disabled {{ in_array($opt, $radPemeriksaan) ? 'checked' : '' }}> {{ $opt }}
                     </label>
                 @endforeach
                 <label class="ob-checklist-item ob-checklist-lainnya">
-                    <input type="checkbox" id="checkRadiologiLainnya" name="radiologi[]" value="Lainnya"> Lainnya
-                    <input type="text" id="radiologiLainnya" name="radiologi_lainnya" placeholder="(tuliskan)" disabled>
+                    <input type="checkbox" disabled {{ $radLainnya !== '' ? 'checked' : '' }}> Lainnya
+                    <input type="text" value="{{ $radLainnya }}" placeholder="-" readonly disabled>
                 </label>
             </div>
 
-            <div class="ob-radio-sub">Scan Hasil (jika perlu)</div>
-            <div class="ob-upload-box" onclick="document.getElementById('scanHasil').click()">
-                Klik untuk mengunggah gambar/scan
-                <div class="ob-upload-hint">(format: JPG, PNG, PDF &nbsp; Maks. 10 MB)</div>
-                <input type="file" id="scanHasil" name="scan_hasil" accept=".jpg,.jpeg,.png,.pdf" class="sembunyi">
+            <div class="ob-radio-sub">Scan Hasil</div>
+            <div class="ob-upload-box">
+                @if ($radFile)
+                    @if (preg_match('/\.(jpe?g|png)$/i', $radFile))
+                        <a href="{{ $radFile }}" target="_blank" rel="noopener">
+                            <img src="{{ $radFile }}" alt="Scan hasil radiologi" class="ob-scan-img">
+                        </a>
+                    @endif
+                    <a href="{{ $radFile }}" target="_blank" rel="noopener" class="ob-scan-link">
+                        <i class="fa-solid fa-up-right-from-square"></i> Buka scan hasil
+                    </a>
+                @else
+                    Belum ada scan hasil.
+                @endif
             </div>
 
             <div class="ob-radio-sub">Hasil Pemeriksaan Radiologi</div>
-            <textarea class="ob-hasil-textarea" name="hasil_radiologi" rows="5" placeholder="Masukkan hasil pemeriksaan radiologi di sini"></textarea>
-        </div>
-
-        <div class="ob-actions">
-            <button type="button" class="ob-btn ob-btn-simpan" onclick="simpanKunjunganBaru()">
-                <i class="fa-solid fa-floppy-disk"></i> Simpan
-            </button>
-            <button type="button" class="ob-btn ob-btn-reset" onclick="resetForm()">
-                <i class="fa-solid fa-rotate-left"></i> Reset
-            </button>
+            <textarea class="ob-hasil-textarea" rows="5" readonly placeholder="Belum ada hasil pemeriksaan radiologi.">{{ $radHasil }}</textarea>
         </div>
     </div>
 
@@ -445,7 +466,7 @@
                         </select>
                     </div>
                     <div class="rj-field">
-                        <label>Dokter</label>
+                        <label>Dokter Pengirim</label>
                         <input type="text" id="rjDokter" autocomplete="off">
                     </div>
                     <div class="rj-field">
@@ -1019,15 +1040,5 @@
             if (dt) dt.style.display = 'none';
         }
     });
-
-    const checkRadiologiLainnya = document.getElementById('checkRadiologiLainnya');
-    const radiologiLainnya = document.getElementById('radiologiLainnya');
-
-    if (checkRadiologiLainnya) {
-        checkRadiologiLainnya.addEventListener('change', function () {
-            radiologiLainnya.disabled = !this.checked;
-            if (!this.checked) radiologiLainnya.value = '';
-        });
-    }
 </script>
 @endsection

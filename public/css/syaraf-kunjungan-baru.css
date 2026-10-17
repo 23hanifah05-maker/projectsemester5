@@ -883,3 +883,19 @@ input.sembunyi { display: none; }
 /* was style="margin-top:22px;" dan style="margin-bottom:14px;" pada form Rujukan */
 #view-rujukan .rj-grid.rj-grid-mt { margin-top: 22px; }
 #view-rujukan .rj-field.rj-mb { margin-bottom: 14px; }
+
+
+/* ===== Tab Radiologi: hanya untuk dilihat (read-only) ===== */
+#tab-radiologi .rd-note { margin: -6px 0 14px; font-size: 12px; color: var(--kb-teks-samar); }
+#tab-radiologi .rd-readonly .rd-item { cursor: default; }
+#tab-radiologi .rd-readonly .rd-item input[type=checkbox]:disabled { opacity: 1; cursor: default; }
+#tab-radiologi .rd-readonly .rd-lainnya input[type=text]:disabled { background: #f7f7f7; color: #333; cursor: default; }
+#tab-radiologi .rd-readonly .rd-upload { border-style: solid; background: #fafafa; cursor: default; }
+#tab-radiologi .rd-readonly .rd-upload:hover { border-color: #ccc; }
+#tab-radiologi .rd-scan-img { display: block; max-width: 100%; max-height: 320px; margin: 0 auto 10px; border-radius: 6px; }
+#tab-radiologi .rd-scan-link { color: var(--kb-merah); font-weight: 600; text-decoration: none; }
+#tab-radiologi .rd-scan-link:hover { text-decoration: underline; }
+#tab-radiologi .rd-readonly .rd-hasil { background: #f7f7f7; cursor: default; }
+
+/* Dx Utama otomatis terisi HNP (tidak bisa diubah) */
+#tab-pathway .cp-table input.cp-dx-auto { background: #f5f5f5; font-weight: 600; color: #333; cursor: default; }

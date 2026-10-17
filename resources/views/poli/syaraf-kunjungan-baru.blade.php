@@ -300,47 +300,54 @@
         </div>
     </div>
 
-    {{-- ===== TAB RADIOLOGI ===== --}}
+    {{-- ===== TAB RADIOLOGI (hanya untuk dilihat, tidak bisa diisi) ===== --}}
     @php
+        $radiologi = $radiologi ?? null;
         $radiologiOptions = ['Foto Thoraks', 'MRI', 'USG Abdomen', 'Rontgen', 'CT Scan'];
+
+        // Data hasil radiologi (dikirim dari controller sebagai $radiologi):
+        //   pemeriksaan (array nama pemeriksaan), lainnya (teks), file_scan (URL file), hasil (teks)
+        $radPemeriksaan = (array) data_get($radiologi, 'pemeriksaan', []);
+        $radLainnya     = trim((string) data_get($radiologi, 'lainnya', ''));
+        $radFile        = data_get($radiologi, 'file_scan');
+        $radHasil       = (string) data_get($radiologi, 'hasil', '');
     @endphp
     <div id="tab-radiologi" class="kb-tab-content">
-        <div class="rd-card">
+        <div class="rd-card rd-readonly">
             <div class="rd-title">Form Pemeriksaan</div>
+            <div class="rd-note">Halaman ini hanya untuk melihat hasil radiologi.</div>
             <div class="rd-sub rd-sub-first">Ceklist Periksa Radiologi</div>
 
             <div class="rd-grid">
                 @foreach ($radiologiOptions as $opt)
                     <label class="rd-item">
-                        <input type="checkbox" name="radiologi[]" value="{{ $opt }}"> {{ $opt }}
+                        <input type="checkbox" disabled {{ in_array($opt, $radPemeriksaan) ? 'checked' : '' }}> {{ $opt }}
                     </label>
                 @endforeach
                 <label class="rd-item rd-lainnya">
-                    <input type="checkbox" id="checkRadiologiLainnya" name="radiologi[]" value="Lainnya"> Lainnya
-                    <input type="text" id="radiologiLainnya" name="radiologi_lainnya" placeholder="(tuliskan)" disabled>
+                    <input type="checkbox" disabled {{ $radLainnya !== '' ? 'checked' : '' }}> Lainnya
+                    <input type="text" value="{{ $radLainnya }}" placeholder="-" readonly disabled>
                 </label>
             </div>
 
-            <div class="rd-sub">Scan Hasil (jika perlu)</div>
-            <div class="rd-upload" onclick="document.getElementById('scanHasil').click()">
-                Klik untuk mengunggah gambar/scan
-                <div class="rd-hint">(format: JPG, PNG, PDF &nbsp; Maks. 10 MB)</div>
-                <div class="rd-nama-file" id="namaFileScan"></div>
-                <input type="file" id="scanHasil" name="scan_hasil" accept=".jpg,.jpeg,.png,.pdf" class="sembunyi"
-                       onchange="document.getElementById('namaFileScan').textContent = this.files.length ? this.files[0].name : ''">
+            <div class="rd-sub">Scan Hasil</div>
+            <div class="rd-upload">
+                @if ($radFile)
+                    @if (preg_match('/\.(jpe?g|png)$/i', $radFile))
+                        <a href="{{ $radFile }}" target="_blank" rel="noopener">
+                            <img src="{{ $radFile }}" alt="Scan hasil radiologi" class="rd-scan-img">
+                        </a>
+                    @endif
+                    <a href="{{ $radFile }}" target="_blank" rel="noopener" class="rd-scan-link">
+                        <i class="fa-solid fa-up-right-from-square"></i> Buka scan hasil
+                    </a>
+                @else
+                    Belum ada scan hasil.
+                @endif
             </div>
 
             <div class="rd-sub">Hasil Pemeriksaan Radiologi</div>
-            <textarea class="rd-hasil" name="hasil_radiologi" rows="5" placeholder="Masukkan hasil pemeriksaan radiologi di sini"></textarea>
-        </div>
-
-        <div class="kb-actions">
-            <button type="button" class="kb-btn kb-btn-rujuk" onclick="resetRadiologi()">
-                <i class="fa-solid fa-rotate-left"></i> Reset
-            </button>
-            <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
-                <i class="fa-solid fa-floppy-disk"></i> Simpan
-            </button>
+            <textarea class="rd-hasil" rows="5" readonly placeholder="Belum ada hasil pemeriksaan radiologi.">{{ $radHasil }}</textarea>
         </div>
     </div>
 
@@ -366,7 +373,7 @@
                         </tr>
                         <tr class="cp-dx-row cp-dx-mid">
                             <td class="cp-aktivitas cp-dx-label">Dx Utama</td>
-                            <td><input type="text" class="cp-dx-input" data-label="Dx Utama"></td>
+                            <td><input type="text" class="cp-dx-input cp-dx-auto" data-label="Dx Utama" value="Hernia Nukleus Pulposus (HNP)" readonly></td>
                             <td><input type="text" class="cp-waktu" readonly></td>
                             <td></td>
                         </tr>
@@ -433,6 +440,7 @@
                             <td>
                                 <label class="cp-check"><input type="checkbox"> Terapi lampu hangat (Infra Red)</label>
                                 <label class="cp-check"><input type="checkbox"> Stimulasi Listrik (TENS)</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
                             </td>
                             <td><input type="text" class="cp-waktu" readonly></td>
                             <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
@@ -497,7 +505,7 @@
                         </select>
                     </div>
                     <div class="rj-field">
-                        <label>Dokter</label>
+                        <label>Dokter Pengirim</label>
                         <input type="text" id="rjDokter" autocomplete="off">
                     </div>
                     <div class="rj-field">
@@ -679,6 +687,11 @@
         }
     });
 
+    // Dx Utama otomatis terisi HNP: kolom Waktu-nya ikut terisi
+    document.querySelectorAll('#tab-pathway .cp-dx-auto').forEach(function (f) {
+        perbaruiWaktuBaris(f.closest('tr'));
+    });
+
     // ===== Clinical Pathway: cetak hasil isian =====
     function cetakCP() {
         const tbody = document.getElementById('cp-cetak-body');
@@ -718,11 +731,11 @@
             const w = tr.querySelector('.cp-waktu');
             const v = f ? f.value.trim() : '';
             if (v !== '') {
+                if (!f.classList.contains('cp-dx-auto')) adaIsi = true;
                 dx.push(f.dataset.label + ': ' + v);
                 dxWaktu.push(w && w.value.trim() !== '' ? w.value.trim() : '-');
             }
         });
-        if (dx.length) adaIsi = true;
         tambahBaris('Diagnosa', dx, dxWaktu.join('\n'), '');
 
         document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
@@ -818,26 +831,6 @@
         } finally {
             tombolSimpan.forEach(tombol => tombol.disabled = false);
         }
-    }
-
-    // ===== Radiologi: kolom "Lainnya" aktif hanya kalau dicentang =====
-    const checkRadiologiLainnya = document.getElementById('checkRadiologiLainnya');
-    const radiologiLainnya = document.getElementById('radiologiLainnya');
-
-    if (checkRadiologiLainnya) {
-        checkRadiologiLainnya.addEventListener('change', function () {
-            radiologiLainnya.disabled = !this.checked;
-            if (!this.checked) radiologiLainnya.value = '';
-        });
-    }
-
-    function resetRadiologi() {
-        document.querySelectorAll('#tab-radiologi input[type=checkbox]').forEach(el => el.checked = false);
-        radiologiLainnya.value = '';
-        radiologiLainnya.disabled = true;
-        document.getElementById('scanHasil').value = '';
-        document.getElementById('namaFileScan').textContent = '';
-        document.querySelector('#tab-radiologi textarea[name="hasil_radiologi"]').value = '';
     }
 
     // ===== Rujukan: buka / tutup form =====
