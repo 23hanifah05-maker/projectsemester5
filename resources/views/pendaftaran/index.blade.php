@@ -10,11 +10,28 @@
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pendaftaran-input.css') }}">
 @endsection
 
 @section('content')
 
 <div class="panel">
+
+    @if (session('success'))
+        <div class="form-alert" style="background:#eafaf1;border-color:#a9dfbf;color:#1e8449;">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="form-alert">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     {{-- HEADER MASTER DATA --}}
     <div class="panel-head">
@@ -320,63 +337,167 @@
 
 {{-- MODAL TAMBAH KUNJUNGAN --}}
 <div class="custom-modal-overlay" id="kunjunganModal">
-    <div class="custom-modal-box">
+    <div class="custom-modal-box modal-kunjungan">
 
         <div class="custom-modal-header">
             <h3>Tambah Kunjungan</h3>
-
-            <button
-                type="button"
-                class="custom-modal-close"
-                onclick="tutupKunjungan()"
-            >
-                &times;
-            </button>
+            <button type="button" class="custom-modal-close" onclick="tutupKunjungan()">&times;</button>
         </div>
 
-        <div class="custom-modal-body">
-            <div class="form-group">
-                <label>No. Rekam Medis</label>
-                <input type="text" id="kunjunganRm" readonly>
+        <form method="POST" action="" id="formKunjungan" autocomplete="off"
+              onsubmit="simpanStatusKunjungan(this)">
+            @csrf
+
+            <div class="custom-modal-body">
+
+                {{-- INPUT DATA --}}
+                <div class="title-underline">Input Data</div>
+                <div class="box">
+                    <div class="top-grid">
+                        <div class="field">
+                            <label>Tgl Registrasi</label>
+                            <input type="text" id="kj-tgl" readonly>
+                        </div>
+
+                        <div class="field">
+                            <label for="kj-poli">Poli</label>
+                            <select name="poli" id="kj-poli" required>
+                                <option value="">-- Pilih Poli --</option>
+                                <option value="saraf">Poli Saraf</option>
+                                <option value="obgyn">Poli Obgyn</option>
+                                <option value="jantung">Poli Jantung</option>
+                                <option value="jiwa">Poli Jiwa</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>No RM</label>
+                            <input type="text" id="kj-no-rm" readonly>
+                        </div>
+
+                        <div class="field">
+                            <label for="kj-dokter">Dokter</label>
+                            <select name="dokter" id="kj-dokter" required>
+                                <option value="">-- Pilih Dokter --</option>
+                                <option value="Dr. Spesialis Saraf">Dr. Spesialis Saraf</option>
+                                <option value="Dr. Spesialis Obgyn">Dr. Spesialis Obgyn</option>
+                                <option value="Dr. Spesialis Jantung">Dr. Spesialis Jantung</option>
+                                <option value="Dr. Spesialis Jiwa">Dr. Spesialis Jiwa</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- IDENTITAS PASIEN (terisi otomatis, terkunci) --}}
+                <div class="box">
+                    <div class="box-title">Identitas Pasien</div>
+                    <div class="cols">
+                        <div class="col-left">
+                            <div class="row"><label>No. Rekam Medis</label><input type="text" id="kj-rm2" readonly></div>
+                            <div class="row"><label>Nama Lengkap</label><input type="text" id="kj-nama" readonly></div>
+                            <div class="row"><label>NIK</label><input type="text" id="kj-nik" readonly></div>
+                            <div class="row"><label>Tempat/Tgl Lahir</label><input type="text" id="kj-ttl" readonly></div>
+                            <div class="row"><label>Umur</label><input type="text" id="kj-umur" readonly></div>
+                            <div class="row"><label>Jenis Kelamin</label><input type="text" id="kj-jk" readonly></div>
+                            <div class="row"><label>Agama</label><input type="text" id="kj-agama" readonly></div>
+                            <div class="row"><label>Pendidikan</label><input type="text" id="kj-pendidikan" readonly></div>
+                            <div class="row"><label>Pekerjaan</label><input type="text" id="kj-pekerjaan" readonly></div>
+                        </div>
+
+                        <div class="col-right">
+                            <div class="row"><label>No HP</label><input type="text" id="kj-hp" readonly></div>
+                            <div class="row">
+                                <label>Suku</label>
+                                <div class="pair-suku">
+                                    <input type="text" id="kj-suku" readonly>
+                                    <label>Bangsa</label>
+                                    <input type="text" id="kj-bangsa" readonly>
+                                </div>
+                            </div>
+                            <div class="row"><label>Bahasa</label><input type="text" id="kj-bahasa" readonly></div>
+                            <div class="row top"><label>Alamat</label><textarea id="kj-alamat" readonly></textarea></div>
+                            <div class="row">
+                                <label></label>
+                                <div class="split-2">
+                                    <input type="text" id="kj-kelurahan" readonly>
+                                    <input type="text" id="kj-kecamatan" readonly>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label></label>
+                                <div class="split-2">
+                                    <input type="text" id="kj-kabupaten" readonly>
+                                    <input type="text" id="kj-provinsi" readonly>
+                                </div>
+                            </div>
+                            <div class="row"><label>Kode Pos</label><input type="text" id="kj-kodepos" readonly></div>
+                            <div class="row">
+                                <label for="kj-pembayaran">Pembayaran</label>
+                                <select name="pembayaran" id="kj-pembayaran" required>
+                                    <option value="">-- Pilih Pembayaran --</option>
+                                    <option value="bpjs">BPJS</option>
+                                    <option value="umum">Umum</option>
+                                    <option value="asuransi">Asuransi swasta</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- PENANGGUNG JAWAB (dikosongkan) --}}
+                <div class="box">
+                    <div class="box-title">Penanggung Jawab</div>
+                    <div class="cols">
+                        <div class="col-left">
+                            <div class="row">
+                                <label for="kj-pj-nama">Nama</label>
+                                <input type="text" name="pj_nama" id="kj-pj-nama"
+                                       placeholder="Nama penanggung jawab" maxlength="100" required>
+                            </div>
+                            <div class="row">
+                                <label for="kj-pj-jk">Jenis Kelamin</label>
+                                <select name="pj_jenis_kelamin" id="kj-pj-jk" required>
+                                    <option value="">-- Pilih Jenis Kelamin --</option>
+                                    <option value="0">Tidak diketahui</option>
+                                    <option value="1">Laki-laki</option>
+                                    <option value="2">Perempuan</option>
+                                    <option value="3">Tidak dapat ditentukan</option>
+                                    <option value="4">Tidak mengisi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-right">
+                            <div class="row">
+                                <label for="kj-pj-hubungan">Hubungan</label>
+                                <select name="pj_hubungan" id="kj-pj-hubungan" required>
+                                    <option value="">-- Pilih Hubungan --</option>
+                                    <option value="ayah">Ayah</option>
+                                    <option value="ibu">Ibu</option>
+                                    <option value="suami">Suami</option>
+                                    <option value="istri">Istri</option>
+                                    <option value="anak">Anak</option>
+                                    <option value="saudara">Saudara</option>
+                                    <option value="lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <label for="kj-pj-hp">No HP</label>
+                                <input type="text" name="pj_no_hp" id="kj-pj-hp" value="+62"
+                                       inputmode="numeric" maxlength="15" required
+                                       oninput="formatHpKj(this)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="form-group">
-                <label>Nama Pasien</label>
-                <input type="text" id="kunjunganNama" readonly>
+            <div class="custom-modal-footer">
+                <button type="button" class="btn-modal btn-modal-secondary" onclick="tutupKunjungan()">Batal</button>
+                <button type="submit" class="btn-modal btn-modal-primary">Simpan Kunjungan</button>
             </div>
-
-            <div class="form-group">
-                <label>Tanggal Kunjungan</label>
-                <input type="date" id="kunjunganTanggal">
-            </div>
-
-            <div class="form-group">
-                <label>Poli</label>
-                <select id="kunjunganPoli">
-                    <option value="">-- Pilih Poli --</option>
-                    <option value="Poli Umum">Poli Umum</option>
-                    <option value="Poli Syaraf">Poli Syaraf</option>
-                    <option value="Poli Anak">Poli Anak</option>
-                    <option value="Poli Gigi">Poli Gigi</option>
-                    <option value="Poli Mata">Poli Mata</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Keluhan</label>
-                <textarea id="kunjunganKeluhan" placeholder="Masukkan keluhan pasien..."></textarea>
-            </div>
-        </div>
-
-        <div class="custom-modal-footer">
-            <button type="button" class="btn-modal btn-modal-secondary" onclick="tutupKunjungan()">
-                Batal
-            </button>
-
-            <button type="button" class="btn-modal btn-modal-primary" onclick="simpanKunjungan()">
-                Simpan Kunjungan
-            </button>
-        </div>
+        </form>
 
     </div>
 </div>
@@ -565,23 +686,85 @@ function closePasienModal() {
     document.getElementById('pasienModal').classList.remove('show');
 }
 
+/* ===== TAMBAH KUNJUNGAN ===== */
+const dokterPerPoliKj = {
+    saraf: 'Dr. Spesialis Saraf',
+    obgyn: 'Dr. Spesialis Obgyn',
+    jantung: 'Dr. Spesialis Jantung',
+    jiwa: 'Dr. Spesialis Jiwa'
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    const poli = document.getElementById('kj-poli');
+    if (poli) {
+        poli.addEventListener('change', function () {
+            document.getElementById('kj-dokter').value = dokterPerPoliKj[poli.value] || '';
+        });
+    }
+});
+
+function formatHpKj(input) {
+    let sisa = input.value.startsWith('+62') ? input.value.slice(3) : input.value;
+    let digit = sisa.replace(/[^0-9]/g, '').replace(/^0+/, '');
+    if (digit.startsWith('62')) digit = digit.slice(2);
+    input.value = '+62' + digit.slice(0, 10);
+}
+
 function bukaKunjungan(button) {
     const hasil = ambilDataBaris(button);
     if (!hasil) return;
 
-    const data = hasil.data;
-    const sekarang = new Date();
-    const tanggal = [
-        sekarang.getFullYear(),
-        String(sekarang.getMonth() + 1).padStart(2, '0'),
-        String(sekarang.getDate()).padStart(2, '0')
+    const d = hasil.data;
+    const now = new Date();
+    const tgl = [
+        String(now.getDate()).padStart(2, '0'),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        now.getFullYear()
     ].join('-');
 
-    document.getElementById('kunjunganRm').value = data.no_rm || '';
-    document.getElementById('kunjunganNama').value = data.nama_pasien || '';
-    document.getElementById('kunjunganTanggal').value = tanggal;
-    document.getElementById('kunjunganPoli').value = data.poli || '';
-    document.getElementById('kunjunganKeluhan').value = '';
+    const peta = {
+        'kj-tgl': tgl,
+        'kj-no-rm': d.no_rm,
+        'kj-rm2': d.no_rm,
+        'kj-nama': d.nama_pasien,
+        'kj-nik': d.nik,
+        'kj-ttl': `${d.tempat_lahir || '-'}, ${formatTanggal(d.tgl_lahir)}`,
+        'kj-umur': d.umur,
+        'kj-jk': d.jenis_kelamin,
+        'kj-agama': d.agama,
+        'kj-pendidikan': d.pendidikan,
+        'kj-pekerjaan': d.pekerjaan,
+        'kj-hp': d.no_hp,
+        'kj-suku': d.suku,
+        'kj-bangsa': d.bangsa,
+        'kj-bahasa': d.bahasa,
+        'kj-alamat': d.alamat,
+        'kj-kelurahan': d.kelurahan,
+        'kj-kecamatan': d.kecamatan,
+        'kj-kabupaten': d.kabupaten,
+        'kj-provinsi': d.provinsi,
+        'kj-kodepos': d.kode_pos
+    };
+
+    Object.entries(peta).forEach(([id, nilai]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = nilai || '';
+    });
+
+    // Pembayaran terakhir pasien dijadikan nilai awal (masih bisa diubah)
+    const bayar = String(d.pembayaran || '').toLowerCase();
+    document.getElementById('kj-pembayaran').value =
+        bayar === 'bpjs' ? 'bpjs' :
+        bayar === 'umum' ? 'umum' :
+        bayar.includes('asuransi') ? 'asuransi' : '';
+
+    // Poli, dokter, dan penanggung jawab dikosongkan
+    ['kj-poli', 'kj-dokter', 'kj-pj-nama', 'kj-pj-jk', 'kj-pj-hubungan']
+        .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('kj-pj-hp').value = '+62';
+
+    document.getElementById('formKunjungan').action =
+        "{{ url('pendaftaran') }}/" + encodeURIComponent(d.no_rm) + "/kunjungan";
 
     document.getElementById('kunjunganModal').classList.add('show');
 }
@@ -590,24 +773,26 @@ function tutupKunjungan() {
     document.getElementById('kunjunganModal').classList.remove('show');
 }
 
-function simpanKunjungan() {
-    const tanggal = document.getElementById('kunjunganTanggal').value;
-    const poli = document.getElementById('kunjunganPoli').value;
+// Status "periksa" di browser, sama seperti saat pendaftaran baru
+function simpanStatusKunjungan(form) {
+    const awalan = {
+        obgyn: 'obgyn', saraf: 'syaraf', jantung: 'jantung', jiwa: 'jiwa'
+    }[form.elements['poli'].value];
 
-    if (!tanggal) {
-        alert('Tanggal kunjungan wajib diisi.');
-        return;
+    const noRm = (document.getElementById('kj-no-rm').value || '').trim().toUpperCase();
+    if (!awalan || !noRm) return;
+
+    try {
+        const status = JSON.parse(localStorage.getItem(awalan + '_status_periksa')) || {};
+        status[noRm] = 'periksa';
+        localStorage.setItem(awalan + '_status_periksa', JSON.stringify(status));
+
+        const waktu = JSON.parse(localStorage.getItem(awalan + '_waktu_selesai')) || {};
+        delete waktu[noRm];
+        localStorage.setItem(awalan + '_waktu_selesai', JSON.stringify(waktu));
+    } catch (err) {
+        console.error(err);
     }
-
-    if (!poli) {
-        alert('Silakan pilih poli.');
-        return;
-    }
-
-    alert(
-        'Validasi kunjungan berhasil.\n\n' +
-        'Perlu dihubungkan ke controller kunjungan agar data benar-benar tersimpan.'
-    );
 }
 
 function bukaEdit(button) {

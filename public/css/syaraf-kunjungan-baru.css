@@ -899,3 +899,17 @@ input.sembunyi { display: none; }
 
 /* Dx Utama otomatis terisi HNP (tidak bisa diubah) */
 #tab-pathway .cp-table input.cp-dx-auto { background: #f5f5f5; font-weight: 600; color: #333; cursor: default; }
+
+/* ===== Badge "Diagnosa Utama" pada daftar penyakit ===== */
+.kb-badge-utama {
+    display: inline-block;
+    margin-left: 12px;
+    padding: 4px 14px;
+    background: #c0182a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 999px;
+    white-space: nowrap;
+    vertical-align: middle;
+}

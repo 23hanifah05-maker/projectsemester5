@@ -1299,6 +1299,14 @@ const diagnosaTerpilih = {
             teks.appendChild(kode);
             teks.appendChild(document.createTextNode(' — ' + item.nama));
 
+            // Setiap penyakit yang diinput otomatis menjadi Diagnosa Utama
+            if (jenis === 'penyakit') {
+                const badge = document.createElement('span');
+                badge.className = 'kb-badge-utama';
+                badge.textContent = 'Diagnosa Utama';
+                teks.appendChild(badge);
+            }
+
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
             hidden.name = k.name;

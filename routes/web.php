@@ -67,6 +67,10 @@ Route::prefix('pendaftaran')->name('pendaftaran.')->group(function () {
     Route::post('/', [PendaftaranController::class, 'store'])
         ->name('store');
 
+    // Tambah kunjungan baru untuk pasien yang sudah terdaftar
+    Route::post('/{no_rm}/kunjungan', [PendaftaranController::class, 'storeKunjungan'])
+        ->name('kunjungan.store');
+
     Route::get('/{id}', [PendaftaranController::class, 'show'])
         ->name('show');
 

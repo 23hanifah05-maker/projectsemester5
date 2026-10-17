@@ -291,6 +291,62 @@ class PendaftaranController extends Controller
     }
 
     /**
+     * Menyimpan kunjungan baru untuk pasien yang sudah terdaftar.
+     * Identitas pasien tidak berubah; hanya penanggung jawab diperbarui.
+     */
+    public function storeKunjungan(Request $request, $no_rm)
+    {
+        $pasien = Pasien::where('no_rm', $no_rm)->firstOrFail();
+
+        $validated = $request->validate([
+            'poli' => 'required|string|exists:poli,slug',
+            'dokter' => 'required|string|max:100',
+            'pembayaran' => ['required', Rule::in(['umum', 'asuransi', 'bpjs'])],
+            'pj_nama' => 'required|string|max:100',
+            'pj_hubungan' => 'required|string|max:20',
+            'pj_jenis_kelamin' => 'required|integer|between:0,4',
+            'pj_no_hp' => 'required|string|max:13',
+        ]);
+
+        $dataPoli = Poli::where('slug', $validated['poli'])->firstOrFail();
+
+        $jenisPembayaran = match ($validated['pembayaran']) {
+            'umum' => 'Umum',
+            'asuransi' => 'Asuransi Swasta',
+            'bpjs' => 'BPJS',
+        };
+
+        $pjNoHp = $this->normalisasiNomorHp($validated['pj_no_hp']);
+
+        if (strlen($pjNoHp) > 13) {
+            return back()
+                ->withErrors(['pj_no_hp' => 'Nomor HP maksimal 13 karakter, termasuk +62.'])
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($pasien, $validated, $dataPoli, $jenisPembayaran, $pjNoHp) {
+            Pasien::where('no_rm', $pasien->no_rm)->update([
+                'pj_nama' => $validated['pj_nama'],
+                'pj_hubungan' => $validated['pj_hubungan'],
+                'pj_jenis_kelamin' => $validated['pj_jenis_kelamin'],
+                'pj_no_hp' => $pjNoHp,
+            ]);
+
+            Pendaftaran::create([
+                'tgl_registrasi' => now(),
+                'no_rm' => $pasien->no_rm,
+                'id_poli' => $dataPoli->id_poli,
+                'dpjp' => $validated['dokter'],
+                'jenis_pembayaran' => $jenisPembayaran,
+            ]);
+        });
+
+        return redirect()
+            ->route('pendaftaran.index')
+            ->with('success', 'Kunjungan baru berhasil disimpan.');
+    }
+
+    /**
      * Membuat nomor rekam medis berikutnya (6 digit angka).
      * Data lama berformat "E000014" tetap dibaca: angkanya (14)
      * dipakai sebagai acuan, sehingga nomor berikutnya 000015.

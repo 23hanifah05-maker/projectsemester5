@@ -93,7 +93,6 @@
     font-size: 12px;
 }
 
-/* [DIUBAH] text-align: center, nowrap, dan padding dirapatkan */
 .table-pendaftaran thead th {
     background: #c8161d;
     color: white;
@@ -104,7 +103,6 @@
     white-space: nowrap;
 }
 
-/* [DIUBAH] text-align: center, nowrap, dan padding dirapatkan */
 .table-pendaftaran tbody td {
     padding: 10px 8px;
     border: 1px solid #e5e5e5;
@@ -128,7 +126,6 @@
 
 /* =====================================================
    BARIS "DATA PASIEN TIDAK DITEMUKAN"
-   (dipindahkan dari inline style di Blade & JS)
 ===================================================== */
 
 .table-pendaftaran tbody td.td-kosong {
@@ -142,10 +139,6 @@
    KOLOM AKSI
 ===================================================== */
 
-/* display:flex, align-items, dan gap dihapus dari <td>
-   karena merusak sel tabel (garis dan tinggi tidak sejajar).
-   Penataan tombol dipindah ke .aksi-wrap (Obgyn) atau margin
-   antar tombol (halaman lain). */
 .aksi-cell {
     white-space: nowrap;
 }
@@ -199,7 +192,6 @@
 
 /* =====================================================
    IKON MATA PADA TOMBOL LIHAT DETAIL
-   (dipindahkan dari <style> di Blade)
 ===================================================== */
 
 .btn-aksi svg {
@@ -228,10 +220,8 @@
     width: 100%;
     height: 100%;
 
-    /* LAPISAN TRANSPARAN */
     background: rgba(255, 255, 255, 0.25);
 
-    /* TINGKAT BLUR BACKGROUND */
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
 
@@ -282,20 +272,16 @@
 
     padding: 16px 20px;
 
-    /* BACKGROUND MERAH */
     background: #c8161d;
 
-    /* BORDER MERAH */
     border-bottom: 1px solid #c8161d;
 
-    /* Supaya sudut atas mengikuti modal */
     border-radius: 10px 10px 0 0;
 }
 
 .modal-header h3 {
     margin: 0;
 
-    /* TULISAN PUTIH */
     color: #ffffff;
 
     font-size: 19px;
@@ -313,7 +299,6 @@
 
     background: transparent;
 
-    /* TOMBOL X PUTIH */
     color: #ffffff;
 
     font-size: 27px;
@@ -404,7 +389,6 @@
 
     background: rgba(255, 255, 255, 0.25);
 
-    /* BLUR BACKGROUND */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 
@@ -566,7 +550,6 @@
 
 /* =====================================================
    INPUT TERKUNCI (MODAL EDIT)
-   (dipindahkan dari inline style di Blade)
 ===================================================== */
 
 .form-group input[readonly].input-terkunci {
@@ -679,4 +662,17 @@
 
         font-size: 14px;
     }
+}
+
+
+/* =====================================================
+   MODAL TAMBAH KUNJUNGAN: lebar mengikuti form Input Data
+===================================================== */
+
+.custom-modal-box.modal-kunjungan {
+    max-width: 1100px;
+}
+
+.modal-kunjungan .custom-modal-body {
+    padding: 18px 22px;
 }
