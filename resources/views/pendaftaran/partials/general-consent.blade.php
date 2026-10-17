@@ -26,22 +26,27 @@
     .gc-title{text-align:center;font-size:16px;line-height:1.5;padding:10px 0;border-top:1px solid #333;border-bottom:1px solid #333;margin-bottom:14px}
 
     /* Data pasien */
-    .gc-section{background:#fbe9e9;color:#c8102e;font-weight:700;font-size:13px;padding:4px 12px;border-bottom:2px solid #c8102e;margin-bottom:12px}
-    .gc-data{display:grid;grid-template-columns:1fr 1fr;gap:10px 40px;margin-bottom:16px}
+    .gc-section{background:#fff;color:#c8102e;font-weight:700;font-size:13px;border:1px solid #ccc;border-bottom:0;border-radius:6px 6px 0 0;padding:8px 14px}
+    .gc-data{display:grid;grid-template-columns:1fr 1fr;gap:10px 40px;border:1px solid #ccc;border-top:0;border-radius:0 0 6px 6px;padding:14px;margin-bottom:14px}
     .gc-row{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
     .gc-row label{flex:0 0 110px}
     .gc-row input{flex:1;min-width:0;border:1px solid #ccc;border-radius:5px;padding:6px 10px;font-size:12px;background:#fff;font-family:inherit}
 
     /* Butir persetujuan */
-    .gc-list{border-top:1px solid #ddd}
-    .gc-item{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:10px 4px;border-bottom:1px solid #ddd}
-    .gc-item-text{flex:1;font-size:12px;line-height:1.5}
+    .gc-list{border:1px solid #ccc;border-radius:6px;overflow:hidden}
+    .gc-item{display:flex;align-items:stretch;justify-content:space-between;border-bottom:1px solid #ccc}
+    .gc-item:last-child{border-bottom:0}
+    .gc-item-text{flex:1;padding:10px 16px;font-size:12px;line-height:1.5}
     .gc-item-text strong{display:block;font-size:13px;font-weight:500;margin-bottom:2px}
     .gc-item-text p{margin:0}
-    .gc-keluarga{display:block;margin-top:8px;font-weight:700;font-size:12px}
-    .gc-keluarga input{display:block;width:100%;margin-top:4px;border:1px solid #999;border-radius:4px;padding:6px 8px;font-family:inherit;font-size:12px}
-    .gc-setuju{flex:0 0 auto;display:flex;align-items:center;gap:8px;border:1px solid #ddd;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);white-space:nowrap}
+    .gc-setuju{flex:0 0 130px;display:flex;align-items:center;justify-content:center;gap:8px;border-left:1px solid #ccc;padding:0 12px;font-size:12px;font-weight:500;cursor:pointer;background:#fff;white-space:nowrap}
     .gc-setuju input,.gc-banner input{width:15px;height:15px;accent-color:#c8102e}
+
+    /* Anggota keluarga (bisa lebih dari 1) */
+    .gc-keluarga{display:block;margin-top:8px;font-weight:700;font-size:12px}
+    .gc-keluarga-row{display:flex;gap:6px;margin-top:6px}
+    .gc-keluarga-input{flex:0 1 55%;border:1px solid #999;border-radius:4px;padding:6px 8px;font-family:inherit;font-size:12px}
+    .gc-keluarga-hapus{border:0;background:#fbe9e9;color:#c8102e;border-radius:4px;width:28px;cursor:pointer;font-size:16px}
 
     /* Banner */
     .gc-banner{display:flex;align-items:center;gap:8px;margin:12px 0;padding:6px 10px;background:#fbe9e9;border:1px solid #f0cccc;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer}
@@ -50,9 +55,12 @@
     .gc-ttd-wrap{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;border:1px solid #ddd;border-radius:6px;padding:14px 18px}
     .gc-ttd-col{display:flex;flex-direction:column;align-items:center}
     .gc-ttd-label{font-size:11px;font-weight:600;margin-bottom:6px}
-    .gc-ttd-box{border:1px solid #bbb;border-radius:4px;background:#fff;min-width:200px;min-height:110px}
-    .gc-ttd-box canvas{display:block;cursor:crosshair;touch-action:none}
-    .gc-link{margin-top:4px;border:0;background:none;color:#c8102e;font-size:11px;cursor:pointer;text-decoration:underline}
+    .gc-ttd-box{border:1px solid #bbb;border-radius:4px;background:#fff}
+    .gc-canvas{display:block;cursor:crosshair;touch-action:none}
+    .gc-link{margin-top:4px;border:0;background:none;color:#c8102e;font-size:11px;cursor:pointer;text-decoration:underline;padding:0}
+    .gc-keluarga .gc-link{display:block;margin-top:6px}
+    .gc-nama-terang{margin-top:8px;font-size:12px;font-weight:600}
+    .gc-nama-terang input{border:0;border-bottom:1px solid #000;text-align:center;width:180px;font-family:inherit;font-size:12px;font-weight:600;outline:none;background:transparent}
     .gc-ttd-waktu{display:flex;flex-direction:column;gap:10px;font-size:11px;font-weight:600;padding-top:20px}
     .gc-ttd-waktu label{display:flex;flex-direction:column;gap:3px}
     .gc-ttd-waktu input{width:130px;border:1px solid #bbb;border-radius:4px;padding:5px 8px;font-size:12px;font-family:inherit}
@@ -64,24 +72,10 @@
 
     @media (max-width:700px){
         .gc-data{grid-template-columns:1fr}
-        .gc-item{flex-direction:column;align-items:flex-start}
-        .gc-head img{width:44px;height:44px}
-    }
-
-    /* ===== Penyesuaian: tampilan tabel dengan kolom "Setuju" ===== */
-    .gc-section{background:#fff;color:#c8102e;border:1px solid #ccc;border-bottom:0;border-radius:6px 6px 0 0;padding:8px 14px;margin-bottom:0}
-    .gc-data{border:1px solid #ccc;border-top:0;border-radius:0 0 6px 6px;padding:14px;margin-bottom:14px}
-    .gc-list{border:1px solid #ccc;border-radius:6px;overflow:hidden}
-    .gc-item{align-items:stretch;gap:0;padding:0;border-bottom:1px solid #ccc}
-    .gc-item:last-child{border-bottom:0}
-    .gc-item-text{padding:10px 16px}
-    .gc-keluarga input{width:55%}
-    .gc-setuju{flex:0 0 130px;justify-content:center;border:0;border-left:1px solid #ccc;border-radius:0;box-shadow:none;padding:0 12px}
-    .gc-banner{border-radius:4px}
-    @media (max-width:700px){
         .gc-item{flex-direction:column}
         .gc-setuju{flex:0 0 auto;border-left:0;border-top:1px solid #ccc;justify-content:flex-start;padding:8px 16px}
-        .gc-keluarga input{width:100%}
+        .gc-head img{width:44px;height:44px}
+        .gc-keluarga-input{flex:1}
     }
     @media print{
         .no-print{display:none !important}
@@ -124,10 +118,18 @@
                     <div class="gc-item-text">
                         <strong>{{ $i + 1 }}. {{ $b[0] }}</strong>
                         <p>{{ $b[1] }}</p>
+
                         @if ($i === 2)
-                            <label class="gc-keluarga">Nama Anggota Keluarga Yang Diperbolehkan Melihat Informasi Pasien :
-                                <input type="text" id="gc-keluarga">
-                            </label>
+                            <div class="gc-keluarga">
+                                Nama Anggota Keluarga Yang Diperbolehkan Melihat Informasi Pasien :
+                                <div id="gc-keluarga-list">
+                                    <div class="gc-keluarga-row">
+                                        <input type="text" class="gc-keluarga-input" placeholder="Nama anggota keluarga">
+                                        <button type="button" class="gc-keluarga-hapus no-print" style="display:none" onclick="gcHapusKeluarga(this)">&times;</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="gc-link no-print" onclick="gcTambahKeluarga()">+ Tambah anggota keluarga</button>
+                            </div>
                         @endif
                     </div>
                     <label class="gc-setuju"><input type="checkbox" class="gc-cek"> Setuju</label>
@@ -141,17 +143,26 @@
         </label>
 
         <div class="gc-ttd-wrap">
+            {{-- Pemberi Informasi --}}
             <div class="gc-ttd-col">
                 <div class="gc-ttd-label">Pemberi Informasi</div>
-                <div class="gc-ttd-box"></div>
+                <div class="gc-ttd-box">
+                    <canvas id="gcTtdPemberi" class="gc-canvas" width="220" height="110"></canvas>
+                </div>
+                <button type="button" class="gc-link no-print" onclick="gcHapusTtd('gcTtdPemberi')">Hapus tanda tangan</button>
+                <div class="gc-nama-terang">( <input type="text" id="gc-nama-pemberi" placeholder="Nama terang"> )</div>
             </div>
+
+            {{-- Pasien / Keluarga --}}
             <div class="gc-ttd-col">
                 <div class="gc-ttd-label">Tanda tangan Pasien/ Keluarga</div>
                 <div class="gc-ttd-box">
-                    <canvas id="gcTtd" width="400" height="110"></canvas>
+                    <canvas id="gcTtd" class="gc-canvas" width="400" height="110"></canvas>
                 </div>
-                <button type="button" class="gc-link no-print" onclick="gcHapusTtd()">Hapus tanda tangan</button>
+                <button type="button" class="gc-link no-print" onclick="gcHapusTtd('gcTtd')">Hapus tanda tangan</button>
+                <div class="gc-nama-terang">( <input type="text" id="gc-nama-pasien" placeholder="Nama terang"> )</div>
             </div>
+
             <div class="gc-ttd-waktu">
                 <label>Tanggal <input type="text" id="gc-tgl" readonly></label>
                 <label>Jam <input type="text" id="gc-jam" readonly></label>
@@ -165,3 +176,201 @@
 
     </div>
 </div>
+
+<script>
+/* =========================================================
+   BUKA / TUTUP MODAL
+   Contoh pemakaian:
+   bukaConsent({norm:'E000014', nama:'Siti', ttl:'Ngawi, 01-01-1990', umur:'36 tahun', jk:'Perempuan', hp:'0812...'})
+   Kalau kamu sudah punya fungsi bukaConsent/tutupConsent sendiri, hapus versi di bawah ini.
+   ========================================================= */
+function bukaConsent(d) {
+    d = d || {};
+    document.getElementById('gc-norm').value = d.norm || '';
+    document.getElementById('gc-nama').value = d.nama || '';
+    document.getElementById('gc-ttl').value  = d.ttl  || '';
+    document.getElementById('gc-umur').value = d.umur || '';
+    document.getElementById('gc-jk').value   = d.jk   || '';
+    document.getElementById('gc-hp').value   = d.hp   || '';
+
+    gcReset();
+
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('gc-tgl').value = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear();
+    document.getElementById('gc-jam').value = pad(now.getHours()) + '.' + pad(now.getMinutes());
+
+    document.getElementById('consentModal').classList.add('show');
+}
+function tutupConsent() {
+    document.getElementById('consentModal').classList.remove('show');
+}
+
+/* Kosongkan form tiap kali modal dibuka */
+function gcReset() {
+    document.querySelectorAll('.gc-cek').forEach(c => c.checked = false);
+    document.getElementById('gc-semua').checked = false;
+
+    const list = document.getElementById('gc-keluarga-list');
+    const rows = list.querySelectorAll('.gc-keluarga-row');
+    rows.forEach((r, i) => { if (i > 0) r.remove(); });
+    list.querySelector('input').value = '';
+    gcRefreshKeluarga();
+
+    document.getElementById('gc-nama-pemberi').value = '';
+    document.getElementById('gc-nama-pasien').value = '';
+    gcHapusTtd('gcTtdPemberi');
+    gcHapusTtd('gcTtd');
+}
+
+/* =========================================================
+   ANGGOTA KELUARGA (boleh lebih dari 1)
+   ========================================================= */
+function gcRefreshKeluarga() {
+    const rows = document.querySelectorAll('#gc-keluarga-list .gc-keluarga-row');
+    rows.forEach(r => {
+        r.querySelector('.gc-keluarga-hapus').style.display = rows.length > 1 ? 'inline-block' : 'none';
+    });
+}
+function gcTambahKeluarga() {
+    const list = document.getElementById('gc-keluarga-list');
+    const row = list.querySelector('.gc-keluarga-row').cloneNode(true);
+    row.querySelector('input').value = '';
+    list.appendChild(row);
+    gcRefreshKeluarga();
+    row.querySelector('input').focus();
+}
+function gcHapusKeluarga(btn) {
+    btn.closest('.gc-keluarga-row').remove();
+    gcRefreshKeluarga();
+}
+function gcAmbilKeluarga() {
+    return Array.from(document.querySelectorAll('.gc-keluarga-input'))
+        .map(i => i.value.trim())
+        .filter(Boolean);
+}
+
+/* =========================================================
+   SIGNATURE PAD (tanpa library) - dipakai 2 canvas
+   ========================================================= */
+const gcPad = {};
+
+function gcInitPad(id) {
+    const canvas = document.getElementById(id);
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#000';
+
+    const state = { canvas: canvas, ctx: ctx, drawing: false, dirty: false };
+    gcPad[id] = state;
+
+    function pos(e) {
+        const r = canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX - r.left) * (canvas.width / r.width),
+            y: (e.clientY - r.top) * (canvas.height / r.height)
+        };
+    }
+
+    canvas.addEventListener('pointerdown', function (e) {
+        state.drawing = true;
+        canvas.setPointerCapture(e.pointerId);
+        const p = pos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x + 0.1, p.y + 0.1);
+        ctx.stroke();
+        state.dirty = true;
+    });
+    canvas.addEventListener('pointermove', function (e) {
+        if (!state.drawing) return;
+        const p = pos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+        canvas.addEventListener(ev, function () { state.drawing = false; });
+    });
+}
+
+function gcHapusTtd(id) {
+    const s = gcPad[id];
+    if (!s) return;
+    s.ctx.clearRect(0, 0, s.canvas.width, s.canvas.height);
+    s.dirty = false;
+}
+function gcAmbilTtd(id) {
+    return gcPad[id] && gcPad[id].dirty ? gcPad[id].canvas.toDataURL('image/png') : '';
+}
+
+/* =========================================================
+   CHECKBOX "SEMUA SETUJU"
+   ========================================================= */
+document.addEventListener('DOMContentLoaded', function () {
+    gcInitPad('gcTtdPemberi');
+    gcInitPad('gcTtd');
+    gcRefreshKeluarga();
+
+    document.getElementById('gc-semua').addEventListener('change', function () {
+        document.querySelectorAll('.gc-cek').forEach(c => c.checked = this.checked);
+    });
+});
+
+/* =========================================================
+   VALIDASI + SIMPAN
+   ========================================================= */
+function gcValidasi() {
+    const cek = document.querySelectorAll('.gc-cek');
+    if (!Array.from(cek).every(c => c.checked)) {
+        alert('Semua butir persetujuan harus dicentang "Setuju".'); return false;
+    }
+    if (!document.getElementById('gc-semua').checked) {
+        alert('Pernyataan persetujuan di bawah butir belum dicentang.'); return false;
+    }
+    if (!gcAmbilTtd('gcTtdPemberi')) {
+        alert('Tanda tangan Pemberi Informasi belum diisi.'); return false;
+    }
+    if (!document.getElementById('gc-nama-pemberi').value.trim()) {
+        alert('Nama terang Pemberi Informasi belum diisi.'); return false;
+    }
+    if (!gcAmbilTtd('gcTtd')) {
+        alert('Tanda tangan Pasien/Keluarga belum diisi.'); return false;
+    }
+    if (!document.getElementById('gc-nama-pasien').value.trim()) {
+        alert('Nama terang Pasien/Keluarga belum diisi.'); return false;
+    }
+    return true;
+}
+
+function simpanConsent() {
+    if (!gcValidasi()) return;
+
+    const data = {
+        no_rm:               document.getElementById('gc-norm').value,
+        anggota_keluarga:    gcAmbilKeluarga(),                     // array nama
+        ttd_pemberi:         gcAmbilTtd('gcTtdPemberi'),            // base64 PNG
+        nama_pemberi:        document.getElementById('gc-nama-pemberi').value.trim(),
+        ttd_pasien:          gcAmbilTtd('gcTtd'),                   // base64 PNG
+        nama_penandatangan:  document.getElementById('gc-nama-pasien').value.trim(),
+        tanggal:             document.getElementById('gc-tgl').value,
+        jam:                 document.getElementById('gc-jam').value
+    };
+
+    /* Kalau backend sudah siap, aktifkan ini dan sesuaikan URL-nya:
+    fetch('/general-consent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(data)
+    }).then(r => r.json()).then(() => { alert('Tersimpan'); tutupConsent(); });
+    */
+
+    console.log('General consent:', data);
+    alert('General Consent tersimpan (dummy).');
+    tutupConsent();
+}
+</script>
