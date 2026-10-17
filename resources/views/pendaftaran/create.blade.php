@@ -108,9 +108,10 @@
                     <div class="row">
                         <label for="nama_pasien">Nama Lengkap</label>
                         <input type="text" name="nama_pasien"
-                               id="nama_pasien"
-                               value="{{ old('nama_pasien') }}"
-                               maxlength="100" required>
+                        id="nama_pasien"
+                        value="{{ old('nama_pasien') }}"
+                        placeholder="Masukkan nama"
+                        maxlength="100" required>
                     </div>
 
                     <div class="row">
