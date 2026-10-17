@@ -7,6 +7,7 @@ use App\Models\Poli;
 use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class PendaftaranController extends Controller
@@ -99,6 +100,21 @@ class PendaftaranController extends Controller
                     'pasien.no_hp',
                     'like',
                     "%{$keyword}%"
+                )
+                ->orWhere(
+                    'pasien.alamat',
+                    'like',
+                    "%{$keyword}%"
+                )
+                ->orWhere(
+                    'pasien.kelurahan',
+                    'like',
+                    "%{$keyword}%"
+                )
+                ->orWhere(
+                    'pasien.kecamatan',
+                    'like',
+                    "%{$keyword}%"
                 );
             });
         }
@@ -136,10 +152,10 @@ class PendaftaranController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            // No RM: 6 digit angka (contoh 000015)
             'no_rm' => [
                 'required',
-                'string',
-                'max:20',
+                'digits:6',
                 'unique:pasien,no_rm',
             ],
 
@@ -178,8 +194,17 @@ class PendaftaranController extends Controller
                 'required',
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
+
+            // Data General Consent (dari modal)
+            'general_consent'       => 'required|in:1',
+            'gc_anggota_keluarga'   => 'nullable|json',
+            'gc_ttd_pemberi'        => 'required|string',
+            'gc_nama_pemberi'       => 'required|string|max:100',
+            'gc_ttd_pasien'         => 'required|string',
+            'gc_nama_penandatangan' => 'required|string|max:100',
+        ], [
+            'general_consent.in' => 'General Consent belum disetujui.',
         ]);
-        
 
         // Pastikan poli yang dipilih tersedia di database.
         $dataPoli = Poli::where(
@@ -187,13 +212,12 @@ class PendaftaranController extends Controller
             $validated['poli']
         )->firstOrFail();
 
-        // Pertahankan pemetaan pembayaran yang digunakan saat ini.
         // Pemetaan jenis pembayaran sesuai pilihan pada formulir.
-$jenisPembayaran = match ($validated['pembayaran']) {
-    'umum' => 'Umum',
-    'asuransi' => 'Asuransi Swasta',
-    'bpjs' => 'BPJS',
-};
+        $jenisPembayaran = match ($validated['pembayaran']) {
+            'umum' => 'Umum',
+            'asuransi' => 'Asuransi Swasta',
+            'bpjs' => 'BPJS',
+        };
 
         $noHp = $this->normalisasiNomorHp(
             $validated['no_hp']
@@ -255,6 +279,9 @@ $jenisPembayaran = match ($validated['pembayaran']) {
             ]);
         });
 
+        // Simpan berkas General Consent (tanda tangan + nama terang + anggota keluarga).
+        $this->simpanGeneralConsent($validated);
+
         return redirect()
             ->route('pendaftaran.index')
             ->with(
@@ -264,22 +291,20 @@ $jenisPembayaran = match ($validated['pembayaran']) {
     }
 
     /**
-     * Membuat nomor rekam medis berikutnya.
+     * Membuat nomor rekam medis berikutnya (6 digit angka).
+     * Data lama berformat "E000014" tetap dibaca: angkanya (14)
+     * dipakai sebagai acuan, sehingga nomor berikutnya 000015.
      */
     private function generateNoRm()
     {
-        $nomorTerakhir = Pasien::where('no_rm', 'like', 'E%')
-            ->orderByRaw(
-                'CAST(SUBSTRING(no_rm, 2) AS UNSIGNED) DESC'
-            )
-            ->value('no_rm');
+        $angkaTerbesar = Pasien::pluck('no_rm')
+            ->map(fn ($noRm) => (int) preg_replace('/\D/', '', (string) $noRm))
+            ->max() ?? 0;
 
-        $angkaBerikutnya = $nomorTerakhir
-            ? ((int) substr($nomorTerakhir, 1)) + 1
-            : 1;
+        $angkaBerikutnya = $angkaTerbesar + 1;
 
         do {
-            $noRm = 'E' . str_pad(
+            $noRm = str_pad(
                 $angkaBerikutnya,
                 6,
                 '0',
@@ -290,6 +315,53 @@ $jenisPembayaran = match ($validated['pembayaran']) {
         } while (Pasien::where('no_rm', $noRm)->exists());
 
         return $noRm;
+    }
+
+    /**
+     * Menyimpan data General Consent ke storage/app/public/general_consent/{no_rm}/
+     */
+    private function simpanGeneralConsent(array $validated): void
+    {
+        $folder = 'general_consent/' . $validated['no_rm'];
+
+        $this->simpanGambarBase64($validated['gc_ttd_pemberi'], $folder . '/ttd_pemberi.png');
+        $this->simpanGambarBase64($validated['gc_ttd_pasien'], $folder . '/ttd_pasien.png');
+
+        $anggota = json_decode($validated['gc_anggota_keluarga'] ?? '[]', true);
+        $anggota = is_array($anggota)
+            ? array_values(array_filter(array_map(
+                fn ($n) => is_string($n) ? trim($n) : '',
+                $anggota
+            )))
+            : [];
+
+        Storage::disk('public')->put(
+            $folder . '/data.json',
+            json_encode([
+                'no_rm'              => $validated['no_rm'],
+                'nama_pemberi'       => $validated['gc_nama_pemberi'],
+                'nama_penandatangan' => $validated['gc_nama_penandatangan'],
+                'anggota_keluarga'   => $anggota,
+                'disetujui_pada'     => now()->toDateTimeString(),
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+    private function simpanGambarBase64(?string $data, string $path): void
+    {
+        $awalan = 'data:image/png;base64,';
+
+        if (!$data || !str_starts_with($data, $awalan)) {
+            return;
+        }
+
+        $biner = base64_decode(substr($data, strlen($awalan)), true);
+
+        if ($biner === false) {
+            return;
+        }
+
+        Storage::disk('public')->put($path, $biner);
     }
 
     /**

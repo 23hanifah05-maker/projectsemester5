@@ -23,7 +23,8 @@
     @endif
 
     @php
-        $noRmOtomatis = $noRmBaru ?? old('no_rm', 'E000001');
+        // No RM: 6 digit angka (contoh 000001)
+        $noRmOtomatis = $noRmBaru ?? old('no_rm', '000001');
         $tglOtomatis = date('Y-m-d');
     @endphp
 
@@ -60,7 +61,8 @@
                 <div class="field">
                     <label for="no_rm">No RM</label>
                     <input type="text" name="no_rm" id="no_rm"
-                           value="{{ $noRmOtomatis }}" readonly>
+                           value="{{ $noRmOtomatis }}"
+                           maxlength="6" pattern="[0-9]{6}" inputmode="numeric" readonly>
                 </div>
 
                 <div class="field">
@@ -99,7 +101,8 @@
                         <label for="no_rekam_medis">No. Rekam Medis</label>
                         <input type="text" name="no_rekam_medis"
                                id="no_rekam_medis"
-                               value="{{ $noRmOtomatis }}" readonly>
+                               value="{{ $noRmOtomatis }}"
+                               maxlength="6" pattern="[0-9]{6}" inputmode="numeric" readonly>
                     </div>
 
                     <div class="row">
@@ -405,7 +408,7 @@
                    id="general_consent" value="0">
 
             <div class="form-actions-right">
-                <button type="submit" class="btn-simpan">💾 Simpan</button>
+                <button type="submit" class="btn-simpan">Simpan</button>
                 <button type="reset" class="btn-reset">↺ Reset</button>
             </div>
         </div>
@@ -564,6 +567,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('tgl_lahir').addEventListener('change', hitungUmur);
     hitungUmur();
 
+    // Siapkan canvas tanda tangan & daftar anggota keluarga
+    gcInitPad('gcTtdPemberi');
+    gcInitPad('gcTtd');
+    gcRefreshKeluarga();
+
+    // Checkbox "semua setuju"
+    document.getElementById('gc-semua').addEventListener('change', function () {
+        document.querySelectorAll('.gc-cek').forEach(c => c.checked = this.checked);
+    });
+
     document.getElementById('formPendaftaran').addEventListener('submit', function (e) {
         const form = this;
         const nik = document.getElementById('nik');
@@ -572,6 +585,12 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             batasiAngka(nik, 16, 'nikError', 'NIK harus 16 digit angka.', true);
             nik.focus();
+            return;
+        }
+
+        if (!/^[0-9]{6}$/.test(form.elements['no_rm'].value)) {
+            e.preventDefault();
+            alert('No RM harus 6 digit angka.');
             return;
         }
 
@@ -621,64 +640,127 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.classList.remove('sudah');
             document.getElementById('general_consent').value = '0';
 
-            gcHapusTtd();
-            document.querySelectorAll('.gc-cek, #gc-semua')
-                .forEach(c => c.checked = false);
-
+            gcReset();
             hitungUmur();
         }, 0);
     });
 });
 
-// GENERAL CONSENT
-let gcMenggambar = false;
-let gcAdaTtd = false;
+/* =========================================================
+   GENERAL CONSENT
+   ========================================================= */
 
-function gcInitCanvas() {
-    const c = document.getElementById('gcTtd');
-    if (!c) return;
+/* ---- Anggota keluarga (boleh lebih dari 1) ---- */
+function gcRefreshKeluarga() {
+    const rows = document.querySelectorAll('#gc-keluarga-list .gc-keluarga-row');
+    rows.forEach(r => {
+        r.querySelector('.gc-keluarga-hapus').style.display =
+            rows.length > 1 ? 'inline-block' : 'none';
+    });
+}
 
-    const ctx = c.getContext('2d');
+function gcTambahKeluarga() {
+    const list = document.getElementById('gc-keluarga-list');
+    const row = list.querySelector('.gc-keluarga-row').cloneNode(true);
+    row.querySelector('input').value = '';
+    list.appendChild(row);
+    gcRefreshKeluarga();
+    row.querySelector('input').focus();
+}
+
+function gcHapusKeluarga(btn) {
+    btn.closest('.gc-keluarga-row').remove();
+    gcRefreshKeluarga();
+}
+
+function gcAmbilKeluarga() {
+    return Array.from(document.querySelectorAll('.gc-keluarga-input'))
+        .map(i => i.value.trim())
+        .filter(Boolean);
+}
+
+/* ---- Signature pad (2 canvas: pemberi informasi & pasien/keluarga) ---- */
+const gcPad = {};
+
+function gcInitPad(id) {
+    const canvas = document.getElementById(id);
+    if (!canvas || gcPad[id]) return;
+
+    const ctx = canvas.getContext('2d');
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.strokeStyle = '#000';
 
-    const pos = e => {
-        const r = c.getBoundingClientRect();
-        return {
-            x: (e.clientX - r.left) * c.width / r.width,
-            y: (e.clientY - r.top) * c.height / r.height
-        };
-    };
+    const state = { canvas: canvas, ctx: ctx, drawing: false, dirty: false };
+    gcPad[id] = state;
 
-    c.onpointerdown = e => {
-        gcMenggambar = true;
+    function pos(e) {
+        const r = canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX - r.left) * (canvas.width / r.width),
+            y: (e.clientY - r.top) * (canvas.height / r.height)
+        };
+    }
+
+    canvas.addEventListener('pointerdown', function (e) {
+        state.drawing = true;
+        canvas.setPointerCapture(e.pointerId);
         const p = pos(e);
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
-        c.setPointerCapture(e.pointerId);
-    };
+        ctx.lineTo(p.x + 0.1, p.y + 0.1);
+        ctx.stroke();
+        state.dirty = true;
+    });
 
-    c.onpointermove = e => {
-        if (!gcMenggambar) return;
+    canvas.addEventListener('pointermove', function (e) {
+        if (!state.drawing) return;
         const p = pos(e);
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
-        gcAdaTtd = true;
-    };
+    });
 
-    c.onpointerup = () => gcMenggambar = false;
-    c.onpointercancel = () => gcMenggambar = false;
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+        canvas.addEventListener(ev, function () { state.drawing = false; });
+    });
 }
 
-function gcHapusTtd() {
-    const c = document.getElementById('gcTtd');
-    if (!c) return;
-
-    c.getContext('2d').clearRect(0, 0, c.width, c.height);
-    gcAdaTtd = false;
+function gcHapusTtd(id) {
+    const s = gcPad[id];
+    if (!s) return;
+    s.ctx.clearRect(0, 0, s.canvas.width, s.canvas.height);
+    s.dirty = false;
 }
 
+function gcAmbilTtd(id) {
+    return gcPad[id] && gcPad[id].dirty
+        ? gcPad[id].canvas.toDataURL('image/png')
+        : '';
+}
+
+/* ---- Reset seluruh isian consent ---- */
+function gcReset() {
+    document.querySelectorAll('.gc-cek').forEach(c => c.checked = false);
+    document.getElementById('gc-semua').checked = false;
+
+    const list = document.getElementById('gc-keluarga-list');
+    list.querySelectorAll('.gc-keluarga-row').forEach((r, i) => { if (i > 0) r.remove(); });
+    list.querySelector('input').value = '';
+    gcRefreshKeluarga();
+
+    document.getElementById('gc-nama-pemberi').value = '';
+    document.getElementById('gc-nama-pasien').value = '';
+    gcHapusTtd('gcTtdPemberi');
+    gcHapusTtd('gcTtd');
+
+    ['gc-h-keluarga', 'gc-h-ttd-pemberi', 'gc-h-nama-pemberi',
+     'gc-h-ttd-pasien', 'gc-h-nama-pasien'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+}
+
+/* ---- Buka / tutup modal ---- */
 function bukaConsent() {
     const form = document.getElementById('formPendaftaran').elements;
     const jk = form['jenis_kelamin'].value;
@@ -714,14 +796,18 @@ function bukaConsent() {
             hour: '2-digit', minute: '2-digit'
         });
 
+    // Nama terang pasien default = nama pasien (boleh diganti kalau yang ttd keluarga)
+    const namaPasien = document.getElementById('gc-nama-pasien');
+    if (!namaPasien.value.trim()) namaPasien.value = form['nama_pasien'].value || '';
+
     document.getElementById('consentModal').classList.add('show');
-    gcInitCanvas();
 }
 
 function tutupConsent() {
     document.getElementById('consentModal').classList.remove('show');
 }
 
+/* ---- Validasi & simpan consent ---- */
 function simpanConsent() {
     const semuaSetuju =
         Array.from(document.querySelectorAll('.gc-cek')).every(c => c.checked);
@@ -736,10 +822,32 @@ function simpanConsent() {
         return;
     }
 
-    if (!gcAdaTtd) {
+    if (!gcAmbilTtd('gcTtdPemberi')) {
+        alert('Tanda tangan Pemberi Informasi belum diisi.');
+        return;
+    }
+
+    if (!document.getElementById('gc-nama-pemberi').value.trim()) {
+        alert('Nama terang Pemberi Informasi belum diisi.');
+        return;
+    }
+
+    if (!gcAmbilTtd('gcTtd')) {
         alert('Tanda tangan pasien/keluarga belum diisi.');
         return;
     }
+
+    if (!document.getElementById('gc-nama-pasien').value.trim()) {
+        alert('Nama terang Pasien/Keluarga belum diisi.');
+        return;
+    }
+
+    // Simpan ke hidden input (ikut terkirim bersama form pendaftaran)
+    document.getElementById('gc-h-keluarga').value      = JSON.stringify(gcAmbilKeluarga());
+    document.getElementById('gc-h-ttd-pemberi').value   = gcAmbilTtd('gcTtdPemberi');
+    document.getElementById('gc-h-nama-pemberi').value  = document.getElementById('gc-nama-pemberi').value.trim();
+    document.getElementById('gc-h-ttd-pasien').value    = gcAmbilTtd('gcTtd');
+    document.getElementById('gc-h-nama-pasien').value   = document.getElementById('gc-nama-pasien').value.trim();
 
     document.getElementById('general_consent').value = '1';
 
