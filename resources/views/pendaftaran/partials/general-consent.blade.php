@@ -69,6 +69,7 @@
     .gc-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
     .gc-btn{background:#c8102e;color:#fff;border:0;border-radius:4px;padding:6px 20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
     .gc-btn:hover{background:#a50d26}
+    .gc-btn:disabled{opacity:.6;cursor:not-allowed}
 
     @media (max-width:700px){
         .gc-data{grid-template-columns:1fr}
@@ -170,8 +171,8 @@
         </div>
 
         <div class="gc-actions no-print">
-            <button type="button" class="gc-btn" onclick="simpanConsent()">💾 Simpan</button>
-            <button type="button" class="gc-btn" onclick="window.print()">🖨 Cetak</button>
+            <button type="button" class="gc-btn" id="gc-btn-simpan" onclick="simpanConsent()">Simpan</button>
+            <button type="button" class="gc-btn" onclick="window.print()">Cetak</button>
         </div>
 
     </div>
@@ -319,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* =========================================================
-   VALIDASI + SIMPAN
+   VALIDASI + SIMPAN KE DATABASE
    ========================================================= */
 function gcValidasi() {
     const cek = document.querySelectorAll('.gc-cek');
@@ -347,30 +348,54 @@ function gcValidasi() {
 function simpanConsent() {
     if (!gcValidasi()) return;
 
+    const noRm = document.getElementById('gc-norm').value.trim();
+    if (!noRm) {
+        alert('No. RM kosong. Pastikan modal dibuka lewat bukaConsent({norm: ...}).');
+        return;
+    }
+
     const data = {
-        no_rm:               document.getElementById('gc-norm').value,
-        anggota_keluarga:    gcAmbilKeluarga(),                     // array nama
-        ttd_pemberi:         gcAmbilTtd('gcTtdPemberi'),            // base64 PNG
-        nama_pemberi:        document.getElementById('gc-nama-pemberi').value.trim(),
-        ttd_pasien:          gcAmbilTtd('gcTtd'),                   // base64 PNG
-        nama_penandatangan:  document.getElementById('gc-nama-pasien').value.trim(),
-        tanggal:             document.getElementById('gc-tgl').value,
-        jam:                 document.getElementById('gc-jam').value
+        no_rm:              noRm,
+        anggota_keluarga:   gcAmbilKeluarga(),                     // array nama
+        ttd_pemberi:        gcAmbilTtd('gcTtdPemberi'),            // base64 PNG
+        nama_pemberi:       document.getElementById('gc-nama-pemberi').value.trim(),
+        ttd_pasien:         gcAmbilTtd('gcTtd'),                   // base64 PNG
+        nama_penandatangan: document.getElementById('gc-nama-pasien').value.trim(),
+        tanggal:            document.getElementById('gc-tgl').value,
+        jam:                document.getElementById('gc-jam').value
     };
 
-    /* Kalau backend sudah siap, aktifkan ini dan sesuaikan URL-nya:
-    fetch('/general-consent', {
+    const tombol = document.getElementById('gc-btn-simpan');
+    tombol.disabled = true;
+
+    fetch("{{ url('/general-consent') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
         body: JSON.stringify(data)
-    }).then(r => r.json()).then(() => { alert('Tersimpan'); tutupConsent(); });
-    */
-
-    console.log('General consent:', data);
-    alert('General Consent tersimpan (dummy).');
-    tutupConsent();
+    })
+    .then(async function (r) {
+        const j = await r.json().catch(function () { return {}; });
+        if (!r.ok) {
+            const pesan = j.errors
+                ? Object.values(j.errors).flat().join('\n')
+                : (j.message || 'Gagal menyimpan (kode ' + r.status + ')');
+            throw new Error(pesan);
+        }
+        return j;
+    })
+    .then(function () {
+        alert('General Consent berhasil disimpan.');
+        tutupConsent();
+    })
+    .catch(function (err) {
+        alert(err.message);
+    })
+    .finally(function () {
+        tombol.disabled = false;
+    });
 }
 </script>
