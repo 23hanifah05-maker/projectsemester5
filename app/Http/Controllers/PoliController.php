@@ -208,7 +208,7 @@ class PoliController extends Controller
     }
 
     /**
-     * Membuka kunjungan berdasarkan nomor RM dan tanggal.
+     * Membuka kunjungan Poli Saraf berdasarkan nomor RM dan tanggal.
      */
     public function kunjunganSarafDetail($no_rm, $tanggal)
     {
@@ -225,7 +225,7 @@ class PoliController extends Controller
 
     /**
      * Mengambil data pasien, TTV, SOAP, diagnosis,
-     * dan tindakan untuk kunjungan yang sedang dibuka.
+     * dan tindakan untuk kunjungan Poli Saraf.
      */
     private function tampilkanKunjunganSaraf(
         Pendaftaran $pendaftaran
@@ -235,13 +235,11 @@ class PoliController extends Controller
             $pendaftaran->no_rm
         )->firstOrFail();
 
-        // TTV tetap menggunakan mekanisme sebelumnya.
         $ttv = Ttv::where(
             'id_pendaftaran',
             $pendaftaran->id_pendaftaran
         )->first();
 
-        // Ambil SOAP berdasarkan kunjungan, bukan sekadar nomor RM.
         $assesmen = Assesmen::where(
             'id_pendaftaran',
             $pendaftaran->id_pendaftaran
@@ -251,7 +249,6 @@ class PoliController extends Controller
         $tindakanTersimpan = [];
 
         if ($assesmen) {
-            // Muat kembali diagnosis ICD-10 yang tersimpan.
             $diagnosisTersimpan = DB::table('detail_diagnosis')
                 ->join(
                     'kode_diagnosis',
@@ -279,7 +276,6 @@ class PoliController extends Controller
                 ->values()
                 ->all();
 
-            // Muat kembali tindakan ICD-9-CM yang tersimpan.
             $tindakanTersimpan = DB::table('detail_tindakan')
                 ->join(
                     'kode_tindakan',
@@ -340,13 +336,161 @@ class PoliController extends Controller
     }
 
     /**
-     * Halaman Poli Obgyn.
+     * Halaman utama Poli Obgyn.
      */
-    public function obgyn()
+    public function obgyn(Request $request)
     {
         $poli = Poli::where('slug', 'obgyn')->firstOrFail();
 
-        return view('poli.obgyn', compact('poli'));
+        $pendaftaran = Pendaftaran::with(['pasien', 'poli'])
+            ->where('id_poli', $poli->id_poli)
+            ->orderByDesc('tgl_registrasi')
+            ->orderByDesc('id_pendaftaran')
+            ->get();
+
+        $pasien = $pendaftaran
+            ->filter(function ($item) {
+                return $item->pasien !== null;
+            })
+            ->map(function ($item) {
+                $data = clone $item->pasien;
+
+                $data->id_pendaftaran = $item->id_pendaftaran;
+                $data->tgl_registrasi = $item->tgl_registrasi;
+                $data->pembayaran = $item->jenis_pembayaran;
+                $data->jenis_pembayaran = $item->jenis_pembayaran;
+                $data->poli = $item->poli->nama_poli ?? '-';
+                $data->dokter = $item->dpjp ?? '-';
+                $data->status_periksa = $item->status_periksa ?? 'periksa';
+
+                $data->jenis_kelamin_label = $this->formatJenisKelamin(
+                    $data->jenis_kelamin
+                );
+
+                $data->agama_label = [
+                    1 => 'Islam',
+                    2 => 'Kristen',
+                    3 => 'Katolik',
+                    4 => 'Hindu',
+                    5 => 'Buddha',
+                    6 => 'Konghucu',
+                ][$data->agama] ?? '-';
+
+                $data->pendidikan_label = [
+                    0 => 'Tidak/belum sekolah',
+                    1 => 'SD',
+                    2 => 'SMP',
+                    3 => 'SMA/SMK',
+                    4 => 'Diploma I',
+                    5 => 'Diploma II',
+                    6 => 'Diploma III',
+                    7 => 'Diploma IV/S1',
+                    8 => 'S2/S3',
+                ][$data->pendidikan] ?? '-';
+
+                $data->pekerjaan_label = [
+                    0 => 'Tidak bekerja',
+                    1 => 'PNS',
+                    2 => 'TNI/Polri',
+                    3 => 'Swasta',
+                    4 => 'Wiraswasta',
+                    5 => 'Lainnya',
+                ][$data->pekerjaan] ?? '-';
+
+                $data->pj_jenis_kelamin_label = $this->formatJenisKelamin(
+                    $data->pj_jenis_kelamin
+                );
+
+                $data->umur = $data->tgl_lahir
+                    ? Carbon::parse($data->tgl_lahir)->age . ' tahun'
+                    : '-';
+
+                return $data;
+            })
+            ->unique('no_rm')
+            ->values();
+
+        return view('poli.obgyn', compact('poli', 'pasien'));
+    }
+
+    /**
+     * Halaman riwayat kunjungan pasien Obgyn.
+     * Mengambil semua riwayat pendaftaran pasien dari database.
+     */
+    public function riwayatObgyn($no_rm)
+    {
+        $poli = Poli::where('slug', 'obgyn')->firstOrFail();
+
+        $pasien = Pasien::where('no_rm', $no_rm)->firstOrFail();
+
+        $riwayat = Pendaftaran::with('poli')
+            ->where('no_rm', $no_rm)
+            ->orderByDesc('tgl_registrasi')
+            ->orderByDesc('id_pendaftaran')
+            ->get();
+
+        $jenisKelamin = $this->formatJenisKelamin(
+            $pasien->jenis_kelamin
+        );
+
+        $umur = $pasien->tgl_lahir
+            ? Carbon::parse($pasien->tgl_lahir)->age . ' tahun'
+            : '-';
+
+        return view('poli.obgyn-riwayat', compact(
+            'poli',
+            'pasien',
+            'riwayat',
+            'no_rm',
+            'jenisKelamin',
+            'umur'
+        ));
+    }
+
+    /**
+     * Membuka kunjungan terbaru pasien di Poli Obgyn.
+     */
+    public function kunjunganObgyn($no_rm, $tanggal = null)
+    {
+        $poli = Poli::where('slug', 'obgyn')->firstOrFail();
+
+        $pasien = Pasien::where('no_rm', $no_rm)->firstOrFail();
+
+        $query = Pendaftaran::with(['pasien', 'poli'])
+            ->where('no_rm', $no_rm)
+            ->where('id_poli', $poli->id_poli);
+
+        if ($tanggal) {
+            $query->whereDate('tgl_registrasi', $tanggal);
+        }
+
+        $pendaftaran = $query
+            ->orderByDesc('tgl_registrasi')
+            ->orderByDesc('id_pendaftaran')
+            ->firstOrFail();
+
+        $jenisKelamin = $this->formatJenisKelamin(
+            $pasien->jenis_kelamin
+        );
+
+        $pjJenisKelamin = $this->formatJenisKelamin(
+            $pasien->pj_jenis_kelamin
+        );
+
+        $umur = $pasien->tgl_lahir
+            ? Carbon::parse($pasien->tgl_lahir)->age . ' tahun'
+            : '-';
+
+        $pasien->umur = $umur;
+        $pasien->jenis_kelamin = $jenisKelamin;
+        $pasien->pj_jenis_kelamin = $pjJenisKelamin;
+
+        return view('poli.obgyn-kunjungan-baru', compact(
+    'poli',
+    'pasien',
+    'pendaftaran',
+    'no_rm'
+));
     }
 
     /**

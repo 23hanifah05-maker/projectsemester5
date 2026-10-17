@@ -165,36 +165,23 @@ Route::get(
 Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])
     ->name('poli.obgyn');
 
+// Halaman riwayat kunjungan pasien
+Route::get('/poli/obgyn/kunjungan/{no_rm}', [
+    PoliController::class,
+    'riwayatObgyn'
+])->name('poli.obgyn.kunjungan');
 
-// Kunjungan Poli Obgyn (halaman riwayat)
-Route::get('/poli/obgyn/kunjungan/{no_rm}', function ($no_rm) {
+// Halaman detail kunjungan berdasarkan tanggal
+Route::get('/poli/obgyn/kunjungan/{no_rm}/{tanggal}', [
+    PoliController::class,
+    'kunjunganObgyn'
+])->name('poli.obgyn.kunjungan.detail');
 
-    return view('poli.obgyn-riwayat', [
-        'no_rm' => $no_rm
-    ]);
-
-})->name('poli.obgyn.kunjungan');
-
-
-// Detail kunjungan Poli Obgyn
-Route::get('/poli/obgyn/kunjungan/{no_rm}/{tanggal}', function ($no_rm, $tanggal) {
-
-    return view('poli.obgyn-kunjungan-baru', [
-        'no_rm' => $no_rm,
-        'tanggal' => $tanggal
-    ]);
-
-})->name('poli.obgyn.kunjungan.detail');
-
-
-// Kunjungan baru Poli Obgyn
-Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', function ($no_rm) {
-
-    return view('poli.obgyn-kunjungan-baru', [
-        'no_rm' => $no_rm
-    ]);
-
-})->name('poli.obgyn.kunjungan-baru');
+// Halaman kunjungan terbaru pasien di Poli Obgyn
+Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', [
+    PoliController::class,
+    'kunjunganObgyn'
+])->name('poli.obgyn.kunjungan-baru');
 
 
 /*

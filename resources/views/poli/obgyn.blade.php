@@ -26,165 +26,6 @@
          masuk dari Pendaftaran. Berubah jadi 'selesai' (hijau) setelah
          tombol Simpan di halaman kunjungan diklik.
     ===================================================== --}}
-    @php
-        $pasien = $pasien ?? [
-            (object) [
-                'no_rm' => 'RM-0002',
-                'nama_pasien' => 'Siti Aminah',
-                'nik' => '3515025205850002',
-                'tgl_lahir' => '1985-05-12',
-                'jenis_kelamin' => 'Perempuan',
-                'alamat' => 'Jl. Diponegoro No. 25',
-                'no_hp' => '081355667788',
-                'tempat_lahir' => 'Surabaya',
-                'suku' => 'Jawa',
-                'bangsa' => 'Indonesia',
-                'bahasa' => 'Indonesia',
-                'umur' => '41 Tahun',
-                'kelurahan' => 'Lemahputro',
-                'agama' => 'Islam',
-                'kecamatan' => 'Sidoarjo',
-                'pendidikan' => 'S1',
-                'kabupaten' => 'Sidoarjo',
-                'pekerjaan' => 'Guru',
-                'provinsi' => 'Jawa Timur',
-                'kode_pos' => '61213',
-                'pembayaran' => 'BPJS',
-                'poli' => 'Poli Obgyn',
-                'dokter' => '',
-                'status' => 'Sudah Terdaftar',
-                'status_periksa' => 'periksa',
-                'pj_nama' => 'Budi Santoso',
-                'pj_hubungan' => 'Suami',
-                'pj_jenis_kelamin' => 'Laki-laki',
-                'pj_no_hp' => '081234567890',
-            ],
-            (object) [
-                'no_rm' => 'RM-0004',
-                'nama_pasien' => 'Dewi Lestari',
-                'nik' => '3515044507920004',
-                'tgl_lahir' => '1992-07-05',
-                'jenis_kelamin' => 'Perempuan',
-                'alamat' => 'Jl. Ahmad Yani No. 15',
-                'no_hp' => '082233445566',
-                'tempat_lahir' => 'Surabaya',
-                'suku' => 'Jawa',
-                'bangsa' => 'Indonesia',
-                'bahasa' => 'Indonesia',
-                'umur' => '34 Tahun',
-                'kelurahan' => 'Krian',
-                'agama' => 'Islam',
-                'kecamatan' => 'Krian',
-                'pendidikan' => 'S1',
-                'kabupaten' => 'Sidoarjo',
-                'pekerjaan' => 'Pegawai Swasta',
-                'provinsi' => 'Jawa Timur',
-                'kode_pos' => '61262',
-                'pembayaran' => 'BPJS',
-                'poli' => 'Poli Obgyn',
-                'dokter' => '',
-                'status' => 'Sudah Terdaftar',
-                'status_periksa' => 'periksa',
-                'pj_nama' => 'Andi Pratama',
-                'pj_hubungan' => 'Suami',
-                'pj_jenis_kelamin' => 'Laki-laki',
-                'pj_no_hp' => '082112223333',
-            ],
-            (object) [
-                'no_rm' => 'RM-0006',
-                'nama_pasien' => 'Lina Marlina',
-                'nik' => '3515065508800006',
-                'tgl_lahir' => '1980-08-15',
-                'jenis_kelamin' => 'Perempuan',
-                'alamat' => 'Jl. Pahlawan No. 32',
-                'no_hp' => '081366778899',
-                'tempat_lahir' => 'Sidoarjo',
-                'suku' => 'Madura',
-                'bangsa' => 'Indonesia',
-                'bahasa' => 'Indonesia',
-                'umur' => '46 Tahun',
-                'kelurahan' => 'Buduran',
-                'agama' => 'Islam',
-                'kecamatan' => 'Buduran',
-                'pendidikan' => 'SMA',
-                'kabupaten' => 'Sidoarjo',
-                'pekerjaan' => 'Ibu Rumah Tangga',
-                'provinsi' => 'Jawa Timur',
-                'kode_pos' => '61252',
-                'pembayaran' => 'Umum',
-                'poli' => 'Poli Obgyn',
-                'dokter' => '',
-                'status' => 'Sudah Terdaftar',
-                'status_periksa' => 'periksa',
-                'pj_nama' => 'Rudi Hartono',
-                'pj_hubungan' => 'Suami',
-                'pj_jenis_kelamin' => 'Laki-laki',
-                'pj_no_hp' => '081377889900',
-            ],
-            (object) [
-                'no_rm' => 'RM-0008',
-                'nama_pasien' => 'Nur Aisyah',
-                'nik' => '3515084203840008',
-                'tgl_lahir' => '1984-03-02',
-                'jenis_kelamin' => 'Perempuan',
-                'alamat' => 'Jl. Hasanudin No. 18',
-                'no_hp' => '083855667788',
-                'tempat_lahir' => 'Gresik',
-                'suku' => 'Jawa',
-                'bangsa' => 'Indonesia',
-                'bahasa' => 'Indonesia',
-                'umur' => '42 Tahun',
-                'kelurahan' => 'Gedangan',
-                'agama' => 'Islam',
-                'kecamatan' => 'Gedangan',
-                'pendidikan' => 'SMA',
-                'kabupaten' => 'Sidoarjo',
-                'pekerjaan' => 'Penjahit',
-                'provinsi' => 'Jawa Timur',
-                'kode_pos' => '61254',
-                'pembayaran' => 'Umum',
-                'poli' => 'Poli Obgyn',
-                'dokter' => '',
-                'status' => 'Sudah Terdaftar',
-                'status_periksa' => 'periksa',
-                'pj_nama' => 'Fajar Ramadhan',
-                'pj_hubungan' => 'Anak',
-                'pj_jenis_kelamin' => 'Laki-laki',
-                'pj_no_hp' => '083811223344',
-            ],
-            (object) [
-                'no_rm' => 'RM-0010',
-                'nama_pasien' => 'Sri Wahyuni',
-                'nik' => '3515105807750010',
-                'tgl_lahir' => '1975-07-18',
-                'jenis_kelamin' => 'Perempuan',
-                'alamat' => 'Jl. Mawar No. 12',
-                'no_hp' => '081298112233',
-                'tempat_lahir' => 'Sidoarjo',
-                'suku' => 'Jawa',
-                'bangsa' => 'Indonesia',
-                'bahasa' => 'Indonesia',
-                'umur' => '51 Tahun',
-                'kelurahan' => 'Candi',
-                'agama' => 'Islam',
-                'kecamatan' => 'Candi',
-                'pendidikan' => 'SMA',
-                'kabupaten' => 'Sidoarjo',
-                'pekerjaan' => 'Wiraswasta',
-                'provinsi' => 'Jawa Timur',
-                'kode_pos' => '61271',
-                'pembayaran' => 'Umum',
-                'poli' => 'Poli Obgyn',
-                'dokter' => '',
-                'status' => 'Sudah Terdaftar',
-                'status_periksa' => 'periksa',
-                'pj_nama' => 'Agus Setiawan',
-                'pj_hubungan' => 'Suami',
-                'pj_jenis_kelamin' => 'Laki-laki',
-                'pj_no_hp' => '081245678901',
-            ],
-        ];
-    @endphp
 
     <div class="panel">
 
@@ -231,7 +72,7 @@
 
                         <td>{{ $item->nik }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
-                        <td>{{ $item->jenis_kelamin }}</td>
+                        <td>{{ $item->jenis_kelamin_label ?? '-' }}</td>
                         <td>{{ $item->alamat }}</td>
                         <td>{{ $item->pembayaran }}</td>
                         <td class="aksi-cell">
@@ -541,13 +382,13 @@ function isiDetail(data) {
     document.getElementById('m-bahasa').textContent = data.bahasa ?? '-';
     document.getElementById('m-umur').textContent = data.umur ?? '-';
     document.getElementById('m-alamat').textContent = data.alamat ?? '-';
-    document.getElementById('m-jk').textContent = data.jenis_kelamin ?? '-';
+    document.getElementById('m-jk').textContent = data.jenis_kelamin_label ?? '-';
     document.getElementById('m-kelurahan').textContent = data.kelurahan ?? '-';
-    document.getElementById('m-agama').textContent = data.agama ?? '-';
+    document.getElementById('m-agama').textContent = data.agama_label ?? '-';
     document.getElementById('m-kecamatan').textContent = data.kecamatan ?? '-';
-    document.getElementById('m-pendidikan').textContent = data.pendidikan ?? '-';
+    document.getElementById('m-pendidikan').textContent = data.pendidikan_label ?? '-';
     document.getElementById('m-kabupaten').textContent = data.kabupaten ?? '-';
-    document.getElementById('m-pekerjaan').textContent = data.pekerjaan ?? '-';
+    document.getElementById('m-pekerjaan').textContent = data.pekerjaan_label ?? '-';
     document.getElementById('m-provinsi').textContent = data.provinsi ?? '-';
     document.getElementById('m-kodepos').textContent = data.kode_pos ?? '-';
     document.getElementById('m-pembayaran').textContent = data.pembayaran ?? '-';
@@ -555,7 +396,7 @@ function isiDetail(data) {
     document.getElementById('m-dokter').textContent = (data.dokter && data.dokter.length > 0) ? data.dokter : '-';
     document.getElementById('m-pj-nama').textContent = data.pj_nama ?? '-';
     document.getElementById('m-pj-hubungan').textContent = data.pj_hubungan ?? '-';
-    document.getElementById('m-pj-jk').textContent = data.pj_jenis_kelamin ?? '-';
+    document.getElementById('m-pj-jk').textContent = data.pj_jenis_kelamin_label ?? '-';
     document.getElementById('m-pj-hp').textContent = data.pj_no_hp ?? '-';
 }
 
