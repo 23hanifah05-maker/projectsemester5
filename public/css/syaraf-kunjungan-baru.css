@@ -181,10 +181,9 @@
     .kb-card .kb-fields { grid-template-columns: 1fr; }
 }
 
-/* ===== Kotak Tanda Vital: 2 baris x 3 kolom (6 isian) =====
-   Ukuran disamakan dengan Poli Obgyn (kotak rapat, isian 34px).
-   Tiap isian = grid sendiri [label | isian | satuan], lebar menyesuaikan layar.
-   Memakai #tab-assesment + !important agar tidak tertimpa syaraf-kunjungan-baru.css */
+/* ===== Kotak Tanda Vital: 2 baris x 4 kolom (sama seperti Poli Obgyn) =====
+   12 kolom: [label | isian | satuan] x 4. Label & satuan selebar isinya,
+   sisa lebar dibagi rata ke 4 kolom isian. */
 #tab-assesment .kb-vitals-box {
     padding: 12px 14px 12px 18px !important;
     border: 1px solid var(--kb-garis);
@@ -194,43 +193,63 @@
 }
 #tab-assesment .kb-vitals-box .kb-vitals {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    column-gap: 28px !important;
+    grid-template-columns:
+        max-content minmax(0, 1fr) max-content
+        max-content minmax(0, 1fr) max-content
+        max-content minmax(0, 1fr) max-content
+        max-content minmax(0, 1fr) max-content !important;
+    column-gap: 6px !important;
     row-gap: 10px !important;
     align-items: center !important;
 }
 #tab-assesment .kb-vitals .kb-vital-row {
-    display: grid !important;
-    grid-template-columns: 70px minmax(0, 1fr) 62px !important;
-    align-items: center !important;
-    column-gap: 8px !important;
-    margin: 0 !important;
-    width: auto !important;
-    min-width: 0 !important;
+    display: contents !important;
 }
 #tab-assesment .kb-vitals .kb-vital-row label {
     font-weight: 600;
     margin: 0 !important;
     width: auto !important;
+    min-width: 0 !important;
     white-space: nowrap;
+    box-sizing: border-box;
+    padding-right: 4px;
 }
-#tab-assesment .kb-vitals .kb-vital-row input[type=text] {
+/* jarak antar kelompok kolom (kolom ke-2, 3, 4) */
+#tab-assesment .kb-vitals .kb-vital-row:nth-child(4n+2) label,
+#tab-assesment .kb-vitals .kb-vital-row:nth-child(4n+3) label,
+#tab-assesment .kb-vitals .kb-vital-row:nth-child(4n) label {
+    padding-left: 14px;
+}
+#tab-assesment .kb-vitals .kb-vital-row input:not([type="checkbox"]) {
     width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
+    flex: none !important;
     height: 34px !important;
     box-sizing: border-box;
     padding: 0 10px !important;
     font-size: 14px !important;
     font-family: inherit;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #fff;
+    border: 1px solid #ccc !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    color: #333 !important;
+    box-shadow: none !important;
 }
-#tab-assesment .kb-vitals .kb-vital-row input[type=text]:focus {
-    outline: none;
-    border-color: var(--kb-merah);
-    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+#tab-assesment .kb-vitals .kb-vital-row input:not([type="checkbox"]):focus {
+    outline: none !important;
+    border-color: var(--kb-merah) !important;
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12) !important;
+}
+/* sembunyikan panah naik-turun di input number */
+#tab-assesment .kb-vitals .kb-vital-row input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+#tab-assesment .kb-vitals .kb-vital-row input[type="number"]::-webkit-inner-spin-button,
+#tab-assesment .kb-vitals .kb-vital-row input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 #tab-assesment .kb-vitals .kb-vital-unit {
     color: var(--kb-teks-samar);
@@ -238,14 +257,8 @@
     white-space: nowrap;
     margin: 0 !important;
 }
-@media (max-width: 1000px) {
-    #tab-assesment .kb-vitals-box .kb-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-}
-@media (max-width: 640px) {
-    #tab-assesment .kb-vitals-box .kb-vitals { grid-template-columns: 1fr !important; }
-}
 
-/* Checkbox Alergi: sama dengan kotak centang Penyakit/Tindakan */
+/* Kotak centang Alergi (checkbox asli, tampilannya mengikuti Obgyn) */
 #tab-assesment .kb-vital-row .kb-check-box {
     justify-self: start;
     flex: 0 0 auto;
@@ -259,37 +272,56 @@
     border-radius: 6px;
     background: #fff;
 }
-.kb-vital-row .kb-vital-check {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 22px;
-    height: 22px;
-    margin: 0;
-    display: flex;
+#chkVital.kb-vital-check {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
     align-items: center;
     justify-content: center;
-    border: 2px solid #555;
-    border-radius: 4px;
-    background: #fff;
+    border: 2px solid #555 !important;
+    border-radius: 4px !important;
+    background: #fff !important;
+    box-shadow: none !important;
     cursor: pointer;
 }
-.kb-vital-row .kb-vital-check::after {
+#chkVital.kb-vital-check::after {
     content: "✓";
     color: transparent;
     font-size: 15px;
     font-weight: 700;
     line-height: 1;
 }
-.kb-vital-row .kb-vital-check:checked {
-    background: var(--kb-hijau);
-    border-color: var(--kb-hijau);
+#chkVital.kb-vital-check:checked {
+    background: var(--kb-hijau) !important;
+    border-color: var(--kb-hijau) !important;
 }
-.kb-vital-row .kb-vital-check:checked::after {
+#chkVital.kb-vital-check:checked::after {
     color: #fff;
 }
-.kb-vital-row .kb-vital-check:focus-visible {
-    outline: 2px solid var(--kb-merah);
-    outline-offset: 2px;
+
+/* Layar sedang: 2 kelompok kolom */
+@media (max-width: 1100px) {
+    #tab-assesment .kb-vitals-box .kb-vitals {
+        grid-template-columns:
+            max-content minmax(0, 1fr) max-content
+            max-content minmax(0, 1fr) max-content !important;
+    }
+    #tab-assesment .kb-vitals .kb-vital-row label { padding-left: 0 !important; }
+    #tab-assesment .kb-vitals .kb-vital-row:nth-child(even) label { padding-left: 14px !important; }
+}
+/* Layar kecil: 1 kelompok kolom */
+@media (max-width: 640px) {
+    #tab-assesment .kb-vitals-box .kb-vitals {
+        grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+    }
+    #tab-assesment .kb-vitals .kb-vital-row label,
+    #tab-assesment .kb-vitals .kb-vital-row:nth-child(even) label { padding-left: 0 !important; }
 }
 
 /* ===== Kotak SOAP ===== */
@@ -851,72 +883,3 @@ input.sembunyi { display: none; }
 /* was style="margin-top:22px;" dan style="margin-bottom:14px;" pada form Rujukan */
 #view-rujukan .rj-grid.rj-grid-mt { margin-top: 22px; }
 #view-rujukan .rj-field.rj-mb { margin-bottom: 14px; }
-
-
-/* PERBAIKAN KONSISTENSI INPUT TTV */
-#tab-assesment .kb-vitals-box .kb-vital-row input,
-#tab-assesment .kb-vitals-box .kb-vital-row select {
-    box-sizing: border-box !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 38px !important;
-    padding: 8px 10px !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 6px !important;
-    background: #fff !important;
-    color: #334155 !important;
-    font-family: inherit !important;
-    font-size: 13px !important;
-    font-weight: 400 !important;
-    line-height: normal !important;
-    box-shadow: none !important;
-    outline-offset: 1px;
-}
-
-#tab-assesment .kb-vitals-box .kb-vital-row input:focus,
-#tab-assesment .kb-vitals-box .kb-vital-row select:focus {
-    border-color: #64748b !important;
-    outline: none !important;
-    box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.12) !important;
-}
-
-#tab-assesment .kb-vitals-box .kb-vital-row input[type="number"] {
-    appearance: textfield;
-    -moz-appearance: textfield;
-}
-
-#tab-assesment .kb-vitals-box .kb-vital-row input[type="number"]::-webkit-inner-spin-button,
-#tab-assesment .kb-vitals-box .kb-vital-row input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-/* Checkbox TTV: tampilan standar, satu centang hitam */
-#chkVital.kb-vital-check {
-    appearance: auto !important;
-    -webkit-appearance: auto !important;
-
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-
-    position: static !important;
-    transform: none !important;
-
-    width: 16px !important;
-    height: 16px !important;
-    min-width: 16px !important;
-    min-height: 16px !important;
-
-    margin: 0 6px 0 0 !important;
-    padding: 0 !important;
-
-    border: initial !important;
-    border-radius: 2px !important;
-    background: initial !important;
-    box-shadow: none !important;
-
-    accent-color: #222 !important;
-    cursor: pointer !important;
-}
-

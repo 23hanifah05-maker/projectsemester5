@@ -63,7 +63,7 @@
     </div>
 
     <div class="kb-tabs">
-        <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assesment</div>
+        <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assessment</div>
         <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
     </div>
@@ -184,7 +184,7 @@
                 </div>
                 <div class="kb-vital-row">
                     <label>HR</label>
-                    <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 80" min="0" max="300" autocomplete="off">
+                    <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 88" min="0" max="300" autocomplete="off">
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row">
