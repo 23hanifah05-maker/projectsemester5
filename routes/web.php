@@ -111,6 +111,13 @@ Route::get('/poli/show/{slug}', function ($slug) {
 Route::get('/poli/syaraf', [PoliController::class, 'saraf'])
     ->name('poli.syaraf');
 
+
+Route::patch(
+    '/poli/syaraf/status-periksa/{id}',
+    [PoliController::class, 'updateStatusPeriksa']
+)->name('poli.syaraf.status-periksa');
+
+
 Route::get('/poli/syaraf/detail/{no_rm}', [
     PoliController::class,
     'riwayatSaraf'

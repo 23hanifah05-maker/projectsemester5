@@ -6,6 +6,8 @@ use App\Models\Poli;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
 use App\Models\Ttv;
+use App\Models\Assesmen;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -28,7 +30,6 @@ class PoliController extends Controller
             return '-';
         }
 
-        // Jika nilainya sudah berupa teks, jangan dikonversi lagi.
         if (!is_numeric($kode)) {
             return $kode;
         }
@@ -38,7 +39,6 @@ class PoliController extends Controller
 
     /**
      * Halaman utama Poli Saraf.
-     * Data pendaftaran dan pasien diambil dari database.
      */
     public function saraf(Request $request)
     {
@@ -139,13 +139,11 @@ class PoliController extends Controller
                         : '-',
 
                     'kelurahan' => $p->kelurahan,
-
                     'agama' => $petaAgama[(int) $p->agama] ?? '-',
                     'kecamatan' => $p->kecamatan,
                     'pendidikan' => $petaPendidikan[(int) $p->pendidikan] ?? '-',
                     'kabupaten' => $p->kabupaten,
                     'pekerjaan' => $petaPekerjaan[(int) $p->pekerjaan] ?? '-',
-
                     'provinsi' => $p->provinsi,
                     'kode_pos' => $p->kode_pos,
                     'pembayaran' => $item->jenis_pembayaran,
@@ -159,7 +157,7 @@ class PoliController extends Controller
                     ),
 
                     'pj_no_hp' => $p->pj_no_hp,
-                    'status_periksa' => 'periksa',
+                    'status_periksa' => $item->status_periksa ?? 'periksa',
                 ];
             })
             ->values();
@@ -184,7 +182,6 @@ class PoliController extends Controller
             $pasien->jenis_kelamin
         );
 
-        // Sediakan juga nilai yang sudah dikonversi pada objek pasien.
         $pasien->jenis_kelamin = $jenisKelamin;
 
         return view('poli.syaraf-riwayat', [
@@ -227,8 +224,8 @@ class PoliController extends Controller
     }
 
     /**
-     * Mengambil data pasien, pendaftaran, dan TTV
-     * untuk halaman formulir kunjungan.
+     * Mengambil data pasien, TTV, SOAP, diagnosis,
+     * dan tindakan untuk kunjungan yang sedang dibuka.
      */
     private function tampilkanKunjunganSaraf(
         Pendaftaran $pendaftaran
@@ -238,10 +235,78 @@ class PoliController extends Controller
             $pendaftaran->no_rm
         )->firstOrFail();
 
+        // TTV tetap menggunakan mekanisme sebelumnya.
         $ttv = Ttv::where(
             'id_pendaftaran',
             $pendaftaran->id_pendaftaran
         )->first();
+
+        // Ambil SOAP berdasarkan kunjungan, bukan sekadar nomor RM.
+        $assesmen = Assesmen::where(
+            'id_pendaftaran',
+            $pendaftaran->id_pendaftaran
+        )->first();
+
+        $diagnosisTersimpan = [];
+        $tindakanTersimpan = [];
+
+        if ($assesmen) {
+            // Muat kembali diagnosis ICD-10 yang tersimpan.
+            $diagnosisTersimpan = DB::table('detail_diagnosis')
+                ->join(
+                    'kode_diagnosis',
+                    'detail_diagnosis.id_kode10',
+                    '=',
+                    'kode_diagnosis.id_icd10'
+                )
+                ->where(
+                    'detail_diagnosis.id_assesmen',
+                    $assesmen->id_assesmen
+                )
+                ->select([
+                    'kode_diagnosis.id_icd10 as id',
+                    'kode_diagnosis.icd_10 as kode',
+                    'kode_diagnosis.diagnosa as nama',
+                ])
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'kode' => $item->kode,
+                        'nama' => $item->nama,
+                    ];
+                })
+                ->values()
+                ->all();
+
+            // Muat kembali tindakan ICD-9-CM yang tersimpan.
+            $tindakanTersimpan = DB::table('detail_tindakan')
+                ->join(
+                    'kode_tindakan',
+                    'detail_tindakan.id_kode9',
+                    '=',
+                    'kode_tindakan.id_icd9'
+                )
+                ->where(
+                    'detail_tindakan.id_assesmen',
+                    $assesmen->id_assesmen
+                )
+                ->select([
+                    'kode_tindakan.id_icd9 as id',
+                    'kode_tindakan.icd_9 as kode',
+                    'kode_tindakan.tindakan as nama',
+                ])
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'kode' => $item->kode,
+                        'nama' => $item->nama,
+                    ];
+                })
+                ->values()
+                ->all();
+        }
 
         $jenisKelamin = $this->formatJenisKelamin(
             $pasien->jenis_kelamin
@@ -252,12 +317,10 @@ class PoliController extends Controller
         );
 
         $umur = $pasien->tgl_lahir
-    ? Carbon::parse($pasien->tgl_lahir)->age . ' Tahun'
-    : '-';
+            ? Carbon::parse($pasien->tgl_lahir)->age . ' Tahun'
+            : '-';
 
-$pasien->umur = $umur;
-
-        // Pastikan Blade yang memakai $pasien juga menerima label teks.
+        $pasien->umur = $umur;
         $pasien->jenis_kelamin = $jenisKelamin;
         $pasien->pj_jenis_kelamin = $pjJenisKelamin;
 
@@ -268,6 +331,9 @@ $pasien->umur = $umur;
             'pendaftaran' => $pendaftaran,
             'id_pendaftaran' => $pendaftaran->id_pendaftaran,
             'ttv' => $ttv,
+            'assesmen' => $assesmen,
+            'diagnosisTersimpan' => $diagnosisTersimpan,
+            'tindakanTersimpan' => $tindakanTersimpan,
             'jenisKelamin' => $jenisKelamin,
             'pjJenisKelamin' => $pjJenisKelamin,
         ]);
@@ -301,5 +367,33 @@ $pasien->umur = $umur;
         $poli = Poli::where('slug', 'jiwa')->firstOrFail();
 
         return view('poli.jiwa', compact('poli'));
+    }
+
+    /**
+     * Memperbarui status pemeriksaan kunjungan Poli Saraf.
+     */
+    public function updateStatusPeriksa(Request $request, $id)
+    {
+        $request->validate([
+            'status_periksa' => 'required|in:periksa,selesai',
+        ]);
+
+        $poli = Poli::where('slug', 'saraf')->firstOrFail();
+
+        $pendaftaran = Pendaftaran::where(
+            'id_pendaftaran',
+            $id
+        )
+            ->where('id_poli', $poli->id_poli)
+            ->firstOrFail();
+
+        $pendaftaran->status_periksa = $request->status_periksa;
+        $pendaftaran->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status pemeriksaan berhasil diperbarui.',
+            'status_periksa' => $pendaftaran->status_periksa,
+        ]);
     }
 }

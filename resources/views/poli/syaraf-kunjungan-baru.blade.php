@@ -216,34 +216,36 @@
 
         <hr class="kb-divider">
 
-        {{-- ===== Kotak SOAP ===== --}}
-        <div class="kb-soap-title">SOAP</div>
-        <div class="kb-soap-box">
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">S</div>
-                <textarea name="subjective" rows="4" placeholder="Subjektif..."></textarea>
-            </div>
 
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">O</div>
-                <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif..."></textarea>
-            </div>
+{{-- ===== Kotak SOAP ===== --}}
+<div class="kb-soap-title">SOAP</div>
+<div class="kb-soap-box">
+    <div class="kb-soap-row">
+        <div class="kb-soap-badge">S</div>
+        <textarea name="subjective" rows="4" placeholder="Subjektif...">{{ old('subjective', $assesmen->subjek ?? '') }}</textarea>
+    </div>
 
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">A</div>
-                <textarea name="assessment" rows="4" placeholder="Assessment / analisa..."></textarea>
-            </div>
+    <div class="kb-soap-row">
+        <div class="kb-soap-badge">O</div>
+        <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif...">{{ old('objective', $assesmen->objek ?? '') }}</textarea>
+    </div>
 
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">P</div>
-                <div class="kb-plan-wrap">
-                    <textarea name="plan" rows="4" placeholder="Rencana/plan..."></textarea>
-                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
-                        <i class="fa-solid fa-print"></i> Cetak
-                    </button>
-                </div>
-            </div>
+    <div class="kb-soap-row">
+        <div class="kb-soap-badge">A</div>
+        <textarea name="assessment" rows="4" placeholder="Assessment / analisa...">{{ old('assessment', $assesmen->assesmen ?? '') }}</textarea>
+    </div>
+
+    <div class="kb-soap-row">
+        <div class="kb-soap-badge">P</div>
+        <div class="kb-plan-wrap">
+            <textarea name="plan" rows="4" placeholder="Rencana/plan...">{{ old('plan', $assesmen->plan ?? '') }}</textarea>
+            <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
+                <i class="fa-solid fa-print"></i> Cetak
+            </button>
         </div>
+    </div>
+</div>
+
 
         <hr class="kb-divider">
 
@@ -1168,8 +1170,17 @@
         tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
     };
 
-    const pilihan = { penyakit: null, tindakan: null };
-    const diagnosaTerpilih = { penyakit: [], tindakan: [] };
+
+const pilihan = {
+    penyakit: null,
+    tindakan: null
+};
+
+const diagnosaTerpilih = {
+    penyakit: @json($diagnosisTersimpan ?? []),
+    tindakan: @json($tindakanTersimpan ?? [])
+};
+
 
     const timerCari = {};
     const urutanCari = { penyakit: 0, tindakan: 0 };
@@ -1318,6 +1329,10 @@
             list.appendChild(baris);
         });
     }
+
+    
+renderDiagnosa('penyakit');
+renderDiagnosa('tindakan');
 
     document.addEventListener('click', function (e) {
         if (!e.target.closest('.kb-search-box')) {
