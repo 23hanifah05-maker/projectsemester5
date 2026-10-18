@@ -576,6 +576,10 @@
     const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
     const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
 
+    // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
+    // Selama false, halaman ini tidak bisa ditinggalkan bila ada data belum disimpan.
+    let izinkanKeluar = false;
+
     function gantiTab(tab, event) {
         document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
@@ -898,7 +902,9 @@
                 );
             }
 
-            // 5. Status selesai berhasil tersimpan di database.
+            // 5. Semua data sudah tersimpan: halaman boleh ditinggalkan.
+            izinkanKeluar = true;
+
             alert(
                 'Data TTV, SOAP, dan ICD berhasil disimpan. ' +
                 'Status pasien berubah menjadi Selesai.'
@@ -1043,6 +1049,9 @@ async function kirimRujukan() {
 
             throw new Error(pesan);
         }
+
+        // Rujukan berhasil dikirim: halaman boleh ditinggalkan.
+        izinkanKeluar = true;
 
         alert(hasil.message || 'Rujukan berhasil dikirim.');
 
@@ -1482,6 +1491,103 @@ renderDiagnosa('tindakan');
             const dt = document.getElementById('dropdownTindakan');
             if (dp) dp.style.display = 'none';
             if (dt) dt.style.display = 'none';
+        }
+    });
+
+    /* =========================================================
+       CEGAH KELUAR HALAMAN SEBELUM DATA DISIMPAN
+       Mencakup: TTV, SOAP, diagnosa (penyakit), dan tindakan.
+       - Tombol Back browser: ditahan, muncul peringatan.
+       - Klik menu / link lain: dibatalkan, muncul peringatan.
+       - Refresh / tutup tab: browser menampilkan konfirmasi.
+       Setelah klik Simpan berhasil, semua pembatasan dilepas.
+       ========================================================= */
+    const PESAN_BELUM_SIMPAN =
+        'Data pasien belum disimpan.\n' +
+        'Klik tombol Simpan terlebih dahulu sebelum meninggalkan halaman ini.';
+
+    function ambilSnapshotForm() {
+        const nilai = id => (document.getElementById(id)?.value ?? '').trim();
+        const teks = nama => (
+            document.querySelector('textarea[name="' + nama + '"]')?.value ?? ''
+        ).trim();
+
+        return JSON.stringify({
+            ttv: [
+                'tekanan_darah', 'heart_rate', 'spo2',
+                'suhu', 'respiratory_rate', 'alergi'
+            ].map(nilai),
+            soap: ['subjective', 'objective', 'assessment', 'plan'].map(teks),
+            penyakit: diagnosaTerpilih.penyakit.map(d => String(d.id)).sort(),
+            tindakan: diagnosaTerpilih.tindakan.map(d => String(d.id)).sort()
+        });
+    }
+
+    // Kondisi form saat halaman dibuka = dianggap sudah tersimpan.
+    const snapshotAwal = ambilSnapshotForm();
+    let guardHistoryAktif = false;
+
+    function adaDataBelumDisimpan() {
+        return !izinkanKeluar && ambilSnapshotForm() !== snapshotAwal;
+    }
+
+    // Tambah satu entri riwayat agar tombol Back bisa ditahan.
+    function pasangGuardHistory() {
+        if (guardHistoryAktif) return;
+        history.pushState({ guardSimpan: true }, '', location.href);
+        guardHistoryAktif = true;
+    }
+
+    function periksaGuard() {
+        if (adaDataBelumDisimpan()) pasangGuardHistory();
+    }
+
+    document.addEventListener('input', periksaGuard);
+    document.addEventListener('change', periksaGuard);
+    document.addEventListener('click', function () {
+        // Menangkap tambah/hapus diagnosa dan tindakan yang bukan input biasa.
+        setTimeout(periksaGuard, 0);
+    });
+
+    // Tombol Back / Forward browser.
+    window.addEventListener('popstate', function () {
+        if (adaDataBelumDisimpan()) {
+            alert(PESAN_BELUM_SIMPAN);
+            history.pushState({ guardSimpan: true }, '', location.href);
+        } else if (guardHistoryAktif) {
+            guardHistoryAktif = false;
+            history.back();
+        }
+    });
+
+    // Klik link / menu sidebar ke halaman lain.
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+
+        const href = (link.getAttribute('href') || '').trim().toLowerCase();
+
+        if (
+            href === '' ||
+            href.startsWith('#') ||
+            href.startsWith('javascript:') ||
+            link.target === '_blank'
+        ) {
+            return;
+        }
+
+        if (adaDataBelumDisimpan()) {
+            e.preventDefault();
+            e.stopPropagation();
+            alert(PESAN_BELUM_SIMPAN);
+        }
+    }, true);
+
+    // Refresh, tutup tab, atau mengetik alamat lain.
+    window.addEventListener('beforeunload', function (e) {
+        if (adaDataBelumDisimpan()) {
+            e.preventDefault();
+            e.returnValue = '';
         }
     });
 </script>
