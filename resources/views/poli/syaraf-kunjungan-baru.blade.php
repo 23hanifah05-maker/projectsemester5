@@ -970,12 +970,13 @@
     }
 
     
+
 async function kirimRujukan() {
-    const tujuan = document.getElementById('rjTujuan').value;
-    const alasan = document.getElementById('rjAlasan').value.trim();
-    const diagnosa = document.getElementById('rjDiagnosa').value.trim();
-    const dokter = document.getElementById('rjDokter').value.trim();
-    const tanggal = document.getElementById('rjTanggal').value;
+    const tujuan = document.getElementById('rjTujuan')?.value;
+    const alasan = document.getElementById('rjAlasan')?.value.trim();
+    const diagnosa = document.getElementById('rjDiagnosa')?.value.trim();
+    const dokter = document.getElementById('rjDokter')?.value.trim();
+    const tanggal = document.getElementById('rjTanggal')?.value;
     const csrfToken = document.getElementById('csrf_token')?.value;
 
     if (!NO_RM_PASIEN) {
@@ -988,22 +989,52 @@ async function kirimRujukan() {
         return;
     }
 
+    if (!diagnosa) {
+        alert('Isi diagnosis pasien terlebih dahulu.');
+        return;
+    }
+
     if (!alasan) {
         alert('Isi alasan rujuk terlebih dahulu.');
         return;
     }
 
+    if (!tanggal) {
+        alert('Isi tanggal rujukan terlebih dahulu.');
+        return;
+    }
+
+    if (!csrfToken) {
+        alert('Token keamanan tidak ditemukan. Muat ulang halaman.');
+        return;
+    }
+
     const tombol = document.querySelector('.rj-kirim');
-    tombol.disabled = true;
+
+    if (tombol) {
+        tombol.disabled = true;
+        tombol.dataset.teksAsli = tombol.textContent;
+        tombol.textContent = 'Mengirim rujukan...';
+    }
 
     try {
         const radiologi = Array.from(
             document.querySelectorAll(
                 '#view-rujukan input[name="rujuk_radiologi[]"]:checked'
             )
-        ).map(cb => cb.value);
+        )
+        .filter(cb => cb.id !== 'rjCekLainnya')
+        .map(cb => cb.value);
 
-        const lainnya = document.getElementById('rjLainnya')?.value.trim();
+        const checkboxLainnya =
+            document.getElementById('rjCekLainnya');
+
+        const inputLainnya =
+            document.getElementById('rjLainnya');
+
+        const lainnya = checkboxLainnya?.checked
+            ? (inputLainnya?.value || '').trim()
+            : '';
 
         const response = await fetch(
             "{{ route('poli.syaraf.rujukan') }}",
@@ -1028,13 +1059,34 @@ async function kirimRujukan() {
             }
         );
 
-        const hasil = await response.json();
+        const teksRespons = await response.text();
+        let hasil;
+
+        try {
+            hasil = JSON.parse(teksRespons);
+        } catch (error) {
+            console.error(
+                'Respons server bukan JSON:',
+                response.status,
+                teksRespons
+            );
+
+            throw new Error(
+                'Server tidak memberikan respons JSON. ' +
+                'Periksa route, controller, dan log Laravel.'
+            );
+        }
 
         if (!response.ok || hasil.success !== true) {
-            const pesan = hasil.message ||
-                (hasil.errors
-                    ? Object.values(hasil.errors).flat().join('\n')
-                    : 'Rujukan gagal dikirim.');
+            let pesan = hasil.message || 'Rujukan gagal dikirim.';
+
+            if (hasil.errors) {
+                const daftarError = Object.values(hasil.errors).flat();
+
+                if (daftarError.length > 0) {
+                    pesan += '\n' + daftarError.join('\n');
+                }
+            }
 
             throw new Error(pesan);
         }
@@ -1047,12 +1099,20 @@ async function kirimRujukan() {
 
     } catch (error) {
         console.error('Gagal mengirim rujukan:', error);
-        alert(error.message || 'Terjadi kesalahan saat mengirim rujukan.');
+
+        alert(
+            error.message ||
+            'Terjadi kesalahan saat mengirim rujukan.'
+        );
+
     } finally {
-        tombol.disabled = false;
+        if (tombol) {
+            tombol.disabled = false;
+            tombol.textContent =
+                tombol.dataset.teksAsli || 'KIRIM RUJUKAN';
+        }
     }
 }
-
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';
 

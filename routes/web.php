@@ -203,6 +203,11 @@ Route::post('/poli/obgyn/ttv', [TtvController::class, 'store'])
 
 Route::post('/poli/obgyn/assesmen', [AssesmenController::class, 'store'])
     ->name('poli.obgyn.assesmen.store');
+
+Route::post(
+    '/poli/obgyn/rujukan',
+    [PoliController::class, 'kirimRujukanObgyn']
+)->name('poli.obgyn.rujukan');
 /*
 |--------------------------------------------------------------------------
 | Poli Jantung
