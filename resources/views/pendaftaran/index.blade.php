@@ -377,13 +377,7 @@
 
                         <div class="field">
                             <label for="kj-dokter">Dokter</label>
-                            <select name="dokter" id="kj-dokter" required>
-                                <option value="">-- Pilih Dokter --</option>
-                                <option value="Dr. Spesialis Saraf">Dr. Spesialis Saraf</option>
-                                <option value="Dr. Spesialis Obgyn">Dr. Spesialis Obgyn</option>
-                                <option value="Dr. Spesialis Jantung">Dr. Spesialis Jantung</option>
-                                <option value="Dr. Spesialis Jiwa">Dr. Spesialis Jiwa</option>
-                            </select>
+                            <input type="text" name="dokter" id="kj-dokter" readonly required>
                         </div>
                     </div>
                 </div>
@@ -688,10 +682,10 @@ function closePasienModal() {
 
 /* ===== TAMBAH KUNJUNGAN ===== */
 const dokterPerPoliKj = {
-    saraf: 'Dr. Spesialis Saraf',
-    obgyn: 'Dr. Spesialis Obgyn',
-    jantung: 'Dr. Spesialis Jantung',
-    jiwa: 'Dr. Spesialis Jiwa'
+    saraf: 'dr. Ratna Wijayanti, Sp.S',
+    obgyn: 'dr. Aditya Iqbal M, Sp.OG',
+    jantung: 'dr. Bagus Fitriadi, Sp.JP',
+    jiwa: 'dr. Devi Anggraeni P, Sp.KJ'
 };
 
 document.addEventListener('DOMContentLoaded', function () {
