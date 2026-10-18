@@ -127,8 +127,6 @@
 
 @section('extra-js')
 
-<script src="{{ asset('js/audit-log.js') }}"></script>
-
 <script>
 
     const modal = document.getElementById('modalDetail');
@@ -142,6 +140,25 @@
         'id', 'username', 'role', 'aktivitas', 'modul', 'waktu',
         'ip', 'no_rm', 'kolom', 'sebelum', 'sesudah', 'status'
     ];
+
+    // Data log dari database (tabel audit_trail)
+    const semuaLog = {!! json_encode(
+        $logs->map(fn ($l) => [
+            'id'        => $l->id,
+            'username'  => $l->username,
+            'role'      => $l->role,
+            'aktivitas' => $l->aktivitas,
+            'modul'     => $l->modul,
+            'waktu'     => $l->created_at->format('Y-m-d H:i:s'),
+            'ip'        => $l->nama_perangkat ?? $l->ip_address,
+            'no_rm'     => $l->no_rm,
+            'kolom'     => $l->bidang_kolom,
+            'sebelum'   => $l->sebelum,
+            'sesudah'   => $l->sesudah,
+            'status'    => $l->status,
+        ])->values(),
+        JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE
+    ) !!};
 
 
     // 2026-10-01 09:23:00 -> 01/10/2026 09.23
@@ -160,7 +177,7 @@
             document.getElementById('d-' + f).textContent =
                 f === 'waktu'
                     ? formatWaktu(nilai)
-                    : (nilai !== undefined && nilai !== '' ? nilai : '-');
+                    : (nilai !== undefined && nilai !== null && nilai !== '' ? nilai : '-');
 
         });
 
@@ -178,7 +195,7 @@
         const sampai  = inpSampai.value;
         const keyword = inpKeyword.value.trim().toLowerCase();
 
-        const hasil = AuditLog.ambil()
+        const hasil = semuaLog
             .filter(function (log) {
 
                 const tanggal = String(log.waktu).substring(0, 10);
@@ -230,7 +247,7 @@
             ].forEach(function (isi) {
 
                 const td = document.createElement('td');
-                td.textContent = isi;
+                td.textContent = isi ?? '-';
                 tr.appendChild(td);
 
             });
