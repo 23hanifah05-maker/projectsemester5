@@ -585,14 +585,41 @@ document.addEventListener('DOMContentLoaded', function () {
         keyword.addEventListener('input', kirimFilter);
     }
 
+    // Batasi kalender: tanggal akhir tidak boleh sebelum tanggal awal
+    function aturBatasPeriode() {
+        if (sampai) sampai.min = dari && dari.value ? dari.value : '';
+        if (dari) dari.max = sampai && sampai.value ? sampai.value : '';
+    }
+
+    // Peringatan jika rentang tidak relevan (mis. 10 s.d 9)
+    function periodeValid(inputBerubah) {
+        if (dari && sampai && dari.value && sampai.value && dari.value > sampai.value) {
+            alert(
+                'Rentang periode tidak valid.\n' +
+                'Tanggal awal tidak boleh lebih besar dari tanggal akhir.'
+            );
+            inputBerubah.value = '';
+            aturBatasPeriode();
+            inputBerubah.focus();
+            return false;
+        }
+        return true;
+    }
+
+    aturBatasPeriode();
+
     if (dari) {
         dari.addEventListener('change', function () {
+            if (!periodeValid(dari)) return;
+            aturBatasPeriode();
             form.requestSubmit();
         });
     }
 
     if (sampai) {
         sampai.addEventListener('change', function () {
+            if (!periodeValid(sampai)) return;
+            aturBatasPeriode();
             form.requestSubmit();
         });
     }
