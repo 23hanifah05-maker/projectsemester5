@@ -23,18 +23,16 @@
     @endif
 
     @php
-        // No RM: 6 digit angka (contoh 000001)
         $noRmOtomatis = $noRmBaru ?? old('no_rm', '000001');
         $tglOtomatis = date('Y-m-d');
     @endphp
 
     <form method="POST"
-      action="{{ route('pendaftaran.store') }}"
-      id="formPendaftaran"
-      autocomplete="off">
+          action="{{ route('pendaftaran.store') }}"
+          id="formPendaftaran"
+          autocomplete="off">
         @csrf
 
-        {{-- INPUT PENDAFTARAN --}}
         <div class="title-underline">Input Data</div>
 
         <div class="box">
@@ -62,35 +60,23 @@
                     <label for="no_rm">No RM</label>
                     <input type="text" name="no_rm" id="no_rm"
                            value="{{ $noRmOtomatis }}"
-                           maxlength="6" pattern="[0-9]{6}" inputmode="numeric" readonly>
+                           maxlength="6" pattern="[0-9]{6}"
+                           inputmode="numeric" readonly>
                 </div>
 
                 <div class="field">
                     <label for="dokter">Dokter</label>
                     <select name="dokter" id="dokter" required>
                         <option value="">-- Pilih Dokter --</option>
-                        <option value="Dr. Spesialis Saraf"
-                            {{ old('dokter') == 'Dr. Spesialis Saraf' ? 'selected' : '' }}>
-                            Dr. Spesialis Saraf
-                        </option>
-                        <option value="Dr. Spesialis Obgyn"
-                            {{ old('dokter') == 'Dr. Spesialis Obgyn' ? 'selected' : '' }}>
-                            Dr. Spesialis Obgyn
-                        </option>
-                        <option value="Dr. Spesialis Jantung"
-                            {{ old('dokter') == 'Dr. Spesialis Jantung' ? 'selected' : '' }}>
-                            Dr. Spesialis Jantung
-                        </option>
-                        <option value="Dr. Spesialis Jiwa"
-                            {{ old('dokter') == 'Dr. Spesialis Jiwa' ? 'selected' : '' }}>
-                            Dr. Spesialis Jiwa
-                        </option>
+                        <option value="Dr. Spesialis Saraf" {{ old('dokter') == 'Dr. Spesialis Saraf' ? 'selected' : '' }}>Dr. Spesialis Saraf</option>
+                        <option value="Dr. Spesialis Obgyn" {{ old('dokter') == 'Dr. Spesialis Obgyn' ? 'selected' : '' }}>Dr. Spesialis Obgyn</option>
+                        <option value="Dr. Spesialis Jantung" {{ old('dokter') == 'Dr. Spesialis Jantung' ? 'selected' : '' }}>Dr. Spesialis Jantung</option>
+                        <option value="Dr. Spesialis Jiwa" {{ old('dokter') == 'Dr. Spesialis Jiwa' ? 'selected' : '' }}>Dr. Spesialis Jiwa</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        {{-- IDENTITAS PASIEN --}}
         <div class="box">
             <div class="box-title">Identitas Pasien</div>
 
@@ -102,16 +88,17 @@
                         <input type="text" name="no_rekam_medis"
                                id="no_rekam_medis"
                                value="{{ $noRmOtomatis }}"
-                               maxlength="6" pattern="[0-9]{6}" inputmode="numeric" readonly>
+                               maxlength="6" pattern="[0-9]{6}"
+                               inputmode="numeric" readonly>
                     </div>
 
                     <div class="row">
                         <label for="nama_pasien">Nama Lengkap</label>
                         <input type="text" name="nama_pasien"
-                        id="nama_pasien"
-                        value="{{ old('nama_pasien') }}"
-                        placeholder="Masukkan nama"
-                        maxlength="100" required>
+                               id="nama_pasien"
+                               value="{{ old('nama_pasien') }}"
+                               placeholder="Masukkan nama"
+                               maxlength="100" required>
                     </div>
 
                     <div class="row">
@@ -221,7 +208,6 @@
                     </div>
                 </div>
 
-                {{-- KOLOM KANAN --}}
                 <div class="col-right">
 
                     <div class="row">
@@ -344,7 +330,6 @@
             </div>
         </div>
 
-        {{-- PENANGGUNG JAWAB --}}
         <div class="box">
             <div class="box-title">Penanggung Jawab</div>
             <div class="cols">
@@ -398,15 +383,21 @@
             </div>
         </div>
 
-        {{-- TOMBOL --}}
+        {{-- TOMBOL DAN DATA GENERAL CONSENT --}}
         <div class="form-actions">
-            <button type="button" class="btn-consent"
-        id="btnConsent" onclick="bukaConsentDariPendaftaran()">
-    General Consent
-</button>
+            <button type="button"
+                    class="btn-consent"
+                    id="btnConsent"
+                    onclick="bukaConsentDariPendaftaran()">
+                General Consent
+            </button>
 
-            <input type="hidden" name="general_consent"
-                   id="general_consent" value="0">
+            <input type="hidden" name="general_consent" id="general_consent" value="0">
+            <input type="hidden" name="gc_anggota_keluarga" id="gc-h-keluarga" value="">
+            <input type="hidden" name="gc_ttd_pemberi" id="gc-h-ttd-pemberi" value="">
+            <input type="hidden" name="gc_nama_pemberi" id="gc-h-nama-pemberi" value="">
+            <input type="hidden" name="gc_ttd_pasien" id="gc-h-ttd-pasien" value="">
+            <input type="hidden" name="gc_nama_penandatangan" id="gc-h-nama-pasien" value="">
 
             <div class="form-actions-right">
                 <button type="submit" class="btn-simpan">Simpan</button>
@@ -416,7 +407,14 @@
     </form>
 </div>
 
+{{-- Modal General Consent --}}
+@include('pendaftaran.partials.general-consent')
+
 <script>
+/* =========================================================
+   UTILITAS INPUT PENDAFTARAN
+   ========================================================= */
+
 function batasiAngka(input, maks, errorId, pesan, wajibPenuh = false) {
     const error = document.getElementById(errorId);
     const adaNonAngka = /[^0-9]/.test(input.value);
@@ -484,6 +482,8 @@ function aturInputLainnya(selectId, inputId, kode) {
     const select = document.getElementById(selectId);
     const input = document.getElementById(inputId);
 
+    if (!select || !input) return;
+
     function perbarui() {
         const tampil = select.value === kode;
         input.style.display = tampil ? '' : 'none';
@@ -497,11 +497,14 @@ function aturInputLainnya(selectId, inputId, kode) {
 }
 
 function hitungUmur() {
-    const val = document.getElementById('tgl_lahir').value;
+    const tanggal = document.getElementById('tgl_lahir');
+    const val = tanggal.value;
+
     if (!val) {
         ['umur_tahun', 'umur_bulan', 'umur_hari'].forEach(id => {
             document.getElementById(id).value = '';
         });
+        tanggal.setCustomValidity('');
         return;
     }
 
@@ -509,13 +512,11 @@ function hitungUmur() {
     const now = new Date();
 
     if (lahir > now) {
-        document.getElementById('tgl_lahir').setCustomValidity(
-            'Tanggal lahir tidak boleh di masa depan.'
-        );
+        tanggal.setCustomValidity('Tanggal lahir tidak boleh di masa depan.');
         return;
     }
 
-    document.getElementById('tgl_lahir').setCustomValidity('');
+    tanggal.setCustomValidity('');
 
     let th = now.getFullYear() - lahir.getFullYear();
     let bl = now.getMonth() - lahir.getMonth();
@@ -536,6 +537,70 @@ function hitungUmur() {
     document.getElementById('umur_hari').value = Math.min(hr, 30);
 }
 
+/* =========================================================
+   BUKA MODAL GENERAL CONSENT DENGAN DATA PASIEN
+   Fungsi bukaConsent() disediakan oleh partial.
+   ========================================================= */
+
+function bukaConsentDariPendaftaran() {
+    const form = document.getElementById('formPendaftaran');
+
+    if (!form) {
+        alert('Form pendaftaran tidak ditemukan.');
+        return;
+    }
+
+    const ambil = nama => {
+        const field = form.elements.namedItem(nama);
+        return field ? String(field.value || '').trim() : '';
+    };
+
+    const norm = ambil('no_rm');
+
+    if (!/^[0-9]{6}$/.test(norm)) {
+        alert('Nomor RM harus tersedia dan terdiri dari 6 digit angka.');
+        return;
+    }
+
+    if (typeof window.bukaConsent !== 'function') {
+        alert('Fungsi bukaConsent belum ditemukan. Periksa JavaScript di file partial general-consent.blade.php.');
+        return;
+    }
+
+    const tanggalLahir = ambil('tgl_lahir');
+    const tempatLahir = ambil('tempat_lahir');
+
+    const ttl = [
+        tempatLahir,
+        tanggalLahir ? tanggalLahir.split('-').reverse().join('-') : ''
+    ].filter(Boolean).join(', ');
+
+    const jkValue = ambil('jenis_kelamin');
+
+    const dataPasien = {
+        norm: norm,
+        nama: ambil('nama_pasien'),
+        ttl: ttl,
+        tempat_lahir: tempatLahir,
+        tgl_lahir: tanggalLahir,
+        umur: ambil('umur_tahun')
+            ? ambil('umur_tahun') + ' Tahun'
+            : '',
+        jk: jkValue === '1'
+            ? 'Laki-laki'
+            : jkValue === '2'
+                ? 'Perempuan'
+                : '',
+        hp: ambil('no_hp')
+    };
+
+    window.bukaConsent(dataPasien);
+}
+
+/* =========================================================
+   INISIALISASI FORM
+   ========================================================= */
+
 document.addEventListener('DOMContentLoaded', function () {
     aturInputLainnya('agama', 'agama_lainnya', '8');
     aturInputLainnya('pekerjaan', 'pekerjaan_lainnya', '5');
@@ -551,14 +616,11 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     function sesuaikanDokter() {
-        const nilai = dokterPerPoli[poli.value] || '';
-        if (nilai) dokter.value = nilai;
-        else dokter.value = '';
+        dokter.value = dokterPerPoli[poli.value] || '';
     }
 
     poli.addEventListener('change', sesuaikanDokter);
 
-    // Tandai dropdown yang belum dipilih.
     document.querySelectorAll('.box select').forEach(function (sel) {
         const tandai = () => sel.classList.toggle('kosong', sel.value === '');
         sel.addEventListener('change', tandai);
@@ -568,18 +630,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('tgl_lahir').addEventListener('change', hitungUmur);
     hitungUmur();
 
-    // Siapkan canvas tanda tangan & daftar anggota keluarga
-    gcInitPad('gcTtdPemberi');
-    gcInitPad('gcTtd');
-    gcRefreshKeluarga();
+    const form = document.getElementById('formPendaftaran');
 
-    // Checkbox "semua setuju"
-    document.getElementById('gc-semua').addEventListener('change', function () {
-        document.querySelectorAll('.gc-cek').forEach(c => c.checked = this.checked);
-    });
-
-    document.getElementById('formPendaftaran').addEventListener('submit', function (e) {
-        const form = this;
+    form.addEventListener('submit', function (e) {
         const nik = document.getElementById('nik');
 
         if (nik.value.length !== 16 || !/^[0-9]{16}$/.test(nik.value)) {
@@ -589,7 +642,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        if (!/^[0-9]{6}$/.test(form.elements['no_rm'].value)) {
+        if (!/^[0-9]{6}$/.test(form.elements.namedItem('no_rm').value)) {
             e.preventDefault();
             alert('No RM harus 6 digit angka.');
             return;
@@ -597,13 +650,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (document.getElementById('general_consent').value !== '1') {
             e.preventDefault();
-            alert('General Consent belum disetujui.');
-            bukaConsent();
+            alert('General Consent belum disetujui. Lengkapi General Consent terlebih dahulu.');
+
+            // Gunakan fungsi pembuka yang mengirim data pasien ke modal.
+            bukaConsentDariPendaftaran();
             return;
         }
 
-        // Status ini hanya disimpan di browser, bukan sebagai data database.
-        const slug = form.elements['poli'].value;
+        // Status browser lokal; tidak menggantikan penyimpanan status ke database.
+        const slug = form.elements.namedItem('poli').value;
         const awalan = {
             obgyn: 'obgyn',
             saraf: 'syaraf',
@@ -611,7 +666,9 @@ document.addEventListener('DOMContentLoaded', function () {
             jiwa: 'jiwa'
         }[slug];
 
-        const noRm = (form.elements['no_rm'].value || '').trim().toUpperCase();
+        const noRm = String(form.elements.namedItem('no_rm').value || '')
+            .trim()
+            .toUpperCase();
 
         if (awalan && noRm) {
             try {
@@ -625,236 +682,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 delete waktu[noRm];
                 localStorage.setItem(kunciWaktu, JSON.stringify(waktu));
             } catch (err) {
-                console.error(err);
+                console.error('Gagal memperbarui status browser:', err);
             }
         }
     });
 
-    document.getElementById('formPendaftaran').addEventListener('reset', function () {
+    form.addEventListener('reset', function () {
         setTimeout(function () {
-            document.querySelectorAll('.box select').forEach(function (s) {
-                s.dispatchEvent(new Event('change'));
+            document.querySelectorAll('.box select').forEach(function (select) {
+                select.dispatchEvent(new Event('change'));
             });
 
             const btn = document.getElementById('btnConsent');
             btn.textContent = 'General Consent';
             btn.classList.remove('sudah');
+
             document.getElementById('general_consent').value = '0';
 
-            gcReset();
+            [
+                'gc-h-keluarga',
+                'gc-h-ttd-pemberi',
+                'gc-h-nama-pemberi',
+                'gc-h-ttd-pasien',
+                'gc-h-nama-pasien'
+            ].forEach(function (id) {
+                const field = document.getElementById(id);
+                if (field) field.value = '';
+            });
+
             hitungUmur();
+
+            // Reset data di modal jika fungsi dari partial tersedia.
+            if (typeof window.gcReset === 'function') {
+                window.gcReset();
+            }
         }, 0);
     });
 });
-
-/* =========================================================
-   GENERAL CONSENT
-   ========================================================= */
-
-/* ---- Anggota keluarga (boleh lebih dari 1) ---- */
-function gcRefreshKeluarga() {
-    const rows = document.querySelectorAll('#gc-keluarga-list .gc-keluarga-row');
-    rows.forEach(r => {
-        r.querySelector('.gc-keluarga-hapus').style.display =
-            rows.length > 1 ? 'inline-block' : 'none';
-    });
-}
-
-function gcTambahKeluarga() {
-    const list = document.getElementById('gc-keluarga-list');
-    const row = list.querySelector('.gc-keluarga-row').cloneNode(true);
-    row.querySelector('input').value = '';
-    list.appendChild(row);
-    gcRefreshKeluarga();
-    row.querySelector('input').focus();
-}
-
-function gcHapusKeluarga(btn) {
-    btn.closest('.gc-keluarga-row').remove();
-    gcRefreshKeluarga();
-}
-
-function gcAmbilKeluarga() {
-    return Array.from(document.querySelectorAll('.gc-keluarga-input'))
-        .map(i => i.value.trim())
-        .filter(Boolean);
-}
-
-/* ---- Signature pad (2 canvas: pemberi informasi & pasien/keluarga) ---- */
-const gcPad = {};
-
-function gcInitPad(id) {
-    const canvas = document.getElementById(id);
-    if (!canvas || gcPad[id]) return;
-
-    const ctx = canvas.getContext('2d');
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#000';
-
-    const state = { canvas: canvas, ctx: ctx, drawing: false, dirty: false };
-    gcPad[id] = state;
-
-    function pos(e) {
-        const r = canvas.getBoundingClientRect();
-        return {
-            x: (e.clientX - r.left) * (canvas.width / r.width),
-            y: (e.clientY - r.top) * (canvas.height / r.height)
-        };
-    }
-
-    canvas.addEventListener('pointerdown', function (e) {
-        state.drawing = true;
-        canvas.setPointerCapture(e.pointerId);
-        const p = pos(e);
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x + 0.1, p.y + 0.1);
-        ctx.stroke();
-        state.dirty = true;
-    });
-
-    canvas.addEventListener('pointermove', function (e) {
-        if (!state.drawing) return;
-        const p = pos(e);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
-    });
-
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
-        canvas.addEventListener(ev, function () { state.drawing = false; });
-    });
-}
-
-function gcHapusTtd(id) {
-    const s = gcPad[id];
-    if (!s) return;
-    s.ctx.clearRect(0, 0, s.canvas.width, s.canvas.height);
-    s.dirty = false;
-}
-
-function gcAmbilTtd(id) {
-    return gcPad[id] && gcPad[id].dirty
-        ? gcPad[id].canvas.toDataURL('image/png')
-        : '';
-}
-
-/* ---- Reset seluruh isian consent ---- */
-function gcReset() {
-    document.querySelectorAll('.gc-cek').forEach(c => c.checked = false);
-    document.getElementById('gc-semua').checked = false;
-
-    const list = document.getElementById('gc-keluarga-list');
-    list.querySelectorAll('.gc-keluarga-row').forEach((r, i) => { if (i > 0) r.remove(); });
-    list.querySelector('input').value = '';
-    gcRefreshKeluarga();
-
-    document.getElementById('gc-nama-pemberi').value = '';
-    document.getElementById('gc-nama-pasien').value = '';
-    gcHapusTtd('gcTtdPemberi');
-    gcHapusTtd('gcTtd');
-
-    ['gc-h-keluarga', 'gc-h-ttd-pemberi', 'gc-h-nama-pemberi',
-     'gc-h-ttd-pasien', 'gc-h-nama-pasien'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-}
-
-/* ---- Buka / tutup modal ---- */
-function bukaConsentDariPendaftaran() {
-    const form = document.getElementById('formPendaftaran').elements;
-
-    const jk = form['jenis_kelamin'].value;
-    const tanggalLahir = form['tgl_lahir'].value;
-    const tempatLahir = form['tempat_lahir'].value;
-
-    const ttl = [
-        tempatLahir,
-        tanggalLahir ? tanggalLahir.split('-').reverse().join('-') : ''
-    ].filter(Boolean).join(', ');
-
-    const umur = form['umur_tahun'].value
-        ? form['umur_tahun'].value + ' Tahun'
-        : '';
-
-    const dataPasien = {
-        norm: form['no_rm'].value,
-        nama: form['nama_pasien'].value,
-        ttl: ttl,
-        umur: umur,
-        jk: jk === '1'
-            ? 'Laki-laki'
-            : jk === '2'
-                ? 'Perempuan'
-                : '',
-        hp: form['no_hp'].value
-    };
-
-    bukaConsent(dataPasien);
-}
-
-function tutupConsent() {
-    document.getElementById('consentModal').classList.remove('show');
-}
-
-/* ---- Validasi & simpan consent ---- */
-function simpanConsent() {
-    const semuaSetuju =
-        Array.from(document.querySelectorAll('.gc-cek')).every(c => c.checked);
-
-    if (!semuaSetuju) {
-        alert('Semua butir harus dicentang "Setuju".');
-        return;
-    }
-
-    if (!document.getElementById('gc-semua').checked) {
-        alert('Centang pernyataan persetujuan di bagian bawah.');
-        return;
-    }
-
-    if (!gcAmbilTtd('gcTtdPemberi')) {
-        alert('Tanda tangan Pemberi Informasi belum diisi.');
-        return;
-    }
-
-    if (!document.getElementById('gc-nama-pemberi').value.trim()) {
-        alert('Nama terang Pemberi Informasi belum diisi.');
-        return;
-    }
-
-    if (!gcAmbilTtd('gcTtd')) {
-        alert('Tanda tangan pasien/keluarga belum diisi.');
-        return;
-    }
-
-    if (!document.getElementById('gc-nama-pasien').value.trim()) {
-        alert('Nama terang Pasien/Keluarga belum diisi.');
-        return;
-    }
-
-    // Simpan ke hidden input (ikut terkirim bersama form pendaftaran)
-    document.getElementById('gc-h-keluarga').value      = JSON.stringify(gcAmbilKeluarga());
-    document.getElementById('gc-h-ttd-pemberi').value   = gcAmbilTtd('gcTtdPemberi');
-    document.getElementById('gc-h-nama-pemberi').value  = document.getElementById('gc-nama-pemberi').value.trim();
-    document.getElementById('gc-h-ttd-pasien').value    = gcAmbilTtd('gcTtd');
-    document.getElementById('gc-h-nama-pasien').value   = document.getElementById('gc-nama-pasien').value.trim();
-
-    document.getElementById('general_consent').value = '1';
-
-    const btn = document.getElementById('btnConsent');
-    btn.textContent = '✔ General Consent';
-    btn.classList.add('sudah');
-
-    tutupConsent();
-}
-
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') tutupConsent();
-});
 </script>
-
-{{-- MODAL GENERAL CONSENT --}}
-@include('pendaftaran.partials.general-consent')
-
 @endsection
