@@ -506,7 +506,7 @@
                     </div>
                     <div class="rj-field">
                         <label>Dokter Pengirim</label>
-                        <input type="text" id="rjDokter" autocomplete="off">
+                        <input type="text" id="rjDokter" value="dr. Ratna Wijayanti, Sp.S" readonly>
                     </div>
                     <div class="rj-field">
                         <label>Tanggal Rujuk</label>

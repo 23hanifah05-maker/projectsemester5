@@ -669,7 +669,9 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
                                 type="text"
                                 id="icDokter"
                                 name="informed_dokter"
+                                value="dr. Aditya Iqbal M, Sp.OG"
                                 autocomplete="off"
+                                readonly
                             >
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </div>
@@ -809,7 +811,7 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
 
                     <div class="rj-field">
                         <label>Dokter Pengirim</label>
-                        <input type="text" id="rjDokter" autocomplete="off">
+                        <input type="text" id="rjDokter" value="dr. Aditya Iqbal M, Sp.OG" readonly>
                     </div>
 
                     <div class="rj-field">

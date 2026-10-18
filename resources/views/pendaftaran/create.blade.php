@@ -66,13 +66,9 @@
 
                 <div class="field">
                     <label for="dokter">Dokter</label>
-                    <select name="dokter" id="dokter" required>
-                        <option value="">-- Pilih Dokter --</option>
-                        <option value="Dr. Spesialis Saraf" {{ old('dokter') == 'Dr. Spesialis Saraf' ? 'selected' : '' }}>Dr. Spesialis Saraf</option>
-                        <option value="Dr. Spesialis Obgyn" {{ old('dokter') == 'Dr. Spesialis Obgyn' ? 'selected' : '' }}>Dr. Spesialis Obgyn</option>
-                        <option value="Dr. Spesialis Jantung" {{ old('dokter') == 'Dr. Spesialis Jantung' ? 'selected' : '' }}>Dr. Spesialis Jantung</option>
-                        <option value="Dr. Spesialis Jiwa" {{ old('dokter') == 'Dr. Spesialis Jiwa' ? 'selected' : '' }}>Dr. Spesialis Jiwa</option>
-                    </select>
+                    <input type="text" name="dokter" id="dokter"
+                           value="{{ old('dokter') }}"
+                           readonly required>
                 </div>
             </div>
         </div>
@@ -609,10 +605,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const dokter = document.getElementById('dokter');
 
     const dokterPerPoli = {
-        saraf: 'Dr. Spesialis Saraf',
-        obgyn: 'Dr. Spesialis Obgyn',
-        jantung: 'Dr. Spesialis Jantung',
-        jiwa: 'Dr. Spesialis Jiwa'
+        saraf: 'dr. Ratna Wijayanti, Sp.S',
+        obgyn: 'dr. Aditya Iqbal M, Sp.OG',
+        jantung: 'dr. Bagus Fitriadi, Sp.JP',
+        jiwa: 'dr. Devi Anggraeni P, Sp.KJ'
     };
 
     function sesuaikanDokter() {
@@ -620,6 +616,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     poli.addEventListener('change', sesuaikanDokter);
+    sesuaikanDokter(); // isi ulang saat halaman dimuat (mis. setelah validasi gagal)
 
     document.querySelectorAll('.box select').forEach(function (sel) {
         const tandai = () => sel.classList.toggle('kosong', sel.value === '');
