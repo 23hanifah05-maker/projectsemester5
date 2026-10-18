@@ -931,6 +931,10 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
     const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
     const ID_PENDAFTARAN = @json($id_pendaftaran ?? null);
 
+    // true bila kunjungan ini sudah punya data asesmen di database.
+    // false = pasien baru: wajib klik Simpan sebelum meninggalkan halaman.
+    const SUDAH_ADA_ASSESMEN = @json($assesmen !== null);
+
     const URL_SIMPAN_TTV = @json(route('poli.obgyn.ttv.store'));
     const URL_SIMPAN_ASSESMEN = @json(route('poli.obgyn.assesmen.store'));
     const URL_UPDATE_STATUS = @json(route('poli.obgyn.status-periksa', ['id' => '__ID__']));
@@ -938,6 +942,29 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
     const URL_CARI = @json(url('/cari-kode'));
     const CSRF_TOKEN = @json(csrf_token());
     const URL_KIRIM_RUJUKAN = @json(route('poli.obgyn.rujukan'));
+
+    // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
+    let izinkanKeluar = false;
+
+    // Membaca respons server dengan aman, supaya error HTML/500 terlihat jelas.
+    async function bacaJson(response, namaProses) {
+        const teks = await response.text();
+
+        try {
+            return JSON.parse(teks);
+        } catch (e) {
+            console.error(
+                'Respons ' + namaProses + ' bukan JSON:',
+                response.status,
+                teks
+            );
+
+            throw new Error(
+                'Server tidak mengirim respons JSON saat ' + namaProses +
+                ' (status ' + response.status + '). Periksa route dan log Laravel.'
+            );
+        }
+    }
 
     // =========================================================
     // TAB
@@ -1012,7 +1039,7 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
     });
 
     // =========================================================
-    // RUJUKAN - MASIH FRONT-END
+    // RUJUKAN
     // =========================================================
     function rujukPasien() {
         if (!NO_RM_PASIEN) {
@@ -1083,123 +1110,119 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
     }
 
 
-async function kirimRujukan() {
-    const tujuan = document.getElementById('rjTujuan')?.value ?? '';
-    const alasan = document.getElementById('rjAlasan')?.value.trim() ?? '';
-    const diagnosa = document.getElementById('rjDiagnosa')?.value.trim() ?? '';
-    const tanggal = document.getElementById('rjTanggal')?.value ?? '';
-    const dokter = document.getElementById('rjDokter')?.value.trim() ?? '';
+    async function kirimRujukan() {
+        const tujuan = document.getElementById('rjTujuan')?.value ?? '';
+        const alasan = document.getElementById('rjAlasan')?.value.trim() ?? '';
+        const diagnosa = document.getElementById('rjDiagnosa')?.value.trim() ?? '';
+        const tanggal = document.getElementById('rjTanggal')?.value ?? '';
+        const dokter = document.getElementById('rjDokter')?.value.trim() ?? '';
 
-    if (!NO_RM_PASIEN) {
-        alert('Data pasien tidak ditemukan.');
-        return;
-    }
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
 
-    if (!tujuan) {
-        alert('Pilih poli tujuan rujukan terlebih dahulu.');
-        return;
-    }
+        if (!tujuan) {
+            alert('Pilih poli tujuan rujukan terlebih dahulu.');
+            return;
+        }
 
-    if (!alasan) {
-        alert('Isi alasan rujuk terlebih dahulu.');
-        return;
-    }
+        if (!alasan) {
+            alert('Isi alasan rujuk terlebih dahulu.');
+            return;
+        }
 
-    if (!tanggal) {
-        alert('Pilih tanggal rujukan terlebih dahulu.');
-        return;
-    }
+        if (!tanggal) {
+            alert('Pilih tanggal rujukan terlebih dahulu.');
+            return;
+        }
 
-    const tombol = document.querySelector('.rj-kirim');
+        const tombol = document.querySelector('.rj-kirim');
 
-    if (!tombol || tombol.disabled) return;
+        if (!tombol || tombol.disabled) return;
 
-    const teksAwal = tombol.textContent;
-    tombol.disabled = true;
-    tombol.textContent = 'Memproses...';
+        const teksAwal = tombol.textContent;
+        tombol.disabled = true;
+        tombol.textContent = 'Memproses...';
 
-    const radiologi = Array.from(
-        document.querySelectorAll(
-            '#view-rujukan input[name="rujuk_radiologi[]"]:checked'
+        const radiologi = Array.from(
+            document.querySelectorAll(
+                '#view-rujukan input[name="rujuk_radiologi[]"]:checked'
+            )
         )
-    )
-        .filter(input => input.id !== 'rjCekLainnya')
-        .map(input => input.value);
+            .filter(input => input.id !== 'rjCekLainnya')
+            .map(input => input.value);
 
-    const cekLainnya = document.getElementById('rjCekLainnya');
-    const inputLainnya = document.getElementById('rjLainnya');
-    const radiologiLainnya = cekLainnya?.checked
-        ? (inputLainnya?.value.trim() ?? '')
-        : '';
+        const cekLainnya = document.getElementById('rjCekLainnya');
+        const inputLainnya = document.getElementById('rjLainnya');
+        const radiologiLainnya = cekLainnya?.checked
+            ? (inputLainnya?.value.trim() ?? '')
+            : '';
 
-    if (cekLainnya?.checked && !radiologiLainnya) {
-        alert('Tuliskan jenis pemeriksaan radiologi lainnya.');
-        tombol.disabled = false;
-        tombol.textContent = teksAwal;
-        return;
-    }
-
-    try {
-        const response = await fetch(URL_KIRIM_RUJUKAN, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': CSRF_TOKEN
-            },
-            body: JSON.stringify({
-                no_rm: NO_RM_PASIEN,
-                id_pendaftaran: ID_PENDAFTARAN,
-                tujuan: tujuan,
-                alasan: alasan,
-                diagnosa: diagnosa,
-                dokter_pengirim: dokter,
-                tanggal_rujuk: tanggal,
-                pemeriksaan_radiologi: radiologi,
-                radiologi_lainnya: radiologiLainnya
-            })
-        });
-
-        const teksRespons = await response.text();
-        let hasil;
+        if (cekLainnya?.checked && !radiologiLainnya) {
+            alert('Tuliskan jenis pemeriksaan radiologi lainnya.');
+            tombol.disabled = false;
+            tombol.textContent = teksAwal;
+            return;
+        }
 
         try {
-            hasil = JSON.parse(teksRespons);
-        } catch {
-            throw new Error(
-                'Respons server bukan JSON. Periksa route dan controller rujukan Obgyn.'
-            );
+            const response = await fetch(URL_KIRIM_RUJUKAN, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    no_rm: NO_RM_PASIEN,
+                    id_pendaftaran: ID_PENDAFTARAN,
+                    tujuan: tujuan,
+                    alasan: alasan,
+                    diagnosa: diagnosa,
+                    dokter_pengirim: dokter,
+                    tanggal_rujuk: tanggal,
+                    pemeriksaan_radiologi: radiologi,
+                    radiologi_lainnya: radiologiLainnya
+                })
+            });
+
+            const hasil = await bacaJson(response, 'mengirim rujukan');
+
+            if (!response.ok || !hasil.success) {
+                const pesanValidasi = Object.values(hasil.errors || {})
+                    .flat()
+                    .join('\n');
+
+                throw new Error(
+                    pesanValidasi ||
+                    hasil.message ||
+                    'Rujukan gagal diproses.'
+                );
+            }
+
+            // Rujukan berhasil: halaman boleh ditinggalkan.
+            izinkanKeluar = true;
+
+            alert(hasil.message || 'Rujukan berhasil dikirim.');
+
+            if (hasil.redirect) {
+                window.location.href = hasil.redirect;
+            } else {
+                window.location.href = URL_HALAMAN_OBGYN;
+            }
+
+        } catch (error) {
+            console.error('Gagal mengirim rujukan Obgyn:', error);
+            alert('Rujukan gagal dikirim: ' + error.message);
+
+        } finally {
+            tombol.disabled = false;
+            tombol.textContent = teksAwal;
         }
-
-        if (!response.ok || !hasil.success) {
-            const pesanValidasi = Object.values(hasil.errors || {})
-                .flat()
-                .join('\n');
-
-            throw new Error(
-                pesanValidasi ||
-                hasil.message ||
-                'Rujukan gagal diproses.'
-            );
-        }
-
-        alert(hasil.message || 'Rujukan berhasil dikirim.');
-
-        if (hasil.redirect) {
-            window.location.href = hasil.redirect;
-        } else {
-            window.location.href = URL_HALAMAN_OBGYN;
-        }
-
-    } catch (error) {
-        console.error('Gagal mengirim rujukan Obgyn:', error);
-        alert('Rujukan gagal dikirim: ' + error.message);
-
-    } finally {
-        tombol.disabled = false;
-        tombol.textContent = teksAwal;
     }
-}
+
     // =========================================================
     // SIMPAN TTV DAN SOAP KE DATABASE
     // =========================================================
@@ -1229,22 +1252,22 @@ async function kirimRujukan() {
             };
 
             const ttvPayload = {
-    id_pendaftaran: ID_PENDAFTARAN,
-    tekanan_darah: ambilNilai('td') || null,
-    heart_rate: ambilNilai('hr') || null,
-    spo2: ambilNilai('spo2') || null,
-    suhu: ambilNilai('suhu') || null,
-    respiratory_rate: ambilNilai('rr') || null,
-    alergi: ambilNilai('alergi') || null,
-    hpht: ambilNilai('hpht') || null,
-    usia_kehamilan: ambilNilai('uk') || null
-};
+                id_pendaftaran: ID_PENDAFTARAN,
+                tekanan_darah: ambilNilai('td') || null,
+                heart_rate: ambilNilai('hr') || null,
+                spo2: ambilNilai('spo2') || null,
+                suhu: ambilNilai('suhu') || null,
+                respiratory_rate: ambilNilai('rr') || null,
+                alergi: ambilNilai('alergi') || null,
+                hpht: ambilNilai('hpht') || null,
+                usia_kehamilan: ambilNilai('uk') || null
+            };
 
-            const penyakitIds = diagnosaTerpilih.penyakit.map(item => item.id);
-            const tindakanIds = diagnosaTerpilih.tindakan.map(item => item.id);
+            const penyakitIds = diagnosaTerpilih.penyakit.map(item => Number(item.id));
+            const tindakanIds = diagnosaTerpilih.tindakan.map(item => Number(item.id));
 
             const assesmenPayload = {
-                id_pendaftaran: ID_PENDAFTARAN,
+                id_pendaftaran: Number(ID_PENDAFTARAN),
                 subjective: ambilNilai('subjective'),
                 objective: ambilNilai('objective'),
                 assessment: ambilNilai('assessment'),
@@ -1256,17 +1279,18 @@ async function kirimRujukan() {
             const headers = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': CSRF_TOKEN
             };
 
-            // Simpan TTV
+            // 1. Simpan TTV
             const hasilTtv = await fetch(URL_SIMPAN_TTV, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(ttvPayload)
             });
 
-            const dataTtv = await hasilTtv.json();
+            const dataTtv = await bacaJson(hasilTtv, 'menyimpan TTV');
 
             if (!hasilTtv.ok) {
                 const pesanValidasi = Object.values(dataTtv.errors || {})
@@ -1280,16 +1304,16 @@ async function kirimRujukan() {
                 );
             }
 
-            // Simpan SOAP dan diagnosis/tindakan
+            // 2. Simpan SOAP dan diagnosis/tindakan
             const hasilAssesmen = await fetch(URL_SIMPAN_ASSESMEN, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(assesmenPayload)
             });
 
-            const dataAssesmen = await hasilAssesmen.json();
+            const dataAssesmen = await bacaJson(hasilAssesmen, 'menyimpan asesmen');
 
-            if (!hasilAssesmen.ok) {
+            if (!hasilAssesmen.ok || dataAssesmen.success !== true) {
                 const pesanValidasi = Object.values(dataAssesmen.errors || {})
                     .flat()
                     .join('\n');
@@ -1300,32 +1324,36 @@ async function kirimRujukan() {
                     'Gagal menyimpan asesmen.'
                 );
             }
-            
-const urlStatus = URL_UPDATE_STATUS.replace(
-    '__ID__',
-    encodeURIComponent(ID_PENDAFTARAN)
-);
 
-const hasilStatus = await fetch(urlStatus, {
-    method: 'PATCH',
-    headers: {
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': CSRF_TOKEN
-    }
-});
+            // 3. Perbarui status kunjungan menjadi selesai
+            const urlStatus = URL_UPDATE_STATUS.replace(
+                '__ID__',
+                encodeURIComponent(ID_PENDAFTARAN)
+            );
 
-const dataStatus = await hasilStatus.json();
+            const hasilStatus = await fetch(urlStatus, {
+                method: 'PATCH',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                }
+            });
 
-if (!hasilStatus.ok || !dataStatus.success) {
-    throw new Error(
-        dataStatus.message || 'Gagal memperbarui status pemeriksaan.'
-    );
-}
+            const dataStatus = await bacaJson(hasilStatus, 'memperbarui status');
 
+            if (!hasilStatus.ok || !dataStatus.success) {
+                throw new Error(
+                    dataStatus.message || 'Gagal memperbarui status pemeriksaan.'
+                );
+            }
+
+            // 4. Semua data sudah tersimpan: halaman boleh ditinggalkan.
+            izinkanKeluar = true;
 
             alert('TTV dan asesmen berhasil disimpan ke database.');
 
-            // Muat ulang daftar Poli Obgyn setelah penyimpanan berhasil
+            // Kembali ke daftar Poli Obgyn setelah penyimpanan berhasil
             window.location.href = URL_HALAMAN_OBGYN;
 
         } catch (error) {
@@ -1540,9 +1568,9 @@ if (!hasilStatus.ok || !dataStatus.success) {
             let nilai = inputEl.value.trim();
 
             if (inputEl.type === 'date' && nilai !== '') {
-    const [tahun, bulan, hari] = nilai.split('-');
-    nilai = `${hari}-${bulan}-${tahun}`;
-}
+                const [tahun, bulan, hari] = nilai.split('-');
+                nilai = `${hari}-${bulan}-${tahun}`;
+            }
 
             const unitEl = row.querySelector('.ob-vital-unit');
             const unit = unitEl ? unitEl.textContent.trim() : '';
@@ -1607,10 +1635,10 @@ if (!hasilStatus.ok || !dataStatus.success) {
     };
 
     // Isi dari diagnosis dan tindakan yang dikirim controller
-const diagnosaTerpilih = {
-    penyakit: @json($diagnosisJson),
-    tindakan: @json($tindakanJson)
-};
+    const diagnosaTerpilih = {
+        penyakit: @json($diagnosisJson),
+        tindakan: @json($tindakanJson)
+    };
 
     const timerCari = {};
     const urutanCari = {
@@ -1881,5 +1909,118 @@ const diagnosaTerpilih = {
     updateCentang('penyakit');
     updateCentang('tindakan');
     updateCentangVital();
+
+    /* =========================================================
+       CEGAH KELUAR HALAMAN SEBELUM ASESMEN DISIMPAN
+       Berlaku bila:
+       - pasien baru (kunjungan ini belum punya data asesmen), atau
+       - ada perubahan TTV / SOAP / diagnosa / tindakan yang belum disimpan.
+
+       - Tombol Back browser: ditahan, muncul peringatan.
+       - Klik menu / link lain: dibatalkan, muncul peringatan.
+       - Refresh / tutup tab: browser menampilkan konfirmasi.
+       Setelah Simpan atau Rujuk berhasil, semua pembatasan dilepas.
+       ========================================================= */
+    const PESAN_BELUM_SIMPAN =
+        'Data pasien belum disimpan.\n' +
+        'Klik tombol Simpan terlebih dahulu sebelum meninggalkan halaman ini.';
+
+    function ambilSnapshotForm() {
+        const nilai = nama => (
+            document.querySelector('[name="' + nama + '"]')?.value ?? ''
+        ).trim();
+
+        return JSON.stringify({
+            ttv: [
+                'td', 'hr', 'spo2', 'suhu', 'rr',
+                'hpht', 'uk', 'alergi'
+            ].map(nilai),
+            soap: [
+                'subjective', 'objective', 'assessment', 'plan'
+            ].map(nilai),
+            penyakit: diagnosaTerpilih.penyakit
+                .map(d => String(d.id)).sort(),
+            tindakan: diagnosaTerpilih.tindakan
+                .map(d => String(d.id)).sort()
+        });
+    }
+
+    // Kondisi form saat halaman dibuka.
+    const snapshotAwal = ambilSnapshotForm();
+    let guardHistoryAktif = false;
+
+    function adaDataBelumDisimpan() {
+        if (izinkanKeluar) return false;
+
+        // Pasien baru: wajib Simpan dulu, walaupun form belum diubah.
+        if (!SUDAH_ADA_ASSESMEN) return true;
+
+        return ambilSnapshotForm() !== snapshotAwal;
+    }
+
+    // Tambah satu entri riwayat agar tombol Back bisa ditahan.
+    function pasangGuardHistory() {
+        if (guardHistoryAktif) return;
+
+        history.pushState({ guardSimpan: true }, '', location.href);
+        guardHistoryAktif = true;
+    }
+
+    function periksaGuard() {
+        if (adaDataBelumDisimpan()) pasangGuardHistory();
+    }
+
+    // Pasien baru langsung dijaga sejak halaman dibuka.
+    periksaGuard();
+
+    document.addEventListener('input', periksaGuard);
+    document.addEventListener('change', periksaGuard);
+    document.addEventListener('click', function () {
+        // Menangkap tambah/hapus diagnosa dan tindakan yang bukan input biasa.
+        setTimeout(periksaGuard, 0);
+    });
+
+    // Tombol Back / Forward browser.
+    window.addEventListener('popstate', function () {
+        if (adaDataBelumDisimpan()) {
+            alert(PESAN_BELUM_SIMPAN);
+            history.pushState({ guardSimpan: true }, '', location.href);
+        } else if (guardHistoryAktif) {
+            guardHistoryAktif = false;
+            history.back();
+        }
+    });
+
+    // Klik link / menu sidebar ke halaman lain.
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('a[href]');
+
+        if (!link) return;
+
+        const href = (link.getAttribute('href') || '').trim().toLowerCase();
+
+        if (
+            href === '' ||
+            href.startsWith('#') ||
+            href.startsWith('javascript:') ||
+            link.target === '_blank'
+        ) {
+            return;
+        }
+
+        if (adaDataBelumDisimpan()) {
+            e.preventDefault();
+            e.stopPropagation();
+            alert(PESAN_BELUM_SIMPAN);
+        }
+    }, true);
+
+    // Refresh, tutup tab, atau mengetik alamat lain.
+    window.addEventListener('beforeunload', function (e) {
+        if (adaDataBelumDisimpan()) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
 </script>
 @endsection
