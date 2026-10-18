@@ -1030,6 +1030,31 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
                 String(d.getDate()).padStart(2, '0');
         }
 
+        // Diagnosa rujukan otomatis dari diagnosa penyakit di form Assessment
+        const rjDx = document.getElementById('rjDiagnosa');
+
+        // 1) daftar penyakit yang sudah ditambahkan (✓)
+        const daftarDx = diagnosaTerpilih.penyakit
+            .map(item => item.kode + ' — ' + item.nama);
+
+        // 2) penyakit yang sudah dipilih dari pencarian tapi belum di-✓
+        if (pilihan.penyakit) {
+            const teksPilihan = pilihan.penyakit.kode + ' — ' + pilihan.penyakit.nama;
+            if (!daftarDx.includes(teksPilihan)) daftarDx.push(teksPilihan);
+        }
+
+        let teksDx = daftarDx.join('; ');
+
+        // 3) jika belum ada, pakai isi kolom A (Assessment) di SOAP
+        if (!teksDx) {
+            const asesmen = document.querySelector('textarea[name="assessment"]');
+            teksDx = asesmen ? asesmen.value.trim() : '';
+        }
+
+        rjDx.value = teksDx;
+        // terkunci jika terisi otomatis; jika kosong tetap bisa diketik manual
+        rjDx.readOnly = teksDx !== '';
+
         document.body.classList.add('mode-rujukan');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }

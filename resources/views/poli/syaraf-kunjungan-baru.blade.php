@@ -536,7 +536,7 @@
                     <div>
                         <div class="rj-field rj-mb">
                             <label>Diagnosa</label>
-                            <input type="text" id="rjDiagnosa" autocomplete="off">
+                            <input type="text" id="rjDiagnosa" autocomplete="off" readonly>
                         </div>
                         <div class="rj-field rj-top">
                             <label>Alasan Rujuk</label>
@@ -939,6 +939,11 @@
                         String(d.getMonth() + 1).padStart(2, '0') + '-' +
                         String(d.getDate()).padStart(2, '0');
         }
+
+        // Diagnosa rujukan otomatis dari diagnosa penyakit di form Assessment
+        document.getElementById('rjDiagnosa').value = diagnosaTerpilih.penyakit
+            .map(item => item.kode + ' — ' + item.nama)
+            .join('; ');
 
         document.body.classList.add('mode-rujukan');
         window.scrollTo({ top: 0, behavior: 'smooth' });
