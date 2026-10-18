@@ -576,7 +576,7 @@
     const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
     const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
 
-    // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
+    // true hanya sesaat sebelum pindah halaman setelah Simpan berhasil.
     // Selama false, halaman ini tidak bisa ditinggalkan bila ada data belum disimpan.
     let izinkanKeluar = false;
 
@@ -980,13 +980,13 @@
         });
     }
 
-    
+
 async function kirimRujukan() {
-    const tujuan = document.getElementById('rjTujuan').value;
-    const alasan = document.getElementById('rjAlasan').value.trim();
-    const diagnosa = document.getElementById('rjDiagnosa').value.trim();
-    const dokter = document.getElementById('rjDokter').value.trim();
-    const tanggal = document.getElementById('rjTanggal').value;
+    const tujuan = document.getElementById('rjTujuan')?.value;
+    const alasan = document.getElementById('rjAlasan')?.value.trim();
+    const diagnosa = document.getElementById('rjDiagnosa')?.value.trim();
+    const dokter = document.getElementById('rjDokter')?.value.trim();
+    const tanggal = document.getElementById('rjTanggal')?.value;
     const csrfToken = document.getElementById('csrf_token')?.value;
 
     if (!NO_RM_PASIEN) {
@@ -999,22 +999,52 @@ async function kirimRujukan() {
         return;
     }
 
+    if (!diagnosa) {
+        alert('Isi diagnosis pasien terlebih dahulu.');
+        return;
+    }
+
     if (!alasan) {
         alert('Isi alasan rujuk terlebih dahulu.');
         return;
     }
 
+    if (!tanggal) {
+        alert('Isi tanggal rujukan terlebih dahulu.');
+        return;
+    }
+
+    if (!csrfToken) {
+        alert('Token keamanan tidak ditemukan. Muat ulang halaman.');
+        return;
+    }
+
     const tombol = document.querySelector('.rj-kirim');
-    tombol.disabled = true;
+
+    if (tombol) {
+        tombol.disabled = true;
+        tombol.dataset.teksAsli = tombol.textContent;
+        tombol.textContent = 'Mengirim rujukan...';
+    }
 
     try {
         const radiologi = Array.from(
             document.querySelectorAll(
                 '#view-rujukan input[name="rujuk_radiologi[]"]:checked'
             )
-        ).map(cb => cb.value);
+        )
+        .filter(cb => cb.id !== 'rjCekLainnya')
+        .map(cb => cb.value);
 
-        const lainnya = document.getElementById('rjLainnya')?.value.trim();
+        const checkboxLainnya =
+            document.getElementById('rjCekLainnya');
+
+        const inputLainnya =
+            document.getElementById('rjLainnya');
+
+        const lainnya = checkboxLainnya?.checked
+            ? (inputLainnya?.value || '').trim()
+            : '';
 
         const response = await fetch(
             "{{ route('poli.syaraf.rujukan') }}",
@@ -1039,31 +1069,80 @@ async function kirimRujukan() {
             }
         );
 
-        const hasil = await response.json();
+        const teksRespons = await response.text();
+        let hasil;
+
+        try {
+            hasil = JSON.parse(teksRespons);
+        } catch (error) {
+            console.error(
+                'Respons server bukan JSON:',
+                response.status,
+                teksRespons
+            );
+
+            throw new Error(
+                'Server tidak memberikan respons JSON. ' +
+                'Periksa route, controller, dan log Laravel.'
+            );
+        }
 
         if (!response.ok || hasil.success !== true) {
-            const pesan = hasil.message ||
-                (hasil.errors
-                    ? Object.values(hasil.errors).flat().join('\n')
-                    : 'Rujukan gagal dikirim.');
+            let pesan = hasil.message || 'Rujukan gagal dikirim.';
+
+            if (hasil.errors) {
+                const daftarError = Object.values(hasil.errors).flat();
+
+                if (daftarError.length > 0) {
+                    pesan += '\n' + daftarError.join('\n');
+                }
+            }
 
             throw new Error(pesan);
         }
 
-        // Rujukan berhasil dikirim: halaman boleh ditinggalkan.
-        izinkanKeluar = true;
-
+        // ===== Rujukan berhasil: kembali ke halaman awal assesmen =====
+        // (sengaja TIDAK pindah halaman lewat hasil.redirect)
         alert(hasil.message || 'Rujukan berhasil dikirim.');
 
-        if (hasil.redirect) {
-            window.location.href = hasil.redirect;
-        }
+        // 1. Reset form rujukan
+        document.getElementById('rjTujuan').value = '';
+        document.getElementById('rjAlasan').value = '';
+        document.querySelectorAll('#view-rujukan input[name="rujuk_radiologi[]"]')
+            .forEach(cb => cb.checked = false);
+        const rjLain = document.getElementById('rjLainnya');
+        if (rjLain) rjLain.value = '';
+
+        // 2. Tutup form rujukan
+        document.body.classList.remove('mode-rujukan');
+
+        // 3. Aktifkan tab Assessment
+        document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelector('.kb-tab')?.classList.add('active');
+        document.getElementById('tab-assesment')?.classList.add('active');
+
+        // 4. Scroll ke paling atas (window + container konten kalau ada)
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        document.querySelectorAll('.main-content, .content, main')
+            .forEach(el => el.scrollTop = 0);
 
     } catch (error) {
         console.error('Gagal mengirim rujukan:', error);
-        alert(error.message || 'Terjadi kesalahan saat mengirim rujukan.');
+
+        alert(
+            error.message ||
+            'Terjadi kesalahan saat mengirim rujukan.'
+        );
+
     } finally {
-        tombol.disabled = false;
+        if (tombol) {
+            tombol.disabled = false;
+            tombol.textContent =
+                tombol.dataset.teksAsli || 'KIRIM RUJUKAN';
+        }
     }
 }
 

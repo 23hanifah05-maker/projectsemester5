@@ -226,6 +226,7 @@ class PoliController extends Controller
 
     /**
      * Halaman riwayat pasien Poli Saraf.
+     * Kunjungan Radiologi tidak ditampilkan di riwayat.
      */
     public function riwayatSaraf($no_rm)
     {
@@ -233,6 +234,9 @@ class PoliController extends Controller
 
         $riwayat = Pendaftaran::with('poli')
             ->where('no_rm', $no_rm)
+            ->whereHas('poli', function ($q) {
+                $q->where('slug', '!=', 'radiologi');
+            })
             ->orderByDesc('tgl_registrasi')
             ->orderByDesc('id_pendaftaran')
             ->get();

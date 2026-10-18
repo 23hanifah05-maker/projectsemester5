@@ -801,12 +801,12 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
                     <div class="rj-field">
                         <label>Tujuan</label>
                         <select id="rjTujuan">
-                            <option value="">-- Pilih Poli --</option>
-                            <option>Poli Syaraf</option>
-                            <option>Poli Jantung</option>
-                            <option>Poli Jiwa</option>
-                            <option>Radiologi</option>
-                        </select>
+    <option value="">-- Pilih Poli --</option>
+    <option value="saraf">Poli Syaraf</option>
+    <option value="jantung">Poli Jantung</option>
+    <option value="jiwa">Poli Jiwa</option>
+    <option value="radiologi">Radiologi</option>
+</select>
                     </div>
 
                     <div class="rj-field">
@@ -937,6 +937,7 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
     const URL_HALAMAN_OBGYN = @json(route('poli.obgyn'));
     const URL_CARI = @json(url('/cari-kode'));
     const CSRF_TOKEN = @json(csrf_token());
+    const URL_KIRIM_RUJUKAN = @json(route('poli.obgyn.rujukan'));
 
     // =========================================================
     // TAB
@@ -1081,21 +1082,124 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
         });
     }
 
-    function kirimRujukan() {
-        if (!document.getElementById('rjTujuan').value) {
-            alert('Pilih poli tujuan rujukan terlebih dahulu.');
-            return;
-        }
 
-        if (!document.getElementById('rjAlasan').value.trim()) {
-            alert('Isi alasan rujuk terlebih dahulu.');
-            return;
-        }
+async function kirimRujukan() {
+    const tujuan = document.getElementById('rjTujuan')?.value ?? '';
+    const alasan = document.getElementById('rjAlasan')?.value.trim() ?? '';
+    const diagnosa = document.getElementById('rjDiagnosa')?.value.trim() ?? '';
+    const tanggal = document.getElementById('rjTanggal')?.value ?? '';
+    const dokter = document.getElementById('rjDokter')?.value.trim() ?? '';
 
-        // Belum terhubung ke backend.
-        alert('Form rujukan sudah divalidasi, tetapi belum tersimpan ke database karena route penyimpanan rujukan belum tersedia.');
+    if (!NO_RM_PASIEN) {
+        alert('Data pasien tidak ditemukan.');
+        return;
     }
 
+    if (!tujuan) {
+        alert('Pilih poli tujuan rujukan terlebih dahulu.');
+        return;
+    }
+
+    if (!alasan) {
+        alert('Isi alasan rujuk terlebih dahulu.');
+        return;
+    }
+
+    if (!tanggal) {
+        alert('Pilih tanggal rujukan terlebih dahulu.');
+        return;
+    }
+
+    const tombol = document.querySelector('.rj-kirim');
+
+    if (!tombol || tombol.disabled) return;
+
+    const teksAwal = tombol.textContent;
+    tombol.disabled = true;
+    tombol.textContent = 'Memproses...';
+
+    const radiologi = Array.from(
+        document.querySelectorAll(
+            '#view-rujukan input[name="rujuk_radiologi[]"]:checked'
+        )
+    )
+        .filter(input => input.id !== 'rjCekLainnya')
+        .map(input => input.value);
+
+    const cekLainnya = document.getElementById('rjCekLainnya');
+    const inputLainnya = document.getElementById('rjLainnya');
+    const radiologiLainnya = cekLainnya?.checked
+        ? (inputLainnya?.value.trim() ?? '')
+        : '';
+
+    if (cekLainnya?.checked && !radiologiLainnya) {
+        alert('Tuliskan jenis pemeriksaan radiologi lainnya.');
+        tombol.disabled = false;
+        tombol.textContent = teksAwal;
+        return;
+    }
+
+    try {
+        const response = await fetch(URL_KIRIM_RUJUKAN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF_TOKEN
+            },
+            body: JSON.stringify({
+                no_rm: NO_RM_PASIEN,
+                id_pendaftaran: ID_PENDAFTARAN,
+                tujuan: tujuan,
+                alasan: alasan,
+                diagnosa: diagnosa,
+                dokter_pengirim: dokter,
+                tanggal_rujuk: tanggal,
+                pemeriksaan_radiologi: radiologi,
+                radiologi_lainnya: radiologiLainnya
+            })
+        });
+
+        const teksRespons = await response.text();
+        let hasil;
+
+        try {
+            hasil = JSON.parse(teksRespons);
+        } catch {
+            throw new Error(
+                'Respons server bukan JSON. Periksa route dan controller rujukan Obgyn.'
+            );
+        }
+
+        if (!response.ok || !hasil.success) {
+            const pesanValidasi = Object.values(hasil.errors || {})
+                .flat()
+                .join('\n');
+
+            throw new Error(
+                pesanValidasi ||
+                hasil.message ||
+                'Rujukan gagal diproses.'
+            );
+        }
+
+        alert(hasil.message || 'Rujukan berhasil dikirim.');
+
+        if (hasil.redirect) {
+            window.location.href = hasil.redirect;
+        } else {
+            window.location.href = URL_HALAMAN_OBGYN;
+        }
+
+    } catch (error) {
+        console.error('Gagal mengirim rujukan Obgyn:', error);
+        alert('Rujukan gagal dikirim: ' + error.message);
+
+    } finally {
+        tombol.disabled = false;
+        tombol.textContent = teksAwal;
+    }
+}
     // =========================================================
     // SIMPAN TTV DAN SOAP KE DATABASE
     // =========================================================
