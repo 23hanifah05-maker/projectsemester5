@@ -497,12 +497,12 @@
                     <div class="rj-field">
                         <label>Tujuan</label>
                         <select id="rjTujuan">
-                            <option value="">-- Pilih Poli --</option>
-                            <option>Poli Obgyn</option>
-                            <option>Poli Jantung</option>
-                            <option>Poli Jiwa</option>
-                            <option>Radiologi</option>
-                        </select>
+    <option value="">-- Pilih Poli --</option>
+    <option value="obgyn">Poli Obgyn</option>
+    <option value="jantung">Poli Jantung</option>
+    <option value="jiwa">Poli Jiwa</option>
+    <option value="radiologi">Radiologi</option>
+</select>
                     </div>
                     <div class="rj-field">
                         <label>Dokter Pengirim</label>
@@ -925,7 +925,6 @@
         }
     }
 
-
     // ===== Rujukan: buka / tutup form =====
     function rujukPasien() {
         if (!NO_RM_PASIEN) {
@@ -970,38 +969,89 @@
         });
     }
 
-    function kirimRujukan() {
-        if (document.getElementById('rjTujuan').value === '') {
-            alert('Pilih poli tujuan rujukan terlebih dahulu.');
-            return;
-        }
-        if (document.getElementById('rjAlasan').value.trim() === '') {
-            alert('Isi alasan rujuk terlebih dahulu.');
-            return;
-        }
+    
+async function kirimRujukan() {
+    const tujuan = document.getElementById('rjTujuan').value;
+    const alasan = document.getElementById('rjAlasan').value.trim();
+    const diagnosa = document.getElementById('rjDiagnosa').value.trim();
+    const dokter = document.getElementById('rjDokter').value.trim();
+    const tanggal = document.getElementById('rjTanggal').value;
+    const csrfToken = document.getElementById('csrf_token')?.value;
 
-        // TODO: kirim ke backend. Sementara masih dummy front-end.
-        alert('Rujukan berhasil dikirim.');
-
-        // Reset form rujukan
-        ['rjDokter', 'rjDiagnosa', 'rjAlasan', 'rjLainnya', 'rjTanggal'].forEach(function (id) {
-            document.getElementById(id).value = '';
-        });
-        document.getElementById('rjTujuan').value = '';
-        document.querySelectorAll('#view-rujukan input[type=checkbox]').forEach(function (cb) {
-            cb.checked = false;
-        });
-
-        // Kembali ke halaman Assesment (pastikan tab Assesment yang aktif)
-        document.querySelectorAll('.kb-tab').forEach(function (el, i) {
-            el.classList.toggle('active', i === 0);
-        });
-        document.querySelectorAll('.kb-tab-content').forEach(function (el) {
-            el.classList.toggle('active', el.id === 'tab-assesment');
-        });
-
-        tutupRujukan();
+    if (!NO_RM_PASIEN) {
+        alert('Data pasien tidak ditemukan.');
+        return;
     }
+
+    if (!tujuan) {
+        alert('Pilih poli tujuan rujukan terlebih dahulu.');
+        return;
+    }
+
+    if (!alasan) {
+        alert('Isi alasan rujuk terlebih dahulu.');
+        return;
+    }
+
+    const tombol = document.querySelector('.rj-kirim');
+    tombol.disabled = true;
+
+    try {
+        const radiologi = Array.from(
+            document.querySelectorAll(
+                '#view-rujukan input[name="rujuk_radiologi[]"]:checked'
+            )
+        ).map(cb => cb.value);
+
+        const lainnya = document.getElementById('rjLainnya')?.value.trim();
+
+        const response = await fetch(
+            "{{ route('poli.syaraf.rujukan') }}",
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    no_rm: NO_RM_PASIEN,
+                    tujuan: tujuan,
+                    alasan: alasan,
+                    diagnosa: diagnosa,
+                    dokter_pengirim: dokter,
+                    tanggal_rujuk: tanggal,
+                    pemeriksaan_radiologi: radiologi,
+                    radiologi_lainnya: lainnya
+                })
+            }
+        );
+
+        const hasil = await response.json();
+
+        if (!response.ok || hasil.success !== true) {
+            const pesan = hasil.message ||
+                (hasil.errors
+                    ? Object.values(hasil.errors).flat().join('\n')
+                    : 'Rujukan gagal dikirim.');
+
+            throw new Error(pesan);
+        }
+
+        alert(hasil.message || 'Rujukan berhasil dikirim.');
+
+        if (hasil.redirect) {
+            window.location.href = hasil.redirect;
+        }
+
+    } catch (error) {
+        console.error('Gagal mengirim rujukan:', error);
+        alert(error.message || 'Terjadi kesalahan saat mengirim rujukan.');
+    } finally {
+        tombol.disabled = false;
+    }
+}
 
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';

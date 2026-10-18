@@ -88,52 +88,81 @@
                 </thead>
 
                 <tbody>
-                    @forelse ($riwayat as $i => $item)
-                        <tr>
-                            <td>{{ $i + 1 }}</td>
+    @forelse ($riwayat as $i => $item)
+        @php
+            $slugPoli = $item->poli->slug ?? '';
+            $tanggalKunjungan = $item->tgl_registrasi
+                ? \Carbon\Carbon::parse($item->tgl_registrasi)->format('d-m-Y')
+                : '-';
+        @endphp
 
-                            {{-- TANGGAL KUNJUNGAN --}}
-                            <td>
-                                @if ($item->tgl_registrasi)
-                                    <a
-                                        href="{{ route('poli.syaraf.kunjungan.detail', [
-                                            'no_rm' => $pasien->no_rm,
-                                            'tanggal' => \Carbon\Carbon::parse($item->tgl_registrasi)->format('Y-m-d')
-                                        ]) }}"
-                                        class="kj-link"
-                                    >
-                                        {{ \Carbon\Carbon::parse($item->tgl_registrasi)->format('d-m-Y') }}
-                                    </a>
-                                @else
-                                    -
-                                @endif
-                            </td>
+        <tr>
+            <td>{{ $i + 1 }}</td>
 
-                            {{-- NAMA POLI --}}
-                            <td>
-                                @if ($item->tgl_registrasi)
-                                    <a
-                                        href="{{ route('poli.syaraf.kunjungan.detail', [
-                                            'no_rm' => $pasien->no_rm,
-                                            'tanggal' => \Carbon\Carbon::parse($item->tgl_registrasi)->format('Y-m-d')
-                                        ]) }}"
-                                        class="kj-link"
-                                    >
-                                        {{ $item->poli->nama_poli ?? 'Poli tidak diketahui' }}
-                                    </a>
-                                @else
-                                    {{ $item->poli->nama_poli ?? 'Poli tidak diketahui' }}
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="kj-kosong">
-                                Belum ada riwayat kunjungan.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
+            {{-- TANGGAL KUNJUNGAN --}}
+            <td>
+    @if ($slugPoli === 'saraf' || $slugPoli === 'syaraf')
+        <a
+            href="{{ route('poli.syaraf.kunjungan.detail', [
+                'no_rm' => $pasien->no_rm,
+                'id_pendaftaran' => $item->id_pendaftaran
+            ]) }}"
+            class="kj-link"
+        >
+            {{ $tanggalKunjungan }}
+        </a>
+    @elseif ($slugPoli === 'obgyn')
+        <a
+            href="{{ route('poli.obgyn.kunjungan.detail', [
+                'no_rm' => $pasien->no_rm,
+                'id_pendaftaran' => $item->id_pendaftaran
+            ]) }}"
+            class="kj-link"
+        >
+            {{ $tanggalKunjungan }}
+        </a>
+    @else
+        {{ $tanggalKunjungan }}
+    @endif
+</td>
+
+            {{-- NAMA POLI --}}
+            <td>
+                @if ($slugPoli === 'saraf')
+                    <a
+                        href="{{ route('poli.syaraf.kunjungan.detail', [
+                            'no_rm' => $pasien->no_rm,
+                            'id_pendaftaran' => $item->id_pendaftaran
+                        ]) }}"
+                        class="kj-link"
+                    >
+                        {{ $item->poli->nama_poli ?? 'Poli Saraf' }}
+                    </a>
+
+                @elseif ($slugPoli === 'obgyn')
+                    <a
+                        href="{{ route('poli.obgyn.kunjungan.detail', [
+                            'no_rm' => $pasien->no_rm,
+                            'id_pendaftaran' => $item->id_pendaftaran
+                        ]) }}"
+                        class="kj-link"
+                    >
+                        {{ $item->poli->nama_poli ?? 'Poli Obgyn' }}
+                    </a>
+
+                @else
+                    {{ $item->poli->nama_poli ?? 'Poli tidak diketahui' }}
+                @endif
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="3" class="kj-kosong">
+                Belum ada riwayat kunjungan.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
             </table>
         </div>
 

@@ -101,77 +101,75 @@
                     </tr>
                 </thead>
 
-                <tbody>
-                    @forelse ($riwayat as $i => $item)
+<tbody>
+    @forelse ($riwayat as $i => $item)
 
-                        @php
-                            $tanggalKunjungan = $item->tgl_registrasi
-                                ? \Carbon\Carbon::parse($item->tgl_registrasi)
-                                : null;
+        @php
+            $tanggalKunjungan = $item->tgl_registrasi
+                ? \Carbon\Carbon::parse($item->tgl_registrasi)
+                : null;
 
-                            $tanggalUrl = $tanggalKunjungan
-                                ? $tanggalKunjungan->format('Y-m-d')
-                                : null;
+            $slugPoli = optional($item->poli)->slug;
+            $namaPoli = optional($item->poli)->nama_poli
+                ?? 'Poli tidak diketahui';
 
-                            $slugPoli = optional($item->poli)->slug;
-                            $namaPoli = optional($item->poli)->nama_poli
-                                ?? 'Poli tidak diketahui';
+            $urlDetail = null;
 
-                            $urlDetail = null;
+            if ($slugPoli === 'obgyn') {
+                $urlDetail = route(
+                    'poli.obgyn.kunjungan.detail',
+                    [
+                        'no_rm' => $noRmAktif,
+                        'id_pendaftaran' => $item->id_pendaftaran,
+                    ]
+                );
+            } elseif ($slugPoli === 'saraf') {
+                $urlDetail = route(
+                    'poli.syaraf.kunjungan.detail',
+                    [
+                        'no_rm' => $noRmAktif,
+                        'id_pendaftaran' => $item->id_pendaftaran,
+                    ]
+                );
+            }
+        @endphp
 
-                            if ($tanggalUrl && $slugPoli === 'obgyn') {
-                                $urlDetail = route(
-                                    'poli.obgyn.kunjungan.detail',
-                                    [
-                                        'no_rm' => $noRmAktif,
-                                        'tanggal' => $tanggalUrl,
-                                    ]
-                                );
-                            } elseif ($tanggalUrl && $slugPoli === 'saraf') {
-                                $urlDetail = route(
-                                    'poli.syaraf.kunjungan.detail',
-                                    [
-                                        'no_rm' => $noRmAktif,
-                                        'tanggal' => $tanggalUrl,
-                                    ]
-                                );
-                            }
-                        @endphp
+        <tr>
+            <td>{{ $i + 1 }}</td>
 
-                        <tr>
-                            <td>{{ $i + 1 }}</td>
+            <td>
+                @if ($urlDetail)
+                    <a href="{{ $urlDetail }}" class="obr-link">
+                        {{ $tanggalKunjungan
+                            ? $tanggalKunjungan->format('d-m-Y')
+                            : '-' }}
+                    </a>
+                @else
+                    {{ $tanggalKunjungan
+                        ? $tanggalKunjungan->format('d-m-Y')
+                        : '-' }}
+                @endif
+            </td>
 
-                            <td>
-                                @if ($urlDetail)
-                                    <a href="{{ $urlDetail }}" class="obr-link">
-                                        {{ $tanggalKunjungan->format('d-m-Y') }}
-                                    </a>
-                                @else
-                                    {{ $tanggalKunjungan
-                                        ? $tanggalKunjungan->format('d-m-Y')
-                                        : '-' }}
-                                @endif
-                            </td>
+            <td>
+                @if ($urlDetail)
+                    <a href="{{ $urlDetail }}" class="obr-link">
+                        {{ $namaPoli }}
+                    </a>
+                @else
+                    {{ $namaPoli }}
+                @endif
+            </td>
+        </tr>
 
-                            <td>
-                                @if ($urlDetail)
-                                    <a href="{{ $urlDetail }}" class="obr-link">
-                                        {{ $namaPoli }}
-                                    </a>
-                                @else
-                                    {{ $namaPoli }}
-                                @endif
-                            </td>
-                        </tr>
-
-                    @empty
-                        <tr>
-                            <td colspan="3" class="obr-kosong">
-                                Belum ada riwayat kunjungan.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
+    @empty
+        <tr>
+            <td colspan="3" class="obr-kosong">
+                Belum ada riwayat kunjungan.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
             </table>
         </div>
 

@@ -132,7 +132,7 @@ Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', [
     'kunjunganSaraf'
 ])->name('poli.syaraf.kunjungan-baru');
 
-Route::get('/poli/syaraf/detail/{no_rm}/{tanggal}', [
+Route::get('/poli/syaraf/detail/{no_rm}/{id_pendaftaran}', [
     PoliController::class,
     'kunjunganSarafDetail'
 ])->name('poli.syaraf.kunjungan.detail');
@@ -146,6 +146,11 @@ Route::post('/poli/syaraf/assesmen', [
     AssesmenController::class,
     'store'
 ])->name('poli.syaraf.assesmen.store');
+
+Route::post('/poli/syaraf/rujukan', [
+    PoliController::class,
+    'kirimRujukan'
+])->name('poli.syaraf.rujukan');
 
 
 /*
@@ -182,7 +187,7 @@ Route::get('/poli/obgyn/kunjungan/{no_rm}', [
 ])->name('poli.obgyn.kunjungan');
 
 // Halaman detail kunjungan berdasarkan tanggal
-Route::get('/poli/obgyn/kunjungan/{no_rm}/{tanggal}', [
+Route::get('/poli/obgyn/kunjungan/{no_rm}/{id_pendaftaran}', [
     PoliController::class,
     'kunjunganObgyn'
 ])->name('poli.obgyn.kunjungan.detail');
@@ -251,3 +256,4 @@ Route::get('/radiologi', [RadiologiController::class, 'index'])
 
 Route::get('/audit-trail', [AuditTrailController::class, 'index'])
     ->name('audit-trail.index');
+
