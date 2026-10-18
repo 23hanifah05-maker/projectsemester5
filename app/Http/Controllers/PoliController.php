@@ -720,20 +720,17 @@ public function kirimRujukan(Request $request)
     });
 
     // Arahkan pasien langsung ke halaman poli tujuan.
-    $redirect = match ($poliTujuan->slug) {
-        'obgyn' => route('poli.obgyn.kunjungan.detail', [
-            'no_rm' => $noRm,
-            'id_pendaftaran' => $pendaftaranBaru->id_pendaftaran,
-        ]),
+   $redirect = match ($poliTujuan->slug) {
+    'obgyn' => route('poli.obgyn'),
 
-        'jantung' => route('poli.jantung'),
+    'jantung' => route('poli.jantung'),
 
-        'jiwa' => route('poli.jiwa'),
+    'jiwa' => route('poli.jiwa'),
 
-        default => route('poli.syaraf.detail', [
-            'no_rm' => $noRm,
-        ]),
-    };
+    'radiologi' => route('radiologi.index'),
+
+    default => route('poli.syaraf'),
+};
 
     return response()->json([
         'success' => true,
