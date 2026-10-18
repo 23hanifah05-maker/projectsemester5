@@ -787,51 +787,144 @@
         document.body.classList.remove('cetak-cp-mode');
     });
 
-    // Klik Simpan: simpan TTV, SOAP, dan ICD sebelum mengubah status pasien.
+
+    // Klik Simpan: simpan TTV, SOAP, ICD, lalu perbarui status di database.
     async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
             return;
         }
 
-        if (typeof cpBolehDiisi === 'function' &&
+        if (
+            typeof cpBolehDiisi === 'function' &&
             typeof cpTerisi === 'function' &&
-            cpBolehDiisi() && !cpTerisi()) {
-            alert('Diagnosa utama pasien adalah HNP. Clinical Pathway wajib diisi sebelum menyimpan.');
-            if (typeof bukaTabPathway === 'function') bukaTabPathway();
+            cpBolehDiisi() &&
+            !cpTerisi()
+        ) {
+            alert(
+                'Diagnosa utama pasien adalah HNP. ' +
+                'Clinical Pathway wajib diisi sebelum menyimpan.'
+            );
+
+            if (typeof bukaTabPathway === 'function') {
+                bukaTabPathway();
+            }
+
             return;
         }
 
-        const tombolSimpan = document.querySelectorAll('[onclick*="simpanKunjunganBaru"]');
-        tombolSimpan.forEach(tombol => tombol.disabled = true);
+        const tombolSimpan = document.querySelectorAll(
+            '[onclick*="simpanKunjunganBaru"]'
+        );
+
+        tombolSimpan.forEach(tombol => {
+            tombol.disabled = true;
+        });
 
         try {
-            // TTV tetap menggunakan endpoint yang sudah ada.
+            // 1. Simpan TTV.
             const ttvTersimpan = await simpanTTVKeDatabase();
-            if (!ttvTersimpan) return;
 
-            // SOAP dan ICD disimpan ke tabel assesmen serta tabel detail.
-            const soapIcdTersimpan = await simpanSOAPdanICDKeDatabase();
-            if (!soapIcdTersimpan) return;
+            if (!ttvTersimpan) {
+                return;
+            }
 
-            const kunci = String(NO_RM_PASIEN).trim().toUpperCase();
-            const status = JSON.parse(localStorage.getItem(KUNCI_STATUS_PERIKSA) || '{}');
-            status[kunci] = 'selesai';
-            localStorage.setItem(KUNCI_STATUS_PERIKSA, JSON.stringify(status));
+            // 2. Simpan SOAP dan ICD.
+            const soapIcdTersimpan =
+                await simpanSOAPdanICDKeDatabase();
 
-            const waktu = JSON.parse(localStorage.getItem(KUNCI_WAKTU_SELESAI) || '{}');
-            waktu[kunci] = Date.now();
-            localStorage.setItem(KUNCI_WAKTU_SELESAI, JSON.stringify(waktu));
+            if (!soapIcdTersimpan) {
+                return;
+            }
 
-            alert('Data TTV, SOAP, dan ICD berhasil disimpan. Status pasien berubah menjadi Selesai.');
+            // 3. Pastikan ID pendaftaran tersedia.
+            const idPendaftaran = document
+                .getElementById('id_pendaftaran')
+                .value;
+
+            const csrfToken = document
+                .getElementById('csrf_token')
+                .value;
+
+            if (!idPendaftaran) {
+                throw new Error(
+                    'ID pendaftaran tidak ditemukan.'
+                );
+            }
+
+            // 4. Perbarui status kunjungan di database.
+            const responseStatus = await fetch(
+                `/poli/syaraf/status-periksa/${idPendaftaran}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        status_periksa: 'selesai'
+                    })
+                }
+            );
+
+            // Baca respons dengan aman agar error server terlihat.
+            const teksRespons = await responseStatus.text();
+
+            let hasilStatus;
+
+            try {
+                hasilStatus = JSON.parse(teksRespons);
+            } catch (e) {
+                console.error(
+                    'Respons pembaruan status bukan JSON:',
+                    responseStatus.status,
+                    teksRespons
+                );
+
+                throw new Error(
+                    'Server tidak mengirim respons JSON saat memperbarui status.'
+                );
+            }
+
+            if (
+                !responseStatus.ok ||
+                hasilStatus.success !== true
+            ) {
+                throw new Error(
+                    hasilStatus.message ||
+                    'Status pemeriksaan gagal diperbarui.'
+                );
+            }
+
+            // 5. Status selesai berhasil tersimpan di database.
+            alert(
+                'Data TTV, SOAP, dan ICD berhasil disimpan. ' +
+                'Status pasien berubah menjadi Selesai.'
+            );
+
+            // 6. Kembali ke daftar Poli Saraf.
             window.location.href = "{{ route('poli.syaraf') }}";
+
         } catch (error) {
-            console.error('Gagal menyimpan kunjungan:', error);
-            alert('Data kunjungan gagal disimpan. Periksa kembali data dan koneksi server.');
+            console.error(
+                'Detail error simpan kunjungan:',
+                error
+            );
+
+            alert(
+                'Data kunjungan gagal disimpan:\n' +
+                (error.message || String(error))
+            );
+
         } finally {
-            tombolSimpan.forEach(tombol => tombol.disabled = false);
+            tombolSimpan.forEach(tombol => {
+                tombol.disabled = false;
+            });
         }
     }
+
 
     // ===== Rujukan: buka / tutup form =====
     function rujukPasien() {
@@ -910,7 +1003,6 @@
         tutupRujukan();
     }
 
-    
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';
 
@@ -1163,18 +1255,14 @@
         tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
     };
 
-
 const pilihan = {
     penyakit: null,
     tindakan: null
 };
-
 const diagnosaTerpilih = {
     penyakit: @json($diagnosisTersimpan ?? []),
     tindakan: @json($tindakanTersimpan ?? [])
 };
-
-
     const timerCari = {};
     const urutanCari = { penyakit: 0, tindakan: 0 };
 
@@ -1330,8 +1418,6 @@ const diagnosaTerpilih = {
             list.appendChild(baris);
         });
     }
-
-    
 renderDiagnosa('penyakit');
 renderDiagnosa('tindakan');
 

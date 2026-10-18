@@ -166,6 +166,12 @@ Route::get(
 |--------------------------------------------------------------------------
 */
 
+Route::patch(
+    '/poli/obgyn/status-periksa/{id}',
+    [\App\Http\Controllers\PoliController::class, 'updateStatusPeriksaObgyn']
+)->name('poli.obgyn.status-periksa');
+
+
 Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])
     ->name('poli.obgyn');
 
@@ -187,7 +193,11 @@ Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', [
     'kunjunganObgyn'
 ])->name('poli.obgyn.kunjungan-baru');
 
+Route::post('/poli/obgyn/ttv', [TtvController::class, 'store'])
+    ->name('poli.obgyn.ttv.store');
 
+Route::post('/poli/obgyn/assesmen', [AssesmenController::class, 'store'])
+    ->name('poli.obgyn.assesmen.store');
 /*
 |--------------------------------------------------------------------------
 | Poli Jantung

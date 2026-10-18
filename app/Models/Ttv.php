@@ -18,5 +18,7 @@ class Ttv extends Model
         'respiratory_rate',
         'spo2',
         'alergi',
+        'hpht',
+        'usia_kehamilan',
     ];
 }

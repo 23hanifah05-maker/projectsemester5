@@ -475,10 +475,12 @@ function terapkanStatusPeriksa() {
             return;
         }
 
-        const kunci = String(data.no_rm || '').trim().toUpperCase();
-        const status = (tersimpan[kunci] || data.status_periksa || 'periksa') === 'selesai'
-            ? 'selesai'
-            : 'periksa';
+       const kunci = String(data.no_rm || '').trim().toUpperCase();
+
+// Status dari database menjadi sumber utama.
+const status = String(data.status_periksa || 'periksa').toLowerCase() === 'selesai'
+    ? 'selesai'
+    : 'periksa';
 
         row.dataset.statusPeriksa = status;
         row.dataset.waktuSelesai = waktu[kunci] || 0;
@@ -488,27 +490,6 @@ function terapkanStatusPeriksa() {
             badge.classList.add(status);
             badge.textContent = status === 'selesai' ? 'Selesai' : 'Periksa';
         }
-    });
-
-    rows.sort(function (a, b) {
-        const selesaiA = a.dataset.statusPeriksa === 'selesai';
-        const selesaiB = b.dataset.statusPeriksa === 'selesai';
-
-        if (selesaiA !== selesaiB) {
-            return selesaiA ? 1 : -1;
-        }
-
-        if (selesaiA) {
-            const selisih = Number(a.dataset.waktuSelesai) - Number(b.dataset.waktuSelesai);
-            if (selisih !== 0) return selisih;
-        }
-
-        return Number(a.dataset.urutAwal) - Number(b.dataset.urutAwal);
-    });
-
-    const tbody = rows[0].parentNode;
-    rows.forEach(function (row) {
-        tbody.appendChild(row);
     });
 
     perbaruiNomor();

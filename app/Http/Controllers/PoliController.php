@@ -73,10 +73,16 @@ class PoliController extends Controller
             });
         }
 
-        $pendaftaran = $query
-            ->orderByDesc('tgl_registrasi')
-            ->orderByDesc('id_pendaftaran')
-            ->get();
+$pendaftaran = $query
+    ->orderByRaw("
+        CASE
+            WHEN status_periksa = 'selesai' THEN 1
+            ELSE 0
+        END ASC
+    ")
+    ->orderBy('tgl_registrasi', 'asc')
+    ->orderBy('id_pendaftaran', 'asc')
+    ->get();
 
         $pasien = $pendaftaran
             ->filter(function ($item) {
@@ -342,11 +348,45 @@ class PoliController extends Controller
     {
         $poli = Poli::where('slug', 'obgyn')->firstOrFail();
 
-        $pendaftaran = Pendaftaran::with(['pasien', 'poli'])
-            ->where('id_poli', $poli->id_poli)
-            ->orderByDesc('tgl_registrasi')
-            ->orderByDesc('id_pendaftaran')
-            ->get();
+$query = Pendaftaran::with(['pasien', 'poli'])
+    ->where('id_poli', $poli->id_poli);
+
+if ($request->filled('dari')) {
+    $query->whereDate(
+        'tgl_registrasi',
+        '>=',
+        $request->input('dari')
+    );
+}
+
+if ($request->filled('sampai')) {
+    $query->whereDate(
+        'tgl_registrasi',
+        '<=',
+        $request->input('sampai')
+    );
+}
+
+if ($request->filled('keyword')) {
+    $keyword = trim($request->input('keyword'));
+
+    $query->whereHas('pasien', function ($q) use ($keyword) {
+        $q->where('nama_pasien', 'like', "%{$keyword}%")
+            ->orWhere('nik', 'like', "%{$keyword}%")
+            ->orWhere('no_rm', 'like', "%{$keyword}%");
+    });
+}
+
+$pendaftaran = $query
+    ->orderByRaw("
+        CASE
+            WHEN status_periksa = 'selesai' THEN 1
+            ELSE 0
+        END ASC
+    ")
+    ->orderBy('tgl_registrasi', 'asc')
+    ->orderBy('id_pendaftaran', 'asc')
+    ->get();
 
         $pasien = $pendaftaran
             ->filter(function ($item) {
@@ -450,48 +490,98 @@ class PoliController extends Controller
     /**
      * Membuka kunjungan terbaru pasien di Poli Obgyn.
      */
-    public function kunjunganObgyn($no_rm, $tanggal = null)
-    {
-        $poli = Poli::where('slug', 'obgyn')->firstOrFail();
+public function kunjunganObgyn($no_rm, $tanggal = null)
+{
+    $poli = \App\Models\Poli::where('slug', 'obgyn')->firstOrFail();
 
-        $pasien = Pasien::where('no_rm', $no_rm)->firstOrFail();
+    $pasien = \App\Models\Pasien::where('no_rm', $no_rm)
+        ->firstOrFail();
 
-        $query = Pendaftaran::with(['pasien', 'poli'])
-            ->where('no_rm', $no_rm)
-            ->where('id_poli', $poli->id_poli);
+$query = \App\Models\Pendaftaran::where('no_rm', $no_rm)
+    ->where('id_poli', 2);
 
-        if ($tanggal) {
-            $query->whereDate('tgl_registrasi', $tanggal);
-        }
+if ($tanggal) {
+    $query->whereDate('tgl_registrasi', $tanggal);
+}
 
-        $pendaftaran = $query
-            ->orderByDesc('tgl_registrasi')
-            ->orderByDesc('id_pendaftaran')
-            ->firstOrFail();
+$pendaftaran = $query
+    ->orderByDesc('id_pendaftaran')
+    ->firstOrFail();
 
-        $jenisKelamin = $this->formatJenisKelamin(
-            $pasien->jenis_kelamin
-        );
+$id_pendaftaran = $pendaftaran->id_pendaftaran;
 
-        $pjJenisKelamin = $this->formatJenisKelamin(
-            $pasien->pj_jenis_kelamin
-        );
+$ttv = \App\Models\Ttv::where(
+    'id_pendaftaran',
+    $id_pendaftaran
+)->first();
 
-        $umur = $pasien->tgl_lahir
-            ? Carbon::parse($pasien->tgl_lahir)->age . ' tahun'
-            : '-';
+$assesmen = \App\Models\Assesmen::where(
+    'id_pendaftaran',
+    $id_pendaftaran
+)->first();
 
-        $pasien->umur = $umur;
-        $pasien->jenis_kelamin = $jenisKelamin;
-        $pasien->pj_jenis_kelamin = $pjJenisKelamin;
+    $diagnosisTersimpan = collect();
+    $tindakanTersimpan = collect();
 
-        return view('poli.obgyn-kunjungan-baru', compact(
-    'poli',
-    'pasien',
-    'pendaftaran',
-    'no_rm'
-));
+    if ($assesmen) {
+        
+$diagnosisTersimpan = \Illuminate\Support\Facades\DB::table('detail_diagnosis')
+    ->join(
+        'kode_diagnosis',
+        'detail_diagnosis.id_kode10',
+        '=',
+        'kode_diagnosis.id_icd10'
+    )
+    ->where('detail_diagnosis.id_assesmen', $assesmen->id_assesmen)
+    ->select(
+        'detail_diagnosis.*',
+        'kode_diagnosis.icd_10 as kode',
+        'kode_diagnosis.diagnosa as nama'
+    )
+    ->get();
+
+
+       
+$tindakanTersimpan = \Illuminate\Support\Facades\DB::table('detail_tindakan')
+    ->join(
+        'kode_tindakan',
+        'detail_tindakan.id_kode9',
+        '=',
+        'kode_tindakan.id_icd9'
+    )
+    ->where('detail_tindakan.id_assesmen', $assesmen->id_assesmen)
+    ->select(
+        'detail_tindakan.*',
+        'kode_tindakan.icd_9 as kode',
+        'kode_tindakan.tindakan as nama'
+    )
+    ->get();
+
     }
+
+    $semuaPasienObgyn = \App\Models\Pasien::whereIn(
+        'no_rm',
+        \App\Models\Pendaftaran::where('id_poli', $poli->id_poli)
+            ->select('no_rm')
+            ->distinct()
+    )->get();
+
+    $radiologi = null;
+
+    return view('poli.obgyn-kunjungan-baru', compact(
+        'poli',
+        'pasien',
+        'pendaftaran',
+        'no_rm',
+        'id_pendaftaran',
+        'ttv',
+        'assesmen',
+        'diagnosisTersimpan',
+        'tindakanTersimpan',
+        'semuaPasienObgyn',
+        'radiologi'
+    ));
+}
 
     /**
      * Halaman Poli Jantung.
@@ -540,4 +630,26 @@ class PoliController extends Controller
             'status_periksa' => $pendaftaran->status_periksa,
         ]);
     }
+
+    
+/**
+ * Memperbarui status pemeriksaan kunjungan Poli Obgyn.
+ */
+public function updateStatusPeriksaObgyn($id)
+{
+    $poli = Poli::where('slug', 'obgyn')->firstOrFail();
+
+    $pendaftaran = Pendaftaran::where('id_pendaftaran', $id)
+        ->where('id_poli', $poli->id_poli)
+        ->firstOrFail();
+
+    $pendaftaran->status_periksa = 'selesai';
+    $pendaftaran->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Status pemeriksaan berhasil diperbarui.',
+        'status_periksa' => $pendaftaran->status_periksa,
+    ]);
+}
 }

@@ -401,9 +401,9 @@
         {{-- TOMBOL --}}
         <div class="form-actions">
             <button type="button" class="btn-consent"
-                    id="btnConsent" onclick="bukaConsent()">
-                General Consent
-            </button>
+        id="btnConsent" onclick="bukaConsentDariPendaftaran()">
+    General Consent
+</button>
 
             <input type="hidden" name="general_consent"
                    id="general_consent" value="0">
@@ -762,46 +762,36 @@ function gcReset() {
 }
 
 /* ---- Buka / tutup modal ---- */
-function bukaConsent() {
+function bukaConsentDariPendaftaran() {
     const form = document.getElementById('formPendaftaran').elements;
-    const jk = form['jenis_kelamin'].value;
 
-    const tgl = form['tgl_lahir'].value
-        ? form['tgl_lahir'].value.split('-').reverse().join('-')
+    const jk = form['jenis_kelamin'].value;
+    const tanggalLahir = form['tgl_lahir'].value;
+    const tempatLahir = form['tempat_lahir'].value;
+
+    const ttl = [
+        tempatLahir,
+        tanggalLahir ? tanggalLahir.split('-').reverse().join('-') : ''
+    ].filter(Boolean).join(', ');
+
+    const umur = form['umur_tahun'].value
+        ? form['umur_tahun'].value + ' Tahun'
         : '';
 
-    const sekarang = new Date();
+    const dataPasien = {
+        norm: form['no_rm'].value,
+        nama: form['nama_pasien'].value,
+        ttl: ttl,
+        umur: umur,
+        jk: jk === '1'
+            ? 'Laki-laki'
+            : jk === '2'
+                ? 'Perempuan'
+                : '',
+        hp: form['no_hp'].value
+    };
 
-    document.getElementById('gc-norm').value = form['no_rm'].value || '-';
-    document.getElementById('gc-nama').value = form['nama_pasien'].value || '-';
-    document.getElementById('gc-jk').value =
-        jk === '1' ? 'Laki-laki' :
-        jk === '2' ? 'Perempuan' : '-';
-
-    document.getElementById('gc-ttl').value =
-        [form['tempat_lahir'].value, tgl].filter(Boolean).join(', ') || '-';
-
-    document.getElementById('gc-umur').value =
-        form['umur_tahun'].value ? form['umur_tahun'].value + ' Tahun' : '-';
-
-    document.getElementById('gc-hp').value =
-        form['no_hp'].value.length > 3 ? form['no_hp'].value : '-';
-
-    document.getElementById('gc-tgl').value =
-        sekarang.toLocaleDateString('id-ID', {
-            day: '2-digit', month: '2-digit', year: 'numeric'
-        });
-
-    document.getElementById('gc-jam').value =
-        sekarang.toLocaleTimeString('id-ID', {
-            hour: '2-digit', minute: '2-digit'
-        });
-
-    // Nama terang pasien default = nama pasien (boleh diganti kalau yang ttd keluarga)
-    const namaPasien = document.getElementById('gc-nama-pasien');
-    if (!namaPasien.value.trim()) namaPasien.value = form['nama_pasien'].value || '';
-
-    document.getElementById('consentModal').classList.add('show');
+    bukaConsent(dataPasien);
 }
 
 function tutupConsent() {

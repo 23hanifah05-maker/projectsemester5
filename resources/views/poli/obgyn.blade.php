@@ -306,52 +306,70 @@ function bacaWaktuSelesai() {
 // - yang "Selesai" (hijau) di bawah, urut dari yang paling dulu selesai
 //   sampai yang paling baru selesai (paling baru ada di paling bawah)
 // Belum ada status tersimpan = 'periksa'.
+
+
 function terapkanStatusPeriksa() {
-    const tersimpan = bacaStatusPeriksa();
-    const waktu = bacaWaktuSelesai();
-    const rows = Array.from(document.querySelectorAll('.row-pasien'));
+    const rows = Array.from(
+        document.querySelectorAll('.row-pasien')
+    );
+
     if (rows.length === 0) return;
 
-    rows.forEach(function (row, i) {
-        // Simpan urutan awal sekali saja, dipakai sebagai pembanding kalau waktunya sama
-        if (row.dataset.urutAwal === undefined) row.dataset.urutAwal = i;
+    rows.forEach(function (row, index) {
+        // Simpan urutan awal dari data yang diterima Laravel.
+        if (row.dataset.urutAwal === undefined) {
+            row.dataset.urutAwal = index;
+        }
 
         const badge = row.querySelector('.badge-periksa');
         let data;
-        try { data = JSON.parse(row.getAttribute('data-pasien')); } catch (e) { return; }
 
-        const kunci = String(data.no_rm).trim().toUpperCase();
-        const status = (tersimpan[kunci] || data.status_periksa || 'periksa') === 'selesai' ? 'selesai' : 'periksa';
+        try {
+            data = JSON.parse(row.getAttribute('data-pasien'));
+        } catch (error) {
+            console.error('Data pasien tidak valid:', error);
+            return;
+        }
+
+        const status = data.status_periksa === 'selesai'
+            ? 'selesai'
+            : 'periksa';
 
         row.dataset.statusPeriksa = status;
-        row.dataset.waktuSelesai = waktu[kunci] || 0;
 
         if (badge) {
             badge.classList.remove('periksa', 'selesai');
             badge.classList.add(status);
-            badge.textContent = status === 'selesai' ? 'Selesai' : 'Periksa';
+            badge.textContent =
+                status === 'selesai' ? 'Selesai' : 'Periksa';
         }
     });
 
+    // Urutkan pasien yang masih diperiksa di atas,
+    // lalu pasien selesai di bagian bawah.
     rows.sort(function (a, b) {
-        const selesaiA = a.dataset.statusPeriksa === 'selesai';
-        const selesaiB = b.dataset.statusPeriksa === 'selesai';
+        const statusA = a.dataset.statusPeriksa;
+        const statusB = b.dataset.statusPeriksa;
 
-        if (selesaiA !== selesaiB) return selesaiA ? 1 : -1; // periksa di atas
-
-        if (selesaiA) {
-            const selisih = Number(a.dataset.waktuSelesai) - Number(b.dataset.waktuSelesai);
-            if (selisih !== 0) return selisih; // selesai lebih dulu = lebih atas
+        if (statusA !== statusB) {
+            return statusA === 'periksa' ? -1 : 1;
         }
 
-        return Number(a.dataset.urutAwal) - Number(b.dataset.urutAwal);
+        // Dalam kelompok yang sama, pertahankan urutan
+        // yang dikirim oleh Laravel.
+        return Number(a.dataset.urutAwal) -
+            Number(b.dataset.urutAwal);
     });
 
     const tbody = rows[0].parentNode;
-    rows.forEach(function (row) { tbody.appendChild(row); });
+
+    rows.forEach(function (row) {
+        tbody.appendChild(row);
+    });
 
     perbaruiNomor();
 }
+
 
 function ambilDataBaris(button) {
     const row = button.closest('.row-pasien');

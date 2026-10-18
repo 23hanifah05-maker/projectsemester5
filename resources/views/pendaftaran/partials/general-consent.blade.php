@@ -185,21 +185,26 @@
    bukaConsent({norm:'E000014', nama:'Siti', ttl:'Ngawi, 01-01-1990', umur:'36 tahun', jk:'Perempuan', hp:'0812...'})
    Kalau kamu sudah punya fungsi bukaConsent/tutupConsent sendiri, hapus versi di bawah ini.
    ========================================================= */
-function bukaConsent(d) {
-    d = d || {};
+function bukaConsent(d = {}) {
     document.getElementById('gc-norm').value = d.norm || '';
     document.getElementById('gc-nama').value = d.nama || '';
-    document.getElementById('gc-ttl').value  = d.ttl  || '';
+    document.getElementById('gc-ttl').value = d.ttl || '';
     document.getElementById('gc-umur').value = d.umur || '';
-    document.getElementById('gc-jk').value   = d.jk   || '';
-    document.getElementById('gc-hp').value   = d.hp   || '';
+    document.getElementById('gc-jk').value = d.jk || '';
+    document.getElementById('gc-hp').value = d.hp || '';
 
-    gcReset();
 
-    const now = new Date();
+    const sekarang = new Date();
     const pad = n => String(n).padStart(2, '0');
-    document.getElementById('gc-tgl').value = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear();
-    document.getElementById('gc-jam').value = pad(now.getHours()) + '.' + pad(now.getMinutes());
+
+    document.getElementById('gc-tgl').value =
+        pad(sekarang.getDate()) + '/' +
+        pad(sekarang.getMonth() + 1) + '/' +
+        sekarang.getFullYear();
+
+    document.getElementById('gc-jam').value =
+        pad(sekarang.getHours()) + '.' +
+        pad(sekarang.getMinutes());
 
     document.getElementById('consentModal').classList.add('show');
 }
@@ -254,7 +259,7 @@ function gcAmbilKeluarga() {
 /* =========================================================
    SIGNATURE PAD (tanpa library) - dipakai 2 canvas
    ========================================================= */
-const gcPad = {};
+window.gcPad = window.gcPad || {};
 
 function gcInitPad(id) {
     const canvas = document.getElementById(id);
@@ -265,7 +270,7 @@ function gcInitPad(id) {
     ctx.strokeStyle = '#000';
 
     const state = { canvas: canvas, ctx: ctx, drawing: false, dirty: false };
-    gcPad[id] = state;
+    window.gcPad[id] = state;
 
     function pos(e) {
         const r = canvas.getBoundingClientRect();
@@ -297,13 +302,15 @@ function gcInitPad(id) {
 }
 
 function gcHapusTtd(id) {
-    const s = gcPad[id];
+    const s = window.gcPad[id];
     if (!s) return;
     s.ctx.clearRect(0, 0, s.canvas.width, s.canvas.height);
     s.dirty = false;
 }
 function gcAmbilTtd(id) {
-    return gcPad[id] && gcPad[id].dirty ? gcPad[id].canvas.toDataURL('image/png') : '';
+    return window.gcPad[id] && window.gcPad[id].dirty
+        ? window.gcPad[id].canvas.toDataURL('image/png')
+        : '';
 }
 
 /* =========================================================
