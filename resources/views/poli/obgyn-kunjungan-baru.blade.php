@@ -50,8 +50,11 @@
             text-decoration: underline;
         }
 
+        /* Tombol Cetak & Simpan Informed Consent sejajar di kanan */
         .ob-ttd-aksi {
-            text-align: right;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
             margin-top: 16px;
         }
 
@@ -119,6 +122,239 @@
 
         .ob-scan-link:hover {
             text-decoration: underline;
+        }
+
+        /* =====================================================
+           FORMULIR CETAK INFORMED CONSENT (A4, 1 lembar)
+           Dicetak lewat dialog print browser, jadi bisa dipilih
+           "Save as PDF" atau printer (mis. Epson) di dialog.
+           ===================================================== */
+        @page ic {
+            size: A4;
+            margin: 0; /* juga menghilangkan tanggal & URL bawaan browser */
+        }
+
+        @media screen {
+            .ic-cetak-only {
+                display: none;
+            }
+        }
+
+        @media print {
+            body.cetak-ic-mode > *:not(#cetak-ic-area) {
+                display: none !important;
+            }
+
+            html,
+            body.cetak-ic-mode {
+                margin: 0 !important;
+                padding: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
+                background: #fff !important;
+            }
+
+            body.cetak-ic-mode #cetak-ic-area {
+                display: block !important;
+                visibility: visible !important;
+                position: static !important;
+                page: ic;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 12mm 16mm;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 11px;
+                line-height: 1.4;
+                color: #000;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            body.cetak-ic-mode #cetak-ic-area * {
+                visibility: visible !important;
+            }
+
+            /* Kop surat */
+            .icp-header {
+                display: flex;
+                align-items: center;
+                padding-bottom: 8px;
+                margin-bottom: 10px;
+                border-bottom: 2px solid #000;
+            }
+
+            .icp-logo {
+                width: 70px;
+                height: 70px;
+                margin-right: 16px;
+                object-fit: contain;
+            }
+
+            .icp-header-text {
+                flex-grow: 1;
+                text-align: center;
+            }
+
+            .icp-header-text h2 {
+                margin: 0;
+                font-size: 17px;
+            }
+
+            .icp-header-text p {
+                margin: 2px 0;
+                font-size: 11px;
+            }
+
+            .icp-title {
+                margin: 6px 0 10px;
+                text-align: center;
+                font-size: 14px;
+                font-weight: bold;
+                letter-spacing: .3px;
+            }
+
+            .icp-title span {
+                display: block;
+                font-size: 11px;
+                font-weight: normal;
+            }
+
+            /* Identitas pasien */
+            .icp-info {
+                width: 100%;
+                margin-bottom: 10px;
+                font-size: 11px;
+                border-collapse: collapse;
+            }
+
+            .icp-info td {
+                padding: 2px 0;
+                vertical-align: top;
+            }
+
+            .icp-info td.icp-info-label { width: 17%; }
+            .icp-info td.icp-info-sep { width: 2%; }
+            .icp-info td.icp-info-isi { width: 31%; }
+
+            /* Tabel isi informasi */
+            .icp-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 11px;
+            }
+
+            .icp-table th,
+            .icp-table td {
+                padding: 4px 7px;
+                border: 1px solid #000;
+                vertical-align: top;
+            }
+
+            .icp-table th {
+                background: #e6e6e6;
+                text-align: center;
+                font-weight: bold;
+            }
+
+            .icp-table tr {
+                page-break-inside: avoid;
+            }
+
+            .icp-table td.icp-kategori {
+                width: 25%;
+                font-weight: bold;
+            }
+
+            .icp-table td.icp-cek {
+                width: 13%;
+                text-align: center;
+                vertical-align: middle;
+            }
+
+            /* Kotak centang */
+            .icp-box {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                margin-right: 4px;
+                border: 1.5px solid #000;
+                font-size: 11px;
+                font-weight: bold;
+                line-height: 11px;
+                text-align: center;
+                vertical-align: middle;
+            }
+
+            .icp-table td.icp-cek .icp-box {
+                margin-right: 0;
+            }
+
+            /* Pernyataan */
+            .icp-persetujuan {
+                margin-top: 12px;
+                page-break-inside: avoid;
+            }
+
+            .icp-subjudul {
+                margin-bottom: 5px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            .icp-keputusan {
+                margin-bottom: 6px;
+            }
+
+            .icp-keputusan span.icp-pilihan {
+                display: inline-block;
+                margin-right: 28px;
+            }
+
+            .icp-pernyataan {
+                margin: 0 0 8px;
+            }
+
+            .icp-waktu {
+                margin-bottom: 4px;
+                text-align: right;
+            }
+
+            /* Tanda tangan */
+            .icp-ttd {
+                width: 100%;
+                border-collapse: collapse;
+                page-break-inside: avoid;
+            }
+
+            .icp-ttd td {
+                width: 33.33%;
+                padding: 0 8px;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .icp-ttd-judul {
+                font-weight: bold;
+            }
+
+            .icp-ttd-gambar {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 75px;
+                margin: 4px 0;
+            }
+
+            .icp-ttd-gambar img {
+                max-width: 100%;
+                max-height: 75px;
+            }
+
+            .icp-ttd-nama {
+                min-height: 14px;
+                padding-top: 2px;
+                border-top: 1px solid #000;
+            }
         }
     </style>
 @endsection
@@ -189,33 +425,33 @@
             : '-';
 
         $umur = ($pasien && $pasien->tgl_lahir)
-    ? \Carbon\Carbon::parse($pasien->tgl_lahir)->age . ' Tahun'
-    : '-';
+            ? \Carbon\Carbon::parse($pasien->tgl_lahir)->age . ' Tahun'
+            : '-';
 
         $jenisKelamin = match ((string) ($pasien->jenis_kelamin ?? '')) {
-    '0' => 'Tidak diketahui',
-    '1' => 'Laki-laki',
-    '2' => 'Perempuan',
-    '3' => 'Tidak dapat ditentukan',
-    '4' => 'Tidak dikonfirmasi',
-    default => '-',
-};
+            '0' => 'Tidak diketahui',
+            '1' => 'Laki-laki',
+            '2' => 'Perempuan',
+            '3' => 'Tidak dapat ditentukan',
+            '4' => 'Tidak dikonfirmasi',
+            default => '-',
+        };
 
-    $diagnosisJson = $diagnosisTersimpan->map(function ($item) {
-    return [
-        'id' => $item->id_kode10,
-        'kode' => $item->kode,
-        'nama' => $item->nama,
-    ];
-})->values()->all();
+        $diagnosisJson = $diagnosisTersimpan->map(function ($item) {
+            return [
+                'id' => $item->id_kode10,
+                'kode' => $item->kode,
+                'nama' => $item->nama,
+            ];
+        })->values()->all();
 
-$tindakanJson = $tindakanTersimpan->map(function ($item) {
-    return [
-        'id' => $item->id_kode9,
-        'kode' => $item->kode,
-        'nama' => $item->nama,
-    ];
-})->values()->all();
+        $tindakanJson = $tindakanTersimpan->map(function ($item) {
+            return [
+                'id' => $item->id_kode9,
+                'kode' => $item->kode,
+                'nama' => $item->nama,
+            ];
+        })->values()->all();
 
     @endphp
 
@@ -224,28 +460,28 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
         <div class="ob-section-title">Data Pasien</div>
 
         @if ($pasien)
-    @php
-        $dataPasien = [
-            'No RM' => $pasien->no_rm ?? '-',
-            'Tempat, Tgl Lahir' => ($pasien->tempat_lahir ?? '-') . ', ' . $tanggalLahir,
-            'Nama' => $pasien->nama_pasien ?? '-',
-            'Umur' => $umur,
-            'Jenis Kelamin' => $jenisKelamin,
-            'No Hp' => $pasien->no_hp ?? '-',
-        ];
-    @endphp
+            @php
+                $dataPasien = [
+                    'No RM' => $pasien->no_rm ?? '-',
+                    'Tempat, Tgl Lahir' => ($pasien->tempat_lahir ?? '-') . ', ' . $tanggalLahir,
+                    'Nama' => $pasien->nama_pasien ?? '-',
+                    'Umur' => $umur,
+                    'Jenis Kelamin' => $jenisKelamin,
+                    'No Hp' => $pasien->no_hp ?? '-',
+                ];
+            @endphp
 
-    <div class="ob-fields">
-        @foreach ($dataPasien as $label => $value)
-            <div class="ob-field">
-                <span class="ob-label">{{ $label }}</span>
-                <span class="ob-value">{{ $value }}</span>
+            <div class="ob-fields">
+                @foreach ($dataPasien as $label => $value)
+                    <div class="ob-field">
+                        <span class="ob-label">{{ $label }}</span>
+                        <span class="ob-value">{{ $value }}</span>
+                    </div>
+                @endforeach
             </div>
-        @endforeach
-    </div>
-@else
-    <p class="teks-kosong">Data pasien tidak ditemukan.</p>
-@endif
+        @else
+            <p class="teks-kosong">Data pasien tidak ditemukan.</p>
+        @endif
     </div>
 
     {{-- TAB --}}
@@ -316,6 +552,87 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
         </div>
     </div>
 
+    {{-- AREA CETAK INFORMED CONSENT (tersembunyi, hanya muncul saat print) --}}
+    <div id="cetak-ic-area" class="ic-cetak-only">
+        <div class="icp-header">
+            <img src="{{ asset('images/logo.png') }}" class="icp-logo" alt="Logo Klinik">
+            <div class="icp-header-text">
+                <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
+                <p>Jl. Ronggo Warsito No. 98 A, Ngawi</p>
+                <p>Telp: (0351) 745596</p>
+            </div>
+        </div>
+
+        <div class="icp-title">
+            PERSETUJUAN TINDAKAN KEDOKTERAN
+            <span>(INFORMED CONSENT)</span>
+        </div>
+
+        <table class="icp-info">
+            <tr>
+                <td class="icp-info-label">Nama Pasien</td>
+                <td class="icp-info-sep">:</td>
+                <td class="icp-info-isi">{{ $pasien->nama_pasien ?? '-' }}</td>
+                <td class="icp-info-label">No. R.M.</td>
+                <td class="icp-info-sep">:</td>
+                <td class="icp-info-isi">{{ $pasien->no_rm ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="icp-info-label">Tempat, Tgl Lahir</td>
+                <td class="icp-info-sep">:</td>
+                <td class="icp-info-isi">{{ ($pasien->tempat_lahir ?? '-') . ', ' . $tanggalLahir }}</td>
+                <td class="icp-info-label">Umur / JK</td>
+                <td class="icp-info-sep">:</td>
+                <td class="icp-info-isi">{{ $umur }} / {{ $jenisKelamin }}</td>
+            </tr>
+        </table>
+
+        <table class="icp-table">
+            <thead>
+                <tr>
+                    <th>Informed Consent</th>
+                    <th>Isi Informasi</th>
+                    <th>Checklist</th>
+                </tr>
+            </thead>
+            <tbody id="ic-cetak-body"></tbody>
+        </table>
+
+        <div class="icp-persetujuan">
+            <div class="icp-subjudul">Pernyataan Persetujuan dan/ Penolakan</div>
+
+            <div class="icp-keputusan" id="ic-cetak-keputusan"></div>
+
+            <p class="icp-pernyataan">
+                Dengan ini menyatakan telah memahami informasi yang telah diberikan.
+            </p>
+
+            <div class="icp-waktu">
+                Ngawi, <span id="ic-cetak-tanggal"></span>, pukul <span id="ic-cetak-pukul"></span>
+            </div>
+
+            <table class="icp-ttd">
+                <tr>
+                    <td>
+                        <div class="icp-ttd-judul">Pemberi Informasi (Dokter)</div>
+                        <div class="icp-ttd-gambar" id="ic-cetak-ttd-dokter"></div>
+                        <div class="icp-ttd-nama" id="ic-cetak-nama-dokter"></div>
+                    </td>
+                    <td>
+                        <div class="icp-ttd-judul">Pasien/ Keluarga</div>
+                        <div class="icp-ttd-gambar" id="ic-cetak-ttd-pasien"></div>
+                        <div class="icp-ttd-nama" id="ic-cetak-nama-pasien"></div>
+                    </td>
+                    <td>
+                        <div class="icp-ttd-judul">Saksi Klinik</div>
+                        <div class="icp-ttd-gambar" id="ic-cetak-ttd-saksi"></div>
+                        <div class="icp-ttd-nama" id="ic-cetak-nama-saksi"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
     {{-- TAB ASSESSMENT --}}
     <div id="tab-assessment" class="ob-tab-content active">
 
@@ -326,23 +643,23 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
                         <label>{{ $label }}</label>
 
                         @if ($name === 'hpht')
-    <input
-        type="date"
-        name="hpht"
-        max="{{ date('Y-m-d') }}"
-        title="Pilih tanggal HPHT"
-        value="{{ old('hpht', $ttv->hpht ?? '') }}"
-    >
-@elseif ($name === 'uk')
-    <input
-        type="number"
-        name="uk"
-        min="0"
-        max="50"
-        placeholder="{{ $placeholder }}"
-        value="{{ old('uk', $ttv->usia_kehamilan ?? '') }}"
-    >
-@else
+                            <input
+                                type="date"
+                                name="hpht"
+                                max="{{ date('Y-m-d') }}"
+                                title="Pilih tanggal HPHT"
+                                value="{{ old('hpht', $ttv->hpht ?? '') }}"
+                            >
+                        @elseif ($name === 'uk')
+                            <input
+                                type="number"
+                                name="uk"
+                                min="0"
+                                max="50"
+                                placeholder="{{ $placeholder }}"
+                                value="{{ old('uk', $ttv->usia_kehamilan ?? '') }}"
+                            >
+                        @else
                             <input
                                 type="text"
                                 name="{{ $name }}"
@@ -768,6 +1085,14 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
                 <div class="ob-ttd-aksi">
                     <button
                         type="button"
+                        class="ob-btn ob-btn-reset ob-btn-rujuk"
+                        onclick="cetakInformedConsent()"
+                    >
+                        <i class="fa-solid fa-print"></i> Cetak
+                    </button>
+
+                    <button
+                        type="button"
                         class="ob-btn ob-btn-simpan"
                         onclick="simpanInformedConsent()"
                     >
@@ -801,12 +1126,12 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
                     <div class="rj-field">
                         <label>Tujuan</label>
                         <select id="rjTujuan">
-    <option value="">-- Pilih Poli --</option>
-    <option value="saraf">Poli Syaraf</option>
-    <option value="jantung">Poli Jantung</option>
-    <option value="jiwa">Poli Jiwa</option>
-    <option value="radiologi">Radiologi</option>
-</select>
+                            <option value="">-- Pilih Poli --</option>
+                            <option value="saraf">Poli Syaraf</option>
+                            <option value="jantung">Poli Jantung</option>
+                            <option value="jiwa">Poli Jiwa</option>
+                            <option value="radiologi">Radiologi</option>
+                        </select>
                     </div>
 
                     <div class="rj-field">
@@ -987,10 +1312,49 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
     }
 
     // =========================================================
-    // CETAK RESEP
+    // CETAK (resep & informed consent)
+    // Area cetak dipindah ke <body> sementara agar hanya area itu
+    // yang tampil di kertas, lalu dikembalikan setelah dialog print
+    // ditutup (afterprint).
     // =========================================================
-    let areaResepParent = null;
-    let areaResepNextSibling = null;
+    let areaCetakAktif = null;
+
+    function siapkanCetak(idArea, kelasMode) {
+        const area = document.getElementById(idArea);
+
+        areaCetakAktif = {
+            area: area,
+            parent: area.parentNode,
+            next: area.nextSibling
+        };
+
+        document.body.appendChild(area);
+        document.body.classList.add(kelasMode);
+    }
+
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('cetak-resep-mode', 'cetak-ic-mode');
+
+        if (!areaCetakAktif) return;
+
+        const { area, parent, next } = areaCetakAktif;
+
+        if (next) {
+            parent.insertBefore(area, next);
+        } else {
+            parent.appendChild(area);
+        }
+
+        areaCetakAktif = null;
+    });
+
+    function tanggalIndonesia(tanggal) {
+        return tanggal.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    }
 
     function cetakResep() {
         const planEl = document.querySelector('textarea[name="plan"]');
@@ -1001,42 +1365,13 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
             return;
         }
 
-        const area = document.getElementById('cetak-resep-area');
-
         document.getElementById('resep-isi-plan').innerText = planText;
-        document.getElementById('resep-tanggal').innerText =
-            new Date().toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
+        document.getElementById('resep-tanggal').innerText = tanggalIndonesia(new Date());
 
-        // Simpan posisi semula agar area cetak bisa dikembalikan
-        areaResepParent = area.parentNode;
-        areaResepNextSibling = area.nextSibling;
-
-        document.body.appendChild(area);
-        document.body.classList.add('cetak-resep-mode');
+        siapkanCetak('cetak-resep-area', 'cetak-resep-mode');
 
         window.print();
     }
-
-    window.addEventListener('afterprint', function () {
-        document.body.classList.remove('cetak-resep-mode');
-
-        const area = document.getElementById('cetak-resep-area');
-
-        if (areaResepParent) {
-            if (areaResepNextSibling) {
-                areaResepParent.insertBefore(area, areaResepNextSibling);
-            } else {
-                areaResepParent.appendChild(area);
-            }
-        }
-
-        areaResepParent = null;
-        areaResepNextSibling = null;
-    });
 
     // =========================================================
     // RUJUKAN
@@ -1525,6 +1860,120 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
             'Validasi Informed Consent berhasil. ' +
             'Data belum tersimpan ke database karena backend Informed Consent belum tersedia.'
         );
+    }
+
+    // =========================================================
+    // INFORMED CONSENT - CETAK FORMULIR
+    // Mengisi area cetak dari isian form, lalu membuka dialog print.
+    // Di dialog print pilih "Save as PDF" atau printer (mis. Epson).
+    // Cetak boleh dengan tanda tangan kosong (untuk ditandatangani manual).
+    // =========================================================
+    function buatKotak(terisi, ikutiTeks) {
+        const kotak = document.createElement('span');
+
+        kotak.className = 'icp-box';
+        kotak.textContent = terisi ? '✓' : '';
+
+        return kotak;
+    }
+
+    async function cetakInformedConsent() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        const nilai = id => (document.getElementById(id)?.value ?? '').trim();
+
+        // 1. Tabel isi informasi + checklist
+        const tbody = document.getElementById('ic-cetak-body');
+        tbody.innerHTML = '';
+
+        document.querySelectorAll('#tab-informed .ob-ic-table tbody tr').forEach(function (tr) {
+            const sel = tr.querySelectorAll(':scope > td');
+            const isiBebas = sel[1].querySelector('.ob-ic-isi-bebas');
+            const cek = sel[2].querySelector('input[type=checkbox]');
+
+            const baris = document.createElement('tr');
+
+            const tdKategori = document.createElement('td');
+            tdKategori.className = 'icp-kategori';
+            tdKategori.textContent = sel[0].textContent.trim();
+
+            const tdIsi = document.createElement('td');
+            tdIsi.textContent = isiBebas
+                ? (isiBebas.value.trim() || '-')
+                : sel[1].textContent.trim();
+
+            const tdCek = document.createElement('td');
+            tdCek.className = 'icp-cek';
+            tdCek.appendChild(buatKotak(cek && cek.checked));
+
+            baris.appendChild(tdKategori);
+            baris.appendChild(tdIsi);
+            baris.appendChild(tdCek);
+            tbody.appendChild(baris);
+        });
+
+        // 2. Keputusan setuju / menolak
+        const keputusanEl = document.querySelector('input[name="informed_keputusan"]:checked');
+        const keputusan = keputusanEl ? keputusanEl.value : 'setuju';
+        const wadahKeputusan = document.getElementById('ic-cetak-keputusan');
+        wadahKeputusan.innerHTML = '';
+
+        [['setuju', 'Setuju'], ['menolak', 'Menolak']].forEach(function (opsi) {
+            const pilihan = document.createElement('span');
+            pilihan.className = 'icp-pilihan';
+            pilihan.appendChild(buatKotak(keputusan === opsi[0]));
+            pilihan.appendChild(document.createTextNode(opsi[1]));
+            wadahKeputusan.appendChild(pilihan);
+        });
+
+        // 3. Tanggal & pukul
+        const tanggal = nilai('icTanggal');
+        const pukul = nilai('icPukul');
+
+        document.getElementById('ic-cetak-tanggal').textContent = tanggal
+            ? tanggalIndonesia(new Date(tanggal + 'T00:00:00'))
+            : '...............';
+
+        document.getElementById('ic-cetak-pukul').textContent = pukul
+            ? pukul + ' WIB'
+            : '.........';
+
+        // 4. Nama & tanda tangan
+        const petaTtd = [
+            ['ttdDokter', 'ic-cetak-ttd-dokter', 'ic-cetak-nama-dokter', 'icDokter'],
+            ['ttdPasien', 'ic-cetak-ttd-pasien', 'ic-cetak-nama-pasien', 'icPasien'],
+            ['ttdSaksi', 'ic-cetak-ttd-saksi', 'ic-cetak-nama-saksi', 'icSaksi']
+        ];
+
+        const daftarGambar = [];
+
+        petaTtd.forEach(function (item) {
+            const [idCanvas, idGambar, idNama, idInput] = item;
+            const wadah = document.getElementById(idGambar);
+
+            wadah.innerHTML = '';
+
+            if (ttdTerisi[idCanvas]) {
+                const img = document.createElement('img');
+                img.src = document.getElementById(idCanvas).toDataURL('image/png');
+                img.alt = 'Tanda tangan';
+                wadah.appendChild(img);
+                daftarGambar.push(img);
+            }
+
+            const nama = nilai(idInput);
+            document.getElementById(idNama).textContent = nama ? '( ' + nama + ' )' : '(                              )';
+        });
+
+        // Pastikan gambar tanda tangan sudah siap sebelum print
+        await Promise.all(daftarGambar.map(img => img.decode().catch(() => {})));
+
+        siapkanCetak('cetak-ic-area', 'cetak-ic-mode');
+
+        window.print();
     }
 
     // =========================================================
