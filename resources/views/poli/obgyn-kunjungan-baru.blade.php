@@ -1529,29 +1529,10 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
 
     // =========================================================
     // TTV KE OBJECTIVE
+    // Centang TIDAK aktif otomatis saat TTV diisi.
+    // Centang hanya berubah (class "aktif") setelah di-klik.
     // =========================================================
     let vitalTerakhir = '';
-
-    function updateCentangVital() {
-        const tombol = document.getElementById('btnCentangVital');
-
-        if (!tombol) return;
-
-        const adaIsi = Array.from(
-            document.querySelectorAll(
-                '.ob-vitals-grid .ob-vital-row input'
-            )
-        ).some(el => el.value.trim() !== '');
-
-        tombol.classList.toggle('aktif', adaIsi);
-    }
-
-    document.querySelectorAll(
-        '.ob-vitals-grid .ob-vital-row input'
-    ).forEach(function (el) {
-        el.addEventListener('input', updateCentangVital);
-        el.addEventListener('change', updateCentangVital);
-    });
 
     function isiObjektifDariVital() {
         const bagian = [];
@@ -1604,6 +1585,10 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
 
         objektif.value = sisa ? teks + '\n' + sisa : teks;
         vitalTerakhir = teks;
+
+        // Centang aktif HANYA setelah di-klik
+        const tombolCentang = document.getElementById('btnCentangVital');
+        if (tombolCentang) tombolCentang.classList.add('aktif');
 
         objektif.focus();
     }
@@ -1908,7 +1893,6 @@ $tindakanJson = $tindakanTersimpan->map(function ($item) {
     renderDiagnosa('tindakan');
     updateCentang('penyakit');
     updateCentang('tindakan');
-    updateCentangVital();
 
     /* =========================================================
        CEGAH KELUAR HALAMAN SEBELUM ASESMEN DISIMPAN
