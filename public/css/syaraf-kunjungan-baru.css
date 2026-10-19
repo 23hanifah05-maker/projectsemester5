@@ -604,9 +604,9 @@
 #tab-pathway .cp-cetak { background: var(--kb-merah); }
 #tab-pathway .cp-cetak:hover { background: var(--kb-merah-gelap); }
 
-#tab-pathway .cp-simpan { background: var(--kb-hijau); }
-#tab-pathway .cp-simpan:hover { background: var(--kb-hijau-gelap); }
-#tab-pathway .cp-simpan.tersimpan { background: var(--kb-hijau-gelap); pointer-events: none; }
+#tab-pathway .cp-simpan { background: var(--kb-merah); }
+#tab-pathway .cp-simpan:hover { background: var(--kb-merah-gelap); }
+#tab-pathway .cp-simpan.tersimpan { background: var(--kb-merah-gelap); pointer-events: none; }
 
 /* ---------- Form Rujukan ---------- */
 #view-rujukan { display: none; }
@@ -757,18 +757,6 @@ p.kb-kosong { color: #888; }
         visibility: visible !important;
     }
 
-<<<<<<< HEAD
-/* Tab Clinical Pathway terkunci bila diagnosa bukan HNP */
-.kb-tab.terkunci {
-    opacity: .5;
-    cursor: not-allowed;
-}
-
-/* Tombol Simpan pada tab Clinical Pathway */
-#tab-pathway .cp-simpan { background: #b81d24; color: #fff; font-weight: 700; border: none; border-radius: 6px; padding: 8px 22px; cursor: pointer; margin-right: 8px; }
-#tab-pathway .cp-simpan:hover { background: #9c161c; }
-#tab-pathway .cp-simpan:disabled { opacity: .6; cursor: not-allowed; }
-=======
     .cetak-header {
         display: flex;
         align-items: center;
@@ -817,4 +805,3 @@ p.kb-kosong { color: #888; }
     }
     .cp-print-table td.cp-print-tarif { width: 16%; text-align: right; white-space: nowrap; }
 }
->>>>>>> 31863b43c5e7bc7360a144f640fb06e3bb38f7a0
