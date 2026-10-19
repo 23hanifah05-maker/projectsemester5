@@ -475,12 +475,17 @@
             </div>
 
             <div class="cp-footer">
+<<<<<<< HEAD
+                <button type="button" class="cp-simpan" id="btnSimpanCP" onclick="simpanCP()"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+                <button type="button" class="cp-cetak" onclick="cetakCP()"><i class="fa-solid fa-print"></i> Cetak</button>
+=======
                 <button type="button" class="cp-simpan" id="btnSimpanCP" onclick="simpanCP()">
                     <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
                 </button>
                 <button type="button" class="cp-cetak" onclick="cetakCP()">
                     <i class="fa-solid fa-print"></i> Cetak
                 </button>
+>>>>>>> 31863b43c5e7bc7360a144f640fb06e3bb38f7a0
             </div>
         </div>
     </div>
@@ -907,9 +912,15 @@
 
         const hasil = { dx_utama: '', dx_sekunder: '', dx_banding: '', baris: {} };
 
-        document.querySelectorAll('#tab-pathway tr.cp-dx-row .cp-dx-input').forEach(function (f) {
-            const kunci = petaDx[f.dataset.label];
-            if (kunci) hasil[kunci] = f.value.trim();
+        document.querySelectorAll('#tab-pathway tr.cp-dx-row').forEach(function (tr) {
+            const f = tr.querySelector('.cp-dx-input');
+            const w = tr.querySelector('.cp-waktu');
+            const kunci = f ? petaDx[f.dataset.label] : null;
+
+            if (kunci) {
+                hasil[kunci] = f.value.trim();
+                hasil['waktu_' + kunci] = w ? w.value.trim() : '';
+            }
         });
 
         document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
@@ -953,17 +964,31 @@
         }
     }
 
+<<<<<<< HEAD
+    // ===== Clinical Pathway: tombol Simpan khusus tab CP =====
+=======
     // ===== Clinical Pathway: tombol Simpan di tab Clinical Pathway =====
     let timerSimpanCP = null;
 
+>>>>>>> 31863b43c5e7bc7360a144f640fb06e3bb38f7a0
     async function simpanCP() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
             return;
         }
 
+<<<<<<< HEAD
+        if (!document.getElementById('id_pendaftaran')?.value) {
+            alert('ID pendaftaran tidak ditemukan. Buka pasien dari kunjungan Poli Saraf.');
+            return;
+        }
+
+        if (!cpBolehDiisi()) {
+            alert('Clinical Pathway hanya dapat disimpan untuk diagnosa HNP (ICD-10 M51).');
+=======
         if (!cpBolehDiisi()) {
             alert('Clinical Pathway hanya tersedia untuk diagnosa HNP (ICD-10 M51).');
+>>>>>>> 31863b43c5e7bc7360a144f640fb06e3bb38f7a0
             return;
         }
 
@@ -973,6 +998,22 @@
         }
 
         const tombol = document.getElementById('btnSimpanCP');
+<<<<<<< HEAD
+        if (tombol) tombol.disabled = true;
+
+        try {
+            const tersimpan = await simpanCPKeDatabase();
+
+            if (tersimpan) {
+                alert('Clinical Pathway berhasil disimpan.');
+            }
+        } finally {
+            if (tombol) tombol.disabled = false;
+        }
+    }
+
+    // Klik Simpan: simpan TTV, SOAP, ICD, CP, lalu perbarui status di database.
+=======
         const teks = tombol.querySelector('span');
 
         if (CP_SIMPAN_KE_DB) {
@@ -1001,6 +1042,7 @@
     }
 
     // ===== Simpan utama: TTV, SOAP, ICD, (CP), lalu status kunjungan =====
+>>>>>>> 31863b43c5e7bc7360a144f640fb06e3bb38f7a0
     async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
