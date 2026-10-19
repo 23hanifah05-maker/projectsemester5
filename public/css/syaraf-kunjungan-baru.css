@@ -919,3 +919,8 @@ input.sembunyi { display: none; }
     opacity: .5;
     cursor: not-allowed;
 }
+
+/* Tombol Simpan pada tab Clinical Pathway */
+#tab-pathway .cp-simpan { background: #b81d24; color: #fff; font-weight: 700; border: none; border-radius: 6px; padding: 8px 22px; cursor: pointer; margin-right: 8px; }
+#tab-pathway .cp-simpan:hover { background: #9c161c; }
+#tab-pathway .cp-simpan:disabled { opacity: .6; cursor: not-allowed; }

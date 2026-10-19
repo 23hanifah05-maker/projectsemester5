@@ -8,7 +8,7 @@ class ClinicalPathway extends Model
 {
     protected $table = 'clinical_pathway';
 
-    public $timestamps = false;
+    protected $primaryKey = 'id_cp';
 
     protected $guarded = [];
 }
