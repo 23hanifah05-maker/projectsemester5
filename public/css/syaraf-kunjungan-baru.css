@@ -913,3 +913,9 @@ input.sembunyi { display: none; }
     white-space: nowrap;
     vertical-align: middle;
 }
+
+/* Tab Clinical Pathway terkunci bila diagnosa bukan HNP */
+.kb-tab.terkunci {
+    opacity: .5;
+    cursor: not-allowed;
+}

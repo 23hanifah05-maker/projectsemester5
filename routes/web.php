@@ -10,6 +10,7 @@ use App\Http\Controllers\PencarianKodeController;
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\TtvController;
 use App\Http\Controllers\AssesmenController;
+use App\Http\Controllers\ClinicalPathwayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -147,6 +148,11 @@ Route::post('/poli/syaraf/assesmen', [
     'store'
 ])->name('poli.syaraf.assesmen.store');
 
+Route::post('/poli/syaraf/clinical-pathway', [
+    ClinicalPathwayController::class,
+    'store'
+])->name('poli.syaraf.clinical-pathway.store');
+
 Route::post('/poli/syaraf/rujukan', [
     PoliController::class,
     'kirimRujukan'
@@ -261,4 +267,3 @@ Route::get('/radiologi', [RadiologiController::class, 'index'])
 
 Route::get('/audit-trail', [AuditTrailController::class, 'index'])
     ->name('audit-trail.index');
-

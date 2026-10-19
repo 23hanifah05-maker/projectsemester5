@@ -373,7 +373,7 @@
                         </tr>
                         <tr class="cp-dx-row cp-dx-mid">
                             <td class="cp-aktivitas cp-dx-label">Dx Utama</td>
-                            <td><input type="text" class="cp-dx-input cp-dx-auto" data-label="Dx Utama" value="Hernia Nukleus Pulposus (HNP)" readonly></td>
+                            <td><input type="text" class="cp-dx-input cp-dx-auto" data-label="Dx Utama" value="" readonly></td>
                             <td><input type="text" class="cp-waktu" readonly></td>
                             <td></td>
                         </tr>
@@ -580,11 +580,74 @@
     // Selama false, halaman ini tidak bisa ditinggalkan bila ada data belum disimpan.
     let izinkanKeluar = false;
 
+    // ===== Clinical Pathway hanya untuk diagnosa HNP =====
+    // Kode ICD-10 HNP. Harus sama dengan KODE_HNP di ClinicalPathwayController.
+    const KODE_HNP = ['M51'];
+
+    function isKodeHNP(item) {
+        const kode = String(item.kode || '').trim().toUpperCase();
+        return KODE_HNP.some(awalan => kode.startsWith(awalan));
+    }
+
+    function cpBolehDiisi() {
+        return diagnosaTerpilih.penyakit.some(isKodeHNP);
+    }
+
+    function cpTerisi() {
+        let terisi = false;
+        document.querySelectorAll('#tab-pathway input[type=checkbox]').forEach(function (cb) {
+            if (cb.checked) terisi = true;
+        });
+        document.querySelectorAll(
+            '#tab-pathway input[type=text]:not(.cp-waktu):not(.cp-dx-auto):not(#cpTotal), #tab-pathway textarea'
+        ).forEach(function (f) {
+            if (f.value.trim() !== '') terisi = true;
+        });
+        return terisi;
+    }
+
     function gantiTab(tab, event) {
+        if (tab === 'pathway' && !cpBolehDiisi()) {
+            alert('Clinical Pathway hanya tersedia untuk diagnosa HNP (ICD-10 M51). ' +
+                  'Pilih diagnosa HNP terlebih dahulu.');
+            return;
+        }
+
+        const tombol = event
+            ? event.currentTarget
+            : document.querySelector('.kb-tab[onclick*="\'' + tab + '\'"]');
+
         document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if (tombol) tombol.classList.add('active');
         document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    function bukaTabPathway() {
+        gantiTab('pathway');
+    }
+
+    // Sinkronkan tab Clinical Pathway dengan diagnosa penyakit yang dipilih.
+    function perbaruiStatusCP() {
+        const boleh = cpBolehDiisi();
+        const tabCP = document.querySelector('.kb-tab[onclick*="pathway"]');
+
+        if (tabCP) {
+            tabCP.classList.toggle('terkunci', !boleh);
+            tabCP.title = boleh ? '' : 'Hanya tersedia untuk diagnosa HNP (ICD-10 M51)';
+        }
+
+        const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
+        if (dxUtama) {
+            const hnp = diagnosaTerpilih.penyakit.find(isKodeHNP);
+            dxUtama.value = hnp ? hnp.kode + ' — ' + hnp.nama : '';
+            perbaruiWaktuBaris(dxUtama.closest('tr'));
+        }
+
+        // Bila sedang di tab CP lalu diagnosa HNP dihapus, kembalikan ke Assessment.
+        if (!boleh && document.getElementById('tab-pathway').classList.contains('active')) {
+            gantiTab('assesment');
+        }
     }
 
     function cetakResep() {
@@ -691,11 +754,6 @@
         }
     });
 
-    // Dx Utama otomatis terisi HNP: kolom Waktu-nya ikut terisi
-    document.querySelectorAll('#tab-pathway .cp-dx-auto').forEach(function (f) {
-        perbaruiWaktuBaris(f.closest('tr'));
-    });
-
     // ===== Clinical Pathway: cetak hasil isian =====
     function cetakCP() {
         const tbody = document.getElementById('cp-cetak-body');
@@ -791,29 +849,113 @@
         document.body.classList.remove('cetak-cp-mode');
     });
 
+    // ===== Clinical Pathway: kumpulkan isian form =====
+    function kumpulkanDataCP() {
+        const petaDx = {
+            'Dx Utama': 'dx_utama',
+            'Dx Sekunder': 'dx_sekunder',
+            'Dx Banding': 'dx_banding'
+        };
 
-    // Klik Simpan: simpan TTV, SOAP, ICD, lalu perbarui status di database.
+        const hasil = { dx_utama: '', dx_sekunder: '', dx_banding: '', baris: {} };
+
+        document.querySelectorAll('#tab-pathway tr.cp-dx-row .cp-dx-input').forEach(function (f) {
+            const kunci = petaDx[f.dataset.label];
+            if (kunci) hasil[kunci] = f.value.trim();
+        });
+
+        document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
+            const sel = tr.querySelectorAll(':scope > td');
+            const nama = sel[0].dataset.nama || sel[0].textContent.trim();
+
+            const ket = [];
+            sel[1].querySelectorAll('label.cp-check').forEach(function (label) {
+                const cb = label.querySelector('input[type=checkbox]');
+                const lain = label.querySelector('.cp-lain-teks');
+                const teks = lain ? lain.value.trim() : label.textContent.trim();
+                if (cb && cb.checked && teks !== '') ket.push(teks);
+            });
+            sel[1].querySelectorAll('input[type=text]:not(.cp-lain-teks), textarea').forEach(function (f) {
+                const v = f.value.trim();
+                if (v !== '') ket.push(v);
+            });
+
+            const waktuEl = sel[2].querySelector('input');
+            const tarifEl = sel[3].querySelector('input');
+
+            hasil.baris[nama] = {
+                keterangan: ket,
+                waktu: waktuEl ? waktuEl.value.trim() : '',
+                tarif: tarifEl ? tarifEl.value.replace(/\D/g, '') : ''
+            };
+        });
+
+        hasil.total = document.getElementById('cpTotal').value.replace(/\D/g, '');
+
+        return hasil;
+    }
+
+    // ===== Clinical Pathway: simpan ke database =====
+    async function simpanCPKeDatabase() {
+        const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
+        const csrfToken = document.getElementById('csrf_token')?.value;
+
+        try {
+            const response = await fetch("{{ route('poli.syaraf.clinical-pathway.store') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    id_pendaftaran: Number(idPendaftaran),
+                    penyakit_id: diagnosaTerpilih.penyakit.map(item => Number(item.id)),
+                    data: kumpulkanDataCP()
+                })
+            });
+
+            const teksRespons = await response.text();
+            let hasil;
+
+            try {
+                hasil = JSON.parse(teksRespons);
+            } catch (e) {
+                console.error('Respons Clinical Pathway bukan JSON:', response.status, teksRespons);
+                throw new Error('Server tidak mengirim respons JSON. Periksa route dan log Laravel.');
+            }
+
+            if (!response.ok || hasil.success !== true) {
+                let pesan = hasil.message || 'Clinical Pathway gagal disimpan.';
+                if (hasil.errors) {
+                    const daftarError = Object.values(hasil.errors).flat();
+                    if (daftarError.length) pesan = daftarError.join('\n');
+                }
+                throw new Error(pesan);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Gagal menyimpan Clinical Pathway:', error);
+            alert(error.message || 'Clinical Pathway gagal disimpan ke database.');
+            return false;
+        }
+    }
+
+    // Klik Simpan: simpan TTV, SOAP, ICD, CP, lalu perbarui status di database.
     async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
             return;
         }
 
-        if (
-            typeof cpBolehDiisi === 'function' &&
-            typeof cpTerisi === 'function' &&
-            cpBolehDiisi() &&
-            !cpTerisi()
-        ) {
+        if (cpBolehDiisi() && !cpTerisi()) {
             alert(
                 'Diagnosa utama pasien adalah HNP. ' +
                 'Clinical Pathway wajib diisi sebelum menyimpan.'
             );
-
-            if (typeof bukaTabPathway === 'function') {
-                bukaTabPathway();
-            }
-
+            bukaTabPathway();
             return;
         }
 
@@ -839,6 +981,15 @@
 
             if (!soapIcdTersimpan) {
                 return;
+            }
+
+            // 2b. Simpan Clinical Pathway (hanya bila diagnosa HNP).
+            if (cpBolehDiisi()) {
+                const cpTersimpan = await simpanCPKeDatabase();
+
+                if (!cpTersimpan) {
+                    return;
+                }
             }
 
             // 3. Pastikan ID pendaftaran tersedia.
@@ -1560,6 +1711,8 @@ const diagnosaTerpilih = {
             baris.appendChild(aksi);
             list.appendChild(baris);
         });
+
+        perbaruiStatusCP();
     }
 renderDiagnosa('penyakit');
 renderDiagnosa('tindakan');
