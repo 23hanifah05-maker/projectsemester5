@@ -68,7 +68,7 @@
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
     </div>
 
-    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print, hasil 1 lembar) ===== --}}
+    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print) ===== --}}
     <div id="cetak-resep-area" class="cetak-resep-only">
         <div class="cetak-header">
             <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
@@ -216,36 +216,34 @@
 
         <hr class="kb-divider">
 
+        {{-- ===== Kotak SOAP ===== --}}
+        <div class="kb-soap-title">SOAP</div>
+        <div class="kb-soap-box">
+            <div class="kb-soap-row">
+                <div class="kb-soap-badge">S</div>
+                <textarea name="subjective" rows="4" placeholder="Subjektif...">{{ old('subjective', $assesmen->subjek ?? '') }}</textarea>
+            </div>
 
-{{-- ===== Kotak SOAP ===== --}}
-<div class="kb-soap-title">SOAP</div>
-<div class="kb-soap-box">
-    <div class="kb-soap-row">
-        <div class="kb-soap-badge">S</div>
-        <textarea name="subjective" rows="4" placeholder="Subjektif...">{{ old('subjective', $assesmen->subjek ?? '') }}</textarea>
-    </div>
+            <div class="kb-soap-row">
+                <div class="kb-soap-badge">O</div>
+                <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif...">{{ old('objective', $assesmen->objek ?? '') }}</textarea>
+            </div>
 
-    <div class="kb-soap-row">
-        <div class="kb-soap-badge">O</div>
-        <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif...">{{ old('objective', $assesmen->objek ?? '') }}</textarea>
-    </div>
+            <div class="kb-soap-row">
+                <div class="kb-soap-badge">A</div>
+                <textarea name="assessment" rows="4" placeholder="Assessment / analisa...">{{ old('assessment', $assesmen->assesmen ?? '') }}</textarea>
+            </div>
 
-    <div class="kb-soap-row">
-        <div class="kb-soap-badge">A</div>
-        <textarea name="assessment" rows="4" placeholder="Assessment / analisa...">{{ old('assessment', $assesmen->assesmen ?? '') }}</textarea>
-    </div>
-
-    <div class="kb-soap-row">
-        <div class="kb-soap-badge">P</div>
-        <div class="kb-plan-wrap">
-            <textarea name="plan" rows="4" placeholder="Rencana/plan...">{{ old('plan', $assesmen->plan ?? '') }}</textarea>
-            <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
-                <i class="fa-solid fa-print"></i> Cetak
-            </button>
+            <div class="kb-soap-row">
+                <div class="kb-soap-badge">P</div>
+                <div class="kb-plan-wrap">
+                    <textarea name="plan" rows="4" placeholder="Rencana/plan...">{{ old('plan', $assesmen->plan ?? '') }}</textarea>
+                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
+                        <i class="fa-solid fa-print"></i> Cetak
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-
 
         <hr class="kb-divider">
 
@@ -475,8 +473,14 @@
                     </tbody>
                 </table>
             </div>
+
             <div class="cp-footer">
-                <button type="button" class="cp-cetak" onclick="cetakCP()"><i class="fa-solid fa-print"></i> Cetak</button>
+                <button type="button" class="cp-simpan" id="btnSimpanCP" onclick="simpanCP()">
+                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
+                </button>
+                <button type="button" class="cp-cetak" onclick="cetakCP()">
+                    <i class="fa-solid fa-print"></i> Cetak
+                </button>
             </div>
         </div>
     </div>
@@ -497,12 +501,12 @@
                     <div class="rj-field">
                         <label>Tujuan</label>
                         <select id="rjTujuan">
-    <option value="">-- Pilih Poli --</option>
-    <option value="obgyn">Poli Obgyn</option>
-    <option value="jantung">Poli Jantung</option>
-    <option value="jiwa">Poli Jiwa</option>
-    <option value="radiologi">Radiologi</option>
-</select>
+                            <option value="">-- Pilih Poli --</option>
+                            <option value="obgyn">Poli Obgyn</option>
+                            <option value="jantung">Poli Jantung</option>
+                            <option value="jiwa">Poli Jiwa</option>
+                            <option value="radiologi">Radiologi</option>
+                        </select>
                     </div>
                     <div class="rj-field">
                         <label>Dokter Pengirim</label>
@@ -569,41 +573,91 @@
 
 @section('extra-js')
 <script>
+    // ===== Konfigurasi =====
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
     const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
 
-    // Kunci penyimpanan status periksa Poli Syaraf
-    const KUNCI_STATUS_PERIKSA = 'syaraf_status_periksa';
-    const KUNCI_WAKTU_SELESAI = 'syaraf_waktu_selesai';
+    // Saklar penyimpanan Clinical Pathway ke database.
+    // false = hanya validasi + tanda "Tersimpan" (belum kirim ke server).
+    // Ubah ke true bila route dan tabel clinical_pathway sudah siap.
+    const CP_SIMPAN_KE_DB = false;
+
+    // Kode ICD-10 HNP. Harus sama dengan KODE_HNP di ClinicalPathwayController.
+    const KODE_HNP = ['M51'];
 
     // true hanya sesaat sebelum pindah halaman setelah Simpan berhasil.
     // Selama false, halaman ini tidak bisa ditinggalkan bila ada data belum disimpan.
     let izinkanKeluar = false;
 
-    // ===== Clinical Pathway hanya untuk diagnosa HNP =====
-    // Kode ICD-10 HNP. Harus sama dengan KODE_HNP di ClinicalPathwayController.
-    const KODE_HNP = ['M51'];
-
-    function isKodeHNP(item) {
-        const kode = String(item.kode || '').trim().toUpperCase();
-        return KODE_HNP.some(awalan => kode.startsWith(awalan));
+    // ===== Helper umum =====
+    function tanggalIndonesia() {
+        return new Date().toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
     }
 
+    function sembunyiDropdown() {
+        ['dropdownPenyakit', 'dropdownTindakan'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+    }
+
+    // Kirim JSON ke server dan pastikan respons berupa JSON dengan success = true.
+    async function kirimJson(url, method, body, pesanGagal) {
+        const csrfToken = document.getElementById('csrf_token')?.value;
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(body)
+        });
+
+        const teksRespons = await response.text();
+        let hasil;
+
+        try {
+            hasil = JSON.parse(teksRespons);
+        } catch (e) {
+            console.error('Respons bukan JSON:', response.status, teksRespons);
+            throw new Error('Server tidak mengirim respons JSON. Periksa route dan log Laravel.');
+        }
+
+        if (!response.ok || hasil.success !== true) {
+            let pesan = hasil.message || pesanGagal;
+            if (hasil.errors) {
+                const daftarError = Object.values(hasil.errors).flat();
+                if (daftarError.length) pesan = daftarError.join('\n');
+            }
+            throw new Error(pesan);
+        }
+
+        return hasil;
+    }
+
+    // ===== Tab =====
     function cpBolehDiisi() {
-        return diagnosaTerpilih.penyakit.some(isKodeHNP);
+        return diagnosaTerpilih.penyakit.some(function (item) {
+            const kode = String(item.kode || '').trim().toUpperCase();
+            return KODE_HNP.some(awalan => kode.startsWith(awalan));
+        });
     }
 
     function cpTerisi() {
-        let terisi = false;
-        document.querySelectorAll('#tab-pathway input[type=checkbox]').forEach(function (cb) {
-            if (cb.checked) terisi = true;
-        });
-        document.querySelectorAll(
+        const adaCentang = Array.from(
+            document.querySelectorAll('#tab-pathway input[type=checkbox]')
+        ).some(cb => cb.checked);
+
+        const adaTeks = Array.from(document.querySelectorAll(
             '#tab-pathway input[type=text]:not(.cp-waktu):not(.cp-dx-auto):not(#cpTotal), #tab-pathway textarea'
-        ).forEach(function (f) {
-            if (f.value.trim() !== '') terisi = true;
-        });
-        return terisi;
+        )).some(f => f.value.trim() !== '');
+
+        return adaCentang || adaTeks;
     }
 
     function gantiTab(tab, event) {
@@ -623,10 +677,6 @@
         document.getElementById('tab-' + tab).classList.add('active');
     }
 
-    function bukaTabPathway() {
-        gantiTab('pathway');
-    }
-
     // Sinkronkan tab Clinical Pathway dengan diagnosa penyakit yang dipilih.
     function perbaruiStatusCP() {
         const boleh = cpBolehDiisi();
@@ -639,7 +689,10 @@
 
         const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
         if (dxUtama) {
-            const hnp = diagnosaTerpilih.penyakit.find(isKodeHNP);
+            const hnp = diagnosaTerpilih.penyakit.find(function (item) {
+                const kode = String(item.kode || '').trim().toUpperCase();
+                return KODE_HNP.some(awalan => kode.startsWith(awalan));
+            });
             dxUtama.value = hnp ? hnp.kode + ' — ' + hnp.nama : '';
             perbaruiWaktuBaris(dxUtama.closest('tr'));
         }
@@ -650,6 +703,7 @@
         }
     }
 
+    // ===== Cetak resep =====
     function cetakResep() {
         const planEl = document.querySelector('textarea[name="plan"]');
         const planText = planEl ? planEl.value.trim() : '';
@@ -659,14 +713,10 @@
             return;
         }
 
-        const area = document.getElementById('cetak-resep-area');
-
         document.getElementById('resep-isi-plan').innerText = planText;
-        document.getElementById('resep-tanggal').innerText = new Date().toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'long', year: 'numeric'
-        });
+        document.getElementById('resep-tanggal').innerText = tanggalIndonesia();
 
-        document.body.appendChild(area);
+        document.body.appendChild(document.getElementById('cetak-resep-area'));
         document.body.classList.add('cetak-resep-mode');
 
         window.print();
@@ -682,30 +732,24 @@
         document.getElementById('cpTotal').value = total ? total.toLocaleString('id-ID') : '';
     }
 
-    // ===== Clinical Pathway: Waktu terisi otomatis saat baris diisi =====
+    // ===== Clinical Pathway: kolom Waktu terisi otomatis saat baris diisi =====
     function jamSekarang() {
         const d = new Date();
-        const tgl = String(d.getDate()).padStart(2, '0') + '-' +
-                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-                    d.getFullYear();
-        const jam = String(d.getHours()).padStart(2, '0') + ':' +
-                    String(d.getMinutes()).padStart(2, '0');
-        return tgl + ' ' + jam;
+        const dua = n => String(n).padStart(2, '0');
+        return dua(d.getDate()) + '-' + dua(d.getMonth() + 1) + '-' + d.getFullYear() +
+               ' ' + dua(d.getHours()) + ':' + dua(d.getMinutes());
     }
 
     function perbaruiWaktuBaris(tr) {
         const waktu = tr.querySelector('.cp-waktu');
         if (!waktu) return;
 
-        let terisi = false;
-        tr.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
-            if (cb.checked) terisi = true;
-        });
-        tr.querySelectorAll('input[type=text]:not(.cp-waktu), textarea').forEach(function (f) {
-            if (f.value.trim() !== '') terisi = true;
-        });
+        const adaCentang = Array.from(tr.querySelectorAll('input[type=checkbox]'))
+            .some(cb => cb.checked);
+        const adaTeks = Array.from(tr.querySelectorAll('input[type=text]:not(.cp-waktu), textarea'))
+            .some(f => f.value.trim() !== '');
 
-        if (terisi) {
+        if (adaCentang || adaTeks) {
             if (waktu.value === '') waktu.value = jamSekarang();
         } else {
             waktu.value = '';
@@ -713,13 +757,16 @@
     }
 
     document.addEventListener('input', function (e) {
-        if (e.target.classList && e.target.classList.contains('cp-lain-teks')) {
-            const label = e.target.closest('label');
-            const cb = label.querySelector('input[type=checkbox]');
-            if (cb) cb.checked = e.target.value.trim() !== '';
+        const el = e.target;
 
+        if (el.classList && el.classList.contains('cp-lain-teks')) {
+            const label = el.closest('label');
+            const cb = label.querySelector('input[type=checkbox]');
+            if (cb) cb.checked = el.value.trim() !== '';
+
+            // Tambah baris "lainnya" baru bila baris terakhir sudah diisi.
             const semua = label.parentElement.querySelectorAll('.cp-lain-teks');
-            if (e.target === semua[semua.length - 1] && e.target.value.trim() !== '') {
+            if (el === semua[semua.length - 1] && el.value.trim() !== '') {
                 const baru = label.cloneNode(true);
                 baru.querySelector('input[type=checkbox]').checked = false;
                 baru.querySelector('.cp-lain-teks').value = '';
@@ -727,12 +774,12 @@
             }
         }
 
-        if (e.target.classList && e.target.classList.contains('cp-tarif')) {
-            e.target.value = e.target.value.replace(/\D/g, '');
+        if (el.classList && el.classList.contains('cp-tarif')) {
+            el.value = el.value.replace(/\D/g, '');
             hitungTotalCP();
         }
 
-        const tr = e.target.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
+        const tr = el.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
         if (tr) perbaruiWaktuBaris(tr);
     });
 
@@ -741,6 +788,7 @@
         if (tr) perbaruiWaktuBaris(tr);
     });
 
+    // Hapus baris "lainnya" yang dikosongkan (kecuali baris terakhir).
     document.addEventListener('focusout', function (e) {
         if (!e.target.classList || !e.target.classList.contains('cp-lain-teks')) return;
 
@@ -754,6 +802,26 @@
         }
     });
 
+    // ===== Clinical Pathway: ambil isi satu baris aktivitas =====
+    // Mengembalikan daftar keterangan (centang + isian teks) untuk sel Keterangan.
+    function ambilKeterangan(sel) {
+        const ket = [];
+
+        sel.querySelectorAll('label.cp-check').forEach(function (label) {
+            const cb = label.querySelector('input[type=checkbox]');
+            const lain = label.querySelector('.cp-lain-teks');
+            const teks = lain ? lain.value.trim() : label.textContent.trim();
+            if (cb && cb.checked && teks !== '') ket.push(teks);
+        });
+
+        sel.querySelectorAll('input[type=text]:not(.cp-lain-teks), textarea').forEach(function (f) {
+            const v = f.value.trim();
+            if (v !== '') ket.push(v);
+        });
+
+        return ket;
+    }
+
     // ===== Clinical Pathway: cetak hasil isian =====
     function cetakCP() {
         const tbody = document.getElementById('cp-cetak-body');
@@ -762,59 +830,43 @@
 
         function tambahBaris(aktivitas, ketList, waktu, tarif) {
             const baris = document.createElement('tr');
+            const kolom = [
+                ['cp-print-aktivitas', aktivitas],
+                ['cp-print-ket', ketList.length ? ketList.join('\n') : '-'],
+                ['cp-print-waktu', waktu !== '' ? waktu : '-'],
+                ['cp-print-tarif', tarif !== '' ? 'Rp ' + tarif : '-']
+            ];
 
-            const tdA = document.createElement('td');
-            tdA.className = 'cp-print-aktivitas';
-            tdA.textContent = aktivitas;
+            kolom.forEach(function (item) {
+                const td = document.createElement('td');
+                td.className = item[0];
+                td.textContent = item[1];
+                baris.appendChild(td);
+            });
 
-            const tdK = document.createElement('td');
-            tdK.className = 'cp-print-ket';
-            tdK.textContent = ketList.length ? ketList.join('\n') : '-';
-
-            const tdW = document.createElement('td');
-            tdW.className = 'cp-print-waktu';
-            tdW.textContent = waktu !== '' ? waktu : '-';
-
-            const tdT = document.createElement('td');
-            tdT.className = 'cp-print-tarif';
-            tdT.textContent = tarif !== '' ? 'Rp ' + tarif : '-';
-
-            baris.appendChild(tdA);
-            baris.appendChild(tdK);
-            baris.appendChild(tdW);
-            baris.appendChild(tdT);
             tbody.appendChild(baris);
         }
 
+        // Baris Diagnosa (Dx Utama, Sekunder, Banding)
         const dx = [];
         const dxWaktu = [];
         document.querySelectorAll('#tab-pathway tr.cp-dx-row').forEach(function (tr) {
             const f = tr.querySelector('.cp-dx-input');
             const w = tr.querySelector('.cp-waktu');
             const v = f ? f.value.trim() : '';
-            if (v !== '') {
-                if (!f.classList.contains('cp-dx-auto')) adaIsi = true;
-                dx.push(f.dataset.label + ': ' + v);
-                dxWaktu.push(w && w.value.trim() !== '' ? w.value.trim() : '-');
-            }
+            if (v === '') return;
+
+            if (!f.classList.contains('cp-dx-auto')) adaIsi = true;
+            dx.push(f.dataset.label + ': ' + v);
+            dxWaktu.push(w && w.value.trim() !== '' ? w.value.trim() : '-');
         });
         tambahBaris('Diagnosa', dx, dxWaktu.join('\n'), '');
 
+        // Baris aktivitas pelayanan
         document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
             const sel = tr.querySelectorAll(':scope > td');
             const aktivitas = sel[0].dataset.nama || sel[0].textContent.trim();
-
-            const ket = [];
-            sel[1].querySelectorAll('label.cp-check').forEach(function (label) {
-                const cb = label.querySelector('input[type=checkbox]');
-                const lain = label.querySelector('.cp-lain-teks');
-                const teks = lain ? lain.value.trim() : label.textContent.trim();
-                if (cb && cb.checked && teks !== '') ket.push('- ' + teks);
-            });
-            sel[1].querySelectorAll('input[type=text]:not(.cp-lain-teks), textarea').forEach(function (f) {
-                const v = f.value.trim();
-                if (v !== '') ket.push(v);
-            });
+            const ket = ambilKeterangan(sel[1]).map(teks => '- ' + teks);
 
             const waktuEl = sel[2].querySelector('input');
             const tarifEl = sel[3].querySelector('input');
@@ -833,20 +885,16 @@
 
         const total = document.getElementById('cpTotal').value.trim();
         document.getElementById('cp-cetak-total').textContent = total !== '' ? 'Rp ' + total : '-';
-        document.getElementById('cp-tanggal').innerText = new Date().toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'long', year: 'numeric'
-        });
+        document.getElementById('cp-tanggal').innerText = tanggalIndonesia();
 
-        const area = document.getElementById('cetak-cp-area');
-        document.body.appendChild(area);
+        document.body.appendChild(document.getElementById('cetak-cp-area'));
         document.body.classList.add('cetak-cp-mode');
 
         window.print();
     }
 
     window.addEventListener('afterprint', function () {
-        document.body.classList.remove('cetak-resep-mode');
-        document.body.classList.remove('cetak-cp-mode');
+        document.body.classList.remove('cetak-resep-mode', 'cetak-cp-mode');
     });
 
     // ===== Clinical Pathway: kumpulkan isian form =====
@@ -867,24 +915,11 @@
         document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
             const sel = tr.querySelectorAll(':scope > td');
             const nama = sel[0].dataset.nama || sel[0].textContent.trim();
-
-            const ket = [];
-            sel[1].querySelectorAll('label.cp-check').forEach(function (label) {
-                const cb = label.querySelector('input[type=checkbox]');
-                const lain = label.querySelector('.cp-lain-teks');
-                const teks = lain ? lain.value.trim() : label.textContent.trim();
-                if (cb && cb.checked && teks !== '') ket.push(teks);
-            });
-            sel[1].querySelectorAll('input[type=text]:not(.cp-lain-teks), textarea').forEach(function (f) {
-                const v = f.value.trim();
-                if (v !== '') ket.push(v);
-            });
-
             const waktuEl = sel[2].querySelector('input');
             const tarifEl = sel[3].querySelector('input');
 
             hasil.baris[nama] = {
-                keterangan: ket,
+                keterangan: ambilKeterangan(sel[1]),
                 waktu: waktuEl ? waktuEl.value.trim() : '',
                 tarif: tarifEl ? tarifEl.value.replace(/\D/g, '') : ''
             };
@@ -898,43 +933,18 @@
     // ===== Clinical Pathway: simpan ke database =====
     async function simpanCPKeDatabase() {
         const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
-        const csrfToken = document.getElementById('csrf_token')?.value;
 
         try {
-            const response = await fetch("{{ route('poli.syaraf.clinical-pathway.store') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
+            await kirimJson(
+                "{{ route('poli.syaraf.clinical-pathway.store') }}",
+                'POST',
+                {
                     id_pendaftaran: Number(idPendaftaran),
                     penyakit_id: diagnosaTerpilih.penyakit.map(item => Number(item.id)),
                     data: kumpulkanDataCP()
-                })
-            });
-
-            const teksRespons = await response.text();
-            let hasil;
-
-            try {
-                hasil = JSON.parse(teksRespons);
-            } catch (e) {
-                console.error('Respons Clinical Pathway bukan JSON:', response.status, teksRespons);
-                throw new Error('Server tidak mengirim respons JSON. Periksa route dan log Laravel.');
-            }
-
-            if (!response.ok || hasil.success !== true) {
-                let pesan = hasil.message || 'Clinical Pathway gagal disimpan.';
-                if (hasil.errors) {
-                    const daftarError = Object.values(hasil.errors).flat();
-                    if (daftarError.length) pesan = daftarError.join('\n');
-                }
-                throw new Error(pesan);
-            }
-
+                },
+                'Clinical Pathway gagal disimpan.'
+            );
             return true;
         } catch (error) {
             console.error('Gagal menyimpan Clinical Pathway:', error);
@@ -943,7 +953,54 @@
         }
     }
 
-    // Klik Simpan: simpan TTV, SOAP, ICD, CP, lalu perbarui status di database.
+    // ===== Clinical Pathway: tombol Simpan di tab Clinical Pathway =====
+    let timerSimpanCP = null;
+
+    async function simpanCP() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        if (!cpBolehDiisi()) {
+            alert('Clinical Pathway hanya tersedia untuk diagnosa HNP (ICD-10 M51).');
+            return;
+        }
+
+        if (!cpTerisi()) {
+            alert('Isi Clinical Pathway dulu sebelum menyimpan.');
+            return;
+        }
+
+        const tombol = document.getElementById('btnSimpanCP');
+        const teks = tombol.querySelector('span');
+
+        if (CP_SIMPAN_KE_DB) {
+            tombol.disabled = true;
+            teks.textContent = 'Menyimpan...';
+
+            const berhasil = await simpanCPKeDatabase();
+
+            tombol.disabled = false;
+            teks.textContent = 'Simpan';
+
+            if (!berhasil) return;
+        } else {
+            console.log('Data Clinical Pathway:', kumpulkanDataCP());
+        }
+
+        // Tanda visual sementara pada tombol
+        clearTimeout(timerSimpanCP);
+        tombol.classList.add('tersimpan');
+        teks.textContent = 'Tersimpan';
+
+        timerSimpanCP = setTimeout(function () {
+            tombol.classList.remove('tersimpan');
+            teks.textContent = 'Simpan';
+        }, 1500);
+    }
+
+    // ===== Simpan utama: TTV, SOAP, ICD, (CP), lalu status kunjungan =====
     async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -951,134 +1008,54 @@
         }
 
         if (cpBolehDiisi() && !cpTerisi()) {
-            alert(
-                'Diagnosa utama pasien adalah HNP. ' +
-                'Clinical Pathway wajib diisi sebelum menyimpan.'
-            );
-            bukaTabPathway();
+            alert('Diagnosa utama pasien adalah HNP. Clinical Pathway wajib diisi sebelum menyimpan.');
+            gantiTab('pathway');
             return;
         }
 
-        const tombolSimpan = document.querySelectorAll(
-            '[onclick*="simpanKunjunganBaru"]'
-        );
-
-        tombolSimpan.forEach(tombol => {
-            tombol.disabled = true;
-        });
+        const tombolSimpan = document.querySelectorAll('[onclick*="simpanKunjunganBaru"]');
+        tombolSimpan.forEach(tombol => { tombol.disabled = true; });
 
         try {
-            // 1. Simpan TTV.
-            const ttvTersimpan = await simpanTTVKeDatabase();
+            // 1. TTV
+            if (!await simpanTTVKeDatabase()) return;
 
-            if (!ttvTersimpan) {
-                return;
+            // 2. SOAP dan ICD
+            if (!await simpanSOAPdanICDKeDatabase()) return;
+
+            // 2b. Clinical Pathway (hanya bila diagnosa HNP dan saklar DB aktif)
+            if (CP_SIMPAN_KE_DB && cpBolehDiisi()) {
+                if (!await simpanCPKeDatabase()) return;
             }
 
-            // 2. Simpan SOAP dan ICD.
-            const soapIcdTersimpan =
-                await simpanSOAPdanICDKeDatabase();
-
-            if (!soapIcdTersimpan) {
-                return;
-            }
-
-            // 2b. Simpan Clinical Pathway (hanya bila diagnosa HNP).
-            if (cpBolehDiisi()) {
-                const cpTersimpan = await simpanCPKeDatabase();
-
-                if (!cpTersimpan) {
-                    return;
-                }
-            }
-
-            // 3. Pastikan ID pendaftaran tersedia.
-            const idPendaftaran = document
-                .getElementById('id_pendaftaran')
-                .value;
-
-            const csrfToken = document
-                .getElementById('csrf_token')
-                .value;
-
+            // 3. Pastikan ID pendaftaran tersedia
+            const idPendaftaran = document.getElementById('id_pendaftaran').value;
             if (!idPendaftaran) {
-                throw new Error(
-                    'ID pendaftaran tidak ditemukan.'
-                );
+                throw new Error('ID pendaftaran tidak ditemukan.');
             }
 
-            // 4. Perbarui status kunjungan di database.
-            const responseStatus = await fetch(
+            // 4. Perbarui status kunjungan
+            await kirimJson(
                 `/poli/syaraf/status-periksa/${idPendaftaran}`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        status_periksa: 'selesai'
-                    })
-                }
+                'PATCH',
+                { status_periksa: 'selesai' },
+                'Status pemeriksaan gagal diperbarui.'
             );
 
-            // Baca respons dengan aman agar error server terlihat.
-            const teksRespons = await responseStatus.text();
-
-            let hasilStatus;
-
-            try {
-                hasilStatus = JSON.parse(teksRespons);
-            } catch (e) {
-                console.error(
-                    'Respons pembaruan status bukan JSON:',
-                    responseStatus.status,
-                    teksRespons
-                );
-
-                throw new Error(
-                    'Server tidak mengirim respons JSON saat memperbarui status.'
-                );
-            }
-
-            if (
-                !responseStatus.ok ||
-                hasilStatus.success !== true
-            ) {
-                throw new Error(
-                    hasilStatus.message ||
-                    'Status pemeriksaan gagal diperbarui.'
-                );
-            }
-
-            // 5. Semua data sudah tersimpan: halaman boleh ditinggalkan.
+            // 5. Semua data sudah tersimpan: halaman boleh ditinggalkan
             izinkanKeluar = true;
 
-            alert(
-                'Data TTV, SOAP, dan ICD berhasil disimpan. ' +
-                'Status pasien berubah menjadi Selesai.'
-            );
+            alert('Data TTV, SOAP, dan ICD berhasil disimpan. Status pasien berubah menjadi Selesai.');
 
-            // 6. Kembali ke daftar Poli Saraf.
+            // 6. Kembali ke daftar Poli Saraf
             window.location.href = "{{ route('poli.syaraf') }}";
 
         } catch (error) {
-            console.error(
-                'Detail error simpan kunjungan:',
-                error
-            );
-
-            alert(
-                'Data kunjungan gagal disimpan:\n' +
-                (error.message || String(error))
-            );
+            console.error('Detail error simpan kunjungan:', error);
+            alert('Data kunjungan gagal disimpan:\n' + (error.message || String(error)));
 
         } finally {
-            tombolSimpan.forEach(tombol => {
-                tombol.disabled = false;
-            });
+            tombolSimpan.forEach(tombol => { tombol.disabled = false; });
         }
     }
 
@@ -1131,83 +1108,43 @@
         });
     }
 
+    // ===== Rujukan: kirim =====
+    async function kirimRujukan() {
+        const tujuan = document.getElementById('rjTujuan')?.value;
+        const alasan = document.getElementById('rjAlasan')?.value.trim();
+        const diagnosa = document.getElementById('rjDiagnosa')?.value.trim();
+        const dokter = document.getElementById('rjDokter')?.value.trim();
+        const tanggal = document.getElementById('rjTanggal')?.value;
+        const csrfToken = document.getElementById('csrf_token')?.value;
 
-async function kirimRujukan() {
-    const tujuan = document.getElementById('rjTujuan')?.value;
-    const alasan = document.getElementById('rjAlasan')?.value.trim();
-    const diagnosa = document.getElementById('rjDiagnosa')?.value.trim();
-    const dokter = document.getElementById('rjDokter')?.value.trim();
-    const tanggal = document.getElementById('rjTanggal')?.value;
-    const csrfToken = document.getElementById('csrf_token')?.value;
+        if (!NO_RM_PASIEN) return alert('Data pasien tidak ditemukan.');
+        if (!tujuan) return alert('Pilih poli tujuan rujukan terlebih dahulu.');
+        if (!diagnosa) return alert('Isi diagnosis pasien terlebih dahulu.');
+        if (!alasan) return alert('Isi alasan rujuk terlebih dahulu.');
+        if (!tanggal) return alert('Isi tanggal rujukan terlebih dahulu.');
+        if (!csrfToken) return alert('Token keamanan tidak ditemukan. Muat ulang halaman.');
 
-    if (!NO_RM_PASIEN) {
-        alert('Data pasien tidak ditemukan.');
-        return;
-    }
+        const tombol = document.querySelector('.rj-kirim');
 
-    if (!tujuan) {
-        alert('Pilih poli tujuan rujukan terlebih dahulu.');
-        return;
-    }
+        if (tombol) {
+            tombol.disabled = true;
+            tombol.dataset.teksAsli = tombol.textContent;
+            tombol.textContent = 'Mengirim rujukan...';
+        }
 
-    if (!diagnosa) {
-        alert('Isi diagnosis pasien terlebih dahulu.');
-        return;
-    }
-
-    if (!alasan) {
-        alert('Isi alasan rujuk terlebih dahulu.');
-        return;
-    }
-
-    if (!tanggal) {
-        alert('Isi tanggal rujukan terlebih dahulu.');
-        return;
-    }
-
-    if (!csrfToken) {
-        alert('Token keamanan tidak ditemukan. Muat ulang halaman.');
-        return;
-    }
-
-    const tombol = document.querySelector('.rj-kirim');
-
-    if (tombol) {
-        tombol.disabled = true;
-        tombol.dataset.teksAsli = tombol.textContent;
-        tombol.textContent = 'Mengirim rujukan...';
-    }
-
-    try {
-        const radiologi = Array.from(
-            document.querySelectorAll(
-                '#view-rujukan input[name="rujuk_radiologi[]"]:checked'
+        try {
+            const radiologi = Array.from(
+                document.querySelectorAll('#view-rujukan input[name="rujuk_radiologi[]"]:checked')
             )
-        )
-        .filter(cb => cb.id !== 'rjCekLainnya')
-        .map(cb => cb.value);
+            .filter(cb => cb.id !== 'rjCekLainnya')
+            .map(cb => cb.value);
 
-        const checkboxLainnya =
-            document.getElementById('rjCekLainnya');
+            const lainnya = rjCekLainnya?.checked ? (rjLainnya?.value || '').trim() : '';
 
-        const inputLainnya =
-            document.getElementById('rjLainnya');
-
-        const lainnya = checkboxLainnya?.checked
-            ? (inputLainnya?.value || '').trim()
-            : '';
-
-        const response = await fetch(
-            "{{ route('poli.syaraf.rujukan') }}",
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
+            const hasil = await kirimJson(
+                "{{ route('poli.syaraf.rujukan') }}",
+                'POST',
+                {
                     no_rm: NO_RM_PASIEN,
                     tujuan: tujuan,
                     alasan: alasan,
@@ -1216,91 +1153,51 @@ async function kirimRujukan() {
                     tanggal_rujuk: tanggal,
                     pemeriksaan_radiologi: radiologi,
                     radiologi_lainnya: lainnya
-                })
-            }
-        );
+                },
+                'Rujukan gagal dikirim.'
+            );
 
-        const teksRespons = await response.text();
-        let hasil;
+            // Rujukan berhasil: kembali ke halaman awal assesmen
+            // (sengaja TIDAK pindah halaman lewat hasil.redirect)
+            alert(hasil.message || 'Rujukan berhasil dikirim.');
 
-        try {
-            hasil = JSON.parse(teksRespons);
+            // 1. Reset form rujukan
+            document.getElementById('rjTujuan').value = '';
+            document.getElementById('rjAlasan').value = '';
+            document.querySelectorAll('#view-rujukan input[name="rujuk_radiologi[]"]')
+                .forEach(cb => cb.checked = false);
+            if (rjLainnya) rjLainnya.value = '';
+
+            // 2. Tutup form rujukan
+            document.body.classList.remove('mode-rujukan');
+
+            // 3. Aktifkan tab Assessment
+            document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector('.kb-tab')?.classList.add('active');
+            document.getElementById('tab-assesment')?.classList.add('active');
+
+            // 4. Scroll ke paling atas
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            document.querySelectorAll('.main-content, .content, main')
+                .forEach(el => el.scrollTop = 0);
+
         } catch (error) {
-            console.error(
-                'Respons server bukan JSON:',
-                response.status,
-                teksRespons
-            );
+            console.error('Gagal mengirim rujukan:', error);
+            alert(error.message || 'Terjadi kesalahan saat mengirim rujukan.');
 
-            throw new Error(
-                'Server tidak memberikan respons JSON. ' +
-                'Periksa route, controller, dan log Laravel.'
-            );
-        }
-
-        if (!response.ok || hasil.success !== true) {
-            let pesan = hasil.message || 'Rujukan gagal dikirim.';
-
-            if (hasil.errors) {
-                const daftarError = Object.values(hasil.errors).flat();
-
-                if (daftarError.length > 0) {
-                    pesan += '\n' + daftarError.join('\n');
-                }
+        } finally {
+            if (tombol) {
+                tombol.disabled = false;
+                tombol.textContent = tombol.dataset.teksAsli || 'KIRIM RUJUKAN';
             }
-
-            throw new Error(pesan);
-        }
-
-        // ===== Rujukan berhasil: kembali ke halaman awal assesmen =====
-        // (sengaja TIDAK pindah halaman lewat hasil.redirect)
-        alert(hasil.message || 'Rujukan berhasil dikirim.');
-
-        // 1. Reset form rujukan
-        document.getElementById('rjTujuan').value = '';
-        document.getElementById('rjAlasan').value = '';
-        document.querySelectorAll('#view-rujukan input[name="rujuk_radiologi[]"]')
-            .forEach(cb => cb.checked = false);
-        const rjLain = document.getElementById('rjLainnya');
-        if (rjLain) rjLain.value = '';
-
-        // 2. Tutup form rujukan
-        document.body.classList.remove('mode-rujukan');
-
-        // 3. Aktifkan tab Assessment
-        document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelector('.kb-tab')?.classList.add('active');
-        document.getElementById('tab-assesment')?.classList.add('active');
-
-        // 4. Scroll ke paling atas (window + container konten kalau ada)
-        window.scrollTo({ top: 0, behavior: 'auto' });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        document.querySelectorAll('.main-content, .content, main')
-            .forEach(el => el.scrollTop = 0);
-
-    } catch (error) {
-        console.error('Gagal mengirim rujukan:', error);
-
-        alert(
-            error.message ||
-            'Terjadi kesalahan saat mengirim rujukan.'
-        );
-
-    } finally {
-        if (tombol) {
-            tombol.disabled = false;
-            tombol.textContent =
-                tombol.dataset.teksAsli || 'KIRIM RUJUKAN';
         }
     }
-}
 
+    // ===== Tanda vital -> Objective (lewat checkbox) =====
     // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
     let vitalTerakhir = '';
 
-    // ===== Tanda vital -> Objective (lewat checkbox) =====
     function bangunTeksVital() {
         const bagian = [];
 
@@ -1311,12 +1208,11 @@ async function kirimRujukan() {
 
             if (!labelEl || !input) return;
 
-            const label = labelEl.textContent.trim();
             const nilai = input.value.trim();
             const unit = unitEl ? unitEl.textContent.trim() : '';
 
             if (nilai !== '') {
-                bagian.push(label + ': ' + nilai + (unit ? ' ' + unit : ''));
+                bagian.push(labelEl.textContent.trim() + ': ' + nilai + (unit ? ' ' + unit : ''));
             }
         });
 
@@ -1328,9 +1224,7 @@ async function kirimRujukan() {
         if (!objektif) return;
 
         if (vitalTerakhir && objektif.value.startsWith(vitalTerakhir)) {
-            objektif.value = objektif.value
-                .slice(vitalTerakhir.length)
-                .replace(/^\n/, '');
+            objektif.value = objektif.value.slice(vitalTerakhir.length).replace(/^\n/, '');
         }
 
         vitalTerakhir = '';
@@ -1351,43 +1245,36 @@ async function kirimRujukan() {
     }
 
     async function toggleVitalKeObjektif(cb) {
-        if (cb.checked) {
-            const teks = bangunTeksVital();
-
-            if (teks === '') {
-                alert('Isi minimal satu tanda vital terlebih dahulu.');
-                cb.checked = false;
-                return;
-            }
-
-            // Simpan TTV terlebih dahulu ke database.
-            const tersimpan = await simpanTTVKeDatabase();
-
-            if (!tersimpan) {
-                cb.checked = false;
-                return;
-            }
-
-            // Masukkan TTV ke Objective setelah penyimpanan berhasil.
-            terapkanVitalKeObjektif(teks);
-
-            const objektif = document.querySelector('textarea[name="objective"]');
-            if (objektif) objektif.focus();
-
-            alert('Data TTV berhasil disimpan dan dimasukkan ke Objective.');
-        } else {
+        if (!cb.checked) {
             hapusVitalDariObjektif();
+            return;
         }
+
+        const teks = bangunTeksVital();
+
+        if (teks === '') {
+            alert('Isi minimal satu tanda vital terlebih dahulu.');
+            cb.checked = false;
+            return;
+        }
+
+        // Simpan TTV terlebih dahulu ke database.
+        if (!await simpanTTVKeDatabase()) {
+            cb.checked = false;
+            return;
+        }
+
+        // Masukkan TTV ke Objective setelah penyimpanan berhasil.
+        terapkanVitalKeObjektif(teks);
+        document.querySelector('textarea[name="objective"]')?.focus();
+
+        alert('Data TTV berhasil disimpan dan dimasukkan ke Objective.');
     }
 
     // Perbarui teks TTV di Objective ketika nilai TTV berubah
     // dan checkbox masih tercentang.
     document.addEventListener('input', function (e) {
-        if (!e.target.closest('.kb-vitals')) return;
-
-        if (!e.target.matches('.kb-vitals input:not([type="checkbox"])')) {
-            return;
-        }
+        if (!e.target.matches('.kb-vitals input:not([type="checkbox"])')) return;
 
         const chk = document.getElementById('chkVital');
         if (!chk || !chk.checked) return;
@@ -1404,59 +1291,30 @@ async function kirimRujukan() {
     // ===== Simpan SOAP dan ICD ke database =====
     async function simpanSOAPdanICDKeDatabase() {
         const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
-        const csrfToken = document.getElementById('csrf_token')?.value;
 
         if (!idPendaftaran) {
             alert('ID pendaftaran tidak ditemukan. Buka pasien dari kunjungan Poli Saraf.');
             return false;
         }
 
-        const ambilTeks = (nama) => {
-            const elemen = document.querySelector(`textarea[name="${nama}"]`);
-            return elemen ? elemen.value.trim() : '';
-        };
-
-        const data = {
-            id_pendaftaran: Number(idPendaftaran),
-            subjective: ambilTeks('subjective'),
-            objective: ambilTeks('objective'),
-            assessment: ambilTeks('assessment'),
-            plan: ambilTeks('plan'),
-            penyakit_id: diagnosaTerpilih.penyakit.map(item => Number(item.id)),
-            tindakan_id: diagnosaTerpilih.tindakan.map(item => Number(item.id))
-        };
+        const ambilTeks = nama =>
+            (document.querySelector(`textarea[name="${nama}"]`)?.value ?? '').trim();
 
         try {
-            const response = await fetch("{{ route('poli.syaraf.assesmen.store') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken
+            await kirimJson(
+                "{{ route('poli.syaraf.assesmen.store') }}",
+                'POST',
+                {
+                    id_pendaftaran: Number(idPendaftaran),
+                    subjective: ambilTeks('subjective'),
+                    objective: ambilTeks('objective'),
+                    assessment: ambilTeks('assessment'),
+                    plan: ambilTeks('plan'),
+                    penyakit_id: diagnosaTerpilih.penyakit.map(item => Number(item.id)),
+                    tindakan_id: diagnosaTerpilih.tindakan.map(item => Number(item.id))
                 },
-                body: JSON.stringify(data)
-            });
-
-            const teksRespons = await response.text();
-            let hasil;
-
-            try {
-                hasil = JSON.parse(teksRespons);
-            } catch (e) {
-                console.error('Respons penyimpanan SOAP/ICD bukan JSON:', response.status, teksRespons);
-                throw new Error('Server tidak mengirim respons JSON. Periksa rute dan log Laravel.');
-            }
-
-            if (!response.ok || hasil.success !== true) {
-                let pesan = hasil.message || 'SOAP dan ICD gagal disimpan.';
-                if (hasil.errors) {
-                    const daftarError = Object.values(hasil.errors).flat();
-                    if (daftarError.length) pesan = daftarError.join('\n');
-                }
-                throw new Error(pesan);
-            }
-
+                'SOAP dan ICD gagal disimpan.'
+            );
             return true;
         } catch (error) {
             console.error('Gagal menyimpan SOAP dan ICD:', error);
@@ -1468,7 +1326,6 @@ async function kirimRujukan() {
     // ===== Simpan TTV ke database =====
     async function simpanTTVKeDatabase() {
         const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
-        const csrfToken = document.getElementById('csrf_token')?.value;
 
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan. TTV tidak dapat disimpan.');
@@ -1480,45 +1337,26 @@ async function kirimRujukan() {
             return false;
         }
 
-        const ambilNilai = (id) => {
-            const el = document.getElementById(id);
-            if (!el) return null;
-            const nilai = el.value.trim();
+        const ambilNilai = function (id) {
+            const nilai = document.getElementById(id)?.value.trim() ?? '';
             return nilai === '' ? null : nilai;
         };
 
-        const data = {
-            id_pendaftaran: Number(idPendaftaran),
-            tekanan_darah: ambilNilai('tekanan_darah'),
-            suhu: ambilNilai('suhu'),
-            heart_rate: ambilNilai('heart_rate'),
-            respiratory_rate: ambilNilai('respiratory_rate'),
-            spo2: ambilNilai('spo2'),
-            alergi: ambilNilai('alergi')
-        };
-
         try {
-            const response = await fetch("{{ route('poli.syaraf.ttv.store') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
+            await kirimJson(
+                "{{ route('poli.syaraf.ttv.store') }}",
+                'POST',
+                {
+                    id_pendaftaran: Number(idPendaftaran),
+                    tekanan_darah: ambilNilai('tekanan_darah'),
+                    suhu: ambilNilai('suhu'),
+                    heart_rate: ambilNilai('heart_rate'),
+                    respiratory_rate: ambilNilai('respiratory_rate'),
+                    spo2: ambilNilai('spo2'),
+                    alergi: ambilNilai('alergi')
                 },
-                body: JSON.stringify(data)
-            });
-
-            const hasil = await response.json();
-
-            if (!response.ok) {
-                let pesan = hasil.message || 'Gagal menyimpan TTV.';
-                if (hasil.errors) {
-                    const daftarError = Object.values(hasil.errors).flat();
-                    if (daftarError.length) pesan = daftarError.join('\n');
-                }
-                throw new Error(pesan);
-            }
-
+                'Gagal menyimpan TTV.'
+            );
             return true;
         } catch (error) {
             console.error('Gagal menyimpan TTV:', error);
@@ -1526,20 +1364,6 @@ async function kirimRujukan() {
             return false;
         }
     }
-
-    document.addEventListener('input', function (e) {
-        if (!e.target.matches('.kb-vitals input[type=text]')) return;
-
-        const chk = document.getElementById('chkVital');
-        if (!chk || !chk.checked) return;
-
-        const teks = bangunTeksVital();
-        if (teks === '') {
-            hapusVitalDariObjektif();
-        } else {
-            terapkanVitalKeObjektif(teks);
-        }
-    });
 
     // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
     const URL_CARI = "{{ url('/cari-kode') }}";
@@ -1549,14 +1373,13 @@ async function kirimRujukan() {
         tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
     };
 
-const pilihan = {
-    penyakit: null,
-    tindakan: null
-};
-const diagnosaTerpilih = {
-    penyakit: @json($diagnosisTersimpan ?? []),
-    tindakan: @json($tindakanTersimpan ?? [])
-};
+    const pilihan = { penyakit: null, tindakan: null };
+
+    const diagnosaTerpilih = {
+        penyakit: @json($diagnosisTersimpan ?? []),
+        tindakan: @json($tindakanTersimpan ?? [])
+    };
+
     const timerCari = {};
     const urutanCari = { penyakit: 0, tindakan: 0 };
 
@@ -1566,9 +1389,8 @@ const diagnosaTerpilih = {
 
     function cariItem(jenis) {
         const k = konfig[jenis];
-        const input = document.getElementById(k.input);
         const dropdown = document.getElementById(k.dropdown);
-        const keyword = input.value.trim();
+        const keyword = document.getElementById(k.input).value.trim();
 
         pilihan[jenis] = null;
         updateCentang(jenis);
@@ -1587,7 +1409,7 @@ const diagnosaTerpilih = {
                     headers: { 'Accept': 'application/json' }
                 });
                 const data = await res.json();
-                if (nomor !== urutanCari[jenis]) return;
+                if (nomor !== urutanCari[jenis]) return; // abaikan hasil pencarian lama
                 renderDropdown(jenis, data);
             } catch (e) {
                 tampilPesan(dropdown, 'Gagal memuat data');
@@ -1614,6 +1436,7 @@ const diagnosaTerpilih = {
             tampilPesan(dropdown, 'Tidak ditemukan');
             return;
         }
+
         dropdown.innerHTML = '';
         data.forEach(function (item) {
             const div = document.createElement('div');
@@ -1714,16 +1537,13 @@ const diagnosaTerpilih = {
 
         perbaruiStatusCP();
     }
-renderDiagnosa('penyakit');
-renderDiagnosa('tindakan');
 
+    renderDiagnosa('penyakit');
+    renderDiagnosa('tindakan');
+
+    // Tutup dropdown pencarian saat klik di luar kotak pencarian.
     document.addEventListener('click', function (e) {
-        if (!e.target.closest('.kb-search-box')) {
-            const dp = document.getElementById('dropdownPenyakit');
-            const dt = document.getElementById('dropdownTindakan');
-            if (dp) dp.style.display = 'none';
-            if (dt) dt.style.display = 'none';
-        }
+        if (!e.target.closest('.kb-search-box')) sembunyiDropdown();
     });
 
     /* =========================================================
@@ -1740,15 +1560,11 @@ renderDiagnosa('tindakan');
 
     function ambilSnapshotForm() {
         const nilai = id => (document.getElementById(id)?.value ?? '').trim();
-        const teks = nama => (
-            document.querySelector('textarea[name="' + nama + '"]')?.value ?? ''
-        ).trim();
+        const teks = nama =>
+            (document.querySelector('textarea[name="' + nama + '"]')?.value ?? '').trim();
 
         return JSON.stringify({
-            ttv: [
-                'tekanan_darah', 'heart_rate', 'spo2',
-                'suhu', 'respiratory_rate', 'alergi'
-            ].map(nilai),
+            ttv: ['tekanan_darah', 'heart_rate', 'spo2', 'suhu', 'respiratory_rate', 'alergi'].map(nilai),
             soap: ['subjective', 'objective', 'assessment', 'plan'].map(teks),
             penyakit: diagnosaTerpilih.penyakit.map(d => String(d.id)).sort(),
             tindakan: diagnosaTerpilih.tindakan.map(d => String(d.id)).sort()
@@ -1799,12 +1615,7 @@ renderDiagnosa('tindakan');
 
         const href = (link.getAttribute('href') || '').trim().toLowerCase();
 
-        if (
-            href === '' ||
-            href.startsWith('#') ||
-            href.startsWith('javascript:') ||
-            link.target === '_blank'
-        ) {
+        if (href === '' || href.startsWith('#') || href.startsWith('javascript:') || link.target === '_blank') {
             return;
         }
 
