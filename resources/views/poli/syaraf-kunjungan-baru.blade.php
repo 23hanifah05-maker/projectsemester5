@@ -1000,6 +1000,13 @@
             console.log('Data Clinical Pathway:', kumpulkanDataCP());
         }
 
+        // Notifikasi sukses (sama seperti notifikasi simpan lainnya)
+        alert(
+            CP_SIMPAN_KE_DB
+                ? 'Data Clinical Pathway berhasil disimpan.'
+                : 'Data Clinical Pathway berhasil divalidasi. Belum tersimpan ke database.'
+        );
+
         // Tanda visual sementara pada tombol
         clearTimeout(timerSimpanCP);
         tombol.classList.add('tersimpan');
