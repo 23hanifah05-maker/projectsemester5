@@ -214,6 +214,14 @@ Route::post(
     '/poli/obgyn/rujukan',
     [PoliController::class, 'kirimRujukanObgyn']
 )->name('poli.obgyn.rujukan');
+
+// BARU: simpan informed consent (hanya untuk tindakan KB IUD)
+Route::post(
+    '/poli/obgyn/informed-consent',
+    [PoliController::class, 'simpanInformedConsent']
+)->name('poli.obgyn.informed.simpan');
+
+
 /*
 |--------------------------------------------------------------------------
 | Poli Jantung

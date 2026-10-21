@@ -7,6 +7,7 @@ use App\Models\Pasien;
 use App\Models\Pendaftaran;
 use App\Models\Ttv;
 use App\Models\Assesmen;
+use App\Models\InformedConsent; // BARU
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -617,6 +618,17 @@ class PoliController extends Controller
 
         $radiologi = null;
 
+        // BARU: data informed consent yang sudah tersimpan untuk kunjungan ini
+        $informedConsent = InformedConsent::where(
+            'id_kunjungan',
+            $id_pendaftaran
+        )->first();
+
+        // BARU: tab Informed Consent hanya terbuka bila ada tindakan KB IUD (ICD-9-CM 69.7)
+        $bolehInformed = $tindakanTersimpan->contains(function ($t) {
+            return str_starts_with($t->kode, '69.7');
+        });
+
         return view('poli.obgyn-kunjungan-baru', compact(
             'poli',
             'pasien',
@@ -628,7 +640,9 @@ class PoliController extends Controller
             'diagnosisTersimpan',
             'tindakanTersimpan',
             'semuaPasienObgyn',
-            'radiologi'
+            'radiologi',
+            'informedConsent',
+            'bolehInformed'
         ));
     }
 
@@ -699,6 +713,61 @@ class PoliController extends Controller
             'message' => 'Status pemeriksaan berhasil diperbarui.',
             'status_periksa' => $pendaftaran->status_periksa,
         ]);
+    }
+
+    /**
+     * BARU: Menyimpan informed consent Poli Obgyn.
+     * Hanya boleh bila kunjungan memiliki tindakan KB IUD (ICD-9-CM 69.7).
+     */
+    public function simpanInformedConsent(Request $request)
+    {
+        $request->validate([
+            'no_rm'               => 'required|string|exists:pasien,no_rm',
+            'id_kunjungan'        => 'required|integer',
+            'tindakan'            => 'nullable|string|max:255',
+            'diagnosis'           => 'nullable|string|max:255',
+            'penjelasan_tindakan' => 'nullable|string',
+            'risiko'              => 'nullable|string',
+            'alternatif'          => 'nullable|string',
+            'keputusan'           => 'required|in:setuju,menolak',
+            'nama_penandatangan'  => 'required|string|max:100',
+            'hubungan'            => 'nullable|string|max:50',
+            'nama_saksi'          => 'nullable|string|max:100',
+        ]);
+
+        // Cek di database: kunjungan harus punya tindakan 69.7 yang sudah tersimpan
+        $assesmen = Assesmen::where('id_pendaftaran', $request->id_kunjungan)
+            ->first();
+
+        $adaIud = $assesmen && DB::table('detail_tindakan')
+            ->join(
+                'kode_tindakan',
+                'detail_tindakan.id_kode9',
+                '=',
+                'kode_tindakan.id_icd9'
+            )
+            ->where('detail_tindakan.id_assesmen', $assesmen->id_assesmen)
+            ->where('kode_tindakan.icd_9', 'like', '69.7%')
+            ->exists();
+
+        if (!$adaIud) {
+            return back()->with(
+                'error',
+                'Informed consent hanya untuk tindakan KB IUD. '
+                . 'Simpan tindakan IUD terlebih dahulu.'
+            );
+        }
+
+        InformedConsent::updateOrCreate(
+            ['id_kunjungan' => $request->id_kunjungan],
+            $request->only([
+                'no_rm', 'tindakan', 'diagnosis', 'penjelasan_tindakan',
+                'risiko', 'alternatif', 'keputusan',
+                'nama_penandatangan', 'hubungan', 'nama_saksi',
+            ]) + ['tanggal' => now()->toDateString()]
+        );
+
+        return back()->with('success', 'Informed consent berhasil disimpan.');
     }
 
     /**

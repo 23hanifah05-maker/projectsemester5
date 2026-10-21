@@ -75,6 +75,12 @@
             color: #777;
         }
 
+        /* BARU: tab Informed Consent terkunci bila tidak ada tindakan KB IUD */
+        .ob-tab-terkunci {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
         .ob-radio-readonly .ob-checklist-item {
             cursor: default;
         }
@@ -1268,6 +1274,10 @@
     const CSRF_TOKEN = @json(csrf_token());
     const URL_KIRIM_RUJUKAN = @json(route('poli.obgyn.rujukan'));
 
+    // BARU: simpan informed consent dan data yang sudah tersimpan
+    const URL_SIMPAN_INFORMED = @json(route('poli.obgyn.informed.simpan'));
+    const DATA_INFORMED = @json($informedConsent ?? null);
+
     // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
     let izinkanKeluar = false;
 
@@ -1295,6 +1305,12 @@
     // TAB
     // =========================================================
     function gantiTab(tab, event) {
+        // BARU: tab Informed Consent terkunci bila tidak ada tindakan KB IUD
+        if (tab === 'informed' && !tabInformedTerbuka()) {
+            alert('Informed Consent hanya tersedia untuk tindakan KB IUD (kode 69.7). Pilih tindakan tersebut terlebih dahulu.');
+            return;
+        }
+
         document.querySelectorAll('.ob-tab').forEach(el => {
             el.classList.remove('active');
         });
@@ -1309,6 +1325,30 @@
 
         const panel = document.getElementById('tab-' + tab);
         if (panel) panel.classList.add('active');
+    }
+
+    // BARU: tab Informed Consent terbuka hanya bila ada tindakan KB IUD (69.7)
+    function tabInformedTerbuka() {
+        return diagnosaTerpilih.tindakan.some(
+            t => String(t.kode ?? '').startsWith('69.7')
+        );
+    }
+
+    function cekTabInformed() {
+        const buka = tabInformedTerbuka();
+        const tab = document.getElementById('ob-tab-btn-informed');
+
+        if (tab) {
+            tab.classList.toggle('ob-tab-terkunci', !buka);
+            tab.title = buka ? '' : 'Hanya tersedia untuk tindakan KB IUD (69.7)';
+        }
+
+        // Jika tindakan IUD dihapus saat tab sedang terbuka, kembali ke Assessment
+        const panel = document.getElementById('tab-informed');
+
+        if (!buka && panel && panel.classList.contains('active')) {
+            document.getElementById('ob-tab-btn-assessment').click();
+        }
     }
 
     // =========================================================
@@ -1797,9 +1837,69 @@
         ttdTerisi[id] = false;
     }
 
-    function simpanInformedConsent() {
-        if (!NO_RM_PASIEN) {
-            alert('Data pasien tidak ditemukan.');
+    // BARU: mengisi ulang form dari data informed consent yang sudah tersimpan
+    function isiDataInformed() {
+        if (!DATA_INFORMED) return;
+
+        const set = (id, nilai) => {
+            const el = document.getElementById(id);
+            if (el && nilai) el.value = nilai;
+        };
+
+        const radio = document.querySelector(
+            'input[name="informed_keputusan"][value="' + DATA_INFORMED.keputusan + '"]'
+        );
+        if (radio) radio.checked = true;
+
+        const daftarCek = DATA_INFORMED.checklist || [];
+        document.querySelectorAll('#tab-informed input[name="informed_cek[]"]')
+            .forEach(c => { c.checked = daftarCek.includes(c.value); });
+
+        const isiBebas = {
+            'Pertimbangan Pelayanan': DATA_INFORMED.isi_pertimbangan,
+            'Lain-lain': DATA_INFORMED.isi_lain
+        };
+
+        Object.keys(isiBebas).forEach(function (kategori) {
+            const el = document.querySelector(
+                '.ob-ic-isi-bebas[name="informed_isi[' + kategori + ']"]'
+            );
+            if (el && isiBebas[kategori]) el.value = isiBebas[kategori];
+        });
+
+        set('icDokter', DATA_INFORMED.nama_dokter);
+        set('icPasien', DATA_INFORMED.nama_penandatangan);
+        set('icSaksi', DATA_INFORMED.nama_saksi);
+        set('icTanggal', DATA_INFORMED.tanggal);
+        set('icPukul', (DATA_INFORMED.pukul || '').slice(0, 5));
+
+        [
+            ['ttdDokter', DATA_INFORMED.ttd_dokter],
+            ['ttdPasien', DATA_INFORMED.ttd_pasien],
+            ['ttdSaksi', DATA_INFORMED.ttd_saksi]
+        ].forEach(function (item) {
+            if (!item[1]) return;
+
+            const canvas = document.getElementById(item[0]);
+            const img = new Image();
+
+            img.onload = function () {
+                canvas.getContext('2d').drawImage(
+                    img, 0, 0, canvas.width, canvas.height
+                );
+                ttdTerisi[item[0]] = true;
+            };
+
+            img.src = item[1];
+        });
+    }
+
+    isiDataInformed();
+
+    // BARU: simpan informed consent ke database
+    async function simpanInformedConsent() {
+        if (!NO_RM_PASIEN || !ID_PENDAFTARAN) {
+            alert('Data pasien atau kunjungan tidak ditemukan.');
             return;
         }
 
@@ -1833,33 +1933,77 @@
             return;
         }
 
-        const dataTtd = {};
+        const nilai = id => (document.getElementById(id)?.value ?? '').trim();
 
-        ID_TTD.forEach(function (id) {
-            const canvas = document.getElementById(id);
+        const isiBebas = kategori => (
+            document.querySelector(
+                '.ob-ic-isi-bebas[name="informed_isi[' + kategori + ']"]'
+            )?.value ?? ''
+        ).trim();
 
-            dataTtd[id] = ttdTerisi[id]
-                ? canvas.toDataURL('image/png')
-                : '';
-        });
+        const ttd = id => (
+            ttdTerisi[id]
+                ? document.getElementById(id).toDataURL('image/png')
+                : null
+        );
 
         const keputusanEl = document.querySelector(
             'input[name="informed_keputusan"]:checked'
         );
 
-        const keputusan = keputusanEl ? keputusanEl.value : 'setuju';
+        const payload = {
+            no_rm: NO_RM_PASIEN,
+            id_kunjungan: Number(ID_PENDAFTARAN),
+            keputusan: keputusanEl ? keputusanEl.value : 'setuju',
+            checklist: Array.from(
+                document.querySelectorAll(
+                    '#tab-informed input[name="informed_cek[]"]:checked'
+                )
+            ).map(c => c.value),
+            isi_pertimbangan: isiBebas('Pertimbangan Pelayanan') || null,
+            isi_lain: isiBebas('Lain-lain') || null,
+            nama_dokter: nilai('icDokter'),
+            nama_penandatangan: nilai('icPasien'),
+            nama_saksi: nilai('icSaksi'),
+            tanggal: nilai('icTanggal'),
+            pukul: nilai('icPukul'),
+            ttd_dokter: ttd('ttdDokter'),
+            ttd_pasien: ttd('ttdPasien'),
+            ttd_saksi: ttd('ttdSaksi')
+        };
 
-        // Data belum dikirim ke database karena endpoint informed consent
-        // dan tabel penyimpanannya belum disediakan.
-        console.log('Data Informed Consent sementara:', {
-            keputusan,
-            dataTtd
-        });
+        try {
+            const response = await fetch(URL_SIMPAN_INFORMED, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                },
+                body: JSON.stringify(payload)
+            });
 
-        alert(
-            'Validasi Informed Consent berhasil. ' +
-            'Data belum tersimpan ke database karena backend Informed Consent belum tersedia.'
-        );
+            const hasil = await bacaJson(response, 'menyimpan informed consent');
+
+            if (!response.ok || !hasil.success) {
+                const pesanValidasi = Object.values(hasil.errors || {})
+                    .flat()
+                    .join('\n');
+
+                throw new Error(
+                    pesanValidasi ||
+                    hasil.message ||
+                    'Informed consent gagal disimpan.'
+                );
+            }
+
+            alert(hasil.message);
+
+        } catch (error) {
+            console.error('Gagal menyimpan informed consent:', error);
+            alert('Informed consent belum tersimpan: ' + error.message);
+        }
     }
 
     // =========================================================
@@ -2316,6 +2460,9 @@
             baris.appendChild(aksi);
             list.appendChild(baris);
         });
+
+        // BARU: kunci atau buka tab Informed Consent sesuai daftar tindakan
+        if (jenis === 'tindakan') cekTabInformed();
     }
 
     function hapusDiagnosa(jenis, id) {
