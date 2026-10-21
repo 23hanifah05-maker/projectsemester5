@@ -298,6 +298,8 @@
 
         <div class="modal-section-title">Identitas Pasien</div>
 
+        {{-- Grid 2 kolom terisi selang-seling: kiri, kanan, kiri, kanan.
+             Kolom kanan: Kelurahan, Kecamatan, Kota/Kabupaten, Kode Pos, Provinsi, Dokter --}}
         <div class="modal-grid">
             <div class="modal-row"><span class="modal-label">No. Rekam Medis</span><span>:</span><span id="m-no-rm"></span></div>
             <div class="modal-row"><span class="modal-label">No. HP</span><span>:</span><span id="m-hp"></span></div>
@@ -316,10 +318,10 @@
             <div class="modal-row"><span class="modal-label">Pendidikan</span><span>:</span><span id="m-pendidikan"></span></div>
             <div class="modal-row"><span class="modal-label">Kota/Kabupaten</span><span>:</span><span id="m-kabupaten"></span></div>
             <div class="modal-row"><span class="modal-label">Pekerjaan</span><span>:</span><span id="m-pekerjaan"></span></div>
-            <div class="modal-row"><span class="modal-label">Provinsi</span><span>:</span><span id="m-provinsi"></span></div>
             <div class="modal-row"><span class="modal-label">Kode Pos</span><span>:</span><span id="m-kodepos"></span></div>
-            <div class="modal-row"><span class="modal-label">Pembayaran</span><span>:</span><span id="m-pembayaran"></span></div>
             <div class="modal-row"><span class="modal-label">Poli</span><span>:</span><span id="m-poli"></span></div>
+            <div class="modal-row"><span class="modal-label">Provinsi</span><span>:</span><span id="m-provinsi"></span></div>
+            <div class="modal-row"><span class="modal-label">Pembayaran</span><span>:</span><span id="m-pembayaran"></span></div>
             <div class="modal-row"><span class="modal-label">Dokter</span><span>:</span><span id="m-dokter"></span></div>
         </div>
 
@@ -498,51 +500,116 @@
 
 {{-- MODAL EDIT --}}
 <div class="custom-modal-overlay" id="editModal">
-    <div class="custom-modal-box">
+    <div class="custom-modal-box modal-kunjungan">
 
         <div class="custom-modal-header">
             <h3>Edit Data Pasien</h3>
 
-            <button
-                type="button"
-                class="custom-modal-close"
-                onclick="tutupEdit()"
-            >
-                &times;
-            </button>
+            <button type="button" class="custom-modal-close" onclick="tutupEdit()">&times;</button>
         </div>
 
         <div class="custom-modal-body">
             <input type="hidden" id="editRow">
 
-            <div class="form-group">
-                <label>No. Rekam Medis</label>
-                <input type="text" id="editRm" readonly class="input-terkunci">
-            </div>
+            <div class="box">
+                <div class="box-title">Identitas Pasien</div>
+                <div class="cols">
+                    <div class="col-left">
+                        <div class="row"><label>No. Rekam Medis</label><input type="text" id="editRm" readonly class="input-terkunci"></div>
+                        <div class="row"><label>Nama Lengkap</label><input type="text" id="editNama" maxlength="100"></div>
+                        <div class="row"><label>NIK</label><input type="text" id="editNik" inputmode="numeric" maxlength="16"
+                             oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+                        <div class="row">
+                            <label>Tempat/Tgl Lahir</label>
+                            <div class="split-2">
+                                <input type="text" id="editTempatLahir" maxlength="50" placeholder="Tempat lahir">
+                                <input type="date" id="editTglLahir" onchange="hitungUmurEdit()">
+                            </div>
+                        </div>
+                        <div class="row"><label>Umur</label><input type="text" id="editUmur" readonly class="input-terkunci"></div>
+                        <div class="row">
+                            <label>Jenis Kelamin</label>
+                            <select id="editJk">
+                                <option value="0">Tidak diketahui</option>
+                                <option value="1">Laki-laki</option>
+                                <option value="2">Perempuan</option>
+                                <option value="3">Tidak dapat ditentukan</option>
+                                <option value="4">Tidak mengisi</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>Agama</label>
+                            <select id="editAgama">
+                                <option value="1">Islam</option>
+                                <option value="2">Protestan</option>
+                                <option value="3">Katolik</option>
+                                <option value="4">Hindu</option>
+                                <option value="5">Buddha</option>
+                                <option value="6">Khonghucu</option>
+                                <option value="7">Penghayat</option>
+                                <option value="8">Lain-lain</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>Pendidikan</label>
+                            <select id="editPendidikan">
+                                <option value="0">Tidak sekolah</option>
+                                <option value="1">SD</option>
+                                <option value="2">SLTP sederajat</option>
+                                <option value="3">SLTA sederajat</option>
+                                <option value="4">D1-D3 sederajat</option>
+                                <option value="5">D4</option>
+                                <option value="6">S1</option>
+                                <option value="7">S2</option>
+                                <option value="8">S3</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>Pekerjaan</label>
+                            <select id="editPekerjaan">
+                                <option value="0">Tidak bekerja</option>
+                                <option value="1">PNS</option>
+                                <option value="2">TNI/POLRI</option>
+                                <option value="3">BUMN</option>
+                                <option value="4">Pegawai Swasta/Wirausaha</option>
+                                <option value="5">Lain-lain</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="form-group">
-                <label>Nama Pasien</label>
-                <input type="text" id="editNama" readonly class="input-terkunci">
-            </div>
-
-            <div class="form-group">
-                <label>NIK</label>
-                <input type="text" id="editNik" readonly class="input-terkunci">
-            </div>
-
-            <div class="form-group">
-                <label>No. HP</label>
-                <input
-                    type="text"
-                    id="editHp"
-                    inputmode="numeric"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                >
-            </div>
-
-            <div class="form-group">
-                <label>Alamat</label>
-                <textarea id="editAlamat"></textarea>
+                    <div class="col-right">
+                        <div class="row">
+                            <label>No HP</label>
+                            <input type="text" id="editHp" inputmode="numeric"
+                                   oninput="this.value = this.value.replace(/[^0-9+]/g, '')">
+                        </div>
+                        <div class="row">
+                            <label>Suku</label>
+                            <div class="pair-suku">
+                                <input type="text" id="editSuku">
+                                <label>Bangsa</label>
+                                <input type="text" id="editBangsa">
+                            </div>
+                        </div>
+                        <div class="row"><label>Bahasa</label><input type="text" id="editBahasa"></div>
+                        <div class="row top"><label>Alamat</label><textarea id="editAlamat"></textarea></div>
+                        <div class="row">
+                            <label></label>
+                            <div class="split-2">
+                                <input type="text" id="editKelurahan" placeholder="Kelurahan">
+                                <input type="text" id="editKecamatan" placeholder="Kecamatan">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label></label>
+                            <div class="split-2">
+                                <input type="text" id="editKabupaten" placeholder="Kota/Kabupaten">
+                                <input type="text" id="editProvinsi" placeholder="Provinsi">
+                            </div>
+                        </div>
+                        <div class="row"><label>Kode Pos</label><input type="text" id="editKodePos" inputmode="numeric"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -816,20 +883,77 @@ function simpanStatusKunjungan(form) {
     }
 }
 
+// Pilih <option> berdasarkan teks (data di tabel disimpan sebagai teks, mis. "Perempuan")
+function pilihOpsiByTeks(idSelect, teks) {
+    const sel = document.getElementById(idSelect);
+    if (!sel) return;
+
+    const opsi = Array.from(sel.options).find(
+        o => o.text.trim().toLowerCase() === String(teks || '').trim().toLowerCase()
+    );
+
+    sel.value = opsi ? opsi.value : sel.options[0].value;
+}
+
+function hitungUmurEdit() {
+    const tgl = document.getElementById('editTglLahir').value;
+    const out = document.getElementById('editUmur');
+
+    if (!tgl) {
+        out.value = '-';
+        return;
+    }
+
+    const lahir = new Date(tgl + 'T00:00:00');
+    const now = new Date();
+    let umur = now.getFullYear() - lahir.getFullYear();
+    const belumUlangTahun =
+        now.getMonth() < lahir.getMonth() ||
+        (now.getMonth() === lahir.getMonth() && now.getDate() < lahir.getDate());
+
+    if (belumUlangTahun) umur--;
+
+    out.value = umur >= 0 ? umur + ' tahun' : '-';
+}
+
 function bukaEdit(button) {
     const hasil = ambilDataBaris(button);
     if (!hasil) return;
 
-    const data = hasil.data;
+    const d = hasil.data;
 
     document.getElementById('editRow').value =
         Array.from(document.querySelectorAll('.row-pasien')).indexOf(hasil.row);
 
-    document.getElementById('editRm').value = data.no_rm || '';
-    document.getElementById('editNama').value = data.nama_pasien || '';
-    document.getElementById('editNik').value = data.nik || '';
-    document.getElementById('editHp').value = data.no_hp || '';
-    document.getElementById('editAlamat').value = data.alamat || '';
+    const peta = {
+        'editRm': d.no_rm,
+        'editNama': d.nama_pasien,
+        'editNik': d.nik,
+        'editTempatLahir': d.tempat_lahir,
+        'editTglLahir': String(d.tgl_lahir || '').substring(0, 10),
+        'editHp': d.no_hp,
+        'editSuku': d.suku,
+        'editBangsa': d.bangsa,
+        'editBahasa': d.bahasa,
+        'editAlamat': d.alamat,
+        'editKelurahan': d.kelurahan,
+        'editKecamatan': d.kecamatan,
+        'editKabupaten': d.kabupaten,
+        'editProvinsi': d.provinsi,
+        'editKodePos': d.kode_pos
+    };
+
+    Object.entries(peta).forEach(([id, nilai]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = nilai || '';
+    });
+
+    pilihOpsiByTeks('editJk', d.jenis_kelamin);
+    pilihOpsiByTeks('editAgama', d.agama);
+    pilihOpsiByTeks('editPendidikan', d.pendidikan);
+    pilihOpsiByTeks('editPekerjaan', d.pekerjaan);
+
+    hitungUmurEdit();
 
     document.getElementById('editModal').classList.add('show');
 }
@@ -838,10 +962,82 @@ function tutupEdit() {
     document.getElementById('editModal').classList.remove('show');
 }
 
-function simpanEdit() {
-    alert(
-        'Form edit sudah terbuka, tetapi penyimpanan ke database perlu dihubungkan ke route update pasien.'
-    );
+async function simpanEdit() {
+    const noRm = document.getElementById('editRm').value.trim();
+
+    if (!noRm) {
+        alert('No. Rekam Medis tidak ditemukan.');
+        return;
+    }
+
+    const nilai = id => (document.getElementById(id)?.value ?? '').trim();
+
+    const payload = {
+        nama_pasien: nilai('editNama'),
+        nik: nilai('editNik'),
+        tempat_lahir: nilai('editTempatLahir'),
+        tgl_lahir: nilai('editTglLahir'),
+        jenis_kelamin: nilai('editJk'),
+        agama: nilai('editAgama'),
+        pendidikan: nilai('editPendidikan'),
+        pekerjaan: nilai('editPekerjaan'),
+        no_hp: nilai('editHp'),
+        suku: nilai('editSuku'),
+        bangsa: nilai('editBangsa'),
+        bahasa: nilai('editBahasa'),
+        alamat: nilai('editAlamat'),
+        kelurahan: nilai('editKelurahan'),
+        kecamatan: nilai('editKecamatan'),
+        kabupaten: nilai('editKabupaten'),
+        provinsi: nilai('editProvinsi'),
+        kode_pos: nilai('editKodePos')
+    };
+
+    const tombol = document.querySelector('#editModal .btn-modal-primary');
+    const teksAwal = tombol.textContent;
+    tombol.disabled = true;
+    tombol.textContent = 'Menyimpan...';
+
+    try {
+        const response = await fetch(
+            "{{ url('pendaftaran') }}/" + encodeURIComponent(noRm),
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                },
+                body: JSON.stringify(payload)
+            }
+        );
+
+        const teks = await response.text();
+        let hasil;
+
+        try {
+            hasil = JSON.parse(teks);
+        } catch (e) {
+            console.error('Respons bukan JSON:', response.status, teks);
+            throw new Error('Server tidak mengirim respons JSON (status ' + response.status + ').');
+        }
+
+        if (!response.ok || !hasil.success) {
+            const pesanValidasi = Object.values(hasil.errors || {}).flat().join('\n');
+            throw new Error(pesanValidasi || hasil.message || 'Gagal menyimpan perubahan.');
+        }
+
+        alert(hasil.message || 'Data pasien berhasil diperbarui.');
+        window.location.reload();
+
+    } catch (error) {
+        console.error('Gagal menyimpan edit pasien:', error);
+        alert('Perubahan belum tersimpan: ' + error.message);
+    } finally {
+        tombol.disabled = false;
+        tombol.textContent = teksAwal;
+    }
 }
 
 function hapusPasien(button) {
