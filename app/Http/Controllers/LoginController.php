@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Helpers\Audit;
 
 class LoginController extends Controller
 {
@@ -15,20 +16,18 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        // Cari user berdasarkan username
         $user = User::where('username', $request->username)->first();
 
-        // Username dan password login yang digunakan
         if (
             $user &&
             $request->username === 'admin123' &&
             $request->password === 'admin@123456'
         ) {
-            // Login user tanpa mengecek password dari database
             Auth::login($user);
 
-            // Regenerasi session
             $request->session()->regenerate();
+
+            Audit::catat('Login ke sistem', 'Autentikasi');
 
             return redirect()->route('dashboard');
         }
@@ -38,6 +37,8 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        Audit::catat('Logout dari sistem', 'Autentikasi');
+
         Auth::logout();
 
         $request->session()->invalidate();
