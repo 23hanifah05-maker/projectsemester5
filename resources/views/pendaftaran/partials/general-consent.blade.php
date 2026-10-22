@@ -210,10 +210,57 @@
     }
 
     @media print {
-        .no-print { display: none !important; }
-        .gc-overlay { position: static; display: block; background: none; padding: 0; }
-        .gc-paper { box-shadow: none; border: 0; max-width: 100%; }
+    @page { size: A4; margin: 6mm; }
+
+    html, body {
+        background: #fff !important;
+        height: auto !important;
+        overflow: visible !important;
     }
+
+    body > *:not(#consentModal) { display: none !important; }
+
+    #consentModal {
+        display: block !important;
+        position: static !important;
+        background: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+
+    .gc-paper {
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .no-print { display: none !important; }
+
+    /* Perkecil seluruh isi agar muat 1 halaman */
+    .gc-frame {
+        zoom: .72;
+        padding: 10px 12px !important;
+    }
+
+    /* Rapatkan jarak */
+    .gc-head { margin-bottom: 4px !important; }
+    .gc-title { padding: 6px 0 !important; }
+    .gc-text { padding: 6px 10px !important; }
+    .gc-banner { margin: 6px 0 !important; }
+    .gc-ttd-wrap { padding: 8px 12px !important; }
+    .gc-canvas { height: 90px !important; }
+
+    /* Nama anggota keluarga kosong tidak perlu mengambil tempat */
+    .gc-item, .gc-ttd-wrap { break-inside: avoid; }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
 </style>
 
 <div class="gc-overlay" id="consentModal">
@@ -613,6 +660,8 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
+         document.body.appendChild(document.getElementById('consentModal'));
+
         gcInitPad('gcTtdPemberi');
         gcInitPad('gcTtd');
         gcRefreshKeluarga();
