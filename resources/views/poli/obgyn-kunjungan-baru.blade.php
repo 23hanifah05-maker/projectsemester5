@@ -1277,6 +1277,14 @@
     // BARU: simpan informed consent dan data yang sudah tersimpan
     const URL_SIMPAN_INFORMED = @json(route('poli.obgyn.informed.simpan'));
     const DATA_INFORMED = @json($informedConsent ?? null);
+    // Status consent yang sudah tersimpan dan disetujui.
+let informedConsentTersimpan = Boolean(
+    DATA_INFORMED && DATA_INFORMED.keputusan === 'setuju'
+);
+
+// Bernilai true jika tombol Simpan menunggu consent
+// sebelum melanjutkan penyimpanan TTV dan asesmen.
+let lanjutSimpanSetelahConsent = false;
 
     // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
     let izinkanKeluar = false;
@@ -1601,148 +1609,175 @@
     // =========================================================
     // SIMPAN TTV DAN SOAP KE DATABASE
     // =========================================================
-    async function simpanKunjunganBaru() {
-        if (!NO_RM_PASIEN) {
-            alert('Data pasien tidak ditemukan.');
-            return;
+async function simpanKunjunganBaru() {
+    if (!NO_RM_PASIEN) {
+        alert('Data pasien tidak ditemukan.');
+        return;
+    }
+
+    if (!ID_PENDAFTARAN) {
+        alert('ID pendaftaran tidak ditemukan. Periksa data pendaftaran pada controller.');
+        return;
+    }
+
+    // Periksa IUD sebelum menyimpan TTV atau asesmen.
+    const adaIud = tabInformedTerbuka();
+
+    if (adaIud && !informedConsentTersimpan) {
+        lanjutSimpanSetelahConsent = true;
+
+        gantiTab('informed', null);
+
+        alert(
+            'Tindakan IUD dipilih. Lengkapi dan simpan Informed Consent ' +
+            'dengan keputusan SETUJU terlebih dahulu. Setelah berhasil, ' +
+            'penyimpanan TTV dan asesmen akan dilanjutkan.'
+        );
+
+        return;
+    }
+
+    const tombolSimpan = document.getElementById('btnSimpanKunjungan');
+
+    if (tombolSimpan) {
+        tombolSimpan.disabled = true;
+        tombolSimpan.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+    }
+
+    try {
+        const ambilNilai = nama => {
+            const el = document.querySelector(`[name="${nama}"]`);
+            return el ? el.value.trim() : '';
+        };
+
+        const ttvPayload = {
+            id_pendaftaran: ID_PENDAFTARAN,
+            tekanan_darah: ambilNilai('td') || null,
+            heart_rate: ambilNilai('hr') || null,
+            spo2: ambilNilai('spo2') || null,
+            suhu: ambilNilai('suhu') || null,
+            respiratory_rate: ambilNilai('rr') || null,
+            alergi: ambilNilai('alergi') || null,
+            hpht: ambilNilai('hpht') || null,
+            usia_kehamilan: ambilNilai('uk') || null
+        };
+
+        const penyakitIds = diagnosaTerpilih.penyakit.map(
+            item => Number(item.id)
+        );
+
+        const tindakanIds = diagnosaTerpilih.tindakan.map(
+            item => Number(item.id)
+        );
+
+        const assesmenPayload = {
+            id_pendaftaran: Number(ID_PENDAFTARAN),
+            subjective: ambilNilai('subjective'),
+            objective: ambilNilai('objective'),
+            assessment: ambilNilai('assessment'),
+            plan: ambilNilai('plan'),
+            penyakit_id: penyakitIds,
+            tindakan_id: tindakanIds
+        };
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': CSRF_TOKEN
+        };
+
+        // 1. Simpan TTV setelah pemeriksaan consent selesai.
+        const hasilTtv = await fetch(URL_SIMPAN_TTV, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(ttvPayload)
+        });
+
+        const dataTtv = await bacaJson(hasilTtv, 'menyimpan TTV');
+
+        if (!hasilTtv.ok || dataTtv.success === false) {
+            const pesanValidasi = Object.values(dataTtv.errors || {})
+                .flat()
+                .join('\n');
+
+            throw new Error(
+                pesanValidasi || dataTtv.message || 'Gagal menyimpan TTV.'
+            );
         }
 
-        if (!ID_PENDAFTARAN) {
-            alert('ID pendaftaran tidak ditemukan. Periksa data pendaftaran pada controller.');
-            return;
+        // 2. Simpan asesmen dan kode ICD.
+        const hasilAssesmen = await fetch(URL_SIMPAN_ASSESMEN, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(assesmenPayload)
+        });
+
+        const dataAssesmen = await bacaJson(
+            hasilAssesmen,
+            'menyimpan asesmen'
+        );
+
+        if (!hasilAssesmen.ok || !dataAssesmen.success) {
+            const pesanValidasi = Object.values(dataAssesmen.errors || {})
+                .flat()
+                .join('\n');
+
+            throw new Error(
+                pesanValidasi ||
+                dataAssesmen.message ||
+                'Gagal menyimpan asesmen.'
+            );
         }
 
-        const tombolSimpan = document.getElementById('btnSimpanKunjungan');
+        // 3. Ubah status kunjungan menjadi selesai.
+        const urlStatus = URL_UPDATE_STATUS.replace(
+            '__ID__',
+            encodeURIComponent(ID_PENDAFTARAN)
+        );
 
-        if (tombolSimpan) {
-            tombolSimpan.disabled = true;
-            tombolSimpan.innerHTML =
-                '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
-        }
-
-        try {
-            const ambilNilai = nama => {
-                const el = document.querySelector(`[name="${nama}"]`);
-                return el ? el.value.trim() : '';
-            };
-
-            const ttvPayload = {
-                id_pendaftaran: ID_PENDAFTARAN,
-                tekanan_darah: ambilNilai('td') || null,
-                heart_rate: ambilNilai('hr') || null,
-                spo2: ambilNilai('spo2') || null,
-                suhu: ambilNilai('suhu') || null,
-                respiratory_rate: ambilNilai('rr') || null,
-                alergi: ambilNilai('alergi') || null,
-                hpht: ambilNilai('hpht') || null,
-                usia_kehamilan: ambilNilai('uk') || null
-            };
-
-            const penyakitIds = diagnosaTerpilih.penyakit.map(item => Number(item.id));
-            const tindakanIds = diagnosaTerpilih.tindakan.map(item => Number(item.id));
-
-            const assesmenPayload = {
-                id_pendaftaran: Number(ID_PENDAFTARAN),
-                subjective: ambilNilai('subjective'),
-                objective: ambilNilai('objective'),
-                assessment: ambilNilai('assessment'),
-                plan: ambilNilai('plan'),
-                penyakit_id: penyakitIds,
-                tindakan_id: tindakanIds
-            };
-
-            const headers = {
-                'Content-Type': 'application/json',
+        const hasilStatus = await fetch(urlStatus, {
+            method: 'PATCH',
+            headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': CSRF_TOKEN
-            };
-
-            // 1. Simpan TTV
-            const hasilTtv = await fetch(URL_SIMPAN_TTV, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(ttvPayload)
-            });
-
-            const dataTtv = await bacaJson(hasilTtv, 'menyimpan TTV');
-
-            if (!hasilTtv.ok) {
-                const pesanValidasi = Object.values(dataTtv.errors || {})
-                    .flat()
-                    .join('\n');
-
-                throw new Error(
-                    pesanValidasi ||
-                    dataTtv.message ||
-                    'Gagal menyimpan TTV.'
-                );
             }
+        });
 
-            // 2. Simpan SOAP dan diagnosis/tindakan
-            const hasilAssesmen = await fetch(URL_SIMPAN_ASSESMEN, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(assesmenPayload)
-            });
+        const dataStatus = await bacaJson(
+            hasilStatus,
+            'memperbarui status'
+        );
 
-            const dataAssesmen = await bacaJson(hasilAssesmen, 'menyimpan asesmen');
-
-            if (!hasilAssesmen.ok || dataAssesmen.success !== true) {
-                const pesanValidasi = Object.values(dataAssesmen.errors || {})
-                    .flat()
-                    .join('\n');
-
-                throw new Error(
-                    pesanValidasi ||
-                    dataAssesmen.message ||
-                    'Gagal menyimpan asesmen.'
-                );
-            }
-
-            // 3. Perbarui status kunjungan menjadi selesai
-            const urlStatus = URL_UPDATE_STATUS.replace(
-                '__ID__',
-                encodeURIComponent(ID_PENDAFTARAN)
+        if (!hasilStatus.ok || !dataStatus.success) {
+            throw new Error(
+                dataStatus.message ||
+                'Gagal memperbarui status pemeriksaan.'
             );
+        }
 
-            const hasilStatus = await fetch(urlStatus, {
-                method: 'PATCH',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': CSRF_TOKEN
-                }
-            });
+        lanjutSimpanSetelahConsent = false;
+        izinkanKeluar = true;
 
-            const dataStatus = await bacaJson(hasilStatus, 'memperbarui status');
+        alert('TTV dan asesmen berhasil disimpan ke database.');
 
-            if (!hasilStatus.ok || !dataStatus.success) {
-                throw new Error(
-                    dataStatus.message || 'Gagal memperbarui status pemeriksaan.'
-                );
-            }
+        window.location.href = URL_HALAMAN_OBGYN;
 
-            // 4. Semua data sudah tersimpan: halaman boleh ditinggalkan.
-            izinkanKeluar = true;
+    } catch (error) {
+        console.error('Gagal menyimpan kunjungan Obgyn:', error);
 
-            alert('TTV dan asesmen berhasil disimpan ke database.');
+        alert('Data belum berhasil disimpan: ' + error.message);
 
-            // Kembali ke daftar Poli Obgyn setelah penyimpanan berhasil
-            window.location.href = URL_HALAMAN_OBGYN;
-
-        } catch (error) {
-            console.error('Gagal menyimpan kunjungan Obgyn:', error);
-
-            alert('Data belum berhasil disimpan: ' + error.message);
-        } finally {
-            if (tombolSimpan) {
-                tombolSimpan.disabled = false;
-                tombolSimpan.innerHTML =
-                    '<i class="fa-solid fa-floppy-disk"></i> Simpan';
-            }
+    } finally {
+        if (tombolSimpan) {
+            tombolSimpan.disabled = false;
+            tombolSimpan.innerHTML =
+                '<i class="fa-solid fa-floppy-disk"></i> Simpan';
         }
     }
+}
 
     // =========================================================
     // INFORMED CONSENT - TAMPILAN FRONT-END
@@ -1998,7 +2033,23 @@
                 );
             }
 
-            alert(hasil.message);
+         if (hasil.keputusan === 'setuju') {
+    informedConsentTersimpan = true;
+    alert(hasil.message);
+
+    if (lanjutSimpanSetelahConsent) {
+        lanjutSimpanSetelahConsent = false;
+        await simpanKunjunganBaru();
+    }
+} else {
+    informedConsentTersimpan = false;
+    lanjutSimpanSetelahConsent = false;
+
+    alert(
+        'Informed Consent tersimpan dengan keputusan MENOLAK. ' +
+        'TTV dan asesmen dengan tindakan IUD tidak dilanjutkan.'
+    );
+}
 
         } catch (error) {
             console.error('Gagal menyimpan informed consent:', error);

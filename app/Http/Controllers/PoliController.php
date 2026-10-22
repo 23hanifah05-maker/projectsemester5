@@ -719,56 +719,125 @@ class PoliController extends Controller
      * BARU: Menyimpan informed consent Poli Obgyn.
      * Hanya boleh bila kunjungan memiliki tindakan KB IUD (ICD-9-CM 69.7).
      */
-    public function simpanInformedConsent(Request $request)
-    {
-        $request->validate([
-            'no_rm'               => 'required|string|exists:pasien,no_rm',
-            'id_kunjungan'        => 'required|integer',
-            'tindakan'            => 'nullable|string|max:255',
-            'diagnosis'           => 'nullable|string|max:255',
-            'penjelasan_tindakan' => 'nullable|string',
-            'risiko'              => 'nullable|string',
-            'alternatif'          => 'nullable|string',
-            'keputusan'           => 'required|in:setuju,menolak',
-            'nama_penandatangan'  => 'required|string|max:100',
-            'hubungan'            => 'nullable|string|max:50',
-            'nama_saksi'          => 'nullable|string|max:100',
-        ]);
 
-        // Cek di database: kunjungan harus punya tindakan 69.7 yang sudah tersimpan
-        $assesmen = Assesmen::where('id_pendaftaran', $request->id_kunjungan)
-            ->first();
+public function simpanInformedConsent(Request $request)
+{
+    $validator = \Illuminate\Support\Facades\Validator::make(
+        $request->all(),
+        [
+            'no_rm' => 'required|string|exists:pasien,no_rm',
+            'id_kunjungan' => 'required|integer|exists:pendaftaran,id_pendaftaran',
 
-        $adaIud = $assesmen && DB::table('detail_tindakan')
-            ->join(
-                'kode_tindakan',
-                'detail_tindakan.id_kode9',
-                '=',
-                'kode_tindakan.id_icd9'
-            )
-            ->where('detail_tindakan.id_assesmen', $assesmen->id_assesmen)
-            ->where('kode_tindakan.icd_9', 'like', '69.7%')
-            ->exists();
+            'keputusan' => 'required|in:setuju,menolak',
+            'checklist' => 'nullable|array',
+            'checklist.*' => 'string',
 
-        if (!$adaIud) {
-            return back()->with(
-                'error',
-                'Informed consent hanya untuk tindakan KB IUD. '
-                . 'Simpan tindakan IUD terlebih dahulu.'
-            );
+            'isi_pertimbangan' => 'nullable|string',
+            'isi_lain' => 'nullable|string',
+
+            'nama_dokter' => 'required|string|max:100',
+            'nama_penandatangan' => 'required|string|max:100',
+            'nama_saksi' => 'nullable|string|max:100',
+
+            'tanggal' => 'required|date',
+            'pukul' => 'required|date_format:H:i',
+
+            'ttd_dokter' => 'required|string',
+            'ttd_pasien' => 'required|string',
+            'ttd_saksi' => 'nullable|string',
+        ]
+    );
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Data Informed Consent belum lengkap atau tidak valid.',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $data = $validator->validated();
+
+    try {
+        // Pastikan kunjungan benar-benar milik pasien
+        // dan terdaftar di Poli Obgyn.
+        $poliObgyn = Poli::where('slug', 'obgyn')->first();
+
+        if (!$poliObgyn) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data Poli Obgyn tidak ditemukan.',
+            ], 422);
         }
 
+        $pendaftaran = Pendaftaran::where(
+            'id_pendaftaran',
+            $data['id_kunjungan']
+        )
+            ->where('no_rm', $data['no_rm'])
+            ->where('id_poli', $poliObgyn->id_poli)
+            ->first();
+
+        if (!$pendaftaran) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kunjungan tidak sesuai dengan pasien atau bukan kunjungan Poli Obgyn.',
+            ], 422);
+        }
+
+        // Simpan checklist sebagai JSON.
+        // Dua bagian isian bebas digabung dalam satu kolom JSON
+        // agar isinya tetap bisa dibedakan saat ditampilkan kembali.
+        $isiBebas = [
+            'pertimbangan' => $data['isi_pertimbangan'] ?? '',
+            'lain' => $data['isi_lain'] ?? '',
+        ];
+
         InformedConsent::updateOrCreate(
-            ['id_kunjungan' => $request->id_kunjungan],
-            $request->only([
-                'no_rm', 'tindakan', 'diagnosis', 'penjelasan_tindakan',
-                'risiko', 'alternatif', 'keputusan',
-                'nama_penandatangan', 'hubungan', 'nama_saksi',
-            ]) + ['tanggal' => now()->toDateString()]
+            [
+                'id_kunjungan' => $data['id_kunjungan'],
+            ],
+            [
+                'no_rm' => $data['no_rm'],
+                'keputusan' => $data['keputusan'],
+                'checklist' => json_encode(
+                    $data['checklist'] ?? [],
+                    JSON_UNESCAPED_UNICODE
+                ),
+                'isi_bebas' => json_encode(
+                    $isiBebas,
+                    JSON_UNESCAPED_UNICODE
+                ),
+
+                'nama_dokter' => $data['nama_dokter'],
+                'nama_penandatangan' => $data['nama_penandatangan'],
+                'nama_pasien' => $data['nama_penandatangan'],
+                'nama_saksi' => $data['nama_saksi'] ?? null,
+
+                'tanggal' => $data['tanggal'],
+                'tanggal_tindakan' => $data['tanggal'],
+                'pukul' => $data['pukul'],
+
+                'ttd_dokter' => $data['ttd_dokter'],
+                'ttd_pasien' => $data['ttd_pasien'],
+                'ttd_saksi' => $data['ttd_saksi'] ?? null,
+            ]
         );
 
-        return back()->with('success', 'Informed consent berhasil disimpan.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Informed Consent berhasil disimpan.',
+            'keputusan' => $data['keputusan'],
+        ]);
+    } catch (\Throwable $e) {
+        report($e);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Informed Consent gagal disimpan. Periksa log Laravel untuk detail error.',
+        ], 500);
     }
+}
 
     /**
      * Membuat pendaftaran baru saat pasien dirujuk dari Poli Saraf.
