@@ -1,0 +1,130 @@
+/* ===== Warna & dasar garis tipis ===== */
+:root {
+    --gc-line: #d6d6d6;          /* warna garis tipis */
+    --gc-red: #d3202a;
+    --gc-radius: 10px;
+}
+
+/* ===== Judul "Data Pasien" ===== */
+.gc-section-title {
+    color: var(--gc-red);
+    font-weight: 700;
+    font-size: 14px;
+    margin: 14px 10px 6px;
+}
+
+/* ===== Kotak dengan garis tipis ===== */
+.gc-box {
+    border: 1px solid var(--gc-line);
+    border-radius: var(--gc-radius);
+    background: #fff;
+    margin: 0 10px 12px;
+}
+
+/* ===== Data pasien: 2 kolom ===== */
+.gc-pasien {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 40px;
+    padding: 14px 18px;
+}
+
+.gc-field {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.gc-field input {
+    border: 1px solid var(--gc-line);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 11px;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ===== Daftar persetujuan (tabel dengan garis tipis) ===== */
+.gc-list {
+    border: 1px solid var(--gc-line);
+    border-radius: var(--gc-radius);
+    overflow: hidden;              /* supaya sudut tetap membulat */
+    margin: 0 10px 14px;
+    background: #fff;
+}
+
+.gc-item {
+    display: grid;
+    grid-template-columns: 1fr 110px;      /* teks | kolom Setuju */
+    border-bottom: 1px solid var(--gc-line); /* garis horizontal antar poin */
+}
+
+.gc-item:last-child {
+    border-bottom: none;
+}
+
+.gc-text {
+    padding: 10px 14px;
+}
+
+.gc-text h4 {
+    margin: 0 0 3px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+}
+
+.gc-text p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #333;
+}
+
+/* ===== Kolom "Setuju" dengan garis vertikal tipis ===== */
+.gc-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-left: 1px solid var(--gc-line);  /* garis vertikal pemisah */
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+.gc-check input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--gc-red);
+    cursor: pointer;
+}
+
+/* ===== Input nama anggota keluarga ===== */
+.gc-label-kecil {
+    display: block;
+    margin: 8px 0 4px 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.gc-input-keluarga {
+    width: 300px;
+    max-width: 100%;
+    border: 1px solid var(--gc-line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-left: 6px;
+    box-sizing: border-box;
+}
+
+/* ===== Responsif ===== */
+@media (max-width: 700px) {
+    .gc-pasien { grid-template-columns: 1fr; }
+    .gc-item   { grid-template-columns: 1fr 85px; }
+}
