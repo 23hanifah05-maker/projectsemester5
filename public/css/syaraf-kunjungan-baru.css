@@ -805,3 +805,320 @@ p.kb-kosong { color: #888; }
     }
     .cp-print-table td.cp-print-tarif { width: 16%; text-align: right; white-space: nowrap; }
 }
+
+/* =====================================================================
+   TAB RESUME MEDIS + POPUP SNOMED CT
+   (tempel di PALING BAWAH syaraf-kunjungan-baru.css)
+   ===================================================================== */
+
+#tab-resume { font-size: 13px; color: #333; }
+
+/* ---------- Bagian atas (alamat / tanggal / penanggung jawab) ---------- */
+#tab-resume .rm-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+#tab-resume .rm-top-col { display: flex; flex-direction: column; gap: 10px; }
+
+#tab-resume .rm-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 10px;
+    align-items: center;
+}
+#tab-resume .rm-row.rm-top-align { align-items: start; }
+#tab-resume .rm-row > label { text-align: right; font-weight: 600; }
+
+#tab-resume .rm-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#tab-resume .rm-offset { margin-left: 120px; display: flex; flex-direction: column; gap: 8px; }
+
+#tab-resume input[type=text],
+#tab-resume input[type=date],
+#tab-resume input[type=time],
+#tab-resume select,
+#tab-resume textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font: inherit;
+    background: #fff;
+    color: #333;
+}
+#tab-resume input[type=text],
+#tab-resume input[type=date],
+#tab-resume input[type=time],
+#tab-resume select { height: 34px; }
+#tab-resume textarea { resize: vertical; min-height: 74px; }
+#tab-resume input:focus,
+#tab-resume select:focus,
+#tab-resume textarea:focus {
+    outline: none;
+    border-color: var(--kb-merah);
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+}
+
+/* Penanggung jawab */
+#tab-resume .rm-pj {
+    border: 1px solid #f3c2bd;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+#tab-resume .rm-pj-title {
+    background: #fdecea;
+    color: var(--kb-merah);
+    font-weight: 700;
+    padding: 8px 12px;
+}
+#tab-resume .rm-pj-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 14px;
+    padding: 12px;
+}
+#tab-resume .rm-pj-item { display: flex; align-items: center; gap: 6px; }
+#tab-resume .rm-pj-item .rm-pj-label { min-width: 90px; }
+#tab-resume .rm-pj-item input { height: 30px; }
+
+/* ---------- Ringkasan klinis ---------- */
+#tab-resume .rm-ringkasan {
+    border: 1px solid var(--kb-garis);
+    border-radius: 8px;
+    overflow: hidden;
+}
+#tab-resume .rm-ringkasan-head {
+    background: var(--kb-merah);
+    color: #fff;
+    text-align: center;
+    font-weight: 700;
+    padding: 9px;
+}
+#tab-resume .rm-ringkasan-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    padding: 14px;
+}
+#tab-resume .rm-kolom { display: flex; flex-direction: column; gap: 14px; }
+#tab-resume .rm-judul { display: block; font-weight: 600; margin-bottom: 5px; }
+
+/* ---------- Kotak SNOMED CT ---------- */
+#tab-resume .rm-snomed {
+    margin-top: 8px;
+    border: 1px solid #f3c2bd;
+    border-radius: 6px;
+    background: #fff7f7;
+    padding: 6px 8px;
+}
+#tab-resume .rm-snomed-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+#tab-resume .rm-snomed-label {
+    color: var(--kb-merah);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+#tab-resume .rm-btn-tambah {
+    background: #fdecea;
+    color: var(--kb-merah);
+    border: 1px solid #f3c2bd;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    cursor: pointer;
+}
+#tab-resume .rm-btn-tambah:hover { background: var(--kb-merah); color: #fff; }
+
+#tab-resume .rm-snomed-list { margin-top: 6px; display: flex; flex-direction: column; gap: 5px; }
+#tab-resume .rm-snomed-kosong { color: #c7a5a5; font-size: 11px; padding: 2px 0; }
+#tab-resume .rm-snomed-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid #ecd0d0;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+#tab-resume .rm-snomed-item .rm-kode { color: var(--kb-merah); font-weight: 600; min-width: 70px; }
+#tab-resume .rm-snomed-item .rm-desk { flex: 1; }
+#tab-resume .rm-snomed-item button {
+    border: 0;
+    background: none;
+    color: var(--kb-merah);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* ---------- Edukasi ---------- */
+#tab-resume .rm-edukasi { display: flex; flex-direction: column; gap: 4px; }
+#tab-resume .rm-edukasi label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+#tab-resume .rm-edukasi input { accent-color: var(--kb-merah); margin: 0; }
+
+/* ---------- Footer ---------- */
+#tab-resume .rm-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 22px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--kb-garis);
+}
+#tab-resume .rm-ttd { width: 190px; }
+#tab-resume .rm-ttd-box {
+    height: 70px;
+    border: 1px solid var(--kb-garis);
+    border-radius: 6px;
+    margin-top: 4px;
+}
+#tab-resume .rm-waktu { width: 150px; display: flex; flex-direction: column; gap: 6px; }
+#tab-resume .rm-aksi { display: flex; gap: 8px; }
+#tab-resume .rm-btn,
+.rm-modal-overlay .rm-btn {
+    border: 0;
+    border-radius: 5px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+    background: var(--kb-merah);
+    cursor: pointer;
+}
+#tab-resume .rm-btn:hover,
+.rm-modal-overlay .rm-btn:hover { background: var(--kb-merah-gelap); }
+#tab-resume .rm-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ---------- Popup SNOMED CT ---------- */
+.rm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(40, 40, 60, .35);
+    backdrop-filter: blur(4px);
+    padding: 20px;
+    font-size: 13px;
+    color: #333;
+}
+.rm-modal-overlay.tampil { display: flex; }
+
+.rm-modal {
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .3);
+}
+.rm-modal-head {
+    background: var(--kb-merah-gelap);
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 15px;
+}
+.rm-modal-tutup { background: none; border: 0; color: #fff; font-size: 18px; cursor: pointer; }
+.rm-modal-body { padding: 14px 16px; overflow-y: auto; }
+
+.rm-modal-overlay input[type=text] {
+    width: 100%;
+    box-sizing: border-box;
+    height: 34px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0 10px;
+    font: inherit;
+}
+.rm-modal-overlay input[type=text]:focus {
+    outline: none;
+    border-color: var(--kb-merah);
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+}
+
+.rm-keyword { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 8px; }
+.rm-keyword label { font-weight: 700; }
+
+.rm-hasil { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; max-height: 190px; overflow-y: auto; }
+.rm-hasil-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--kb-garis);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.rm-hasil-item:hover { background: #fff3f3; }
+.rm-hasil-item .rm-kode { color: var(--kb-merah); min-width: 75px; }
+.rm-hasil-item .rm-desk { flex: 1; }
+.rm-hasil-item .rm-plus { color: var(--kb-merah); font-weight: 700; }
+.rm-hasil-item.sudah { opacity: .55; cursor: default; }
+.rm-hasil-item.sudah:hover { background: #fff; }
+.rm-hasil-kosong { text-align: center; color: var(--kb-teks-samar); padding: 10px; font-size: 12px; }
+
+.rm-manual { margin-top: 12px; border: 1px solid #f3c2bd; border-radius: 8px; overflow: hidden; }
+.rm-manual-title { background: #fdecea; color: var(--kb-merah); font-weight: 600; padding: 8px 12px; }
+.rm-manual-body { padding: 12px; }
+.rm-manual-grid { display: grid; grid-template-columns: auto 1fr auto 1.2fr; gap: 8px 10px; align-items: center; }
+.rm-manual-grid label { font-weight: 700; }
+.rm-manual-aksi { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.rm-btn-batal {
+    background: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 7px 18px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.rm-btn-batal:hover { background: #f1f1f1; }
+
+/* ---------- Responsif ---------- */
+@media (max-width: 900px) {
+    #tab-resume .rm-top,
+    #tab-resume .rm-ringkasan-body { grid-template-columns: 1fr; }
+    #tab-resume .rm-offset { margin-left: 0; }
+    #tab-resume .rm-footer { flex-wrap: wrap; justify-content: flex-start; }
+}
+
+/* ---------- Cetak Resume Medis ---------- */
+@media print {
+    body.cetak-rm-mode * { visibility: hidden !important; }
+    body.cetak-rm-mode #tab-resume,
+    body.cetak-rm-mode #tab-resume * { visibility: visible !important; }
+    body.cetak-rm-mode #tab-resume {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 10mm;
+        box-sizing: border-box;
+    }
+    body.cetak-rm-mode .rm-btn-tambah,
+    body.cetak-rm-mode .rm-aksi,
+    body.cetak-rm-mode .rm-snomed-item button { display: none !important; }
+}

@@ -10,6 +10,7 @@
     ];
 @endphp
 
+{{-- CSS khusus modal. Tabel, kotak data pasien, dan garis tipis ada di public/css/general-consent.css --}}
 <style>
     .gc-overlay {
         display: none;
@@ -24,21 +25,24 @@
         font-family: 'Poppins','Segoe UI',Arial,sans-serif;
         color: #222;
     }
+    .gc-overlay.show { display: flex; }
 
-    .gc-overlay.show {
-        display: flex;
-    }
+    .gc-paper {
+    position: relative;
+    background: #fff;
+    width: 100%;
+    max-width: 980px;
+    border-radius: 12px;
+    padding: 18px;                 /* jarak antara tepi modal dan kotak luar */
+    box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
 
-    .gc-box {
-        position: relative;
-        background: #fff;
-        width: 100%;
-        max-width: 980px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 20px 24px 24px;
-        box-shadow: 0 10px 40px rgba(0,0,0,.25);
-    }
+/* KOTAK LUAR FORMULIR (garis tepi seperti desain) */
+    .gc-frame {
+    border: 1px solid var(--gc-line, #d6d6d6);
+    border-radius: 10px;
+    padding: 16px 18px 18px;
+}
 
     .gc-close {
         position: absolute;
@@ -51,10 +55,7 @@
         cursor: pointer;
         color: #888;
     }
-
-    .gc-close:hover {
-        color: #c8102e;
-    }
+    .gc-close:hover { color: #c8102e; }
 
     .gc-head {
         display: flex;
@@ -63,24 +64,12 @@
         gap: 16px;
         margin-bottom: 10px;
     }
+    .gc-head img { width: 64px; height: 64px; object-fit: contain; flex: 0 0 auto; }
 
-    .gc-head img {
-        width: 64px;
-        height: 64px;
-        object-fit: contain;
-        flex: 0 0 auto;
-    }
-
-    .gc-klinik {
-        flex: 1;
-        text-align: center;
-        font-size: 11px;
-        color: #444;
-    }
-
+    .gc-klinik { flex: 1; text-align: center; font-size: 11px; color: #444; }
     .gc-klinik-nama {
         display: inline-block;
-        border: 1px solid #ccc;
+        border: 1px solid var(--gc-line, #d6d6d6);
         border-radius: 4px;
         padding: 5px 40px;
         margin-bottom: 6px;
@@ -89,147 +78,33 @@
         color: #222;
         box-shadow: 0 1px 4px rgba(0,0,0,.12);
     }
-
-    .gc-klinik small {
-        display: block;
-        font-size: 11px;
-        line-height: 1.4;
-    }
+    .gc-klinik small { display: block; font-size: 11px; line-height: 1.4; }
 
     .gc-title {
         text-align: center;
         font-size: 16px;
         line-height: 1.5;
         padding: 10px 0;
-        border-top: 1px solid #333;
-        border-bottom: 1px solid #333;
-        margin-bottom: 14px;
+        border-top: 1px solid var(--gc-line, #d6d6d6);
+        border-bottom: 1px solid var(--gc-line, #d6d6d6);
+        margin-bottom: margin: 0 -18px 4px;
     }
 
-    .gc-section {
-        background: #fff;
-        color: #c8102e;
-        font-weight: 700;
-        font-size: 13px;
-        border: 1px solid #ccc;
-        border-bottom: 0;
-        border-radius: 6px 6px 0 0;
-        padding: 8px 14px;
-    }
+    /* Pada modal, kotak/list tidak perlu margin samping tambahan */
+    .gc-paper .gc-section-title { margin-left: 0; }
+    .gc-paper .gc-box,
+    .gc-paper .gc-list { margin-left: 0; margin-right: 0; }
 
-    .gc-data {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px 40px;
-        border: 1px solid #ccc;
-        border-top: 0;
-        border-radius: 0 0 6px 6px;
-        padding: 14px;
-        margin-bottom: 14px;
-    }
-
-    .gc-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .gc-row label {
-        flex: 0 0 110px;
-    }
-
-    .gc-row input {
-        flex: 1;
-        min-width: 0;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 6px 10px;
-        font-size: 12px;
-        background: #fff;
-        font-family: inherit;
-    }
-
-    .gc-list {
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        overflow: hidden;
-    }
-
-    .gc-item {
-        display: flex;
-        align-items: stretch;
-        justify-content: space-between;
-        border-bottom: 1px solid #ccc;
-    }
-
-    .gc-item:last-child {
-        border-bottom: 0;
-    }
-
-    .gc-item-text {
-        flex: 1;
-        padding: 10px 16px;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-    .gc-item-text strong {
-        display: block;
-        font-size: 13px;
-        font-weight: 500;
-        margin-bottom: 2px;
-    }
-
-    .gc-item-text p {
-        margin: 0;
-    }
-
-    .gc-setuju {
-        flex: 0 0 130px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        border-left: 1px solid #ccc;
-        padding: 0 12px;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        background: #fff;
-        white-space: nowrap;
-    }
-
-    .gc-setuju input,
-    .gc-banner input {
-        width: 15px;
-        height: 15px;
-        accent-color: #c8102e;
-    }
-
-    .gc-keluarga {
-        display: block;
-        margin-top: 8px;
-        font-weight: 700;
-        font-size: 12px;
-    }
-
-    .gc-keluarga-row {
-        display: flex;
-        gap: 6px;
-        margin-top: 6px;
-    }
-
+    /* Nama anggota keluarga */
+    .gc-keluarga-row { display: flex; gap: 6px; margin-top: 6px; margin-left: 6px; }
     .gc-keluarga-input {
         flex: 0 1 55%;
-        border: 1px solid #999;
-        border-radius: 4px;
-        padding: 6px 8px;
+        border: 1px solid var(--gc-line, #d6d6d6);
+        border-radius: 6px;
+        padding: 6px 10px;
         font-family: inherit;
         font-size: 12px;
     }
-
     .gc-keluarga-hapus {
         border: 0;
         background: #fbe9e9;
@@ -248,46 +123,28 @@
         padding: 6px 10px;
         background: #fbe9e9;
         border: 1px solid #f0cccc;
-        border-radius: 4px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 500;
         cursor: pointer;
     }
+    .gc-banner input { width: 15px; height: 15px; accent-color: #c8102e; }
 
+    /* Tanda tangan */
     .gc-ttd-wrap {
         display: flex;
         flex-wrap: wrap;
         gap: 24px;
         justify-content: center;
         align-items: flex-start;
-        border: 1px solid #ddd;
-        border-radius: 6px;
+        border: 1px solid var(--gc-line, #d6d6d6);
+        border-radius: 10px;
         padding: 14px 18px;
     }
-
-    .gc-ttd-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .gc-ttd-label {
-        font-size: 11px;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
-
-    .gc-ttd-box {
-        border: 1px solid #bbb;
-        border-radius: 4px;
-        background: #fff;
-    }
-
-    .gc-canvas {
-        display: block;
-        cursor: crosshair;
-        touch-action: none;
-    }
+    .gc-ttd-col { display: flex; flex-direction: column; align-items: center; }
+    .gc-ttd-label { font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+    .gc-ttd-box { border: 1px solid var(--gc-line, #d6d6d6); border-radius: 6px; background: #fff; }
+    .gc-canvas { display: block; cursor: crosshair; touch-action: none; }
 
     .gc-link {
         margin-top: 4px;
@@ -299,18 +156,9 @@
         text-decoration: underline;
         padding: 0;
     }
+    .gc-text .gc-link { display: block; margin: 6px 0 0 6px; }
 
-    .gc-keluarga .gc-link {
-        display: block;
-        margin-top: 6px;
-    }
-
-    .gc-nama-terang {
-        margin-top: 8px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
+    .gc-nama-terang { margin-top: 8px; font-size: 12px; font-weight: 600; }
     .gc-nama-terang input {
         border: 0;
         border-bottom: 1px solid #000;
@@ -331,29 +179,17 @@
         font-weight: 600;
         padding-top: 20px;
     }
-
-    .gc-ttd-waktu label {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-
+    .gc-ttd-waktu label { display: flex; flex-direction: column; gap: 3px; }
     .gc-ttd-waktu input {
         width: 130px;
-        border: 1px solid #bbb;
-        border-radius: 4px;
+        border: 1px solid var(--gc-line, #d6d6d6);
+        border-radius: 6px;
         padding: 5px 8px;
         font-size: 12px;
         font-family: inherit;
     }
 
-    .gc-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 14px;
-    }
-
+    .gc-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
     .gc-btn {
         background: #c8102e;
         color: #fff;
@@ -365,66 +201,72 @@
         cursor: pointer;
         font-family: inherit;
     }
-
-    .gc-btn:hover {
-        background: #a50d26;
-    }
-
-    .gc-btn:disabled {
-        opacity: .6;
-        cursor: not-allowed;
-    }
+    .gc-btn:hover { background: #a50d26; }
+    .gc-btn:disabled { opacity: .6; cursor: not-allowed; }
 
     @media (max-width: 700px) {
-        .gc-data {
-            grid-template-columns: 1fr;
-        }
-
-        .gc-item {
-            flex-direction: column;
-        }
-
-        .gc-setuju {
-            flex: 0 0 auto;
-            border-left: 0;
-            border-top: 1px solid #ccc;
-            justify-content: flex-start;
-            padding: 8px 16px;
-        }
-
-        .gc-head img {
-            width: 44px;
-            height: 44px;
-        }
-
-        .gc-keluarga-input {
-            flex: 1;
-        }
+        .gc-head img { width: 44px; height: 44px; }
+        .gc-keluarga-input { flex: 1; }
     }
 
     @media print {
-        .no-print {
-            display: none !important;
-        }
+    @page { size: A4; margin: 6mm; }
 
-        .gc-overlay {
-            position: static;
-            display: block;
-            background: none;
-            padding: 0;
-        }
-
-        .gc-box {
-            box-shadow: none;
-            border: 0;
-            max-width: 100%;
-        }
+    html, body {
+        background: #fff !important;
+        height: auto !important;
+        overflow: visible !important;
     }
+
+    body > *:not(#consentModal) { display: none !important; }
+
+    #consentModal {
+        display: block !important;
+        position: static !important;
+        background: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+
+    .gc-paper {
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .no-print { display: none !important; }
+
+    /* Perkecil seluruh isi agar muat 1 halaman */
+    .gc-frame {
+        zoom: .72;
+        padding: 10px 12px !important;
+    }
+
+    /* Rapatkan jarak */
+    .gc-head { margin-bottom: 4px !important; }
+    .gc-title { padding: 6px 0 !important; }
+    .gc-text { padding: 6px 10px !important; }
+    .gc-banner { margin: 6px 0 !important; }
+    .gc-ttd-wrap { padding: 8px 12px !important; }
+    .gc-canvas { height: 90px !important; }
+
+    /* Nama anggota keluarga kosong tidak perlu mengambil tempat */
+    .gc-item, .gc-ttd-wrap { break-inside: avoid; }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
 </style>
 
 <div class="gc-overlay" id="consentModal">
-    <div class="gc-box" id="consentPaper">
+    <div class="gc-paper" id="consentPaper">
         <button type="button" class="gc-close no-print" onclick="tutupConsent()">&times;</button>
+            <div class="gc-frame"> 
 
         <div class="gc-head">
             <img src="{{ asset('images/logo.png') }}" alt="Logo">
@@ -440,57 +282,59 @@
             (GENERAL CONSENT) RAWAT JALAN
         </div>
 
-        <div class="gc-section">Data Pasien</div>
+        {{-- DATA PASIEN --}}
+        <div class="gc-section-title">Data Pasien</div>
 
-        <div class="gc-data">
-            <div class="gc-row">
+        <div class="gc-box gc-pasien">
+            <div class="gc-field">
                 <label>No RM</label>
                 <input type="text" id="gc-norm" readonly>
             </div>
-            <div class="gc-row">
+            <div class="gc-field">
                 <label>Tempat, Tgl Lahir</label>
                 <input type="text" id="gc-ttl" readonly>
             </div>
-            <div class="gc-row">
+            <div class="gc-field">
                 <label>Nama</label>
                 <input type="text" id="gc-nama" readonly>
             </div>
-            <div class="gc-row">
+            <div class="gc-field">
                 <label>Umur</label>
                 <input type="text" id="gc-umur" readonly>
             </div>
-            <div class="gc-row">
+            <div class="gc-field">
                 <label>Jenis Kelamin</label>
                 <input type="text" id="gc-jk" readonly>
             </div>
-            <div class="gc-row">
+            <div class="gc-field">
                 <label>No Hp</label>
                 <input type="text" id="gc-hp" readonly>
             </div>
         </div>
 
+        {{-- DAFTAR PERSETUJUAN (garis tipis horizontal + vertikal) --}}
         <div class="gc-list">
             @foreach ($butir as $i => $b)
                 <div class="gc-item">
-                    <div class="gc-item-text">
-                        <strong>{{ $i + 1 }}. {{ $b[0] }}</strong>
+                    <div class="gc-text">
+                        <h4>{{ $i + 1 }}. {{ $b[0] }}</h4>
                         <p>{{ $b[1] }}</p>
 
                         @if ($i === 2)
-                            <div class="gc-keluarga">
+                            <label class="gc-label-kecil">
                                 Nama Anggota Keluarga Yang Diperbolehkan Melihat Informasi Pasien:
-                                <div id="gc-keluarga-list">
-                                    <div class="gc-keluarga-row">
-                                        <input type="text" class="gc-keluarga-input" placeholder="Nama anggota keluarga">
-                                        <button type="button" class="gc-keluarga-hapus no-print" style="display:none" onclick="gcHapusKeluarga(this)">&times;</button>
-                                    </div>
+                            </label>
+                            <div id="gc-keluarga-list">
+                                <div class="gc-keluarga-row">
+                                    <input type="text" class="gc-keluarga-input" placeholder="Nama anggota keluarga">
+                                    <button type="button" class="gc-keluarga-hapus no-print" style="display:none" onclick="gcHapusKeluarga(this)">&times;</button>
                                 </div>
-                                <button type="button" class="gc-link no-print" onclick="gcTambahKeluarga()">+ Tambah anggota keluarga</button>
                             </div>
+                            <button type="button" class="gc-link no-print" onclick="gcTambahKeluarga()">+ Tambah anggota keluarga</button>
                         @endif
                     </div>
 
-                    <label class="gc-setuju">
+                    <label class="gc-check">
                         <input type="checkbox" class="gc-cek">
                         Setuju
                     </label>
@@ -503,6 +347,7 @@
             Dengan ini saya menyatakan bahwa seluruh informasi di atas telah saya baca, pahami, dan saya setuju dengan sebenar-benarnya.
         </label>
 
+        {{-- TANDA TANGAN --}}
         <div class="gc-ttd-wrap">
             <div class="gc-ttd-col">
                 <div class="gc-ttd-label">Pemberi Informasi</div>
@@ -533,6 +378,7 @@
             <button type="button" class="gc-btn" onclick="window.print()">Cetak</button>
         </div>
     </div>
+</div>
 </div>
 
 <script>
@@ -602,6 +448,9 @@
         gcHapusTtd('gcTtdPemberi');
         gcHapusTtd('gcTtd');
     }
+
+    // Dipanggil oleh tombol Reset di create.blade.php
+    window.gcReset = gcReset;
 
     function gcRefreshKeluarga() {
         const rows = document.querySelectorAll('#gc-keluarga-list .gc-keluarga-row');
@@ -811,6 +660,8 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
+         document.body.appendChild(document.getElementById('consentModal'));
+
         gcInitPad('gcTtdPemberi');
         gcInitPad('gcTtd');
         gcRefreshKeluarga();
