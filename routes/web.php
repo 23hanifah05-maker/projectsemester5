@@ -275,3 +275,4 @@ Route::get('/radiologi', [RadiologiController::class, 'index'])
 
 Route::get('/audit-trail', [AuditTrailController::class, 'index'])
     ->name('audit-trail.index');
+    
