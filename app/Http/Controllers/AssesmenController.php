@@ -23,7 +23,6 @@ class AssesmenController extends Controller
             'assessment' => ['present', 'nullable', 'string'],
             'plan' => ['present', 'nullable', 'string'],
 
-            // Diagnosis boleh kosong.
             'penyakit_id' => ['sometimes', 'nullable', 'array'],
             'penyakit_id.*' => [
                 'required',
@@ -32,7 +31,6 @@ class AssesmenController extends Controller
                 'exists:kode_diagnosis,id_icd10',
             ],
 
-            // Tindakan boleh kosong.
             'tindakan_id' => ['sometimes', 'nullable', 'array'],
             'tindakan_id.*' => [
                 'required',
@@ -57,6 +55,43 @@ class AssesmenController extends Controller
 
         $data = $validator->validated();
 
+        /*
+         * PEMERIKSAAN KHUSUS POLI OBGYN
+         * Poli Saraf tidak terkena pemeriksaan ini.
+         */
+        if ($request->routeIs('poli.obgyn.assesmen.store')) {
+            $idPendaftaran = (int) $data['id_pendaftaran'];
+
+            $tindakanIds = array_map(
+                'intval',
+                $data['tindakan_id'] ?? []
+            );
+
+            // Periksa apakah tindakan IUD (kode ICD-9-CM 69.7) dipilih.
+            $adaIud = !empty($tindakanIds)
+                && DB::table('kode_tindakan')
+                    ->whereIn('id_icd9', $tindakanIds)
+                    ->where('icd_9', 'like', '69.7%')
+                    ->exists();
+
+            if ($adaIud) {
+                // Consent harus tersimpan untuk kunjungan yang sama
+                // dan keputusan pasien harus "setuju".
+                $consentDisetujui = DB::table('informed_consent')
+                    ->where('id_kunjungan', $idPendaftaran)
+                    ->where('keputusan', 'setuju')
+                    ->exists();
+
+                if (!$consentDisetujui) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tindakan IUD belum dapat disimpan. Lengkapi dan simpan Informed Consent dengan keputusan setuju terlebih dahulu.',
+                        'requires_informed_consent' => true,
+                    ], 422);
+                }
+            }
+        }
+
         try {
             $idAssesmen = DB::transaction(function () use ($data) {
                 $idPendaftaran = (int) $data['id_pendaftaran'];
@@ -72,7 +107,6 @@ class AssesmenController extends Controller
                 )));
 
                 // Simpan SOAP dan kode utama.
-                // Jika tidak ada pilihan, kode utama bernilai NULL.
                 $assesmen = Assesmen::updateOrCreate(
                     ['id_pendaftaran' => $idPendaftaran],
                     [
@@ -85,7 +119,7 @@ class AssesmenController extends Controller
                     ]
                 );
 
-                // Perbarui detail diagnosis sesuai pilihan terbaru.
+                // Perbarui detail diagnosis.
                 DB::table('detail_diagnosis')
                     ->where('id_assesmen', $assesmen->id_assesmen)
                     ->delete();
@@ -106,7 +140,7 @@ class AssesmenController extends Controller
                         ->insert($detailDiagnosis);
                 }
 
-                // Perbarui detail tindakan sesuai pilihan terbaru.
+                // Perbarui detail tindakan.
                 DB::table('detail_tindakan')
                     ->where('id_assesmen', $assesmen->id_assesmen)
                     ->delete();
