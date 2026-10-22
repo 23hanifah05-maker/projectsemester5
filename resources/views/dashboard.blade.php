@@ -16,19 +16,22 @@
     {{-- =====================================================
         PERIODE (posisi & tampilan tetap; hanya memfilter 2 grafik)
     ====================================================== --}}
-    <form method="GET" action="{{ route('dashboard') }}" class="period">
+    <form method="GET" action="{{ route('dashboard') }}" class="period" id="formPeriode">
 
         <label>Periode</label>
 
-        <input type="date" name="tanggal_awal"
-               value="{{ request('tanggal_awal') }}"
-               onchange="this.form.submit()">
+        <input type="date" name="tanggal_awal" id="tanggalAwal"
+               value="{{ request('tanggal_awal') }}">
 
         <span>s.d</span>
 
-        <input type="date" name="tanggal_akhir"
-               value="{{ request('tanggal_akhir') }}"
-               onchange="this.form.submit()">
+        <input type="date" name="tanggal_akhir" id="tanggalAkhir"
+               value="{{ request('tanggal_akhir') }}">
+
+        <span class="periode-warning" id="periodeWarning"
+              @if (!session('periode_error')) hidden @endif>
+            {{ session('periode_error') }}
+        </span>
 
     </form>
 
@@ -152,7 +155,7 @@
         @foreach ($penyakit as $index => $data)
             <div class="disease-row">
                 <div class="disease-number">{{ $index + 1 }}</div>
-                <div class="disease-name">{{ $data['nama'] }}</div>
+                <div class="disease-name" title="{{ $data['nama'] }}">{{ $data['nama'] }}</div>
                 <div class="bar-bg">
                     <div class="bar" style="width: {{ ($data['jumlah'] / $maksimal) * 100 }}%;"></div>
                 </div>
@@ -199,7 +202,7 @@
                 'THT'     => 32,
             ];
 
-            $maxKunjungan = max($kunjunganPoli) ?: 1;
+            $maxKunjungan = $kunjunganPoli ? (max($kunjunganPoli) ?: 1) : 1;
         @endphp
 
         <div class="chart">
@@ -214,4 +217,53 @@
 
     </div>
 
+@endsection
+
+@section('extra-js')
+<script>
+    (function () {
+        const form    = document.getElementById('formPeriode');
+        const awal    = document.getElementById('tanggalAwal');
+        const akhir   = document.getElementById('tanggalAkhir');
+        const warning = document.getElementById('periodeWarning');
+
+        function tampilkanPeringatan(pesan) {
+            warning.textContent = pesan;
+            warning.hidden = false;
+        }
+
+        function sembunyikanPeringatan() {
+            warning.hidden = true;
+            warning.textContent = '';
+        }
+
+        // Batasi kalender: tanggal akhir tidak bisa sebelum tanggal awal, dan sebaliknya
+        function aturBatas() {
+            akhir.min = awal.value || '';
+            awal.max  = akhir.value || '';
+        }
+
+        function kirimJikaValid(sumber) {
+            if (awal.value && akhir.value && akhir.value < awal.value) {
+                tampilkanPeringatan(
+                    'Rentang tanggal tidak valid: tanggal akhir tidak boleh lebih awal dari tanggal mulai.'
+                );
+
+                // Kosongkan input yang baru diubah agar tidak tersimpan salah
+                sumber.value = '';
+                aturBatas();
+                return;
+            }
+
+            sembunyikanPeringatan();
+            aturBatas();
+            form.submit();
+        }
+
+        awal.addEventListener('change',  () => kirimJikaValid(awal));
+        akhir.addEventListener('change', () => kirimJikaValid(akhir));
+
+        aturBatas();
+    })();
+</script>
 @endsection

@@ -112,6 +112,22 @@
 
 
 /* =====================================================
+   PERINGATAN PERIODE
+===================================================== */
+
+.periode-warning {
+    font-size: 11px;
+    font-weight: 600;
+
+    color: #d71920;
+}
+
+.periode-warning[hidden] {
+    display: none;
+}
+
+
+/* =====================================================
    10 BESAR PENYAKIT
 ===================================================== */
 
@@ -120,7 +136,7 @@
 
     grid-template-columns:
         27px
-        88px
+        250px
         1fr
         32px;
 
@@ -139,6 +155,10 @@
 
 .disease-name {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    padding-right: 8px;
 }
 
 .bar-bg {
@@ -176,6 +196,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-around;
+    gap: 10px;
 
     padding: 5px 20px 0;
 
@@ -183,7 +204,9 @@
 }
 
 .chart-item {
-    width: 7%;
+    flex: 1;
+    min-width: 0;
+    max-width: 90px;
     height: 100%;
 
     display: flex;
@@ -240,6 +263,14 @@
 
     .statistics {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .disease-row {
+        grid-template-columns:
+            27px
+            140px
+            1fr
+            32px;
     }
 
 }
