@@ -182,25 +182,66 @@
             <a href="#" class="master-data-title">Daftar Pasien</a>
         </div>
 
-        <form method="GET" action="{{ route('poli.syaraf') }}" class="filter-row">
-            <div class="filter-item">
-                <label>Periode</label>
-                <input type="date" name="dari" value="{{ request('dari') }}">
-                <span>s.d</span>
-                <input type="date" name="sampai" value="{{ request('sampai') }}">
-            </div>
+<form method="GET" action="{{ route('poli.syaraf') }}" class="filter-row">
+    <div class="filter-item">
+        <label>Periode</label>
 
-            <div class="filter-item filter-keyword">
-                <label>Keyword</label>
-                <input
-                    type="text"
-                    id="inputKeyword"
-                    name="keyword"
-                    value="{{ request('keyword') }}"
-                    placeholder="Cari nama, NIK, atau No. RM"
-                >
-            </div>
-        </form>
+        <input
+            type="date"
+            name="dari"
+            id="tanggalDari"
+            value="{{ request('dari') }}"
+        >
+
+        <span>s.d</span>
+
+        <input
+            type="date"
+            name="sampai"
+            id="tanggalSampai"
+            value="{{ request('sampai') }}"
+        >
+    </div>
+
+    <div class="filter-item filter-keyword">
+        <label>Keyword</label>
+        <input
+            type="text"
+            id="inputKeyword"
+            name="keyword"
+            value="{{ request('keyword') }}"
+            placeholder="Cari nama, NIK, atau No. RM"
+        >
+    </div>
+</form>
+
+<script>
+    const tanggalDari = document.getElementById('tanggalDari');
+    const tanggalSampai = document.getElementById('tanggalSampai');
+
+    function aturBatasTanggal() {
+        if (tanggalDari.value) {
+            // Tanggal akhir boleh sama dengan tanggal awal
+            tanggalSampai.min = tanggalDari.value;
+
+            // Jika tanggal akhir lebih awal, sesuaikan otomatis
+            if (
+                tanggalSampai.value &&
+                tanggalSampai.value < tanggalDari.value
+            ) {
+                tanggalSampai.value = tanggalDari.value;
+            }
+        } else {
+            tanggalSampai.removeAttribute('min');
+        }
+    }
+
+    // Jalankan saat halaman dibuka
+    aturBatasTanggal();
+
+    // Perbarui batas saat tanggal awal diubah
+    tanggalDari.addEventListener('change', aturBatasTanggal);
+</script>
 
         <table class="table-pendaftaran">
             <thead>
