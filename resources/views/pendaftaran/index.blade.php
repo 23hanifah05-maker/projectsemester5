@@ -1084,5 +1084,4 @@ document.addEventListener('keydown', function(event) {
 
 @endsection
 =======
-@endsectionsS
->>>>>>> Stashed changes
+@endsection
