@@ -999,6 +999,11 @@ async function simpanEdit() {
     tombol.textContent = 'Menyimpan...';
 
     try {
+        console.log('No. RM:', noRm);
+        console.log(
+            'URL update:',
+            "{{ url('pendaftaran') }}/" + encodeURIComponent(noRm)
+        );
         const response = await fetch(
             "{{ url('pendaftaran') }}/" + encodeURIComponent(noRm),
             {

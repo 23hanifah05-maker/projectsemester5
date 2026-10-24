@@ -464,11 +464,54 @@ class PendaftaranController extends Controller
         return redirect()->route('pendaftaran.index');
     }
 
+    
     public function update(Request $request, $id)
     {
-        return redirect()
-            ->route('pendaftaran.index')
-            ->with('success', 'Fitur edit belum diaktifkan.');
+        $pasien = Pasien::where('no_rm', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'nama_pasien'   => 'required|string|max:100',
+            'nik'           => [
+                'required',
+                'string',
+                'size:16',
+                Rule::unique('pasien', 'nik')->ignore($pasien->no_rm, 'no_rm'),
+            ],
+            'tempat_lahir'  => 'required|string|max:50',
+            'tgl_lahir'     => 'required|date',
+            'jenis_kelamin' => 'required|integer|between:0,4',
+            'agama'         => 'required|integer|between:1,8',
+            'pendidikan'    => 'required|integer|between:0,8',
+            'pekerjaan'     => 'required|integer|between:0,5',
+            'no_hp'         => 'required|string|max:13',
+            'suku'          => 'required|string|max:30',
+            'bangsa'        => 'required|string|max:30',
+            'bahasa'        => 'required|string|max:30',
+            'alamat'        => 'required|string',
+            'kelurahan'     => 'required|string|max:255',
+            'kecamatan'     => 'required|string',
+            'kabupaten'     => 'required|string',
+            'provinsi'      => 'required|string|max:100',
+            'kode_pos'      => 'required|digits_between:1,10',
+        ]);
+
+        $noHp = $this->normalisasiNomorHp($validated['no_hp']);
+
+        if (strlen($noHp) > 13) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor HP maksimal 13 karakter, termasuk +62.',
+            ], 422);
+        }
+
+        $validated['no_hp'] = $noHp;
+
+        $pasien->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data pasien berhasil diperbarui.',
+        ]);
     }
 
     public function destroy($id)
