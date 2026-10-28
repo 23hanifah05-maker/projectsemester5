@@ -131,7 +131,7 @@
                         @yield('header-icon')
                     @else
                         <!-- Default Ikon Rumah -->
-                        <i class="fa-solid fa-house"></i>
+                        
                     @endif
                     
                     <h1>@yield('header-title', 'Dashboard')</h1>

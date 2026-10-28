@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Input Data Pendaftaran - Klinik Utama Merah Putih')
-@section('header-icon', '📋')
+@section('header-icon')
 @section('header-title', 'Pendaftaran')
 
 @section('extra-css')

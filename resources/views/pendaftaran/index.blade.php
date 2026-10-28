@@ -4,7 +4,7 @@
 @section('header-title', 'Pendaftaran')
 
 @section('header-icon')
-    <i class="fa-solid fa-address-book"></i>
+    
 @endsection
 
 @section('extra-css')
