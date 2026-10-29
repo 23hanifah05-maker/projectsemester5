@@ -830,7 +830,8 @@
     // Saklar penyimpanan Clinical Pathway ke database.
     // false = hanya validasi + tanda "Tersimpan" (belum kirim ke server).
     // Ubah ke true bila route dan tabel clinical_pathway sudah siap.
-    const CP_SIMPAN_KE_DB = false;
+    // Penyimpanan Clinical Pathway ke database.
+    const CP_SIMPAN_KE_DB = true;
 
     // Kode ICD-10 HNP. Harus sama dengan KODE_HNP di ClinicalPathwayController.
     const KODE_HNP = ['M51'];
