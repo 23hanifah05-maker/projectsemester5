@@ -53,6 +53,7 @@
                         <option value="obgyn" {{ old('poli') == 'obgyn' ? 'selected' : '' }}>Poli Obgyn</option>
                         <option value="jantung" {{ old('poli') == 'jantung' ? 'selected' : '' }}>Poli Jantung</option>
                         <option value="jiwa" {{ old('poli') == 'jiwa' ? 'selected' : '' }}>Poli Jiwa</option>
+                        <option value="radiologi" {{ old('poli') == 'radiologi' ? 'selected' : '' }}>Radiologi</option>
                     </select>
                 </div>
 
@@ -608,7 +609,8 @@ document.addEventListener('DOMContentLoaded', function () {
         saraf: 'dr. Ratna Wijayanti, Sp.S',
         obgyn: 'dr. Aditya Iqbal M, Sp.OG',
         jantung: 'dr. Bagus Fitriadi, Sp.JP',
-        jiwa: 'dr. Devi Anggraeni P, Sp.KJ'
+        jiwa: 'dr. Devi Anggraeni P, Sp.KJ',
+        radiologi: 'Dr. Spesialis Radiologi'
     };
 
     function sesuaikanDokter() {
@@ -660,7 +662,8 @@ document.addEventListener('DOMContentLoaded', function () {
             obgyn: 'obgyn',
             saraf: 'syaraf',
             jantung: 'jantung',
-            jiwa: 'jiwa'
+            jiwa: 'jiwa',
+            radiologi: 'radiologi'
         }[slug];
 
         const noRm = String(form.elements.namedItem('no_rm').value || '')

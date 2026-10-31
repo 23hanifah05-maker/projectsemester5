@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-input.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/general-consent.css') }}">
 @endsection
 
 @section('content')
@@ -347,8 +348,18 @@
         </div>
 
         <form method="POST" action="" id="formKunjungan" autocomplete="off"
-              onsubmit="simpanStatusKunjungan(this)">
+              onsubmit="return validasiKunjungan(this)">
             @csrf
+
+            {{-- DATA GENERAL CONSENT (diisi dari modal General Consent) --}}
+            <input type="hidden" name="general_consent" value="0">
+            <input type="hidden" name="gc_anggota_keluarga" value="">
+            <input type="hidden" name="gc_ttd_pemberi" value="">
+            <input type="hidden" name="gc_nama_pemberi" value="">
+            <input type="hidden" name="gc_ttd_pasien" value="">
+            <input type="hidden" name="gc_nama_penandatangan" value="">
+            <input type="hidden" name="gc_tanggal" value="">
+            <input type="hidden" name="gc_jam" value="">
 
             <div class="custom-modal-body">
 
@@ -369,6 +380,7 @@
                                 <option value="obgyn">Poli Obgyn</option>
                                 <option value="jantung">Poli Jantung</option>
                                 <option value="jiwa">Poli Jiwa</option>
+                                <option value="radiologi">Radiologi</option>
                             </select>
                         </div>
 
@@ -490,6 +502,9 @@
             </div>
 
             <div class="custom-modal-footer">
+                <button type="button" class="btn-modal btn-modal-secondary" id="btnConsent"
+                        style="margin-right:auto;"
+                        onclick="bukaConsentDariKunjungan()">General Consent</button>
                 <button type="button" class="btn-modal btn-modal-secondary" onclick="tutupKunjungan()">Batal</button>
                 <button type="submit" class="btn-modal btn-modal-primary">Simpan Kunjungan</button>
             </div>
@@ -625,6 +640,9 @@
 
     </div>
 </div>
+
+{{-- Modal General Consent --}}
+@include('pendaftaran.partials.general-consent')
 
 @endsection
 
@@ -779,7 +797,8 @@ const dokterPerPoliKj = {
     saraf: 'dr. Ratna Wijayanti, Sp.S',
     obgyn: 'dr. Aditya Iqbal M, Sp.OG',
     jantung: 'dr. Bagus Fitriadi, Sp.JP',
-    jiwa: 'dr. Devi Anggraeni P, Sp.KJ'
+    jiwa: 'dr. Devi Anggraeni P, Sp.KJ',
+    radiologi: 'Dr. Spesialis Radiologi'
 };
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -796,6 +815,55 @@ function formatHpKj(input) {
     let digit = sisa.replace(/[^0-9]/g, '').replace(/^0+/, '');
     if (digit.startsWith('62')) digit = digit.slice(2);
     input.value = '+62' + digit.slice(0, 10);
+}
+
+// Kosongkan hasil General Consent sebelumnya pada form kunjungan
+function resetConsentKj() {
+    const form = document.getElementById('formKunjungan');
+    if (!form) return;
+
+    form.elements['general_consent'].value = '0';
+
+    form.querySelectorAll('input[name^="gc_"]').forEach(function (input) {
+        input.value = '';
+    });
+
+    const btn = document.getElementById('btnConsent');
+    if (btn) {
+        btn.textContent = 'General Consent';
+        btn.classList.remove('sudah');
+    }
+}
+
+// Buka modal General Consent dengan data pasien dari modal kunjungan
+function bukaConsentDariKunjungan() {
+    if (typeof window.bukaConsent !== 'function') {
+        alert('Fungsi bukaConsent belum ditemukan. Periksa JavaScript di file partial general-consent.blade.php.');
+        return;
+    }
+
+    const nilai = id => (document.getElementById(id)?.value ?? '').trim();
+
+    window.bukaConsent({
+        norm: nilai('kj-no-rm'),
+        nama: nilai('kj-nama'),
+        ttl: nilai('kj-ttl'),
+        umur: nilai('kj-umur'),
+        jk: nilai('kj-jk'),
+        hp: nilai('kj-hp')
+    });
+}
+
+// Wajib mengisi General Consent sebelum kunjungan disimpan
+function validasiKunjungan(form) {
+    if (form.elements['general_consent'].value !== '1') {
+        alert('General Consent belum disetujui. Lengkapi General Consent terlebih dahulu.');
+        bukaConsentDariKunjungan();
+        return false;
+    }
+
+    simpanStatusKunjungan(form);
+    return true;
 }
 
 function bukaKunjungan(button) {
@@ -851,6 +919,9 @@ function bukaKunjungan(button) {
         .forEach(id => document.getElementById(id).value = '');
     document.getElementById('kj-pj-hp').value = '+62';
 
+    // General Consent harus diisi ulang untuk setiap kunjungan
+    resetConsentKj();
+
     document.getElementById('formKunjungan').action =
         "{{ url('pendaftaran') }}/" + encodeURIComponent(d.no_rm) + "/kunjungan";
 
@@ -864,7 +935,7 @@ function tutupKunjungan() {
 // Status "periksa" di browser, sama seperti saat pendaftaran baru
 function simpanStatusKunjungan(form) {
     const awalan = {
-        obgyn: 'obgyn', saraf: 'syaraf', jantung: 'jantung', jiwa: 'jiwa'
+        obgyn: 'obgyn', saraf: 'syaraf', jantung: 'jantung', jiwa: 'jiwa', radiologi: 'radiologi'
     }[form.elements['poli'].value];
 
     const noRm = (document.getElementById('kj-no-rm').value || '').trim().toUpperCase();

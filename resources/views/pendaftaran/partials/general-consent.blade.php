@@ -615,11 +615,12 @@
         }
 
         /*
-         * Simpan hasil consent ke hidden input di form pendaftaran.
+         * Simpan hasil consent ke hidden input di form pendaftaran
+         * (halaman Input) atau form kunjungan (modal Tambah Kunjungan).
          * Tidak melakukan fetch terpisah karena pasien mungkin belum tersimpan
          * ke database pada saat General Consent diisi.
          */
-        const form = document.getElementById('formPendaftaran');
+        const form = document.getElementById('formPendaftaran') || document.getElementById('formKunjungan');
 
         if (!form) {
             alert('Form pendaftaran tidak ditemukan.');
