@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Audit;
 use App\Models\Pasien;
 use App\Models\Poli;
 use App\Models\Pendaftaran;
@@ -282,6 +283,12 @@ class PendaftaranController extends Controller
         // Simpan berkas General Consent (tanda tangan + nama terang + anggota keluarga).
         $this->simpanGeneralConsent($validated);
 
+        Audit::catat(
+            'Menambah data pasien baru: ' . $validated['nama_pasien'],
+            'Pendaftaran',
+            $validated['no_rm']
+        );
+
         return redirect()
             ->route('pendaftaran.index')
             ->with(
@@ -340,6 +347,12 @@ class PendaftaranController extends Controller
                 'jenis_pembayaran' => $jenisPembayaran,
             ]);
         });
+
+        Audit::catat(
+            'Menambah kunjungan baru ke ' . $dataPoli->nama_poli,
+            'Pendaftaran',
+            $pasien->no_rm
+        );
 
         return redirect()
             ->route('pendaftaran.index')
@@ -464,7 +477,6 @@ class PendaftaranController extends Controller
         return redirect()->route('pendaftaran.index');
     }
 
-    
     public function update(Request $request, $id)
     {
         $pasien = Pasien::where('no_rm', $id)->firstOrFail();
@@ -506,7 +518,39 @@ class PendaftaranController extends Controller
 
         $validated['no_hp'] = $noHp;
 
+        // Ambil nilai lama dari database sebelum diubah.
+        $lama = collect($pasien->getRawOriginal())
+            ->only(array_keys($validated))
+            ->all();
+
         $pasien->update($validated);
+
+        Audit::catatPerubahan(
+            'Pendaftaran',
+            $pasien->no_rm,
+            $lama,
+            $validated,
+            [
+                'nama_pasien'   => 'nama pasien',
+                'nik'           => 'NIK',
+                'tempat_lahir'  => 'tempat lahir',
+                'tgl_lahir'     => 'tanggal lahir',
+                'jenis_kelamin' => 'jenis kelamin',
+                'agama'         => 'agama',
+                'pendidikan'    => 'pendidikan',
+                'pekerjaan'     => 'pekerjaan',
+                'no_hp'         => 'no HP',
+                'suku'          => 'suku',
+                'bangsa'        => 'bangsa',
+                'bahasa'        => 'bahasa',
+                'alamat'        => 'alamat',
+                'kelurahan'     => 'kelurahan',
+                'kecamatan'     => 'kecamatan',
+                'kabupaten'     => 'kabupaten',
+                'provinsi'      => 'provinsi',
+                'kode_pos'      => 'kode pos',
+            ]
+        );
 
         return response()->json([
             'success' => true,

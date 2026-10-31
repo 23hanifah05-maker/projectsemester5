@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Audit;
 use App\Models\Pendaftaran;
 use App\Models\Ttv;
 use Illuminate\Http\Request;
@@ -82,12 +83,49 @@ class TtvController extends Controller
                     $validated['usia_kehamilan'] ?? null;
             }
 
+            // Ambil nilai lama sebelum diubah, untuk audit trail.
+            $ttvLama = Ttv::where(
+                'id_pendaftaran',
+                $pendaftaran->id_pendaftaran
+            )->first();
+
+            $lama = $ttvLama
+                ? collect($ttvLama->getRawOriginal())
+                    ->only(array_keys($dataTtv))
+                    ->all()
+                : null;
+
             $ttv = Ttv::updateOrCreate(
                 [
                     'id_pendaftaran' => $pendaftaran->id_pendaftaran,
                 ],
                 $dataTtv
             );
+
+            $modul = $request->routeIs('poli.obgyn.ttv.store')
+                ? 'Poli Obgyn'
+                : 'Poli Syaraf';
+
+            if ($lama === null) {
+                Audit::catat('Menyimpan data TTV', $modul, $pendaftaran->no_rm);
+            } else {
+                Audit::catatPerubahan(
+                    $modul,
+                    $pendaftaran->no_rm,
+                    $this->normalisasi($lama),
+                    $this->normalisasi($dataTtv),
+                    [
+                        'tekanan_darah'    => 'tekanan darah',
+                        'suhu'             => 'suhu',
+                        'heart_rate'       => 'heart rate',
+                        'respiratory_rate' => 'respiratory rate',
+                        'spo2'             => 'SpO2',
+                        'alergi'           => 'alergi',
+                        'hpht'             => 'HPHT',
+                        'usia_kehamilan'   => 'usia kehamilan',
+                    ]
+                );
+            }
 
             return response()->json([
                 'success' => true,
@@ -102,5 +140,19 @@ class TtvController extends Controller
                 'message' => 'Terjadi kesalahan saat menyimpan data TTV.',
             ], 500);
         }
+    }
+
+    /**
+     * Menyamakan format nilai agar 36.50 dan 36.5 tidak dianggap berubah.
+     */
+    private function normalisasi(array $data): array
+    {
+        return array_map(function ($nilai) {
+            if ($nilai === null) {
+                return '';
+            }
+
+            return is_numeric($nilai) ? (string) (float) $nilai : (string) $nilai;
+        }, $data);
     }
 }

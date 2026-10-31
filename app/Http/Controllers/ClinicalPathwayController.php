@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Audit;
 use App\Models\ClinicalPathway;
+use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -63,7 +65,7 @@ class ClinicalPathwayController extends Controller
 
         $tarif = fn (string $nama): int => (int) ($baris[$nama]['tarif'] ?? 0);
 
-        ClinicalPathway::updateOrCreate(
+        $clinicalPathway = ClinicalPathway::updateOrCreate(
             ['id_pendaftaran' => $request->id_pendaftaran],
             [
                 'dx_utama'              => $kosongJadiNull($data['dx_utama'] ?? null),
@@ -100,6 +102,19 @@ class ClinicalPathwayController extends Controller
 
                 'total_tarif'           => (int) ($data['total'] ?? 0),
             ]
+        );
+
+        $noRm = Pendaftaran::where(
+            'id_pendaftaran',
+            $request->id_pendaftaran
+        )->value('no_rm');
+
+        Audit::catat(
+            $clinicalPathway->wasRecentlyCreated
+                ? 'Menyimpan Clinical Pathway HNP'
+                : 'Memperbarui Clinical Pathway HNP',
+            'Poli Syaraf',
+            $noRm
         );
 
         return response()->json([

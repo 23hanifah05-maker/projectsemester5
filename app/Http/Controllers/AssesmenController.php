@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Audit;
 use App\Models\Assesmen;
+use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -93,6 +95,37 @@ class AssesmenController extends Controller
         }
 
         try {
+            // Ambil data lama sebelum diubah, untuk audit trail.
+            $assesmenLama = Assesmen::where(
+                'id_pendaftaran',
+                (int) $data['id_pendaftaran']
+            )->first();
+
+            $soapLama = $assesmenLama
+                ? [
+                    'subjek'    => (string) $assesmenLama->subjek,
+                    'objek'     => (string) $assesmenLama->objek,
+                    'assesmen'  => (string) $assesmenLama->assesmen,
+                    'plan'      => (string) $assesmenLama->plan,
+                ]
+                : null;
+
+            $diagnosisLama = $assesmenLama
+                ? DB::table('detail_diagnosis')
+                    ->where('id_assesmen', $assesmenLama->id_assesmen)
+                    ->pluck('id_kode10')
+                    ->map(fn ($id) => (int) $id)
+                    ->all()
+                : [];
+
+            $tindakanLama = $assesmenLama
+                ? DB::table('detail_tindakan')
+                    ->where('id_assesmen', $assesmenLama->id_assesmen)
+                    ->pluck('id_kode9')
+                    ->map(fn ($id) => (int) $id)
+                    ->all()
+                : [];
+
             $idAssesmen = DB::transaction(function () use ($data) {
                 $idPendaftaran = (int) $data['id_pendaftaran'];
 
@@ -164,6 +197,83 @@ class AssesmenController extends Controller
                 return $assesmen->id_assesmen;
             });
 
+            // ===== Audit trail =====
+            $modul = $request->routeIs('poli.obgyn.assesmen.store')
+                ? 'Poli Obgyn'
+                : 'Poli Syaraf';
+
+            $noRm = Pendaftaran::where(
+                'id_pendaftaran',
+                (int) $data['id_pendaftaran']
+            )->value('no_rm');
+
+            $diagnosisBaru = array_values(array_unique(array_map(
+                'intval',
+                $data['penyakit_id'] ?? []
+            )));
+
+            $tindakanBaru = array_values(array_unique(array_map(
+                'intval',
+                $data['tindakan_id'] ?? []
+            )));
+
+            if ($soapLama === null) {
+                Audit::catat('Menyimpan SOAP dan kode ICD', $modul, $noRm);
+            } else {
+                $soapBaru = [
+                    'subjek'   => (string) ($data['subjective'] ?? ''),
+                    'objek'    => (string) ($data['objective'] ?? ''),
+                    'assesmen' => (string) ($data['assessment'] ?? ''),
+                    'plan'     => (string) ($data['plan'] ?? ''),
+                ];
+
+                $labelSoap = [
+                    'subjek'   => 'Subjective (S)',
+                    'objek'    => 'Objective (O)',
+                    'assesmen' => 'Assessment (A)',
+                    'plan'     => 'Plan (P)',
+                ];
+
+                foreach ($soapBaru as $field => $nilaiBaru) {
+                    if ($soapLama[$field] !== $nilaiBaru) {
+                        Audit::catat(
+                            'Mengubah ' . $labelSoap[$field],
+                            $modul,
+                            $noRm
+                        );
+                    }
+                }
+
+                $sama = function (array $a, array $b) {
+                    sort($a);
+                    sort($b);
+
+                    return $a === $b;
+                };
+
+                if (!$sama($diagnosisLama, $diagnosisBaru)) {
+                    Audit::catat(
+                        'Mengubah diagnosis ICD-10: ['
+                            . $this->kodeDiagnosis($diagnosisLama)
+                            . '] menjadi ['
+                            . $this->kodeDiagnosis($diagnosisBaru) . ']',
+                        $modul,
+                        $noRm
+                    );
+                }
+
+                if (!$sama($tindakanLama, $tindakanBaru)) {
+                    Audit::catat(
+                        'Mengubah tindakan ICD-9-CM: ['
+                            . $this->kodeTindakan($tindakanLama)
+                            . '] menjadi ['
+                            . $this->kodeTindakan($tindakanBaru) . ']',
+                        $modul,
+                        $noRm
+                    );
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'SOAP dan kode ICD berhasil disimpan.',
@@ -177,5 +287,35 @@ class AssesmenController extends Controller
                 'message' => 'Penyimpanan SOAP dan ICD gagal. Periksa log Laravel untuk detail error.',
             ], 500);
         }
+    }
+
+    /**
+     * Mengubah daftar ID diagnosis menjadi daftar kode ICD-10.
+     */
+    private function kodeDiagnosis(array $ids): string
+    {
+        if (empty($ids)) {
+            return '-';
+        }
+
+        return DB::table('kode_diagnosis')
+            ->whereIn('id_icd10', $ids)
+            ->pluck('icd_10')
+            ->implode(', ');
+    }
+
+    /**
+     * Mengubah daftar ID tindakan menjadi daftar kode ICD-9-CM.
+     */
+    private function kodeTindakan(array $ids): string
+    {
+        if (empty($ids)) {
+            return '-';
+        }
+
+        return DB::table('kode_tindakan')
+            ->whereIn('id_icd9', $ids)
+            ->pluck('icd_9')
+            ->implode(', ');
     }
 }

@@ -23,4 +23,21 @@ class Audit
             'nama_perangkat' => gethostname(),
         ]);
     }
+
+    public static function catatPerubahan($modul, $noRm, array $lama, array $baru, array $label = [])
+    {
+        foreach ($baru as $field => $nilaiBaru) {
+            $nilaiLama = $lama[$field] ?? null;
+
+            if ((string) $nilaiLama !== (string) $nilaiBaru) {
+                $nama = $label[$field] ?? $field;
+
+                self::catat(
+                    "Mengubah {$nama}: '{$nilaiLama}' menjadi '{$nilaiBaru}'",
+                    $modul,
+                    $noRm
+                );
+            }
+        }
+    }
 }

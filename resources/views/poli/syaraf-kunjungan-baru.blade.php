@@ -292,6 +292,9 @@
             </div>
         </div>
 
+        {{-- RESEP OBAT + judul PATEN (TINDAK LANJUT :) --}}
+        @include('partials.resep-obat')
+
         <hr class="kb-divider">
 
         {{-- ===== Diagnosa ===== --}}
@@ -1011,6 +1014,8 @@
     }
 
     // ===== Cetak resep =====
+    // Catatan: cetakResep() ini digantikan oleh versi di partial
+    // partials/resep-obat.blade.php (mencetak Plan + daftar obat).
     function cetakResep() {
         const planEl = document.querySelector('textarea[name="plan"]');
         const planText = planEl ? planEl.value.trim() : '';
