@@ -24,6 +24,21 @@ class Audit
         ]);
     }
 
+    public static function catatGagal($aktivitas, $modul, $usernameDiinput = '-')
+    {
+        AuditTrail::create([
+            'user_id'        => null,
+            'username'       => $usernameDiinput ?: '-',
+            'role'           => '-',
+            'aktivitas'      => $aktivitas,
+            'modul'          => $modul,
+            'no_rm'          => null,
+            'status'         => 'gagal',
+            'ip_address'     => request()->ip(),
+            'nama_perangkat' => gethostname(),
+        ]);
+    }
+
     public static function catatPerubahan($modul, $noRm, array $lama, array $baru, array $label = [])
     {
         foreach ($baru as $field => $nilaiBaru) {

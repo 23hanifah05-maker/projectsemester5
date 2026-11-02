@@ -264,6 +264,11 @@
 </style>
 
 <!-- STRUKTUR SIDEBAR -->
+@php
+    // Role user yang sedang login (admin, dokter, perawat, pmik, radiolog)
+    $role = auth()->user()->role;
+@endphp
+
 <div class="sidebar" id="mySidebar">
     <div>
         <div class="sidebar-header">
@@ -274,18 +279,25 @@
         <div class="menu-label">Menu Utama</div>
         
         <ul class="sidebar-menu">
+
+            {{-- Dashboard: semua role (tidak dibungkus) --}}
             <li>
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <div class="left-content"><i class="fa-solid fa-house icon-main"></i> Dashboard</div>
                 </a>
             </li>
 
+            {{-- Pendaftaran: perawat, pmik --}}
+            @if(in_array($role, ['perawat', 'pmik']))
             <li>
                 <a href="{{ route('pendaftaran.index') }}" class="{{ request()->routeIs('pendaftaran*') ? 'active' : '' }}">
                     <div class="left-content"><i class="fa-solid fa-address-book icon-main"></i> Pendaftaran</div>
                 </a>
             </li>
+            @endif
 
+            {{-- Poli: dokter, perawat --}}
+            @if(in_array($role, ['dokter', 'perawat']))
             <li class="has-dropdown">
                 @php
                     $isSyaraf  = request()->routeIs('poli.syaraf*')  || request()->is('*syaraf*');
@@ -328,7 +340,10 @@
                     </li>
                 </ul>
             </li>
+            @endif
 
+            {{-- Radiologi: dokter, perawat, radiolog --}}
+            @if(in_array($role, ['dokter', 'perawat', 'radiolog']))
             <li>
                 <a href="{{ route('radiologi.index') }}" class="{{ request()->routeIs('radiologi*') ? 'active' : '' }}">
                     <div class="left-content">
@@ -336,7 +351,10 @@
                     </div>
                 </a>
             </li>
+            @endif
 
+            {{-- Audit Trail: admin saja --}}
+            @if($role === 'admin')
             <li>
                 <a href="{{ route('audit-trail.index') }}" class="{{ request()->routeIs('audit-trail*') ? 'active' : '' }}">
                     <div class="left-content">
@@ -344,9 +362,12 @@
                     </div>
                 </a>
             </li>
+            @endif
+
         </ul>
     </div>
 
+    {{-- Keluar: semua role (tidak dibungkus) --}}
     <div class="sidebar-footer">
         <hr>
 
@@ -401,11 +422,16 @@
 
 
 <script>
-    document.getElementById('btnPoli').addEventListener('click', function(e) {
-        e.preventDefault(); 
-        document.getElementById('menuPoli').classList.toggle('show'); 
-        this.classList.toggle('expanded'); 
-    });
+    // Menu Poli hanya ada untuk dokter & perawat,
+    // jadi cek dulu supaya tidak error di role lain
+    const btnPoli = document.getElementById('btnPoli');
+    if (btnPoli) {
+        btnPoli.addEventListener('click', function(e) {
+            e.preventDefault(); 
+            document.getElementById('menuPoli').classList.toggle('show'); 
+            this.classList.toggle('expanded'); 
+        });
+    }
 
     function toggleSidebar() {
         const sidebar = document.getElementById('mySidebar');

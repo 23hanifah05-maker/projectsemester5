@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Helpers\Audit;
 
@@ -18,11 +19,8 @@ class LoginController extends Controller
 
         $user = User::where('username', $request->username)->first();
 
-        if (
-            $user &&
-            $request->username === 'admin123' &&
-            $request->password === 'admin@123456'
-        ) {
+        // Cek password dari database (yang sudah di-hash)
+        if ($user && Hash::check($request->password, $user->password)) {
             Auth::login($user);
 
             $request->session()->regenerate();
@@ -31,6 +29,12 @@ class LoginController extends Controller
 
             return redirect()->route('dashboard');
         }
+
+        Audit::catatGagal(
+            'Gagal login ke sistem (username atau password salah)',
+            'Autentikasi',
+            $request->username
+        );
 
         return back()->with('error', 'Username atau password salah.');
     }

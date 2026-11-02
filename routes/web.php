@@ -12,267 +12,101 @@ use App\Http\Controllers\TtvController;
 use App\Http\Controllers\AssesmenController;
 use App\Http\Controllers\ClinicalPathwayController;
 
-/*
-|--------------------------------------------------------------------------
-| Root
-|--------------------------------------------------------------------------
-| Halaman awal aplikasi diarahkan ke login dulu, bukan langsung ke poli.
-*/
-
+// ================= TANPA LOGIN =================
 Route::get('/', function () {
     return redirect()->route('login');
 });
-
-
-/*
-|--------------------------------------------------------------------------
-| Auth (Login / Logout)
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
-Route::post('/login', [LoginController::class, 'login'])
-    ->name('login.process');
-
-Route::post('/logout', [LoginController::class, 'logout'])
-    ->name('logout');
+Route::post('/login', [LoginController::class, 'login'])->name('login.process');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 
-/*
-|--------------------------------------------------------------------------
-| Dashboard
-|--------------------------------------------------------------------------
-*/
+// ================= HARUS LOGIN =================
+Route::middleware('auth')->group(function () {
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->name('dashboard');
+    // ---------- Dashboard: semua role ----------
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // ---------- Pendaftaran: perawat, pmik ----------
+    Route::middleware('role:perawat,pmik')
+        ->prefix('pendaftaran')->name('pendaftaran.')->group(function () {
+            Route::get('/', [PendaftaranController::class, 'index'])->name('index');
+            Route::get('/create', [PendaftaranController::class, 'create'])->name('create');
+            Route::post('/', [PendaftaranController::class, 'store'])->name('store');
+            Route::post('/{no_rm}/kunjungan', [PendaftaranController::class, 'storeKunjungan'])->name('kunjungan.store');
+            Route::get('/{id}', [PendaftaranController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [PendaftaranController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [PendaftaranController::class, 'update'])->name('update');
+            Route::delete('/{id}', [PendaftaranController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/tambah', [PendaftaranController::class, 'tambah'])->name('tambah');
+        });
 
-/*
-|--------------------------------------------------------------------------
-| Pendaftaran
-|--------------------------------------------------------------------------
-*/
+    // ---------- Poli: dokter, perawat ----------
+    Route::middleware('role:dokter,perawat')->group(function () {
 
-Route::prefix('pendaftaran')->name('pendaftaran.')->group(function () {
+        Route::get('/poli', [PoliController::class, 'index'])->name('poli');
+        Route::get('/poli/show/{slug}', function ($slug) {
+            return view('poli.' . $slug);
+        })->name('poli.show');
 
-    Route::get('/', [PendaftaranController::class, 'index'])
-        ->name('index');
+        // Poli Syaraf
+        Route::get('/poli/syaraf', [PoliController::class, 'saraf'])->name('poli.syaraf');
+        Route::patch('/poli/syaraf/status-periksa/{id}', [PoliController::class, 'updateStatusPeriksa'])->name('poli.syaraf.status-periksa');
+        Route::get('/poli/syaraf/detail/{no_rm}', [PoliController::class, 'riwayatSaraf'])->name('poli.syaraf.detail');
+        Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', [PoliController::class, 'kunjunganSaraf'])->name('poli.syaraf.kunjungan-baru');
+        Route::get('/poli/syaraf/detail/{no_rm}/{id_pendaftaran}', [PoliController::class, 'kunjunganSarafDetail'])->name('poli.syaraf.kunjungan.detail');
 
-    Route::get('/create', [PendaftaranController::class, 'create'])
-        ->name('create');
+        // Poli Obgyn
+        Route::patch('/poli/obgyn/status-periksa/{id}', [PoliController::class, 'updateStatusPeriksaObgyn'])->name('poli.obgyn.status-periksa');
+        Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])->name('poli.obgyn');
+        Route::get('/poli/obgyn/kunjungan/{no_rm}', [PoliController::class, 'riwayatObgyn'])->name('poli.obgyn.kunjungan');
+        Route::get('/poli/obgyn/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::class, 'kunjunganObgyn'])->name('poli.obgyn.kunjungan.detail');
+        Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', [PoliController::class, 'kunjunganObgyn'])->name('poli.obgyn.kunjungan-baru');
 
-    Route::post('/', [PendaftaranController::class, 'store'])
-        ->name('store');
+        // Poli lain
+        Route::get('/poli/jantung', [PoliController::class, 'jantung'])->name('poli.jantung');
+        Route::get('/poli/jiwa', [PoliController::class, 'jiwa'])->name('poli.jiwa');
+    });
 
-    // Tambah kunjungan baru untuk pasien yang sudah terdaftar
-    Route::post('/{no_rm}/kunjungan', [PendaftaranController::class, 'storeKunjungan'])
-        ->name('kunjungan.store');
+    // ---------- TTV: perawat ----------
+    Route::middleware('role:perawat')->group(function () {
+        Route::post('/poli/syaraf/ttv', [TtvController::class, 'store'])->name('poli.syaraf.ttv.store');
+        Route::post('/poli/obgyn/ttv', [TtvController::class, 'store'])->name('poli.obgyn.ttv.store');
+    });
 
-    Route::get('/{id}', [PendaftaranController::class, 'show'])
-        ->name('show');
+    // ---------- Asesmen, clinical pathway, rujukan, informed consent: dokter ----------
+    Route::middleware('role:dokter')->group(function () {
+        Route::post('/poli/syaraf/assesmen', [AssesmenController::class, 'store'])->name('poli.syaraf.assesmen.store');
+        Route::post('/poli/obgyn/assesmen', [AssesmenController::class, 'store'])->name('poli.obgyn.assesmen.store');
+        Route::post('/poli/syaraf/clinical-pathway', [ClinicalPathwayController::class, 'store'])->name('poli.syaraf.clinical-pathway.store');
+        Route::post('/poli/syaraf/rujukan', [PoliController::class, 'kirimRujukan'])->name('poli.syaraf.rujukan');
+        Route::post('/poli/obgyn/rujukan', [PoliController::class, 'kirimRujukanObgyn'])->name('poli.obgyn.rujukan');
+        Route::post('/poli/obgyn/informed-consent', [PoliController::class, 'simpanInformedConsent'])->name('poli.obgyn.informed.simpan');
+    });
 
-    Route::get('/{id}/edit', [PendaftaranController::class, 'edit'])
-        ->name('edit');
+    // ---------- Clinical pathway (lihat): dokter, perawat, pmik ----------
+    Route::middleware('role:dokter,perawat,pmik')->group(function () {
+        Route::get('/poli/saraf/clinical-pathway', [PoliController::class, 'clinicalPathway'])->name('poli.clinical_pathway');
+    });
 
-    Route::put('/{id}', [PendaftaranController::class, 'update'])
-        ->name('update');
+    // ---------- Pencarian kode ICD: dokter, pmik ----------
+    Route::middleware('role:dokter,pmik')->group(function () {
+        Route::get('/cari-kode/{jenis}', [PencarianKodeController::class, 'cari'])
+            ->whereIn('jenis', ['penyakit', 'tindakan'])
+            ->name('cari.kode');
+    });
 
-    Route::delete('/{id}', [PendaftaranController::class, 'destroy'])
-        ->name('destroy');
+    // ---------- Radiologi: dokter, perawat, radiolog ----------
+    Route::middleware('role:dokter,perawat,radiolog')->group(function () {
+        Route::get('/radiologi', [RadiologiController::class, 'index'])->name('radiologi.index');
+    });
 
-    Route::get('/{id}/tambah', [PendaftaranController::class, 'tambah'])
-        ->name('tambah');
+    // ---------- Audit Trail: admin saja ----------
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('audit-trail.index');
+    });
 });
-
-
-/*
-|--------------------------------------------------------------------------
-| Poli
-|--------------------------------------------------------------------------
-*/
-
-// Rute poli utama melalui PoliController
-Route::get('/poli', [PoliController::class, 'index'])
-    ->name('poli');
-
-
-// Menampilkan poli berdasarkan slug
-Route::get('/poli/show/{slug}', function ($slug) {
-    return view('poli.' . $slug);
-})->name('poli.show');
-
-
-/*
-|--------------------------------------------------------------------------
-| Poli Syaraf
-|--------------------------------------------------------------------------
-*/
-
-// Halaman utama Poli Saraf
-Route::get('/poli/syaraf', [PoliController::class, 'saraf'])
-    ->name('poli.syaraf');
-
-
-Route::patch(
-    '/poli/syaraf/status-periksa/{id}',
-    [PoliController::class, 'updateStatusPeriksa']
-)->name('poli.syaraf.status-periksa');
-
-
-Route::get('/poli/syaraf/detail/{no_rm}', [
-    PoliController::class,
-    'riwayatSaraf'
-])->name('poli.syaraf.detail');
-
-Route::get('/poli/syaraf/kunjungan-baru/{no_rm}', [
-    PoliController::class,
-    'kunjunganSaraf'
-])->name('poli.syaraf.kunjungan-baru');
-
-Route::get('/poli/syaraf/detail/{no_rm}/{id_pendaftaran}', [
-    PoliController::class,
-    'kunjunganSarafDetail'
-])->name('poli.syaraf.kunjungan.detail');
-
-Route::post('/poli/syaraf/ttv', [
-    TtvController::class,
-    'store'
-])->name('poli.syaraf.ttv.store');
-
-Route::post('/poli/syaraf/assesmen', [
-    AssesmenController::class,
-    'store'
-])->name('poli.syaraf.assesmen.store');
-
-Route::post('/poli/syaraf/clinical-pathway', [
-    ClinicalPathwayController::class,
-    'store'
-])->name('poli.syaraf.clinical-pathway.store');
-
-Route::post('/poli/syaraf/rujukan', [
-    PoliController::class,
-    'kirimRujukan'
-])->name('poli.syaraf.rujukan');
-
-
-/*
-|--------------------------------------------------------------------------
-| Clinical Pathway Poli Saraf
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/poli/saraf/clinical-pathway',
-    [PoliController::class, 'clinicalPathway']
-)->name('poli.clinical_pathway');
-
-
-/*
-|--------------------------------------------------------------------------
-| Poli Obgyn
-|--------------------------------------------------------------------------
-*/
-
-Route::patch(
-    '/poli/obgyn/status-periksa/{id}',
-    [\App\Http\Controllers\PoliController::class, 'updateStatusPeriksaObgyn']
-)->name('poli.obgyn.status-periksa');
-
-
-Route::get('/poli/obgyn', [PoliController::class, 'obgyn'])
-    ->name('poli.obgyn');
-
-// Halaman riwayat kunjungan pasien
-Route::get('/poli/obgyn/kunjungan/{no_rm}', [
-    PoliController::class,
-    'riwayatObgyn'
-])->name('poli.obgyn.kunjungan');
-
-// Halaman detail kunjungan berdasarkan tanggal
-Route::get('/poli/obgyn/kunjungan/{no_rm}/{id_pendaftaran}', [
-    PoliController::class,
-    'kunjunganObgyn'
-])->name('poli.obgyn.kunjungan.detail');
-
-// Halaman kunjungan terbaru pasien di Poli Obgyn
-Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', [
-    PoliController::class,
-    'kunjunganObgyn'
-])->name('poli.obgyn.kunjungan-baru');
-
-Route::post('/poli/obgyn/ttv', [TtvController::class, 'store'])
-    ->name('poli.obgyn.ttv.store');
-
-Route::post('/poli/obgyn/assesmen', [AssesmenController::class, 'store'])
-    ->name('poli.obgyn.assesmen.store');
-
-Route::post(
-    '/poli/obgyn/rujukan',
-    [PoliController::class, 'kirimRujukanObgyn']
-)->name('poli.obgyn.rujukan');
-
-// BARU: simpan informed consent (hanya untuk tindakan KB IUD)
-Route::post(
-    '/poli/obgyn/informed-consent',
-    [PoliController::class, 'simpanInformedConsent']
-)->name('poli.obgyn.informed.simpan');
-
-
-/*
-|--------------------------------------------------------------------------
-| Poli Jantung
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/poli/jantung', [PoliController::class, 'jantung'])
-    ->name('poli.jantung');
-
-
-/*
-|--------------------------------------------------------------------------
-| Poli Jiwa
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/poli/jiwa', [PoliController::class, 'jiwa'])
-    ->name('poli.jiwa');
-
-
-/*
-|--------------------------------------------------------------------------
-| Pencarian Kode ICD
-|--------------------------------------------------------------------------
-| Diagnosis ICD-10 dan Tindakan ICD-9-CM
-*/
-
-Route::get(
-    '/cari-kode/{jenis}',
-    [PencarianKodeController::class, 'cari']
-)
-->whereIn('jenis', ['penyakit', 'tindakan'])
-->name('cari.kode');
-
-
-/*
-|--------------------------------------------------------------------------
-| Radiologi
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/radiologi', [RadiologiController::class, 'index'])
-    ->name('radiologi.index');
-
-
-/*
-|--------------------------------------------------------------------------
-| Audit Trail
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/audit-trail', [AuditTrailController::class, 'index'])
-    ->name('audit-trail.index');
-    
