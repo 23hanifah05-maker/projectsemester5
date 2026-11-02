@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('username', 100)->nullable();
             $table->string('role', 50)->nullable();
-            $table->string('aktivitas', 30);
+            $table->text('aktivitas'); // Tipe TEXT agar muat teks panjang
             $table->string('modul', 50);
             $table->string('no_rm', 20)->nullable();
             $table->string('bidang_kolom', 100)->nullable();

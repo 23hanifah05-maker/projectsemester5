@@ -60,7 +60,7 @@
                     <th>Aktivitas</th>
                     <th>Modul</th>
                     <th>Waktu</th>
-                    <th>IP Adress</th>
+                    <th>IP Address</th>
                 </tr>
             </thead>
 
@@ -100,7 +100,7 @@
                     'aktivitas' => 'Aktivitas',
                     'modul' => 'Modul',
                     'waktu' => 'Waktu',
-                    'ip' => 'IP Adress',
+                    'ip' => 'IP Address',
                     'no_rm' => 'Nomor RM',
                     'kolom' => 'Bidang Kolom',
                     'sebelum' => 'Sebelum',
@@ -149,7 +149,7 @@
             'role'      => $l->role,
             'aktivitas' => $l->aktivitas,
             'modul'     => $l->modul,
-            'waktu'     => $l->created_at->format('Y-m-d H:i:s'),
+            'waktu'     => $l->created_at ? $l->created_at->format('Y-m-d H:i:s') : '-',
             'ip'        => $l->nama_perangkat ?? $l->ip_address,
             'no_rm'     => $l->no_rm,
             'kolom'     => $l->bidang_kolom,
@@ -161,29 +161,40 @@
     ) !!};
 
 
-    // 2026-10-01 09:23:00 -> 01/10/2026 09.23
+    // Formatting Waktu (2026-10-01 09:23:00 -> 01/10/2026 09.23)
     function formatWaktu(w) {
         const m = String(w).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
         return m ? m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + '.' + m[5] : w;
     }
 
+    // Mapping ID Role ke Nama Role
+    function getNamaRole(roleId) {
+        const roles = {
+            '1': 'Administrator',
+            '2': 'Petugas Pendaftaran',
+            '3': 'Dokter',
+            '4': 'Perawat'
+        };
+        return roles[String(roleId)] || roleId || '-';
+    }
 
     function bukaDetail(log) {
-
         fields.forEach(function (f) {
+            let nilai = log[f];
 
-            const nilai = log[f];
+            if (f === 'role') {
+                nilai = getNamaRole(nilai);
+            } else if (f === 'waktu') {
+                nilai = formatWaktu(nilai);
+            }
 
             document.getElementById('d-' + f).textContent =
-                f === 'waktu'
-                    ? formatWaktu(nilai)
-                    : (nilai !== undefined && nilai !== null && nilai !== '' ? nilai : '-');
-
+                (nilai !== undefined && nilai !== null && nilai !== '' ? nilai : '-');
         });
 
+        const statusLower = String(log.status).toLowerCase();
         document.getElementById('d-status').className =
-            'value ' +
-            (log.status === 'Berhasil' ? 'status-berhasil' : 'status-gagal');
+            'value ' + (statusLower === 'berhasil' ? 'status-berhasil' : 'status-gagal');
 
         modal.classList.add('show');
     }
@@ -239,7 +250,7 @@
             [
                 log.id,
                 log.username,
-                log.role,
+                getNamaRole(log.role),
                 log.aktivitas,
                 log.modul,
                 formatWaktu(log.waktu),

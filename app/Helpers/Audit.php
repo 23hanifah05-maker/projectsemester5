@@ -7,8 +7,15 @@ use Illuminate\Support\Facades\Auth;
 
 class Audit
 {
-    public static function catat($aktivitas, $modul, $noRm = null)
-    {
+    public static function catat(
+        $aktivitas,
+        $modul,
+        $noRm = null,
+        $kolom = null,
+        $sebelum = null,
+        $sesudah = null,
+        $status = 'berhasil'
+    ) {
         $user = Auth::user();
 
         AuditTrail::create([
@@ -18,9 +25,12 @@ class Audit
             'aktivitas'      => $aktivitas,
             'modul'          => $modul,
             'no_rm'          => $noRm,
-            'status'         => 'berhasil',
+            'bidang_kolom'   => $kolom,
+            'sebelum'        => $sebelum,
+            'sesudah'        => $sesudah,
+            'status'         => $status,
             'ip_address'     => request()->ip(),
-            'nama_perangkat' => gethostname(),
+            'nama_perangkat' => gethostname() ?: request()->ip(),
         ]);
     }
 
@@ -30,12 +40,16 @@ class Audit
             $nilaiLama = $lama[$field] ?? null;
 
             if ((string) $nilaiLama !== (string) $nilaiBaru) {
-                $nama = $label[$field] ?? $field;
+                $namaKolom = $label[$field] ?? $field;
 
                 self::catat(
-                    "Mengubah {$nama}: '{$nilaiLama}' menjadi '{$nilaiBaru}'",
+                    "Mengubah {$namaKolom}: '{$nilaiLama}' menjadi '{$nilaiBaru}'",
                     $modul,
-                    $noRm
+                    $noRm,
+                    $namaKolom,
+                    (string) $nilaiLama,
+                    (string) $nilaiBaru,
+                    'berhasil'
                 );
             }
         }

@@ -32,6 +32,16 @@ class LoginController extends Controller
             return redirect()->route('dashboard');
         }
 
+        Audit::catat(
+            'Gagal login: Username/password salah (' . $request->username . ')',
+            'Autentikasi',
+            null,
+            null,
+            null,
+            null,
+            'gagal'
+        );
+
         return back()->with('error', 'Username atau password salah.');
     }
 

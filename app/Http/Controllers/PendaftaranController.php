@@ -153,7 +153,6 @@ class PendaftaranController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // No RM: 6 digit angka (contoh 000015)
             'no_rm' => [
                 'required',
                 'digits:6',
@@ -196,7 +195,6 @@ class PendaftaranController extends Controller
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
 
-            // Data General Consent (dari modal)
             'general_consent'       => 'required|in:1',
             'gc_anggota_keluarga'   => 'nullable|json',
             'gc_ttd_pemberi'        => 'required|string',
@@ -207,13 +205,11 @@ class PendaftaranController extends Controller
             'general_consent.in' => 'General Consent belum disetujui.',
         ]);
 
-        // Pastikan poli yang dipilih tersedia di database.
         $dataPoli = Poli::where(
             'slug',
             $validated['poli']
         )->firstOrFail();
 
-        // Pemetaan jenis pembayaran sesuai pilihan pada formulir.
         $jenisPembayaran = match ($validated['pembayaran']) {
             'umum' => 'Umum',
             'asuransi' => 'Asuransi Swasta',
@@ -243,7 +239,6 @@ class PendaftaranController extends Controller
             $noHp,
             $pjNoHp
         ) {
-            // Simpan identitas pasien, termasuk provinsi.
             Pasien::create([
                 'no_rm' => $validated['no_rm'],
                 'nik' => $validated['nik'],
@@ -270,7 +265,6 @@ class PendaftaranController extends Controller
                 'pj_no_hp' => $pjNoHp,
             ]);
 
-            // Simpan pendaftaran poli.
             Pendaftaran::create([
                 'tgl_registrasi' => now(),
                 'no_rm' => $validated['no_rm'],
@@ -280,7 +274,6 @@ class PendaftaranController extends Controller
             ]);
         });
 
-        // Simpan berkas General Consent (tanda tangan + nama terang + anggota keluarga).
         $this->simpanGeneralConsent($validated);
 
         Audit::catat(
@@ -299,7 +292,6 @@ class PendaftaranController extends Controller
 
     /**
      * Menyimpan kunjungan baru untuk pasien yang sudah terdaftar.
-     * Identitas pasien tidak berubah; hanya penanggung jawab diperbarui.
      */
     public function storeKunjungan(Request $request, $no_rm)
     {
@@ -359,11 +351,6 @@ class PendaftaranController extends Controller
             ->with('success', 'Kunjungan baru berhasil disimpan.');
     }
 
-    /**
-     * Membuat nomor rekam medis berikutnya (6 digit angka).
-     * Data lama berformat "E000014" tetap dibaca: angkanya (14)
-     * dipakai sebagai acuan, sehingga nomor berikutnya 000015.
-     */
     private function generateNoRm()
     {
         $angkaTerbesar = Pasien::pluck('no_rm')
@@ -386,9 +373,6 @@ class PendaftaranController extends Controller
         return $noRm;
     }
 
-    /**
-     * Menyimpan data General Consent ke storage/app/public/general_consent/{no_rm}/
-     */
     private function simpanGeneralConsent(array $validated): void
     {
         $folder = 'general_consent/' . $validated['no_rm'];
@@ -433,9 +417,6 @@ class PendaftaranController extends Controller
         Storage::disk('public')->put($path, $biner);
     }
 
-    /**
-     * Menyamakan format nomor HP.
-     */
     private function normalisasiNomorHp($nomor)
     {
         $nomor = trim($nomor);
@@ -518,7 +499,6 @@ class PendaftaranController extends Controller
 
         $validated['no_hp'] = $noHp;
 
-        // Ambil nilai lama dari database sebelum diubah.
         $lama = collect($pasien->getRawOriginal())
             ->only(array_keys($validated))
             ->all();
