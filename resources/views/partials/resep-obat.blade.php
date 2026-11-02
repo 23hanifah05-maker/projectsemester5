@@ -1,84 +1,43 @@
 {{--
-    PARTIAL: Resep Obat + judul "PATEN (TINDAK LANJUT :)"
+    PARTIAL: Kotak "Tindak Lanjut" dan "Resep Obat" pada kolom Plan (P)
     Simpan di: resources/views/partials/resep-obat.blade.php
     Dipakai di Poli Obgyn dan Poli Syaraf lewat:  @include('partials.resep-obat')
 
-    Isi partial ini berdiri sendiri (CSS, HTML, JavaScript), jadi halaman
-    kunjungan hanya perlu satu baris @include.
+    - textarea[name="plan"] asli disembunyikan, tetapi tetap ada dan berisi
+      gabungan kedua kotak (dipakai oleh simpan SOAP, resume, dan cetak).
+    - Tombol Cetak yang sudah ada dipindahkan ke kiri bawah kotak Resep Obat.
 --}}
 
 <style>
-    .rsp-plan-label {
+    .kb-plan-wrap,
+    .ob-plan-wrap {
         display: block;
-        width: 100%;
-        margin-bottom: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #b81d24;
     }
 
-    .rsp-box {
-        margin-top: 14px;
-        padding: 14px 16px;
-        border: 1px solid #e5e5e5;
+    .rsp-kotak {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border: 1px solid #d9d9d9;
         border-radius: 8px;
         background: #fff;
     }
 
-    .rsp-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        font-size: 14px;
+    .rsp-kotak + .rsp-kotak {
+        margin-top: 12px;
+    }
+
+    .rsp-judul {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
         font-weight: 700;
         color: #b81d24;
     }
 
-    .rsp-tambah {
-        padding: 6px 12px;
-        border: 1px solid #b81d24;
-        border-radius: 6px;
-        background: #fff;
-        color: #b81d24;
-        font: inherit;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .rsp-tambah:hover {
-        background: #b81d24;
-        color: #fff;
-    }
-
-    .rsp-wrap {
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    .rsp-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-    }
-
-    .rsp-table th {
-        padding: 6px 8px;
-        background: #fdeaea;
-        color: #b81d24;
-        text-align: left;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .rsp-table td {
-        padding: 4px;
-        vertical-align: middle;
-    }
-
-    .rsp-table input,
-    .rsp-table select {
+    .rsp-kotak textarea {
+        display: block;
         width: 100%;
         box-sizing: border-box;
         padding: 6px 8px;
@@ -87,142 +46,161 @@
         background: #fff;
         font: inherit;
         font-size: 13px;
+        line-height: 1.5;
+        resize: vertical;
     }
 
-    .rsp-hapus {
-        border: none;
-        background: none;
-        color: #c1121f;
-        font-size: 15px;
-        cursor: pointer;
+    .rsp-kotak textarea:focus {
+        outline: none;
+        border-color: #b81d24;
+    }
+
+    /* Tombol Cetak di kiri bawah kotak Resep Obat */
+    .rsp-footer {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 10px;
+    }
+
+    .rsp-footer .kb-cetak-btn,
+    .rsp-footer [onclick*="cetakResep"] {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0 !important;
     }
 </style>
 
-<div class="rsp-box" id="resepBox">
-    <div class="rsp-head">
-        <span>Resep Obat</span>
-
-        <button type="button" class="rsp-tambah" onclick="tambahBarisResep()">
-            + Tambah Obat
-        </button>
-    </div>
-
-    <div class="rsp-wrap">
-        <table class="rsp-table">
-            <thead>
-                <tr>
-                    <th style="width:40px;">No</th>
-                    <th>Nama Obat</th>
-                    <th style="width:120px;">Jenis</th>
-                    <th style="width:140px;">Dosis</th>
-                    <th style="width:100px;">Jumlah</th>
-                    <th>Aturan Pakai</th>
-                    <th style="width:40px;"></th>
-                </tr>
-            </thead>
-
-            <tbody id="resepBody"></tbody>
-        </table>
-    </div>
-</div>
-
 <script>
-    // ---------------------------------------------------------
-    // Judul "PATEN (TINDAK LANJUT :)" di atas kolom P
-    // (berlaku untuk Poli Obgyn: .ob-plan-wrap, Poli Syaraf: .kb-plan-wrap)
-    // ---------------------------------------------------------
     (function () {
-        const wrap = document.querySelector('.ob-plan-wrap, .kb-plan-wrap');
+        const JUDUL_TL = 'Tindak Lanjut :';
+        const JUDUL_RESEP = 'Resep Obat :';
 
-        if (!wrap || wrap.querySelector('.rsp-plan-label')) return;
+        function buatKotak(judul, id) {
+            const kotak = document.createElement('div');
+            kotak.className = 'rsp-kotak';
 
-        const label = document.createElement('div');
+            const label = document.createElement('label');
+            label.className = 'rsp-judul';
+            label.setAttribute('for', id);
+            label.textContent = judul;
 
-        label.className = 'rsp-plan-label';
-        // Ubah tulisan judul di bawah ini bila perlu
-        label.textContent = 'PATEN (TINDAK LANJUT :)';
+            const area = document.createElement('textarea');
+            area.id = id;
+            area.rows = 2;
+            area.autocomplete = 'off';
 
-        wrap.insertBefore(label, wrap.firstChild);
+            kotak.appendChild(label);
+            kotak.appendChild(area);
+
+            return { kotak: kotak, area: area };
+        }
+
+        // Pecah isi Plan yang tersimpan menjadi dua bagian
+        function pecahPlan(teks) {
+            const pola = /^\s*Tindak Lanjut :\s*\n?([\s\S]*?)\n*\s*Resep Obat :\s*\n?([\s\S]*)$/;
+            const hasil = teks.match(pola);
+
+            if (hasil) {
+                return {
+                    tl: hasil[1].replace(/\s+$/, ''),
+                    resep: hasil[2].replace(/\s+$/, '')
+                };
+            }
+
+            // Isi lama tanpa judul masuk ke Tindak Lanjut
+            return { tl: teks.trim(), resep: '' };
+        }
+
+        function siapkanPlan() {
+            const plan = document.querySelector('textarea[name="plan"]');
+
+            if (!plan || plan.dataset.templateSiap === '1') return;
+
+            plan.dataset.templateSiap = '1';
+
+            const tl = buatKotak(JUDUL_TL, 'planTindakLanjut');
+            const resep = buatKotak(JUDUL_RESEP, 'planResepObat');
+
+            const awal = pecahPlan(plan.value);
+            tl.area.value = awal.tl;
+            resep.area.value = awal.resep;
+
+            // Sembunyikan textarea asli (tetap ada untuk simpan & cetak).
+            // Nilainya TIDAK diubah di sini, supaya pengaman "belum disimpan"
+            // tidak menganggap form sudah berubah.
+            plan.style.display = 'none';
+            plan.removeAttribute('required');
+
+            plan.insertAdjacentElement('afterend', tl.kotak);
+            tl.kotak.insertAdjacentElement('afterend', resep.kotak);
+
+            // Footer kotak Resep Obat: tombol Cetak di kiri bawah
+            const footer = document.createElement('div');
+            footer.className = 'rsp-footer';
+            resep.kotak.appendChild(footer);
+
+            // Pindahkan tombol Cetak yang sudah ada; jika tidak ada, buat baru
+            let tombolCetak = document.querySelector('.kb-cetak-plan, .ob-cetak-plan') ||
+                              document.querySelector('[onclick*="cetakResep"]');
+
+            if (!tombolCetak) {
+                tombolCetak = document.createElement('button');
+                tombolCetak.type = 'button';
+                tombolCetak.className = 'kb-cetak-btn';
+                tombolCetak.textContent = 'Cetak';
+                tombolCetak.addEventListener('click', function () {
+                    window.cetakResep();
+                });
+            }
+
+            footer.appendChild(tombolCetak);
+
+            // Gabungkan kedua kotak ke textarea asli saat dokter mengetik
+            function sinkron() {
+                const a = tl.area.value;
+                const b = resep.area.value;
+
+                if (a.trim() === '' && b.trim() === '') {
+                    plan.value = '';
+                } else {
+                    plan.value =
+                        JUDUL_TL + '\n' + a +
+                        '\n\n' +
+                        JUDUL_RESEP + '\n' + b;
+                }
+
+                plan.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            tl.area.addEventListener('input', sinkron);
+            resep.area.addEventListener('input', sinkron);
+        }
+
+        document.addEventListener('DOMContentLoaded', siapkanPlan);
+
+        if (document.readyState !== 'loading') {
+            siapkanPlan();
+        }
     })();
 
     // ---------------------------------------------------------
-    // Tabel Resep Obat
-    // ---------------------------------------------------------
-    function nomorUlangResep() {
-        document.querySelectorAll('#resepBody tr').forEach(function (tr, i) {
-            tr.querySelector('.resep-no').textContent = i + 1;
-        });
-    }
-
-    function tambahBarisResep(data) {
-        const d = data || {};
-        const tr = document.createElement('tr');
-
-        tr.innerHTML =
-            '<td class="resep-no" style="text-align:center;"></td>' +
-            '<td><input type="text" class="resep-nama" placeholder="Nama obat" autocomplete="off"></td>' +
-            '<td><select class="resep-jenis">' +
-                '<option value="Generik">Generik</option>' +
-                '<option value="Paten">Paten</option>' +
-            '</select></td>' +
-            '<td><input type="text" class="resep-dosis" placeholder="mis. 500 mg" autocomplete="off"></td>' +
-            '<td><input type="text" class="resep-jumlah" placeholder="mis. 10" autocomplete="off"></td>' +
-            '<td><input type="text" class="resep-aturan" placeholder="mis. 3x1 sesudah makan" autocomplete="off"></td>' +
-            '<td><button type="button" class="rsp-hapus" title="Hapus" aria-label="Hapus">&times;</button></td>';
-
-        tr.querySelector('.resep-nama').value = d.nama || '';
-        tr.querySelector('.resep-jenis').value = d.jenis || 'Generik';
-        tr.querySelector('.resep-dosis').value = d.dosis || '';
-        tr.querySelector('.resep-jumlah').value = d.jumlah || '';
-        tr.querySelector('.resep-aturan').value = d.aturan || '';
-
-        tr.querySelector('.rsp-hapus').addEventListener('click', function () {
-            const body = document.getElementById('resepBody');
-
-            // Selalu sisakan satu baris kosong
-            if (body.children.length <= 1) {
-                tr.querySelectorAll('input').forEach(i => i.value = '');
-                tr.querySelector('.resep-jenis').value = 'Generik';
-                return;
-            }
-
-            tr.remove();
-            nomorUlangResep();
-        });
-
-        document.getElementById('resepBody').appendChild(tr);
-        nomorUlangResep();
-    }
-
-    function ambilResep() {
-        return Array.from(document.querySelectorAll('#resepBody tr'))
-            .map(function (tr) {
-                return {
-                    nama: tr.querySelector('.resep-nama').value.trim(),
-                    jenis: tr.querySelector('.resep-jenis').value,
-                    dosis: tr.querySelector('.resep-dosis').value.trim(),
-                    jumlah: tr.querySelector('.resep-jumlah').value.trim(),
-                    aturan: tr.querySelector('.resep-aturan').value.trim()
-                };
-            })
-            .filter(r => r.nama !== '');
-    }
-
-    tambahBarisResep();
-
-    // ---------------------------------------------------------
-    // Cetak resep: teks Plan + daftar obat.
+    // Cetak resep: mencetak isi Plan (judul + isi kedua kotak).
     // Menggantikan cetakResep() bawaan halaman setelah semua
-    // script halaman selesai dimuat.
+    // script halaman selesai dimuat. Area cetak, tanggal, dan
+    // class cetak-resep-mode sama seperti fungsi bawaan.
     // ---------------------------------------------------------
     document.addEventListener('DOMContentLoaded', function () {
         window.cetakResep = function () {
-            const planEl = document.querySelector('textarea[name="plan"]');
-            const planText = planEl ? planEl.value.trim() : '';
-            const resep = ambilResep();
+            const resepEl = document.getElementById('planResepObat');
+            const resepObat = resepEl ? resepEl.value.trim() : '';
 
-            if (!planText && resep.length === 0) {
-                alert('Isi bagian Plan (P) atau Resep Obat dulu sebelum mencetak resep.');
+            // Yang dicetak hanya kotak Resep Obat
+            if (resepObat === '') {
+                alert('Isi kotak Resep Obat dulu sebelum mencetak resep.');
                 return;
             }
 
@@ -234,30 +212,12 @@
                 return;
             }
 
-            // Kotak daftar obat di lembar resep (dibuat sekali, tepat di bawah isi Plan)
-            let isiObat = document.getElementById('resep-isi-obat');
+            const isiObatLama = document.getElementById('resep-isi-obat');
+            if (isiObatLama) isiObatLama.remove();
 
-            if (!isiObat) {
-                isiObat = document.createElement('div');
-                isiObat.id = 'resep-isi-obat';
-                isiObat.className = isiPlan.className;
-                isiObat.style.whiteSpace = 'pre-line';
-                isiPlan.parentNode.insertBefore(isiObat, isiPlan.nextSibling);
-            }
-
-            isiPlan.innerText = planText;
-
-            isiObat.innerText = resep.map(function (r) {
-                const baris = ['R/ ' + r.nama + ' (' + r.jenis + ')'];
-
-                const detail = [r.dosis, r.jumlah ? 'jumlah ' + r.jumlah : '']
-                    .filter(Boolean).join(' - ');
-
-                if (detail) baris.push('     ' + detail);
-                if (r.aturan) baris.push('     S ' + r.aturan);
-
-                return baris.join('\n');
-            }).join('\n\n');
+            // Hanya isi Resep Obat (tanpa judul, karena lembar resep sudah ada "R/")
+            isiPlan.style.whiteSpace = 'pre-wrap';
+            isiPlan.innerText = resepObat;
 
             const tanggal = document.getElementById('resep-tanggal');
 
@@ -269,8 +229,6 @@
                 });
             }
 
-            // Poli Obgyn memakai siapkanCetak (area dikembalikan setelah print);
-            // Poli Syaraf memindahkan area ke <body> langsung.
             if (typeof siapkanCetak === 'function') {
                 siapkanCetak('cetak-resep-area', 'cetak-resep-mode');
             } else {

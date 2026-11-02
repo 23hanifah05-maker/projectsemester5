@@ -30,10 +30,21 @@ class LoginController extends Controller
             return redirect()->route('dashboard');
         }
 
+<<<<<<< HEAD
         Audit::catatGagal(
             'Gagal login ke sistem (username atau password salah)',
             'Autentikasi',
             $request->username
+=======
+        Audit::catat(
+            'Gagal login: Username/password salah (' . $request->username . ')',
+            'Autentikasi',
+            null,
+            null,
+            null,
+            null,
+            'gagal'
+>>>>>>> ddf835cc574b772e20d1bdb0b90352723bc7102a
         );
 
         return back()->with('error', 'Username atau password salah.');
