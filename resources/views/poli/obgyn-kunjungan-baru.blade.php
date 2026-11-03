@@ -1390,15 +1390,20 @@
 
     {{-- TAB RESUME MEDIS (tampilan mengikuti Poli Syaraf) --}}
     @php
+        // Kotak kode SNOMED CT hanya untuk admin dan pmik.
+        // Role lain (dokter, perawat) tidak melihat kotak ini sama sekali.
+        $bolehSnomed = in_array(auth()->user()->role ?? null, ['admin', 'pmik']);
+
         // Kotak kode SNOMED CT di bawah tiap isian (tampilan saja)
-        $snomed = fn ($kunci) =>
+        $snomed = fn ($kunci) => !$bolehSnomed ? '' : (
             '<div class="rm-snomed" data-kunci="' . $kunci . '">' .
                 '<div class="rm-snomed-isi">' .
                     '<div class="rm-snomed-judul"><i class="fa-solid fa-tag"></i> Kode SNOMED CT</div>' .
                     '<div class="rm-snomed-daftar"><span class="rm-snomed-kosong">Belum ada kode SNOMED CT</span></div>' .
                 '</div>' .
                 '<button type="button" class="rm-snomed-btn" onclick="tambahKodeSnomed(this)">Tambah Kode +</button>' .
-            '</div>';
+            '</div>'
+        );
 
         // [id, label, placeholder, kunci snomed]
         $rmKiri = [
