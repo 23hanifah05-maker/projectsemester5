@@ -45,8 +45,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}/tambah', [PendaftaranController::class, 'tambah'])->name('tambah');
         });
 
-    // ---------- Poli: dokter, perawat ----------
-    Route::middleware('role:dokter,perawat')->group(function () {
+    // ---------- Poli: dokter, perawat, pmik ----------
+    Route::middleware('role:dokter,perawat,pmik')->group(function () {
 
         Route::get('/poli', [PoliController::class, 'index'])->name('poli');
         Route::get('/poli/show/{slug}', function ($slug) {

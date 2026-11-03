@@ -539,6 +539,10 @@
          TAB RESUME MEDIS (disesuaikan dengan Poli Obgyn)
          ========================================================= --}}
     @php
+        // Kotak kode SNOMED CT hanya untuk admin dan pmik.
+        // Role lain (dokter, perawat) tidak melihat kotak ini sama sekali.
+        $bolehSnomed = in_array(auth()->user()->role ?? null, ['admin', 'pmik']);
+
         // Kolom kiri: 6 blok
         $rmBlokKiri = [
             ['keluhan',     'Keluhan Saat Masuk',                    'Tuliskan keluhan saat masuk...'],
@@ -665,13 +669,15 @@
                             <label class="rm-judul" for="rm_{{ $kunci }}">{{ $judul }}</label>
                             <textarea id="rm_{{ $kunci }}" data-rm="{{ $kunci }}" placeholder="{{ $ph }}">{{ data_get($rm, $kunci, $kunci === 'penunjang' ? $penunjangDefault : '') }}</textarea>
 
-                            <div class="rm-snomed" data-snomed="{{ $kunci }}">
-                                <div class="rm-snomed-head">
-                                    <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
-                                    <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
+                            @if ($bolehSnomed)
+                                <div class="rm-snomed" data-snomed="{{ $kunci }}">
+                                    <div class="rm-snomed-head">
+                                        <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
+                                        <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
+                                    </div>
+                                    <div class="rm-snomed-list"></div>
                                 </div>
-                                <div class="rm-snomed-list"></div>
-                            </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -683,13 +689,15 @@
                             <label class="rm-judul" for="rm_{{ $kunci }}">{{ $judul }}</label>
                             <textarea id="rm_{{ $kunci }}" data-rm="{{ $kunci }}" placeholder="{{ $ph }}">{{ data_get($rm, $kunci, '') }}</textarea>
 
-                            <div class="rm-snomed" data-snomed="{{ $kunci }}">
-                                <div class="rm-snomed-head">
-                                    <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
-                                    <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
+                            @if ($bolehSnomed)
+                                <div class="rm-snomed" data-snomed="{{ $kunci }}">
+                                    <div class="rm-snomed-head">
+                                        <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
+                                        <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
+                                    </div>
+                                    <div class="rm-snomed-list"></div>
                                 </div>
-                                <div class="rm-snomed-list"></div>
-                            </div>
+                            @endif
                         </div>
                     @endforeach
 
@@ -702,13 +710,15 @@
                             @endforeach
                         </div>
 
-                        <div class="rm-snomed" data-snomed="edukasi">
-                            <div class="rm-snomed-head">
-                                <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
-                                <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('edukasi')">Tambah Kode <b>+</b></button>
+                        @if ($bolehSnomed)
+                            <div class="rm-snomed" data-snomed="edukasi">
+                                <div class="rm-snomed-head">
+                                    <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
+                                    <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('edukasi')">Tambah Kode <b>+</b></button>
+                                </div>
+                                <div class="rm-snomed-list"></div>
                             </div>
-                            <div class="rm-snomed-list"></div>
-                        </div>
+                        @endif
                     </div>
 
                     {{-- Prognosis, Kondisi, Cara Keluar --}}
@@ -753,43 +763,45 @@
         </div>
     </div>
 
-    {{-- ===== POPUP PENCARIAN & PENGKODEAN SNOMED CT ===== --}}
-    <div class="rm-modal-overlay" id="rmModal" role="dialog" aria-modal="true" aria-labelledby="rmModalJudul">
-        <div class="rm-modal">
-            <div class="rm-modal-head">
-                <span id="rmModalJudul">Pencarian &amp; Pengkodean SNOMED CT</span>
-                <button type="button" class="rm-modal-tutup" onclick="rmTutupModal()" aria-label="Tutup">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="rm-modal-body">
-                <div class="rm-keyword">
-                    <label for="rmKeyword">Keyword</label>
-                    <input type="text" id="rmKeyword" autocomplete="off" oninput="rmCariKode()">
+    {{-- ===== POPUP PENCARIAN & PENGKODEAN SNOMED CT (hanya admin dan pmik) ===== --}}
+    @if ($bolehSnomed)
+        <div class="rm-modal-overlay" id="rmModal" role="dialog" aria-modal="true" aria-labelledby="rmModalJudul">
+            <div class="rm-modal">
+                <div class="rm-modal-head">
+                    <span id="rmModalJudul">Pencarian &amp; Pengkodean SNOMED CT</span>
+                    <button type="button" class="rm-modal-tutup" onclick="rmTutupModal()" aria-label="Tutup">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
 
-                <div class="rm-hasil" id="rmHasil"></div>
+                <div class="rm-modal-body">
+                    <div class="rm-keyword">
+                        <label for="rmKeyword">Keyword</label>
+                        <input type="text" id="rmKeyword" autocomplete="off" oninput="rmCariKode()">
+                    </div>
 
-                <div class="rm-manual">
-                    <div class="rm-manual-title">Input Kode SNOMED CT Manual</div>
-                    <div class="rm-manual-body">
-                        <div class="rm-manual-grid">
-                            <label for="rmManualKode">Kode</label>
-                            <input type="text" id="rmManualKode" inputmode="numeric" autocomplete="off">
-                            <label for="rmManualDesk">Deskripsi</label>
-                            <input type="text" id="rmManualDesk" autocomplete="off"
-                                   onkeydown="if (event.key === 'Enter') { event.preventDefault(); rmTambahManual(); }">
-                        </div>
-                        <div class="rm-manual-aksi">
-                            <button type="button" class="rm-btn-batal" onclick="rmTutupModal()">Batal</button>
-                            <button type="button" class="rm-btn" onclick="rmTambahManual()">Tambah Kode +</button>
+                    <div class="rm-hasil" id="rmHasil"></div>
+
+                    <div class="rm-manual">
+                        <div class="rm-manual-title">Input Kode SNOMED CT Manual</div>
+                        <div class="rm-manual-body">
+                            <div class="rm-manual-grid">
+                                <label for="rmManualKode">Kode</label>
+                                <input type="text" id="rmManualKode" inputmode="numeric" autocomplete="off">
+                                <label for="rmManualDesk">Deskripsi</label>
+                                <input type="text" id="rmManualDesk" autocomplete="off"
+                                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); rmTambahManual(); }">
+                            </div>
+                            <div class="rm-manual-aksi">
+                                <button type="button" class="rm-btn-batal" onclick="rmTutupModal()">Batal</button>
+                                <button type="button" class="rm-btn" onclick="rmTambahManual()">Tambah Kode +</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 
     {{-- ===== FORM RUJUKAN (muncul saat tombol Rujuk diklik) ===== --}}
     <div id="view-rujukan">
@@ -1904,6 +1916,7 @@
     let rmKolomAktif = null;
 
     // Pindahkan popup ke <body> supaya tidak terpotong container halaman.
+    // (Popup hanya ada untuk admin dan pmik, jadi dicek dulu.)
     (function () {
         const modal = document.getElementById('rmModal');
         if (modal) document.body.appendChild(modal);
@@ -1978,7 +1991,7 @@
     }
 
     function rmTutupModal() {
-        document.getElementById('rmModal').classList.remove('tampil');
+        document.getElementById('rmModal')?.classList.remove('tampil');
         rmKolomAktif = null;
     }
 
@@ -2048,7 +2061,7 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') rmTutupModal();
     });
-    document.getElementById('rmModal').addEventListener('click', function (e) {
+    document.getElementById('rmModal')?.addEventListener('click', function (e) {
         if (e.target === this) rmTutupModal();
     });
 
