@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -9,38 +10,6 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        /*
-        |--------------------------------------------------------------
-        | KARTU STATISTIK (tidak terpengaruh filter periode)
-        | Sumber: tabel pendaftaran
-        |   - tgl_registrasi  : tanggal pasien mendaftar
-        |   - status_periksa  : 'periksa' (belum dilayani) / 'selesai'
-        |--------------------------------------------------------------
-        */
-        $totalPasienHariIni = DB::table('pendaftaran')
-            ->whereDate('tgl_registrasi', today())
-            ->count();
-
-        $totalPasienBulanIni = DB::table('pendaftaran')
-            ->whereMonth('tgl_registrasi', now()->month)
-            ->whereYear('tgl_registrasi', now()->year)
-            ->count();
-
-        $pasienBelumDilayani = DB::table('pendaftaran')
-            ->whereDate('tgl_registrasi', today())
-            ->where('status_periksa', 'periksa')
-            ->count();
-
-        $pasienSelesai = DB::table('pendaftaran')
-            ->whereDate('tgl_registrasi', today())
-            ->where('status_periksa', 'selesai')
-            ->count();
-
-        /*
-        |--------------------------------------------------------------
-        | FILTER PERIODE (hanya untuk 2 grafik)
-        |--------------------------------------------------------------
-        */
         $awal  = $request->input('tanggal_awal');
         $akhir = $request->input('tanggal_akhir');
 
@@ -52,6 +21,67 @@ class DashboardController extends Controller
                     'periode_error',
                     'Rentang tanggal tidak valid: tanggal akhir tidak boleh lebih awal dari tanggal mulai.'
                 );
+        }
+
+        /*
+        |--------------------------------------------------------------
+        | KARTU STATISTIK (mengikuti filter periode)
+        | Sumber: tabel pendaftaran
+        |   - tgl_registrasi  : tanggal pasien mendaftar
+        |   - status_periksa  : 'periksa' (belum dilayani) / 'selesai'
+        |--------------------------------------------------------------
+        */
+        if ($awal && $akhir) {
+            $a = Carbon::parse($awal)->locale('id');
+            $b = Carbon::parse($akhir)->locale('id');
+
+            $labelHariIni  = 'Total Pasien Tgl ' . $b->translatedFormat('d M Y');
+            $labelBulanIni = $a->isSameMonth($b)
+                ? 'Total Pasien Bulan ' . $a->translatedFormat('F')
+                : 'Total Pasien ' . $a->translatedFormat('d M') . ' - ' . $b->translatedFormat('d M Y');
+
+            $totalPasienHariIni = DB::table('pendaftaran')
+                ->whereDate('tgl_registrasi', $b->toDateString())
+                ->count();
+
+            $totalPasienBulanIni = DB::table('pendaftaran')
+                ->whereDate('tgl_registrasi', '>=', $a->toDateString())
+                ->whereDate('tgl_registrasi', '<=', $b->toDateString())
+                ->count();
+
+            $pasienBelumDilayani = DB::table('pendaftaran')
+                ->whereDate('tgl_registrasi', '>=', $a->toDateString())
+                ->whereDate('tgl_registrasi', '<=', $b->toDateString())
+                ->where('status_periksa', 'periksa')
+                ->count();
+
+            $pasienSelesai = DB::table('pendaftaran')
+                ->whereDate('tgl_registrasi', '>=', $a->toDateString())
+                ->whereDate('tgl_registrasi', '<=', $b->toDateString())
+                ->where('status_periksa', 'selesai')
+                ->count();
+        } else {
+            $labelHariIni  = 'Total Pasien Hari Ini';
+            $labelBulanIni = 'Total Pasien Bulan ' . now()->locale('id')->translatedFormat('F');
+
+            $totalPasienHariIni = DB::table('pendaftaran')
+                ->whereDate('tgl_registrasi', today())
+                ->count();
+
+            $totalPasienBulanIni = DB::table('pendaftaran')
+                ->whereMonth('tgl_registrasi', now()->month)
+                ->whereYear('tgl_registrasi', now()->year)
+                ->count();
+
+            $pasienBelumDilayani = DB::table('pendaftaran')
+                ->whereDate('tgl_registrasi', today())
+                ->where('status_periksa', 'periksa')
+                ->count();
+
+            $pasienSelesai = DB::table('pendaftaran')
+                ->whereDate('tgl_registrasi', today())
+                ->where('status_periksa', 'selesai')
+                ->count();
         }
 
         /*
@@ -119,6 +149,8 @@ class DashboardController extends Controller
             ->all();
 
         return view('dashboard', compact(
+            'labelHariIni',
+            'labelBulanIni',
             'totalPasienHariIni',
             'totalPasienBulanIni',
             'pasienBelumDilayani',

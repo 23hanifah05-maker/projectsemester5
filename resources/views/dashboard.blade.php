@@ -37,7 +37,7 @@
 
 
     {{-- =====================================================
-        STATISTIK (tidak terpengaruh filter periode)
+        STATISTIK (mengikuti filter periode)
     ====================================================== --}}
     <div class="statistics">
 
@@ -54,7 +54,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-title">Total Pasien Hari Ini</div>
+                <div class="stat-title">{{ $labelHariIni ?? 'Total Pasien Hari Ini' }}</div>
                 <div class="stat-number">{{ number_format($totalPasienHariIni ?? 0, 0, ',', '.') }}</div>
             </div>
         </div>
@@ -72,7 +72,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-title">Total Pasien Bulan Ini</div>
+                <div class="stat-title">{{ $labelBulanIni ?? 'Total Pasien Bulan Ini' }}</div>
                 <div class="stat-number">{{ number_format($totalPasienBulanIni ?? 0, 0, ',', '.') }}</div>
             </div>
         </div>
