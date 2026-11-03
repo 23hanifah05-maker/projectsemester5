@@ -1819,54 +1819,61 @@
     }
 
     function renderDiagnosa(jenis) {
-        const k = konfig[jenis];
-        const list = document.getElementById(k.list);
-        list.innerHTML = '';
+    const k = konfig[jenis];
+    const list = document.getElementById(k.list);
+    list.innerHTML = '';
 
-        diagnosaTerpilih[jenis].forEach(function (item) {
-            const baris = document.createElement('div');
-            baris.className = 'kb-diagnosa-item';
+    diagnosaTerpilih[jenis].forEach(function (item, index) {
+        const baris = document.createElement('div');
+        baris.className = 'kb-diagnosa-item';
 
-            const teks = document.createElement('span');
-            teks.className = 'kb-diagnosa-text';
-            const kode = document.createElement('b');
-            kode.textContent = item.kode;
-            teks.appendChild(kode);
-            teks.appendChild(document.createTextNode(' — ' + item.nama));
+        const teks = document.createElement('span');
+        teks.className = 'kb-diagnosa-text';
 
-            // Setiap penyakit yang diinput otomatis menjadi Diagnosa Utama
-            if (jenis === 'penyakit') {
-                const badge = document.createElement('span');
-                badge.className = 'kb-badge-utama';
-                badge.textContent = 'Diagnosa Utama';
-                teks.appendChild(badge);
-            }
+        const kode = document.createElement('b');
+        kode.textContent = item.kode;
+        teks.appendChild(kode);
+        teks.appendChild(document.createTextNode(' — ' + item.nama));
 
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = k.name;
-            hidden.value = item.id;
+        // Diagnosa pertama otomatis menjadi Utama
+        // Diagnosa kedua dan seterusnya menjadi Sekunder
+        if (jenis === 'penyakit') {
+            const badge = document.createElement('span');
+            badge.className = 'kb-badge-utama';
+            badge.textContent = index === 0
+                ? 'Diagnosa Utama'
+                : 'Diagnosa Sekunder';
 
-            const aksi = document.createElement('span');
-            aksi.className = 'kb-diagnosa-aksi';
+            teks.appendChild(badge);
+        }
 
-            const btnHapus = document.createElement('button');
-            btnHapus.type = 'button';
-            btnHapus.className = 'kb-aksi-hapus';
-            btnHapus.title = 'Hapus';
-            btnHapus.setAttribute('aria-label', 'Hapus');
-            btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-            btnHapus.onclick = function () { hapusDiagnosa(jenis, item.id); };
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = k.name;
+        hidden.value = item.id;
 
-            aksi.appendChild(btnHapus);
-            baris.appendChild(teks);
-            baris.appendChild(hidden);
-            baris.appendChild(aksi);
-            list.appendChild(baris);
-        });
+        const aksi = document.createElement('span');
+        aksi.className = 'kb-diagnosa-aksi';
 
-        perbaruiStatusCP();
-    }
+        const btnHapus = document.createElement('button');
+        btnHapus.type = 'button';
+        btnHapus.className = 'kb-aksi-hapus';
+        btnHapus.title = 'Hapus';
+        btnHapus.setAttribute('aria-label', 'Hapus');
+        btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        btnHapus.onclick = function () {
+            hapusDiagnosa(jenis, item.id);
+        };
+
+        aksi.appendChild(btnHapus);
+        baris.appendChild(teks);
+        baris.appendChild(hidden);
+        baris.appendChild(aksi);
+        list.appendChild(baris);
+    });
+
+    perbaruiStatusCP();
+}
 
     renderDiagnosa('penyakit');
     renderDiagnosa('tindakan');
