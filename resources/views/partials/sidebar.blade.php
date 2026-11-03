@@ -287,8 +287,8 @@
                 </a>
             </li>
 
-            {{-- Pendaftaran: admin, perawat, pmik --}}
-            @if(in_array($role, ['admin', 'perawat', 'pmik']))
+            {{-- Pendaftaran: admin, pmik --}}
+            @if(in_array($role, ['admin', 'pmik']))
             <li>
                 <a href="{{ route('pendaftaran.index') }}" class="{{ request()->routeIs('pendaftaran*') ? 'active' : '' }}">
                     <div class="left-content"><i class="fa-solid fa-address-book icon-main"></i> Pendaftaran</div>
@@ -296,8 +296,8 @@
             </li>
             @endif
 
-            {{-- Poli: admin, dokter, perawat --}}
-            @if(in_array($role, ['admin', 'dokter', 'perawat']))
+            {{-- Poli: admin, dokter, perawat, pmik --}}
+            @if(in_array($role, ['admin', 'dokter', 'perawat', 'pmik']))
             <li class="has-dropdown">
                 @php
                     $isSyaraf  = request()->routeIs('poli.syaraf*')  || request()->is('*syaraf*');
@@ -342,8 +342,8 @@
             </li>
             @endif
 
-            {{-- Radiologi: admin, dokter, perawat, radiolog --}}
-            @if(in_array($role, ['admin', 'dokter', 'perawat', 'radiolog']))
+            {{-- Radiologi: admin, radiolog --}}
+            @if(in_array($role, ['admin', 'radiolog']))
             <li>
                 <a href="{{ route('radiologi.index') }}" class="{{ request()->routeIs('radiologi*') ? 'active' : '' }}">
                     <div class="left-content">
