@@ -3112,82 +3112,87 @@
     }
 
     function renderDiagnosa(jenis) {
-        const k = konfig[jenis];
-        const list = document.getElementById(k.list);
+    const k = konfig[jenis];
+    const list = document.getElementById(k.list);
 
-        if (!list) return;
+    if (!list) return;
 
-        list.innerHTML = '';
+    list.innerHTML = '';
 
-        diagnosaTerpilih[jenis].forEach(function (item, urutan) {
-            const baris = document.createElement('div');
-            baris.className = 'ob-diagnosa-item';
+    diagnosaTerpilih[jenis].forEach(function (item, urutan) {
+        const baris = document.createElement('div');
+        baris.className = 'ob-diagnosa-item';
 
-            const teks = document.createElement('span');
-            const kode = document.createElement('b');
+        const teks = document.createElement('span');
+        const kode = document.createElement('b');
 
-            kode.textContent = item.kode ?? '';
+        kode.textContent = item.kode ?? '';
 
-            teks.appendChild(kode);
-            teks.appendChild(
-                document.createTextNode(' — ' + (item.nama ?? ''))
-            );
+        teks.appendChild(kode);
+        teks.appendChild(
+            document.createTextNode(' — ' + (item.nama ?? ''))
+        );
 
-            if (jenis === 'penyakit' && urutan === 0) {
-                const badge = document.createElement('span');
+        // Diagnosa pertama menjadi Utama,
+        // diagnosa kedua dan seterusnya menjadi Sekunder.
+        if (jenis === 'penyakit') {
+            const badge = document.createElement('span');
 
-                badge.textContent = 'Diagnosa Utama';
-                badge.style.cssText =
-                    'display:inline-block;margin-left:10px;' +
-                    'padding:2px 10px;background:#c1121f;color:#fff;' +
-                    'border-radius:10px;font-size:11px;font-weight:600;' +
-                    'white-space:nowrap;vertical-align:middle;';
+            badge.textContent = urutan === 0
+                ? 'Diagnosa Utama'
+                : 'Diagnosa Sekunder';
 
-                teks.appendChild(badge);
-            }
+            badge.style.cssText =
+                'display:inline-block;margin-left:10px;' +
+                'padding:2px 10px;background:#c1121f;color:#fff;' +
+                'border-radius:10px;font-size:11px;font-weight:600;' +
+                'white-space:nowrap;vertical-align:middle;';
 
-            baris.appendChild(teks);
+            teks.appendChild(badge);
+        }
 
-            const hidden = document.createElement('input');
+        baris.appendChild(teks);
 
-            hidden.type = 'hidden';
-            hidden.name = k.name;
-            hidden.value = item.id;
+        const hidden = document.createElement('input');
 
-            baris.appendChild(hidden);
+        hidden.type = 'hidden';
+        hidden.name = k.name;
+        hidden.value = item.id;
 
-            const aksi = document.createElement('span');
-            aksi.className = 'ob-diagnosa-aksi';
+        baris.appendChild(hidden);
 
-            const btn = document.createElement('button');
+        const aksi = document.createElement('span');
+        aksi.className = 'ob-diagnosa-aksi';
 
-            btn.type = 'button';
-            btn.className = 'ob-aksi-hapus';
-            btn.title = 'Hapus';
-            btn.setAttribute('aria-label', 'Hapus');
-            btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        const btn = document.createElement('button');
 
-            btn.addEventListener('click', function () {
-                hapusDiagnosa(jenis, item.id);
-            });
+        btn.type = 'button';
+        btn.className = 'ob-aksi-hapus';
+        btn.title = 'Hapus';
+        btn.setAttribute('aria-label', 'Hapus');
+        btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
 
-            aksi.appendChild(btn);
-            baris.appendChild(aksi);
-            list.appendChild(baris);
+        btn.addEventListener('click', function () {
+            hapusDiagnosa(jenis, item.id);
         });
 
-        // Kunci atau buka tab Informed Consent sesuai daftar tindakan
-        if (jenis === 'tindakan') cekTabInformed();
-    }
+        aksi.appendChild(btn);
+        baris.appendChild(aksi);
+        list.appendChild(baris);
+    });
 
-    function hapusDiagnosa(jenis, id) {
-        diagnosaTerpilih[jenis] =
-            diagnosaTerpilih[jenis].filter(
-                d => String(d.id) !== String(id)
-            );
+    // Kunci atau buka tab Informed Consent sesuai daftar tindakan
+    if (jenis === 'tindakan') cekTabInformed();
+}
 
-        renderDiagnosa(jenis);
-    }
+function hapusDiagnosa(jenis, id) {
+    diagnosaTerpilih[jenis] =
+        diagnosaTerpilih[jenis].filter(
+            d => String(d.id) !== String(id)
+        );
+
+    renderDiagnosa(jenis);
+}
 
     document.addEventListener('click', function (e) {
         if (!e.target.closest('.ob-search-box')) {
