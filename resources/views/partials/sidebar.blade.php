@@ -265,7 +265,7 @@
 
 <!-- STRUKTUR SIDEBAR -->
 @php
-    // Role user yang sedang login (admin, dokter, perawat, pmik, radiolog)
+    // Role user yang sedang login (admin, dokter, perawat, pmik, radiologi)
     $role = auth()->user()->role;
 @endphp
 
@@ -342,8 +342,8 @@
             </li>
             @endif
 
-            {{-- Radiologi: admin, radiolog --}}
-            @if(in_array($role, ['admin', 'radiolog']))
+            {{-- Radiologi: admin, radiologi --}}
+            @if(in_array($role, ['admin', 'radiologi']))
             <li>
                 <a href="{{ route('radiologi.index') }}" class="{{ request()->routeIs('radiologi*') ? 'active' : '' }}">
                     <div class="left-content">
