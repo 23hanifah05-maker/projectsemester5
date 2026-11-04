@@ -13,33 +13,57 @@
     <style>
         .ob-ttd-wrap {
             display: flex;
-            gap: 24px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 18px;
             margin: 24px 0 8px;
-            padding: 20px;
+            padding: 16px;
             border: 1px solid #e5e5e5;
             border-radius: 6px;
         }
 
         .ob-ttd-item {
-            flex: 1;
+            flex: 0 0 220px;
+            width: 220px;
+            max-width: 100%;
             text-align: center;
         }
 
         .ob-ttd-judul {
             font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 13px;
+            line-height: 18px;
+            margin-bottom: 7px;
+        }
+
+        .ob-ttd-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            max-width: 100%;
+            height: 110px;
+            padding: 4px;
+            box-sizing: border-box;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #d5d5d5;
+            border-radius: 9px;
+            cursor: pointer;
+        }
+
+        .ob-ttd-card:hover {
+            border-color: #aaa;
         }
 
         .ob-ttd-canvas {
             display: block;
             width: 100%;
-            height: 160px;
+            height: 100%;
             background: #fff;
-            border: 1px solid #999;
-            border-radius: 4px;
-            touch-action: none;
-            cursor: crosshair;
+            border: 0;
+            border-radius: 5px;
+            pointer-events: none;
         }
 
         .ob-ttd-hapus {
@@ -48,6 +72,112 @@
             font-size: 13px;
             color: #c1121f;
             text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* Popup tanda tangan Informed Consent */
+        .ob-ttd-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10050;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(0, 0, 0, .48);
+            backdrop-filter: blur(3px);
+        }
+
+        .ob-ttd-modal-overlay.aktif {
+            display: flex;
+        }
+
+        .ob-ttd-modal {
+            width: min(600px, 100%);
+            overflow: hidden;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, .25);
+        }
+
+        .ob-ttd-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 15px 20px;
+            color: #fff;
+            background: #c8102e;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .ob-ttd-modal-close {
+            padding: 0;
+            border: 0;
+            color: #fff;
+            background: transparent;
+            font-size: 26px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .ob-ttd-modal-body {
+            padding: 20px;
+        }
+
+        .ob-ttd-modal-body p {
+            margin: 0 0 12px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .ob-ttd-modal-canvas {
+            display: block;
+            width: 100%;
+            height: 260px;
+            background: #fff;
+            border: 1px solid #d5d5d5;
+            border-radius: 9px;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .ob-ttd-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .ob-ttd-modal-actions button {
+            min-width: 88px;
+            padding: 10px 17px;
+            border: 0;
+            border-radius: 7px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .ob-ttd-modal-btn-hapus {
+            color: #c8102e;
+            background: #fce8eb;
+        }
+
+        .ob-ttd-modal-btn-batal {
+            color: #444;
+            background: #e9e9e9;
+        }
+
+        .ob-ttd-modal-btn-simpan {
+            color: #fff;
+            background: #c8102e;
+        }
+
+        @media (max-width: 600px) {
+            .ob-ttd-modal-canvas { height: 220px; }
+            .ob-ttd-modal-body { padding: 15px; }
         }
 
         /* Tombol Cetak & Simpan Informed Consent sejajar di kanan */
@@ -352,20 +482,48 @@
             border-top: 1px solid #ddd;
         }
 
+        .rm-ttd-block {
+            flex: 0 0 220px;
+            width: 220px;
+            max-width: 100%;
+        }
+
         .rm-ttd-label {
-            margin-bottom: 4px;
-            font-size: 11px;
+            margin-bottom: 7px;
+            font-size: 13px;
+            line-height: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .rm-ttd-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            max-width: 100%;
+            height: 110px;
+            padding: 4px;
+            box-sizing: border-box;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #d5d5d5;
+            border-radius: 9px;
+            cursor: pointer;
+        }
+
+        .rm-ttd-card:hover {
+            border-color: #aaa;
         }
 
         .rm-ttd-canvas {
             display: block;
-            width: 160px;
-            height: 70px;
+            width: 100%;
+            height: 100%;
             background: #fff;
-            border: 1px solid #999;
-            border-radius: 4px;
-            touch-action: none;
-            cursor: crosshair;
+            border: 0;
+            border-radius: 5px;
+            pointer-events: none;
         }
 
         .rm-waktu label {
@@ -1323,47 +1481,48 @@
                 <div class="ob-ttd-wrap">
                     <div class="ob-ttd-item">
                         <div class="ob-ttd-judul">Pemberi Informasi (Dokter)</div>
-                        <canvas
-                            id="ttdDokter"
-                            class="ob-ttd-canvas"
-                            width="500"
-                            height="200"
-                        ></canvas>
-                        <a
-                            href="#"
-                            class="ob-ttd-hapus"
-                            onclick="hapusTtd('ttdDokter'); return false;"
-                        >Hapus tanda tangan</a>
+                        <div class="ob-ttd-card" onclick="bukaPopupTtd('ttdDokter')" title="Bubuhkan tanda tangan">
+                            <canvas id="ttdDokter" class="ob-ttd-canvas" width="500" height="200"></canvas>
+                        </div>
+                        <a href="#" class="ob-ttd-hapus"
+                           onclick="event.stopPropagation(); hapusTtd('ttdDokter'); return false;">Hapus tanda tangan</a>
                     </div>
 
                     <div class="ob-ttd-item">
                         <div class="ob-ttd-judul">Tanda Tangan Pasien/ Keluarga</div>
-                        <canvas
-                            id="ttdPasien"
-                            class="ob-ttd-canvas"
-                            width="500"
-                            height="200"
-                        ></canvas>
-                        <a
-                            href="#"
-                            class="ob-ttd-hapus"
-                            onclick="hapusTtd('ttdPasien'); return false;"
-                        >Hapus tanda tangan</a>
+                        <div class="ob-ttd-card" onclick="bukaPopupTtd('ttdPasien')" title="Bubuhkan tanda tangan">
+                            <canvas id="ttdPasien" class="ob-ttd-canvas" width="500" height="200"></canvas>
+                        </div>
+                        <a href="#" class="ob-ttd-hapus"
+                           onclick="event.stopPropagation(); hapusTtd('ttdPasien'); return false;">Hapus tanda tangan</a>
                     </div>
 
                     <div class="ob-ttd-item">
                         <div class="ob-ttd-judul">Saksi Klinik</div>
-                        <canvas
-                            id="ttdSaksi"
-                            class="ob-ttd-canvas"
-                            width="500"
-                            height="200"
-                        ></canvas>
-                        <a
-                            href="#"
-                            class="ob-ttd-hapus"
-                            onclick="hapusTtd('ttdSaksi'); return false;"
-                        >Hapus tanda tangan</a>
+                        <div class="ob-ttd-card" onclick="bukaPopupTtd('ttdSaksi')" title="Bubuhkan tanda tangan">
+                            <canvas id="ttdSaksi" class="ob-ttd-canvas" width="500" height="200"></canvas>
+                        </div>
+                        <a href="#" class="ob-ttd-hapus"
+                           onclick="event.stopPropagation(); hapusTtd('ttdSaksi'); return false;">Hapus tanda tangan</a>
+                    </div>
+                </div>
+
+                {{-- POPUP TANDA TANGAN INFORMED CONSENT --}}
+                <div class="ob-ttd-modal-overlay" id="obTtdModal" onclick="klikLuarPopupTtd(event)">
+                    <div class="ob-ttd-modal" role="dialog" aria-modal="true" aria-labelledby="obTtdModalTitle">
+                        <div class="ob-ttd-modal-head">
+                            <span id="obTtdModalTitle">Tanda Tangan</span>
+                            <button type="button" class="ob-ttd-modal-close" onclick="tutupPopupTtd()" aria-label="Tutup">&times;</button>
+                        </div>
+                        <div class="ob-ttd-modal-body">
+                            <p>Silakan bubuhkan tanda tangan pada area di bawah ini.</p>
+                            <canvas id="obTtdModalCanvas" class="ob-ttd-modal-canvas" width="1000" height="400"></canvas>
+                            <div class="ob-ttd-modal-actions">
+                                <button type="button" class="ob-ttd-modal-btn-hapus" onclick="hapusIsiPopupTtd()">Hapus</button>
+                                <button type="button" class="ob-ttd-modal-btn-batal" onclick="tutupPopupTtd()">Batal</button>
+                                <button type="button" class="ob-ttd-modal-btn-simpan" onclick="simpanPopupTtd()">Simpan</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1571,14 +1730,16 @@
 
             {{-- TANDA TANGAN DPJP, TANGGAL, JAM, TOMBOL --}}
             <div class="rm-footer">
-                <div>
+                <div class="rm-ttd-block">
                     <div class="rm-ttd-label">Tanda tangan DPJP</div>
-                    <canvas id="ttdDpjp" class="rm-ttd-canvas" width="320" height="140"></canvas>
+                    <div class="rm-ttd-card" onclick="bukaPopupTtd('ttdDpjp')" title="Bubuhkan tanda tangan">
+                        <canvas id="ttdDpjp" class="rm-ttd-canvas" width="500" height="200"></canvas>
+                    </div>
                     <a
                         href="#"
                         class="ob-ttd-hapus"
-                        onclick="hapusTtd('ttdDpjp'); return false;"
-                    >Hapus</a>
+                        onclick="event.stopPropagation(); hapusTtd('ttdDpjp'); return false;"
+                    >Hapus tanda tangan</a>
                 </div>
 
                 <div class="rm-waktu">
@@ -2486,6 +2647,9 @@
         ctx.lineJoin = 'round';
         ctx.strokeStyle = '#000';
 
+        // Tanda tangan DPJP dibubuhkan melalui popup, bukan langsung pada card.
+        if (id === 'ttdDpjp') return;
+
         function posisi(e) {
             const r = canvas.getBoundingClientRect();
 
@@ -2535,6 +2699,129 @@
 
         ttdTerisi[id] = false;
     }
+
+    // Popup tanda tangan untuk tiga penanda tangan Informed Consent.
+    let ttdPopupAktif = null;
+    let ttdPopupAdaCoretan = false;
+
+    const popupTtd = document.getElementById('obTtdModal');
+    const canvasPopupTtd = document.getElementById('obTtdModalCanvas');
+    const ctxPopupTtd = canvasPopupTtd ? canvasPopupTtd.getContext('2d') : null;
+
+    // Letakkan overlay langsung di body agar tetap dapat tampil dari tab Resume Medis.
+    if (popupTtd && popupTtd.parentElement !== document.body) {
+        document.body.appendChild(popupTtd);
+    }
+
+    const judulPopupTtd = {
+        ttdDokter: 'Tanda Tangan Pemberi Informasi (Dokter)',
+        ttdPasien: 'Tanda Tangan Pasien/Keluarga',
+        ttdSaksi: 'Tanda Tangan Saksi Klinik',
+        ttdDpjp: 'Tanda Tangan DPJP'
+    };
+
+    if (ctxPopupTtd) {
+        ctxPopupTtd.lineWidth = 3;
+        ctxPopupTtd.lineCap = 'round';
+        ctxPopupTtd.lineJoin = 'round';
+        ctxPopupTtd.strokeStyle = '#000';
+    }
+
+    function posisiPopupTtd(e) {
+        const r = canvasPopupTtd.getBoundingClientRect();
+        return {
+            x: (e.clientX - r.left) * (canvasPopupTtd.width / r.width),
+            y: (e.clientY - r.top) * (canvasPopupTtd.height / r.height)
+        };
+    }
+
+    if (canvasPopupTtd && ctxPopupTtd) {
+        let sedangMenggambarTtd = false;
+
+        canvasPopupTtd.addEventListener('pointerdown', function (e) {
+            sedangMenggambarTtd = true;
+            ttdPopupAdaCoretan = true;
+            canvasPopupTtd.setPointerCapture(e.pointerId);
+            const p = posisiPopupTtd(e);
+            ctxPopupTtd.beginPath();
+            ctxPopupTtd.moveTo(p.x, p.y);
+            ctxPopupTtd.lineTo(p.x + 0.1, p.y + 0.1);
+            ctxPopupTtd.stroke();
+        });
+
+        canvasPopupTtd.addEventListener('pointermove', function (e) {
+            if (!sedangMenggambarTtd) return;
+            const p = posisiPopupTtd(e);
+            ctxPopupTtd.lineTo(p.x, p.y);
+            ctxPopupTtd.stroke();
+        });
+
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (eventName) {
+            canvasPopupTtd.addEventListener(eventName, function () {
+                sedangMenggambarTtd = false;
+            });
+        });
+    }
+
+    function bukaPopupTtd(id) {
+        if (!popupTtd || !canvasPopupTtd || !ctxPopupTtd || !judulPopupTtd[id]) return;
+
+        const canvasAsli = document.getElementById(id);
+        if (!canvasAsli) return;
+
+        ttdPopupAktif = id;
+        document.getElementById('obTtdModalTitle').textContent = judulPopupTtd[id];
+        ctxPopupTtd.clearRect(0, 0, canvasPopupTtd.width, canvasPopupTtd.height);
+        ttdPopupAdaCoretan = Boolean(ttdTerisi[id]);
+
+        if (ttdTerisi[id]) {
+            ctxPopupTtd.drawImage(canvasAsli, 0, 0, canvasPopupTtd.width, canvasPopupTtd.height);
+        }
+
+        popupTtd.classList.add('aktif');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function tutupPopupTtd() {
+        if (!popupTtd) return;
+        popupTtd.classList.remove('aktif');
+        document.body.style.overflow = '';
+        ttdPopupAktif = null;
+    }
+
+    function klikLuarPopupTtd(event) {
+        if (event.target === popupTtd) tutupPopupTtd();
+    }
+
+    function hapusIsiPopupTtd() {
+        if (!ctxPopupTtd || !canvasPopupTtd) return;
+        ctxPopupTtd.clearRect(0, 0, canvasPopupTtd.width, canvasPopupTtd.height);
+        ttdPopupAdaCoretan = false;
+    }
+
+    function simpanPopupTtd() {
+        if (!ttdPopupAktif || !canvasPopupTtd) return;
+
+        if (!ttdPopupAdaCoretan) {
+            alert('Silakan bubuhkan tanda tangan terlebih dahulu.');
+            return;
+        }
+
+        const canvasAsli = document.getElementById(ttdPopupAktif);
+        if (!canvasAsli) return;
+
+        const ctxAsli = canvasAsli.getContext('2d');
+        ctxAsli.clearRect(0, 0, canvasAsli.width, canvasAsli.height);
+        ctxAsli.drawImage(canvasPopupTtd, 0, 0, canvasAsli.width, canvasAsli.height);
+        ttdTerisi[ttdPopupAktif] = true;
+        tutupPopupTtd();
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && popupTtd && popupTtd.classList.contains('aktif')) {
+            tutupPopupTtd();
+        }
+    });
 
     // Mengisi ulang form dari data informed consent yang sudah tersimpan
     function isiDataInformed() {
