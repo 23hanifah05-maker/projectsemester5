@@ -1,17 +1,93 @@
 @php
     $butir = [
-        ['Hak dan Kewajiban pasien', 'Saya menyatakan telah menerima dan memahami informasi mengenai hak serta kewajiban saya sebagai pasien di Klinik Merah Putih melalui petugas, leaflet, atau banner.'],
-        ['Persetujuan Pelayanan Medis', 'Saya memberikan persetujuan dan kuasa kepada Klinik Merah Putih, dokter, perawat, serta tenaga kesehatan untuk memberikan asuhan medis, pemeriksaan fisik, laboratorium, radiologi (termasuk X-ray), tindakan medis rutin, penyuntikan, pemberian obat-obatan, dan pemasangan alat kesehatan sesuai kebutuhan perawatan saya.'],
-        ['Pelepasan Informasi Medis', 'Saya memahami bahwa data medis saya dijamin kerahasiaannya. Saya menyetujui pelepasan informasi kesehatan, diagnosis, dan hasil pemeriksaan medis saya kepada tenaga kesehatan yang merawat, pihak penjamin atau asuransi, serta anggota keluarga saya.'],
-        ['Pengajuan Keluhan', 'Saya telah menerima informasi mengenai tata cara pengajuan keluhan terkait pelayanan klinik dan setuju untuk mengikuti prosedur yang berlaku.'],
-        ['Tata Tertib dan Barang Berharga', 'Saya dan keluarga berjanji mematuhi tata tertib Klinik Merah Putih, tidak membawa perhiasan atau barang berharga berlebihan (atau menitipkannya sesuai prosedur jika membawa), serta tidak mengambil, menyimpan, atau membagikan foto, video, maupun dokumen aktivitas pelayanan tanpa izin tertulis.'],
-        ['Kewajiban Pembayaran', 'Saya bertanggung jawab melunasi seluruh biaya pelayanan medis yang diberikan sesuai ketentuan tarif Klinik Merah Putih. Apabila menggunakan jaminan atau asuransi, saya bersedia membayarkan sisa biaya yang tidak ditanggung oleh pihak penjamin.'],
-        ['Pernyataan Persetujuan', 'Saya menyetujui seluruh pernyataan dalam formulir ini dan menandatanganinya secara sadar tanpa paksaan dari pihak mana pun.'],
+        [
+            'Hak dan Kewajiban Sebagai Pasien',
+            "<div class='gc-sub-group'>
+                <span class='gc-sub-item'>a) Saya memiliki hak untuk mengambil bagian dalam keputusan mengenai penyakit saya dan dalam hal perawatan medis da rencana pengobatan.</span>
+                <span class='gc-sub-item'>b) Saya telah mendapat informasi ttentang Hak dan Kewajiban pasien di Klinik Merah Putih melalui leaflet dan banner yang disediakan oleh petugas.</span>
+            </div>"
+        ],
+        [
+            'Persetujuan Pelayanan',
+            'Saya menyetujui dan memberikan persetujuan untuk mendapatkan pelayanan di Klinik Merah Putih dan dengan ini saya meminta dan memberikan kuasa kepada Klinik Merah Putih, dokter, perawat, dan tenaga kesehatan lainnya untuk memberikan asuhan keperawatan, pemeriksaan fisik yang dilakukan oleh dokter dan perawat dan melakukan prosedur diagnostik radiologi dan / atau terapi dan tatalaksana sesuai pertimbangan dokter yang diperlukan atau disarankan pada perawatan saya. Hal ini mencakup seluruh pemeriksaan dan prosedur diagnostik rutin termasuk X-ray, pemberian dan / atau tindakan medis serta penyuntikan (intramuskular, intravena, dan prosedur invasif lainnya), produk farmasi dan obat-obatan, pemasangan alat kesehatan (kecuali yang membutuhkan persetujuan khusus (tertulis) dan pengambilan darah untuk pemeriksaan laboratorium termasuk pemeriksaan status HIV / AIDS atau pemeriksaan patologi).'
+        ],
+        [
+            'Pelepasan Informasi',
+            "<div class='gc-sub-group'>
+                <span class='gc-sub-item'>i. Saya memahami informasi yang ada di dalam diri saya termasuk diagnosis, hasil laboratorium dan hasil tes diagnostik yang akan digunakan untuk perawatan medis dijamin kerahasiaannya oleh Klinik Merah Putih.</span>
+                <span class='gc-sub-item'>ii. Saya setuju untuk melepaskan informasi terkait dengan kondisi kesehatan, asuhan dan pengobatan yang saya terima kepada:</span>
+                <div class='gc-sub-indent'>
+                    <span class='gc-sub-item'>a) Dokter dan tenaga kesehatan lain yang turut merawat / memberikan asuhan kepada saya.</span>
+                    <span class='gc-sub-item'>b) Perusahaan asuransi kesehatan atau perusahaan lainnya atau pihak lain yang menjamin pembiayaan saya.</span>
+                    <span class='gc-sub-item'>c) Anggota keluarga saya:</span>
+                </div>
+            </div>"
+        ],
+        [
+            'Pengajuan Keluhan',
+            'Saya telah menerima informasi tentang adanya tata cara pengajuan keluhan pelanggan terkait pelayanan yang diberikan Klinik Merah Putih terhadap diri saya. Saya setuju untuk mengikuti tata cara pengajuan keluhan pelanggan sesuai prosedur yang ada.'
+        ],
+        [
+            'Informasi Rawat Jalan',
+            "<div class='gc-sub-group'>
+                <span class='gc-sub-item'>a) Saya telah menerima informasi tentang tata tertib yang berlaku di Klinik Merah Putih dan saya beserta keluarga bersedia untuk mematuhinya.</span>
+                <span class='gc-sub-item'>b) Saya tidak diperkenankan untuk membawa perhiasan, barang-barang berharga / uang berlebihan.</span>
+                <span class='gc-sub-item'>c) Pasien yang tidak sengaja membawa barang berharga selama perawatan di Klinik Merah Putih, maka barang tersebut wajib dititipkan kepada keluarga yang menunggu untuk diamankan. Jika pasien tidak sadar atau tidak mampu melindungi barangnya, maka barang tersebut wajib dititipkan kepada petugas satpam sesuai prosedur yang berlaku.</span>
+                <span class='gc-sub-item'>d) Selama dalam pelayanan saya dan keluarga akan mematuhi ketentuan untuk tidak mengambil, menyimpan, mengedarkan gambar / video dokumen dan aktivitas pelayanan selama di klinik tanpa persetujuan klinik.</span>
+            </div>"
+        ],
+        [
+            'Kewajiban Pembayaran',
+            "Saya menyatakan setuju, baik sebagai pasien ataupun sebagai wali, bahwa sesuai pertimbangan pelayanan yang diberikan kepada pasien, maka saya wajib untuk membayar total biaya pelayanan sesuai acuan biaya dan ketentuan Klinik Merah Putih dengan jaminan atau pribadi.<br><br>Apabila asuransi kesehatan swasta atau program pemerintah menanggung pembiayaan saya, saya memberi wewenang kepada Klinik Merah Putih untuk memberi tagihan dari semua pelayanan dan tindakan medis yang diberikan. Tanggungan asuransi saya mungkin menyatakan bahwa sebagian pembayaran tetap menjadi tanggung jawab pribadi saya atau tidak ditanggung oleh asuransi, maka Klinik Merah Putih berwenang memberi tagihan untuk biaya yang tidak ditanggung oleh asuransi dan saya bertanggung jawab untuk membayarnya.<br><br>Apabila saya tidak memberikan persetujuan, atau dikemudian hari mencabut persetujuan saya untuk melepaskan informasi saya kepada perusahaan asuransi yang saya tentukan, maka saya pribadi bertanggung jawab untuk membayar semua pelayanan dan tindakan medis dari Klinik Merah Putih."
+        ],
+        [
+            'Pernyataan Persetujuan',
+            'Saya menyetujui setiap pernyataan yang terdapat pada formulir ini dan menandatanganinya tanpa paksaan dan dengan kesadaran penuh.'
+        ],
     ];
 @endphp
 
-{{-- CSS khusus modal. Tabel, kotak data pasien, dan garis tipis ada di public/css/general-consent.css --}}
+{{-- CSS khusus modal --}}
 <style>
+    /* Penyetaraan ukuran huruf dan rata kanan-kiri untuk seluruh deskripsi */
+.gc-text p,
+.gc-text div,
+.gc-sub-item {
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+    text-align: justify !important;
+    text-justify: inter-word !important;
+    color: #222;
+}
+
+/* Judul poin utama (misal: 1. Hak dan Kewajiban Pasien) */
+.gc-text h4 {
+    font-size: 13px !important;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #000;
+}
+
+/* Struktur tata letak sub-poin agar simetris & sejajar */
+.gc-sub-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.gc-sub-indent {
+    margin-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gc-sub-item {
+    display: block;
+    padding-left: 22px;
+    text-indent: -22px;
+}
     .gc-overlay {
         display: none;
         position: fixed;
@@ -104,7 +180,7 @@
         padding: 10px 0;
         border-top: 1px solid var(--gc-line, #d6d6d6);
         border-bottom: 1px solid var(--gc-line, #d6d6d6);
-        margin-bottom: margin: 0 -18px 4px;
+        margin-bottom: 4px;
     }
 
     .gc-paper .gc-section-title { margin-left: 0; }
@@ -284,10 +360,7 @@
     .gc-btn:hover { background: #a50d26; }
     .gc-btn:disabled { opacity: .6; cursor: not-allowed; }
 
-    /* =====================================
-       POPUP TANDA TANGAN
-    ===================================== */
-
+    /* POPUP TANDA TANGAN */
     .gc-sign-overlay {
         display: none;
         position: fixed;
@@ -589,7 +662,7 @@
 
                         <div class="gc-text">
                             <h4>{{ $i + 1 }}. {{ $b[0] }}</h4>
-                            <p>{{ $b[1] }}</p>
+                            <p>{!! $b[1] !!}</p>
 
                             @if ($i === 2)
 
@@ -747,15 +820,11 @@
         </div>
     </div>
 
-    {{-- =====================================
-         POPUP INPUT TANDA TANGAN
-    ====================================== --}}
-
+    {{-- POPUP INPUT TANDA TANGAN --}}
     <div class="gc-sign-overlay" id="gcSignModal">
 
         <div class="gc-sign-modal">
 
-            {{-- HEADER POPUP --}}
             <div class="gc-sign-header">
 
                 <h3 id="gcSignTitle">
@@ -770,14 +839,12 @@
 
             </div>
 
-            {{-- BODY POPUP --}}
             <div class="gc-sign-body">
 
                 <div class="gc-sign-info">
                     Silakan bubuhkan tanda tangan pada area di bawah ini.
                 </div>
 
-                {{-- AREA CANVAS TANDA TANGAN --}}
                 <div class="gc-sign-canvas-wrap">
 
                     <canvas id="gcTtdPopup"
@@ -787,7 +854,6 @@
 
                 </div>
 
-                {{-- TOMBOL POPUP --}}
                 <div class="gc-sign-footer">
 
                     <button type="button"
@@ -827,10 +893,7 @@
 
     window.gcPad = window.gcPad || {};
 
-    /* =====================================
-       MENGISI DATA PASIEN
-    ====================================== */
-
+    /* MENGISI DATA PASIEN */
     function gcIsiData(data) {
 
         document.getElementById('gc-norm').value = data.norm || '';
@@ -854,10 +917,7 @@
 
     }
 
-    /* =====================================
-       MEMBUKA GENERAL CONSENT
-    ====================================== */
-
+    /* MEMBUKA GENERAL CONSENT */
     window.bukaConsent = function (data = {}) {
 
         gcDataPasien = data || {};
@@ -874,20 +934,14 @@
 
     };
 
-    /* =====================================
-       MENUTUP GENERAL CONSENT
-    ====================================== */
-
+    /* MENUTUP GENERAL CONSENT */
     window.tutupConsent = function () {
 
         document.getElementById('consentModal').classList.remove('show');
 
     };
 
-    /* =====================================
-       MEMBUKA POPUP TANDA TANGAN
-    ====================================== */
-
+    /* MEMBUKA POPUP TANDA TANGAN */
     window.gcBukaPopupTtd = function (id) {
 
         if (id !== 'gcTtdPemberi' && id !== 'gcTtd') {
@@ -902,14 +956,9 @@
             ? 'Tanda Tangan Pemberi Informasi'
             : 'Tanda Tangan Pasien/Keluarga';
 
-        // Pastikan canvas popup siap.
         gcInitPad('gcTtdPopup');
-
-        // Bersihkan canvas popup.
         gcHapusTtd('gcTtdPopup');
 
-        // Jika tanda tangan sebelumnya sudah ada,
-        // tampilkan kembali agar dapat diedit.
         const sumber = window.gcPad[id];
         const popup = window.gcPad['gcTtdPopup'];
 
@@ -927,15 +976,11 @@
 
         }
 
-        // Tampilkan popup.
         document.getElementById('gcSignModal').classList.add('show');
 
     };
 
-    /* =====================================
-       MENUTUP POPUP TANDA TANGAN
-    ====================================== */
-
+    /* MENUTUP POPUP TANDA TANGAN */
     window.gcTutupPopupTtd = function () {
 
         const modal = document.getElementById('gcSignModal');
@@ -948,11 +993,7 @@
 
     };
 
-    /* =====================================
-       MENYIMPAN TANDA TANGAN POPUP
-       KE CANVAS UTAMA GENERAL CONSENT
-    ====================================== */
-
+    /* MENYIMPAN TANDA TANGAN POPUP KE CANVAS UTAMA GENERAL CONSENT */
     window.gcSimpanPopupTtd = function () {
 
         if (!gcTargetTtd) {
@@ -977,7 +1018,6 @@
 
         gambar.onload = function () {
 
-            // Bersihkan canvas utama.
             target.ctx.clearRect(
                 0,
                 0,
@@ -985,7 +1025,6 @@
                 target.canvas.height
             );
 
-            // Masukkan tanda tangan dari popup.
             target.ctx.drawImage(
                 gambar,
                 0,
@@ -994,10 +1033,8 @@
                 target.canvas.height
             );
 
-            // Tandai bahwa tanda tangan sudah terisi.
             target.dirty = true;
 
-            // Tutup popup.
             gcTutupPopupTtd();
 
         };
@@ -1006,10 +1043,7 @@
 
     };
 
-    /* =====================================
-       RESET GENERAL CONSENT
-    ====================================== */
-
+    /* RESET GENERAL CONSENT */
     function gcReset() {
 
         document.querySelectorAll('.gc-cek').forEach(c => {
@@ -1049,13 +1083,9 @@
 
     }
 
-    // Dipanggil oleh tombol Reset di create.blade.php.
     window.gcReset = gcReset;
 
-    /* =====================================
-       REFRESH ANGGOTA KELUARGA
-    ====================================== */
-
+    /* REFRESH ANGGOTA KELUARGA */
     function gcRefreshKeluarga() {
 
         const rows = document.querySelectorAll(
@@ -1077,10 +1107,7 @@
 
     }
 
-    /* =====================================
-       TAMBAH ANGGOTA KELUARGA
-    ====================================== */
-
+    /* TAMBAH ANGGOTA KELUARGA */
     window.gcTambahKeluarga = function () {
 
         const list = document.getElementById('gc-keluarga-list');
@@ -1103,10 +1130,7 @@
 
     };
 
-    /* =====================================
-       HAPUS ANGGOTA KELUARGA
-    ====================================== */
-
+    /* HAPUS ANGGOTA KELUARGA */
     window.gcHapusKeluarga = function (button) {
 
         const row = button.closest('.gc-keluarga-row');
@@ -1119,10 +1143,7 @@
 
     };
 
-    /* =====================================
-       MENGAMBIL DATA ANGGOTA KELUARGA
-    ====================================== */
-
+    /* MENGAMBIL DATA ANGGOTA KELUARGA */
     function gcAmbilKeluarga() {
 
         return Array.from(
@@ -1133,10 +1154,7 @@
 
     }
 
-    /* =====================================
-       INISIALISASI CANVAS TANDA TANGAN
-    ====================================== */
-
+    /* INISIALISASI CANVAS TANDA TANGAN */
     function gcInitPad(id) {
 
         const canvas = document.getElementById(id);
@@ -1145,7 +1163,6 @@
             return;
         }
 
-        // Hindari menambahkan event listener berkali-kali.
         if (canvas.dataset.gcInitialized === '1') {
             return;
         }
@@ -1173,16 +1190,12 @@
             const rect = canvas.getBoundingClientRect();
 
             return {
-                x: (event.clientX - rect.left) *
-                    (canvas.width / rect.width),
-
-                y: (event.clientY - rect.top) *
-                    (canvas.height / rect.height)
+                x: (event.clientX - rect.left) * (canvas.width / rect.width),
+                y: (event.clientY - rect.top) * (canvas.height / rect.height)
             };
 
         }
 
-        // Mulai menggambar.
         canvas.addEventListener('pointerdown', function (event) {
 
             event.preventDefault();
@@ -1205,7 +1218,6 @@
 
         });
 
-        // Proses menggambar.
         canvas.addEventListener('pointermove', function (event) {
 
             if (!state.drawing) {
@@ -1224,7 +1236,6 @@
 
         });
 
-        // Mengakhiri proses menggambar.
         ['pointerup', 'pointerleave', 'pointercancel'].forEach(
             function (eventName) {
 
@@ -1239,10 +1250,7 @@
 
     }
 
-    /* =====================================
-       HAPUS TANDA TANGAN
-    ====================================== */
-
+    /* HAPUS TANDA TANGAN */
     window.gcHapusTtd = function (id) {
 
         const state = window.gcPad[id];
@@ -1262,10 +1270,7 @@
 
     };
 
-    /* =====================================
-       MENGAMBIL HASIL TANDA TANGAN
-    ====================================== */
-
+    /* MENGAMBIL HASIL TANDA TANGAN */
     function gcAmbilTtd(id) {
 
         const state = window.gcPad[id];
@@ -1276,10 +1281,7 @@
 
     }
 
-    /* =====================================
-       VALIDASI GENERAL CONSENT
-    ====================================== */
-
+    /* VALIDASI GENERAL CONSENT */
     function gcValidasi() {
 
         const semuaButir = Array.from(
@@ -1338,10 +1340,7 @@
 
     }
 
-    /* =====================================
-       SIMPAN GENERAL CONSENT
-    ====================================== */
-
+    /* SIMPAN GENERAL CONSENT */
     window.simpanConsent = function () {
 
         if (!gcValidasi()) {
@@ -1360,10 +1359,6 @@
 
         }
 
-        /*
-         * Simpan hasil consent ke hidden input di form pendaftaran
-         * atau form kunjungan.
-         */
         const form =
             document.getElementById('formPendaftaran') ||
             document.getElementById('formKunjungan');
@@ -1453,17 +1448,13 @@
 
     };
 
-    /* =====================================
-       DOM CONTENT LOADED
-    ====================================== */
-
+    /* DOM CONTENT LOADED */
     document.addEventListener('DOMContentLoaded', function () {
 
         document.body.appendChild(
             document.getElementById('consentModal')
         );
 
-        // Inisialisasi seluruh canvas.
         gcInitPad('gcTtdPemberi');
 
         gcInitPad('gcTtd');
@@ -1488,7 +1479,6 @@
 
         }
 
-        // Tutup popup jika pengguna mengklik area luar popup.
         const popup = document.getElementById('gcSignModal');
 
         if (popup) {
