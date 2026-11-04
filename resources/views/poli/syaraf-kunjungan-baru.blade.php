@@ -31,24 +31,217 @@
             min-height: 56px;
         }
 
-        /* Tanda tangan DPJP (canvas) */
-        .rm-ttd-canvas {
+        /* ===== Tanda tangan DPJP: ukuran mengikuti General Consent ===== */
+        .rm-ttd {
+            display: flex;
+            flex: 0 0 auto;
+            flex-direction: column;
+            align-items: center;
+            width: 220px;
+            max-width: 100%;
+            min-width: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .rm-ttd-label {
             display: block;
-            width: 160px;
-            height: 70px;
+            margin: 0 0 6px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .rm-ttd-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            max-width: 100%;
+            height: 110px;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            border: 1px solid #d6d6d6;
+            border-radius: 6px;
             background: #fff;
-            border: 1px solid #999;
-            border-radius: 4px;
-            touch-action: none;
-            cursor: crosshair;
+            cursor: pointer;
+        }
+
+        .rm-ttd-preview {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #fff;
+            pointer-events: none;
+        }
+
+        .rm-ttd-preview[hidden] {
+            display: none !important;
+        }
+
+        .rm-ttd-placeholder {
+            display: block;
+            padding: 8px;
+            color: #777;
+            font-size: 11px;
+            line-height: 1.4;
+            font-weight: 400;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .rm-ttd-placeholder[hidden] {
+            display: none !important;
         }
 
         .rm-ttd-hapus {
             display: inline-block;
-            margin-top: 4px;
-            font-size: 12px;
-            color: #c1121f;
+            margin: 4px 0 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #c8102e;
+            font-family: inherit;
+            font-size: 11px;
+            line-height: 1.3;
             text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .rm-ttd-area:focus-visible,
+        .rm-ttd-hapus:focus-visible {
+            outline: 2px solid #c8102e;
+            outline-offset: 2px;
+        }
+
+        /* ===== Popup tanda tangan: ukuran mengikuti General Consent ===== */
+        .rm-ttd-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .45);
+            backdrop-filter: blur(3px);
+        }
+
+        .rm-ttd-modal-overlay.aktif {
+            display: flex;
+        }
+
+        .rm-ttd-modal {
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+        }
+
+        .rm-ttd-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 17px 22px;
+            color: #fff;
+            background: #c8102e;
+        }
+
+        .rm-ttd-modal-head span {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .rm-ttd-modal-close {
+            padding: 0;
+            border: 0;
+            color: #fff;
+            background: transparent;
+            font-size: 26px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .rm-ttd-modal-body {
+            padding: 22px;
+        }
+
+        .rm-ttd-modal-body p {
+            margin: 0 0 12px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .rm-ttd-canvas-wrap {
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+            border: 1px solid #d6d6d6;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .rm-ttd-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            border-radius: 0;
+            background: #fff;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .rm-ttd-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .rm-ttd-modal-actions button {
+            min-width: 0;
+            padding: 10px 22px;
+            border: 0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .rm-ttd-btn-hapus {
+            color: #c8102e;
+            background: #fbe9e9;
+        }
+
+        .rm-ttd-btn-batal {
+            color: #444;
+            background: #e9e9e9;
+        }
+
+        .rm-ttd-btn-simpan {
+            color: #fff;
+            background: #c8102e;
+        }
+
+        .rm-ttd-btn-simpan:hover {
+            background: #a50d26;
+        }
+
+        @media (max-width: 600px) {
+            .rm-ttd-modal { max-width: 100%; }
+            .rm-ttd-modal-body { padding: 15px; }
+            .rm-ttd-canvas-wrap { height: 220px; }
+            .rm-ttd-modal-actions { flex-wrap: wrap; gap: 8px; }
+            .rm-ttd-modal-actions button { padding: 10px 16px; }
         }
 
         .rm-pj-item select {
@@ -740,9 +933,14 @@
         {{-- ===== Footer ===== --}}
         <div class="rm-footer">
             <div class="rm-ttd">
-                <div>Tanda tangan DPJP</div>
-                <canvas id="ttdDpjp" class="rm-ttd-canvas" width="320" height="140"></canvas>
-                <a href="#" class="rm-ttd-hapus" onclick="hapusTtdDpjp(); return false;">Hapus</a>
+                <div class="rm-ttd-label">Tanda tangan DPJP</div>
+                <div class="rm-ttd-area" role="button" tabindex="0"
+                     onclick="bukaModalTtdDpjp()"
+                     onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); bukaModalTtdDpjp(); }"
+                     aria-label="Klik untuk membubuhkan tanda tangan DPJP">
+                    <img id="ttdDpjpPreview" class="rm-ttd-preview" alt="Pratinjau tanda tangan DPJP" hidden>
+                </div>
+                <button type="button" class="rm-ttd-hapus" onclick="hapusTtdDpjpTersimpan()">Hapus tanda tangan</button>
             </div>
             <div class="rm-waktu">
                 <div>
@@ -759,6 +957,27 @@
                     <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
                 </button>
                 <button type="button" class="rm-btn" onclick="cetakRM()">Cetak</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== POPUP TANDA TANGAN DPJP ===== --}}
+    <div class="rm-ttd-modal-overlay" id="rmTtdModal" role="dialog" aria-modal="true" aria-labelledby="rmTtdModalJudul">
+        <div class="rm-ttd-modal">
+            <div class="rm-ttd-modal-head">
+                <span id="rmTtdModalJudul">Tanda Tangan DPJP</span>
+                <button type="button" class="rm-ttd-modal-close" onclick="tutupModalTtdDpjp()" aria-label="Tutup">&times;</button>
+            </div>
+            <div class="rm-ttd-modal-body">
+                <p>Silakan bubuhkan tanda tangan pada area di bawah ini.</p>
+                <div class="rm-ttd-canvas-wrap">
+                    <canvas id="ttdDpjp" class="rm-ttd-canvas" width="560" height="260"></canvas>
+                </div>
+                <div class="rm-ttd-modal-actions">
+                    <button type="button" class="rm-ttd-btn-hapus" onclick="hapusTtdDpjp()">Hapus</button>
+                    <button type="button" class="rm-ttd-btn-batal" onclick="tutupModalTtdDpjp()">Batal</button>
+                    <button type="button" class="rm-ttd-btn-simpan" onclick="simpanTtdDpjp()">Simpan</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2117,20 +2336,25 @@
         isi('rm_tindakan', tindakan.map(teksKode).join('\n'));
     }
 
-    // ----- Tanda tangan DPJP (canvas) -----
+    // ----- Tanda tangan DPJP: popup canvas -----
     let ttdDpjpTerisi = false;
+    let ttdDpjpData = null;
+    let ttdDpjpGambar = false;
+    let ttdDpjpDihapus = false;
 
     (function () {
         const canvas = document.getElementById('ttdDpjp');
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
-        let gambar = false;
+        let menggambar = false;
 
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#000';
+        function aturKanvas() {
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#000';
+        }
 
         function posisi(e) {
             const r = canvas.getBoundingClientRect();
@@ -2140,9 +2364,11 @@
             };
         }
 
+        aturKanvas();
+
         canvas.addEventListener('pointerdown', function (e) {
-            gambar = true;
-            ttdDpjpTerisi = true;
+            menggambar = true;
+            ttdDpjpGambar = true;
             canvas.setPointerCapture(e.pointerId);
 
             const p = posisi(e);
@@ -2153,23 +2379,113 @@
         });
 
         canvas.addEventListener('pointermove', function (e) {
-            if (!gambar) return;
+            if (!menggambar) return;
             const p = posisi(e);
             ctx.lineTo(p.x, p.y);
             ctx.stroke();
         });
 
-        ['pointerup', 'pointercancel'].forEach(function (ev) {
-            canvas.addEventListener(ev, function () { gambar = false; });
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+            canvas.addEventListener(ev, function () { menggambar = false; });
         });
     })();
+
+    function bukaModalTtdDpjp() {
+        const modal = document.getElementById('rmTtdModal');
+        const canvas = document.getElementById('ttdDpjp');
+        if (!modal || !canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Muat tanda tangan terakhir ke kanvas agar dapat dilanjutkan atau diperbaiki.
+        if (ttdDpjpData) {
+            const gambar = new Image();
+            gambar.onload = function () {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(gambar, 0, 0, canvas.width, canvas.height);
+            };
+            gambar.src = ttdDpjpData;
+        }
+
+        ttdDpjpGambar = false;
+        ttdDpjpDihapus = false;
+        modal.classList.add('aktif');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function tutupModalTtdDpjp() {
+        const modal = document.getElementById('rmTtdModal');
+        if (!modal) return;
+        modal.classList.remove('aktif');
+        document.body.style.overflow = '';
+    }
+
+    function simpanTtdDpjp() {
+        const canvas = document.getElementById('ttdDpjp');
+        if (!canvas) return;
+
+        if (!ttdDpjpGambar && !ttdDpjpData && !ttdDpjpDihapus) {
+            alert('Silakan bubuhkan tanda tangan terlebih dahulu.');
+            return;
+        }
+
+        if (ttdDpjpDihapus) {
+            ttdDpjpData = null;
+        } else if (ttdDpjpGambar) {
+            ttdDpjpData = canvas.toDataURL('image/png');
+        }
+
+        ttdDpjpTerisi = !!ttdDpjpData;
+        perbaruiPratinjauTtdDpjp();
+        tutupModalTtdDpjp();
+    }
+
+    function perbaruiPratinjauTtdDpjp() {
+        const preview = document.getElementById('ttdDpjpPreview');
+        const placeholder = document.getElementById('ttdDpjpPlaceholder');
+
+        if (preview) {
+            if (ttdDpjpData) {
+                preview.src = ttdDpjpData;
+                preview.hidden = false;
+            } else {
+                preview.removeAttribute('src');
+                preview.hidden = true;
+            }
+        }
+
+        if (placeholder) placeholder.hidden = !!ttdDpjpData;
+    }
+
+    function hapusTtdDpjpTersimpan() {
+        ttdDpjpData = null;
+        ttdDpjpTerisi = false;
+        ttdDpjpGambar = false;
+        ttdDpjpDihapus = true;
+
+        const canvas = document.getElementById('ttdDpjp');
+        if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        perbaruiPratinjauTtdDpjp();
+    }
 
     function hapusTtdDpjp() {
         const canvas = document.getElementById('ttdDpjp');
         if (!canvas) return;
+
         canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        ttdDpjpTerisi = false;
+        ttdDpjpGambar = false;
+        ttdDpjpDihapus = true;
     }
+
+    // Tutup popup bila area gelap di luar kotak diklik.
+    document.getElementById('rmTtdModal')?.addEventListener('click', function (e) {
+        if (e.target === this) tutupModalTtdDpjp();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') tutupModalTtdDpjp();
+    });
 
     // ----- Data form Resume Medis -----
     function kumpulkanDataRM() {
@@ -2186,9 +2502,7 @@
         });
 
         // Tanda tangan DPJP
-        data.ttd_dpjp = ttdDpjpTerisi
-            ? document.getElementById('ttdDpjp').toDataURL('image/png')
-            : null;
+        data.ttd_dpjp = ttdDpjpTerisi ? ttdDpjpData : null;
 
         return data;
     }
