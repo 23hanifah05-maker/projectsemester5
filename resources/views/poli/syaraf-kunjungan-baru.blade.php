@@ -264,6 +264,22 @@
         $pasien = collect($semuaPasien)->firstWhere('no_rm', $no_rm ?? request('no_rm'));
 
         $tglKunjungan = request()->route('tanggal');
+
+        // ---------- HAK AKSES PER ROLE ----------
+        $role = auth()->user()->role ?? null;
+        $bolehTtv          = in_array($role, ['admin', 'perawat']);
+        $bolehSubjOb       = in_array($role, ['admin', 'dokter', 'perawat']);          // S dan O
+        $bolehAssPlan      = in_array($role, ['admin', 'dokter']);                     // A dan P
+        $bolehIcd          = in_array($role, ['admin', 'pmik']);                       // kode ICD
+        $bolehRujuk        = in_array($role, ['admin', 'dokter']);
+        $bolehCp           = in_array($role, ['admin', 'dokter', 'perawat']);          // clinical pathway
+        $bolehResume       = in_array($role, ['admin', 'dokter']);                     // edit resume
+        $bolehSimpan       = in_array($role, ['admin', 'dokter', 'perawat', 'pmik']);
+        $bolehSimpanResume = in_array($role, ['admin', 'dokter', 'pmik']);             // pmik: kode SNOMED
+
+        $soapReadonly = fn ($n) => in_array($n, ['subjective', 'objective'])
+            ? ($bolehSubjOb ? '' : 'readonly')
+            : ($bolehAssPlan ? '' : 'readonly');
     @endphp
 
     <div class="kb-card" id="kartu-pasien-utama">
@@ -419,36 +435,36 @@
             <div class="kb-vitals">
                 <div class="kb-vital-row">
                     <label>TD</label>
-                    <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" autocomplete="off">
+                    <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">mmHg</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>HR</label>
-                    <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 88" min="0" max="300" autocomplete="off">
+                    <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 88" min="0" max="300" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>SpO2</label>
-                    <input type="number" id="spo2" name="spo2" data-field="spo2" value="{{ old('spo2', $ttv->spo2 ?? '') }}" placeholder="mis. 98" min="0" max="100" autocomplete="off">
+                    <input type="number" id="spo2" name="spo2" data-field="spo2" value="{{ old('spo2', $ttv->spo2 ?? '') }}" placeholder="mis. 98" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">%</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>Suhu</label>
-                    <input type="number" id="suhu" name="suhu" data-field="suhu" value="{{ old('suhu', $ttv->suhu ?? '') }}" placeholder="mis. 36.5" min="20" max="50" step="0.1" autocomplete="off">
+                    <input type="number" id="suhu" name="suhu" data-field="suhu" value="{{ old('suhu', $ttv->suhu ?? '') }}" placeholder="mis. 36.5" min="20" max="50" step="0.1" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">°C</span>
                 </div>
                 <div class="kb-vital-row">
                     <label>RR</label>
-                    <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off">
+                    <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
                 <div class="kb-vital-row kb-vital-lainnya">
                     <label for="chkVital">Alergi</label>
-                    <input type="text" id="alergi" name="alergi" data-field="alergi" value="{{ old('alergi', $ttv->alergi ?? '') }}" placeholder="mis. tidak ada" autocomplete="off">
+                    <input type="text" id="alergi" name="alergi" data-field="alergi" value="{{ old('alergi', $ttv->alergi ?? '') }}" placeholder="mis. tidak ada" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-check-box">
                         <input type="checkbox" class="kb-vital-check" id="chkVital"
                                title="Centang untuk menyimpan TTV ke database dan memasukkannya ke Objective"
-                               onchange="toggleVitalKeObjektif(this)">
+                               onchange="toggleVitalKeObjektif(this)" {{ $bolehTtv ? '' : 'disabled' }}>
                     </span>
                 </div>
             </div>
@@ -461,23 +477,23 @@
         <div class="kb-soap-box">
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">S</div>
-                <textarea name="subjective" rows="4" placeholder="Subjektif...">{{ old('subjective', $assesmen->subjek ?? '') }}</textarea>
+                <textarea name="subjective" rows="4" placeholder="Subjektif..." {{ $soapReadonly('subjective') }}>{{ old('subjective', $assesmen->subjek ?? '') }}</textarea>
             </div>
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">O</div>
-                <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif...">{{ old('objective', $assesmen->objek ?? '') }}</textarea>
+                <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif..." {{ $soapReadonly('objective') }}>{{ old('objective', $assesmen->objek ?? '') }}</textarea>
             </div>
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">A</div>
-                <textarea name="assessment" rows="4" placeholder="Assessment / analisa...">{{ old('assessment', $assesmen->assesmen ?? '') }}</textarea>
+                <textarea name="assessment" rows="4" placeholder="Assessment / analisa..." {{ $soapReadonly('assessment') }}>{{ old('assessment', $assesmen->assesmen ?? '') }}</textarea>
             </div>
 
             <div class="kb-soap-row">
                 <div class="kb-soap-badge">P</div>
                 <div class="kb-plan-wrap">
-                    <textarea name="plan" rows="4" placeholder="Rencana/plan...">{{ old('plan', $assesmen->plan ?? '') }}</textarea>
+                    <textarea name="plan" rows="4" placeholder="Rencana/plan..." {{ $soapReadonly('plan') }}>{{ old('plan', $assesmen->plan ?? '') }}</textarea>
                     <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
                         <i class="fa-solid fa-print"></i> Cetak
                     </button>
@@ -495,7 +511,7 @@
         <div class="kb-diagnosa-row">
             <div class="kb-search-field">
                 <label>Penyakit</label>
-                <div class="kb-search-inline">
+                <div class="kb-search-inline" {!! $bolehIcd ? '' : 'style="display:none"' !!}>
                     <div class="kb-search-box">
                         <input type="text" id="cariPenyakit" placeholder="Cari kode / nama penyakit..." autocomplete="off"
                                oninput="cariItem('penyakit')"
@@ -513,7 +529,7 @@
             </div>
             <div class="kb-search-field">
                 <label>Tindakan</label>
-                <div class="kb-search-inline">
+                <div class="kb-search-inline" {!! $bolehIcd ? '' : 'style="display:none"' !!}>
                     <div class="kb-search-box">
                         <input type="text" id="cariTindakan" placeholder="Cari kode / nama tindakan..." autocomplete="off"
                                oninput="cariItem('tindakan')"
@@ -532,12 +548,16 @@
         </div>
 
         <div class="kb-actions">
-            <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
-                <i class="fa-solid fa-right-from-bracket"></i> Rujuk
-            </button>
-            <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
-                <i class="fa-solid fa-floppy-disk"></i> Simpan
-            </button>
+            @if ($bolehRujuk)
+                <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Rujuk
+                </button>
+            @endif
+            @if ($bolehSimpan)
+                <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan
+                </button>
+            @endif
         </div>
     </div>
 
@@ -718,9 +738,11 @@
             </div>
 
             <div class="cp-footer">
-                <button type="button" class="cp-simpan" id="btnSimpanCP" onclick="simpanCP()">
-                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
-                </button>
+                @if ($bolehCp)
+                    <button type="button" class="cp-simpan" id="btnSimpanCP" onclick="simpanCP()">
+                        <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
+                    </button>
+                @endif
                 <button type="button" class="cp-cetak" onclick="cetakCP()">
                     <i class="fa-solid fa-print"></i> Cetak
                 </button>
@@ -953,9 +975,11 @@
                 </div>
             </div>
             <div class="rm-aksi">
-                <button type="button" class="rm-btn" id="btnSimpanRM" onclick="simpanRM()">
-                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
-                </button>
+                @if ($bolehSimpanResume)
+                    <button type="button" class="rm-btn" id="btnSimpanRM" onclick="simpanRM()">
+                        <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
+                    </button>
+                @endif
                 <button type="button" class="rm-btn" onclick="cetakRM()">Cetak</button>
             </div>
         </div>
@@ -1113,6 +1137,16 @@
     // ===== Konfigurasi =====
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
     const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
+
+    // Hak akses (dari server). Server tetap memeriksa ulang di route & controller.
+    const ROLE_USER      = @json($role);
+    const BOLEH_TTV      = @json($bolehTtv);
+    const BOLEH_SO       = @json($bolehSubjOb);
+    const BOLEH_ASS_PLAN = @json($bolehAssPlan);
+    const BOLEH_ICD      = @json($bolehIcd);
+    const BOLEH_CP       = @json($bolehCp);
+    const BOLEH_RESUME   = @json($bolehResume);
+    const BOLEH_SIMPAN   = @json($bolehSimpan);
 
     // Saklar penyimpanan Clinical Pathway ke database.
     // false = hanya validasi + tanda "Tersimpan" (belum kirim ke server).
@@ -1562,13 +1596,17 @@
     }
 
     // ===== Simpan utama: TTV, SOAP, ICD, (CP), lalu status kunjungan =====
+    // Setiap role hanya menyimpan bagian yang boleh diedit olehnya:
+    //   perawat : TTV, S, O, clinical pathway
+    //   dokter  : S, O, A, P, clinical pathway, lalu status kunjungan
+    //   pmik    : kode ICD (penyakit dan tindakan)
     async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
             return;
         }
 
-        if (cpBolehDiisi() && !cpTerisi()) {
+        if (BOLEH_CP && cpBolehDiisi() && !cpTerisi()) {
             alert('Diagnosa utama pasien adalah HNP. Clinical Pathway wajib diisi sebelum menyimpan.');
             gantiTab('pathway');
             return;
@@ -1578,14 +1616,16 @@
         tombolSimpan.forEach(tombol => { tombol.disabled = true; });
 
         try {
-            // 1. TTV
-            if (!await simpanTTVKeDatabase()) return;
+            // 1. TTV (hanya perawat / admin)
+            if (BOLEH_TTV) {
+                if (!await simpanTTVKeDatabase()) return;
+            }
 
-            // 2. SOAP dan ICD
+            // 2. SOAP dan ICD (field disesuaikan dengan role)
             if (!await simpanSOAPdanICDKeDatabase()) return;
 
-            // 2b. Clinical Pathway (hanya bila diagnosa HNP dan saklar DB aktif)
-            if (CP_SIMPAN_KE_DB && cpBolehDiisi()) {
+            // 2b. Clinical Pathway (hanya bila boleh, diagnosa HNP, dan saklar DB aktif)
+            if (CP_SIMPAN_KE_DB && BOLEH_CP && cpBolehDiisi()) {
                 if (!await simpanCPKeDatabase()) return;
             }
 
@@ -1595,18 +1635,24 @@
                 throw new Error('ID pendaftaran tidak ditemukan.');
             }
 
-            // 4. Perbarui status kunjungan
-            await kirimJson(
-                `/poli/syaraf/status-periksa/${idPendaftaran}`,
-                'PATCH',
-                { status_periksa: 'selesai' },
-                'Status pemeriksaan gagal diperbarui.'
-            );
+            // 4. Perbarui status kunjungan (hanya dokter / admin)
+            if (BOLEH_ASS_PLAN) {
+                await kirimJson(
+                    `/poli/syaraf/status-periksa/${idPendaftaran}`,
+                    'PATCH',
+                    { status_periksa: 'selesai' },
+                    'Status pemeriksaan gagal diperbarui.'
+                );
+            }
 
             // 5. Semua data sudah tersimpan: halaman boleh ditinggalkan
             izinkanKeluar = true;
 
-            alert('Data TTV, SOAP, dan ICD berhasil disimpan. Status pasien berubah menjadi Selesai.');
+            alert(
+                BOLEH_ASS_PLAN
+                    ? 'Data berhasil disimpan. Status pasien berubah menjadi Selesai.'
+                    : 'Data berhasil disimpan.'
+            );
 
             // 6. Kembali ke daftar Poli Saraf
             window.location.href = "{{ route('poli.syaraf') }}";
@@ -1850,6 +1896,7 @@
     });
 
     // ===== Simpan SOAP dan ICD ke database =====
+    // Hanya field yang boleh diedit oleh role ini yang dikirim.
     async function simpanSOAPdanICDKeDatabase() {
         const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
 
@@ -1861,19 +1908,28 @@
         const ambilTeks = nama =>
             (document.querySelector(`textarea[name="${nama}"]`)?.value ?? '').trim();
 
+        const payload = { id_pendaftaran: Number(idPendaftaran) };
+
+        if (BOLEH_SO) {
+            payload.subjective = ambilTeks('subjective');
+            payload.objective = ambilTeks('objective');
+        }
+
+        if (BOLEH_ASS_PLAN) {
+            payload.assessment = ambilTeks('assessment');
+            payload.plan = ambilTeks('plan');
+        }
+
+        if (BOLEH_ICD) {
+            payload.penyakit_id = diagnosaTerpilih.penyakit.map(item => Number(item.id));
+            payload.tindakan_id = diagnosaTerpilih.tindakan.map(item => Number(item.id));
+        }
+
         try {
             await kirimJson(
                 "{{ route('poli.syaraf.assesmen.store') }}",
                 'POST',
-                {
-                    id_pendaftaran: Number(idPendaftaran),
-                    subjective: ambilTeks('subjective'),
-                    objective: ambilTeks('objective'),
-                    assessment: ambilTeks('assessment'),
-                    plan: ambilTeks('plan'),
-                    penyakit_id: diagnosaTerpilih.penyakit.map(item => Number(item.id)),
-                    tindakan_id: diagnosaTerpilih.tindakan.map(item => Number(item.id))
-                },
+                payload,
                 'SOAP dan ICD gagal disimpan.'
             );
             return true;
@@ -2586,6 +2642,7 @@
        - Klik menu / link lain: dibatalkan, muncul peringatan.
        - Refresh / tutup tab: browser menampilkan konfirmasi.
        Setelah klik Simpan berhasil, semua pembatasan dilepas.
+       Role yang tidak bisa menyimpan (BOLEH_SIMPAN = false) tidak dihalangi.
        ========================================================= */
     const PESAN_BELUM_SIMPAN =
         'Data pasien belum disimpan.\n' +
@@ -2609,6 +2666,7 @@
     let guardHistoryAktif = false;
 
     function adaDataBelumDisimpan() {
+        if (!BOLEH_SIMPAN) return false;
         return !izinkanKeluar && ambilSnapshotForm() !== snapshotAwal;
     }
 
@@ -2666,5 +2724,32 @@
             e.returnValue = '';
         }
     });
+
+    // =========================================================
+    // PEMBATASAN TAMPILAN PER ROLE
+    // =========================================================
+    (function () {
+        // Kode ICD: hanya pmik / admin yang boleh menghapus
+        if (!BOLEH_ICD) {
+            const css = document.createElement('style');
+            css.textContent = '.kb-aksi-hapus{display:none !important;}';
+            document.head.appendChild(css);
+        }
+
+        // Clinical pathway: hanya dokter, perawat, admin yang boleh mengisi
+        if (!BOLEH_CP) {
+            document.querySelectorAll('#tab-pathway input, #tab-pathway textarea')
+                .forEach(el => { el.disabled = true; });
+        }
+
+        // Resume medis: hanya dokter / admin yang mengedit.
+        // PMIK tetap bisa mengelola kode SNOMED (tombol Tambah Kode).
+        if (!BOLEH_RESUME) {
+            document.querySelectorAll('#tab-resume input, #tab-resume textarea, #tab-resume select')
+                .forEach(el => { el.disabled = true; });
+            document.querySelectorAll('#tab-resume .rm-ttd-area').forEach(el => { el.style.pointerEvents = 'none'; });
+            document.querySelectorAll('#tab-resume .rm-ttd-hapus').forEach(el => { el.style.display = 'none'; });
+        }
+    })();
 </script>
 @endsection

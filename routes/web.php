@@ -16,11 +16,14 @@ use App\Http\Controllers\ClinicalPathwayController;
 |--------------------------------------------------------------------------
 | HAK AKSES
 |--------------------------------------------------------------------------
-| admin    : semua halaman (otomatis lolos di middleware CekRole)
-| dokter   : dashboard, poli
-| perawat  : dashboard, poli
-| pmik     : dashboard, poli (lihat saja), pendaftaran
-| radiologi : dashboard, radiologi
+| admin     : edit semua
+| dokter    : edit SOAP, rujukan, informed consent, clinical pathway, resume.
+|             Hanya LIHAT: TTV, kode ICD, radiologi, daftar pasien per poli.
+| perawat   : edit TTV, S, O, clinical pathway.
+|             Hanya LIHAT: A, P, ICD, rujukan, informed consent, resume, radiologi.
+| pmik      : edit pendaftaran dan kode ICD (+ SNOMED).
+|             Hanya LIHAT: riwayat kunjungan, SOAP, resume.
+| radiologi : dashboard dan halaman radiologi.
 */
 
 
@@ -158,18 +161,33 @@ Route::middleware('auth')->group(function () {
 
 
     // ------------------------------------------------------------------
-    // Asesmen, Clinical Pathway, Rujukan, Informed Consent: dokter (+ admin)
+    // Clinical Pathway (simpan): dokter, perawat (+ admin)
     // ------------------------------------------------------------------
-    Route::middleware('role:dokter')->group(function () {
+    Route::middleware('role:dokter,perawat')->group(function () {
+
+        Route::post('/poli/syaraf/clinical-pathway', [ClinicalPathwayController::class, 'store'])
+            ->name('poli.syaraf.clinical-pathway.store');
+    });
+
+
+    // ------------------------------------------------------------------
+    // Asesmen: dokter (S, O, A, P), perawat (S, O), pmik (kode ICD saja).
+    // Pembatasan field per role WAJIB juga dilakukan di AssesmenController.
+    // ------------------------------------------------------------------
+    Route::middleware('role:dokter,perawat,pmik')->group(function () {
 
         Route::post('/poli/syaraf/assesmen', [AssesmenController::class, 'store'])
             ->name('poli.syaraf.assesmen.store');
 
         Route::post('/poli/obgyn/assesmen', [AssesmenController::class, 'store'])
             ->name('poli.obgyn.assesmen.store');
+    });
 
-        Route::post('/poli/syaraf/clinical-pathway', [ClinicalPathwayController::class, 'store'])
-            ->name('poli.syaraf.clinical-pathway.store');
+
+    // ------------------------------------------------------------------
+    // Rujukan & Informed Consent: dokter (+ admin)
+    // ------------------------------------------------------------------
+    Route::middleware('role:dokter')->group(function () {
 
         Route::post('/poli/syaraf/rujukan', [PoliController::class, 'kirimRujukan'])
             ->name('poli.syaraf.rujukan');
@@ -184,11 +202,9 @@ Route::middleware('auth')->group(function () {
 
 
     // ------------------------------------------------------------------
-    // Pencarian Kode ICD (ICD-10 & ICD-9-CM): dokter, pmik (+ admin)
-    // Dipakai dokter untuk memilih diagnosa di form asesmen.
-    // Kalau dokter tidak boleh, ganti jadi role:pmik
+    // Pencarian Kode ICD (ICD-10 & ICD-9-CM): pmik (+ admin)
     // ------------------------------------------------------------------
-    Route::middleware('role:dokter,pmik')->group(function () {
+    Route::middleware('role:pmik')->group(function () {
 
         Route::get('/cari-kode/{jenis}', [PencarianKodeController::class, 'cari'])
             ->whereIn('jenis', ['penyakit', 'tindakan'])
