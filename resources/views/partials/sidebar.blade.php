@@ -317,7 +317,7 @@
                 <ul class="submenu {{ $poliOpen ? 'show' : '' }}" id="menuPoli">
                     <li>
                         <a href="{{ route('poli.syaraf') }}" class="{{ $isSyaraf ? 'active' : '' }}">
-                            <i class="fa-solid fa-brain"></i> Poli Syaraf
+                            <i class="fa-solid fa-brain"></i> Poli Saraf
                         </a>
                     </li>
 

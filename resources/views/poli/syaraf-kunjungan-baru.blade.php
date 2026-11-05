@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Kunjungan Baru - Poli Syaraf')
+@section('title', 'Kunjungan Baru - Poli Saraf')
 @section('header-icon', '🩺')
-@section('header-title', 'Poli Syaraf')
+@section('header-title', 'Poli Saraf')
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
@@ -491,7 +491,7 @@
         <hr class="kb-divider">
 
         {{-- ===== Diagnosa ===== --}}
-        <div class="kb-diagnosa-title">Diagnosa</div>
+        <div class="kb-diagnosa-title">Kode ICD</div>
         <div class="kb-diagnosa-row">
             <div class="kb-search-field">
                 <label>Penyakit</label>

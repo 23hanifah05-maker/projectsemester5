@@ -1189,7 +1189,7 @@
         <hr class="ob-divider">
 
         {{-- DIAGNOSIS --}}
-        <div class="ob-diagnosa-title">Diagnosa</div>
+        <div class="ob-diagnosa-title">Kode ICD</div>
 
         <div class="ob-diagnosa-box">
             <div class="ob-diagnosa-row">
