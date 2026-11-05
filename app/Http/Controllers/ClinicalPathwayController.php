@@ -34,18 +34,20 @@ class ClinicalPathwayController extends Controller
             'icd10', 'icd', 'code',
         ])->first(fn ($nama) => in_array($nama, $kolom)) ?? ($kolom[1] ?? $kolom[0]);
 
-        $daftarKode = DB::table('kode_diagnosis')
-            ->whereIn($kolomId, $request->penyakit_id)
-            ->pluck($kolomKode);
+        // Diagnosa Utama = diagnosa urutan pertama yang dikirim dari form.
+        $idDiagnosaUtama = array_values($request->penyakit_id)[0];
 
-        $adaHnp = $daftarKode->contains(function ($kode) {
-            return Str::startsWith(strtoupper(trim($kode)), self::KODE_HNP);
-        });
+        $kodeUtama = DB::table('kode_diagnosis')
+            ->where($kolomId, $idDiagnosaUtama)
+            ->value($kolomKode);
 
-        if (!$adaHnp) {
+        $utamaAdalahHnp = $kodeUtama !== null
+            && Str::startsWith(strtoupper(trim($kodeUtama)), self::KODE_HNP);
+
+        if (!$utamaAdalahHnp) {
             return response()->json([
                 'success' => false,
-                'message' => 'Clinical Pathway hanya dapat disimpan untuk diagnosa HNP (ICD-10 M51).',
+                'message' => 'Clinical Pathway hanya dapat disimpan bila HNP (ICD-10 M51) menjadi Diagnosa Utama.',
             ], 422);
         }
 
