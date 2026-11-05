@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     {{-- FONT AWESOME --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
+
     {{-- CSS UTAMA --}}
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     @yield('extra-css')
@@ -24,14 +24,14 @@
             font-family: 'Poppins', sans-serif;
         }
 
-       .main {
-        margin-left: 230px;
-        min-height: 100vh;
-        transition: margin-left 0.3s ease;
+        .main {
+            margin-left: 230px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
         }
 
         body.sidebar-collapsed .main {
-            margin-left: 0; 
+            margin-left: 0;
         }
 
         /* HEADER PUTIH */
@@ -50,14 +50,14 @@
         .header-left {
             display: flex;
             align-items: center;
-            gap: 15px; /* Jarak antara toggle dan judul */
+            gap: 15px;
         }
 
-        /* Tombol Toggle di Header */
+        /* Tombol toggle sidebar */
         .header-toggle-btn {
             background: transparent;
             border: none;
-            color: #d12027; /* Warna merah */
+            color: #d12027;
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0;
@@ -69,21 +69,20 @@
         .header-toggle-btn:hover {
             color: #941b1e;
         }
-        
-        /* Area Judul Halaman Dinamis */
+
+        /* Judul halaman dinamis */
         .header-page-title {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        /* Ikon Header (Warna Merah) */
-        .header-page-title i, .header-page-title svg {
+        .header-page-title i,
+        .header-page-title svg {
             font-size: 1.6rem;
             color: #d12027;
         }
 
-        /* Teks Judul Halaman (Merah & Tebal) */
         .header-page-title h1 {
             margin: 0;
             font-size: 1.6rem;
@@ -91,25 +90,40 @@
             font-weight: 700;
         }
 
+        /* Info user (ikon + nama + role) */
         .admin {
             display: flex;
             align-items: center;
             gap: 12px;
-            font-weight: 600;
             color: #333;
-            font-size: 1rem;
         }
-        
+
         .admin-icon {
-            background: #d12027;
-            color: white;
             width: 38px;
             height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
+            color: #fff;
             font-size: 1.2rem;
+        }
+
+        .admin-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .admin-nama {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .admin-role {
+            font-weight: 400;
+            font-size: 0.75rem;
+            color: #777;
         }
     </style>
 </head>
@@ -117,33 +131,49 @@
 
     @include('partials.sidebar')
 
+    @php
+        // Daftar role: label, ikon Font Awesome, dan warna latar lingkaran
+        $daftarRole = [
+            'admin'     => ['label' => 'Admin',     'ikon' => 'fa-user-shield',  'warna' => '#d12027'],
+            'pmik'      => ['label' => 'PMIK',      'ikon' => 'fa-file-medical', 'warna' => '#7b3fa0'],
+            'perawat'   => ['label' => 'Perawat',   'ikon' => 'fa-user-nurse',   'warna' => '#e0568a'],
+            'dokter'    => ['label' => 'Dokter',    'ikon' => 'fa-user-doctor',  'warna' => '#1f7ae0'],
+            'radiologi' => ['label' => 'Radiologi', 'ikon' => 'fa-x-ray',        'warna' => '#2a9d6f'],
+        ];
+
+        $roleUser = strtolower(session('role', Auth::user()?->role ?? 'admin'));
+        $infoRole = $daftarRole[$roleUser] ?? [
+            'label' => ucfirst($roleUser),
+            'ikon'  => 'fa-user',
+            'warna' => '#d12027',
+        ];
+        $namaUser = session('username', Auth::user()?->username ?? 'Admin');
+    @endphp
+
     <main class="main">
         <header class="header">
             <div class="header-left">
-                <!-- Tombol Buka Tutup Sidebar di Samping Kiri -->
+                {{-- Tombol buka/tutup sidebar --}}
                 <button class="header-toggle-btn" onclick="toggleSidebar()" title="Buka/Tutup Sidebar">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                
-                <!-- Judul Halaman Dinamis -->
+
+                {{-- Judul halaman dinamis --}}
                 <div class="header-page-title">
-                    @hasSection('header-icon')
-                        @yield('header-icon')
-                    @else
-                        <!-- Default Ikon Rumah -->
-                        
-                    @endif
-                    
+                    @yield('header-icon')
                     <h1>@yield('header-title', 'Dashboard')</h1>
                 </div>
             </div>
 
+            {{-- Info user sesuai role --}}
             <div class="admin">
-                <!-- Ikon Profil lalu Teks Admin -->
-                <div class="admin-icon">
-                    <i class="fa-solid fa-user"></i>
+                <div class="admin-icon" style="background: {{ $infoRole['warna'] }};">
+                    <i class="fa-solid {{ $infoRole['ikon'] }}"></i>
                 </div>
-                <span>{{ session('username', 'Admin') }}</span>
+                <div class="admin-info">
+                    <span class="admin-nama">{{ $namaUser }}</span>
+                    <span class="admin-role">{{ $infoRole['label'] }}</span>
+                </div>
             </div>
         </header>
 
