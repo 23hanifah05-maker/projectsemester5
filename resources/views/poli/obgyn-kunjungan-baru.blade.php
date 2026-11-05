@@ -132,9 +132,6 @@
 
         /* =====================================================
            RESUME MEDIS (tampilan mengikuti Poli Syaraf)
-           Kolom "Ringkasan Klinis & Penatalaksanaan" dibuat simetris:
-           kedua kolom sama tinggi dan kotak isian ikut memanjang,
-           jadi tidak ada ruang kosong di bawah salah satu sisi.
            ===================================================== */
         .rm-wrap {
             display: flex;
@@ -157,7 +154,6 @@
             resize: vertical;
         }
 
-        /* Bagian atas: alamat, kunjungan, penanggung jawab */
         .rm-top {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -220,7 +216,6 @@
             font-size: 12px;
         }
 
-        /* Bar judul merah */
         .rm-bar {
             padding: 8px;
             background: #b81d24;
@@ -231,7 +226,6 @@
             border-radius: 4px;
         }
 
-        /* Dua kolom simetris */
         .rm-cols {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -251,7 +245,6 @@
             gap: 6px;
         }
 
-        /* Blok berisi textarea ikut memanjang mengisi sisa tinggi kolom */
         .rm-blok.rm-grow {
             flex: 1;
         }
@@ -280,7 +273,6 @@
             font-weight: 400;
         }
 
-        /* Kotak kode SNOMED CT */
         .rm-snomed {
             display: flex;
             align-items: center;
@@ -342,7 +334,6 @@
             cursor: pointer;
         }
 
-        /* Bagian bawah: tanda tangan DPJP, tanggal, jam, tombol */
         .rm-footer {
             display: flex;
             align-items: flex-end;
@@ -392,12 +383,10 @@
 
         /* =====================================================
            FORMULIR CETAK INFORMED CONSENT (A4, 1 lembar)
-           Dicetak lewat dialog print browser, jadi bisa dipilih
-           "Save as PDF" atau printer (mis. Epson) di dialog.
            ===================================================== */
         @page ic {
             size: A4;
-            margin: 0; /* juga menghilangkan tanggal & URL bawaan browser */
+            margin: 0;
         }
 
         @media screen {
@@ -440,7 +429,6 @@
                 visibility: visible !important;
             }
 
-            /* Kop surat */
             .icp-header {
                 display: flex;
                 align-items: center;
@@ -485,7 +473,6 @@
                 font-weight: normal;
             }
 
-            /* Identitas pasien */
             .icp-info {
                 width: 100%;
                 margin-bottom: 10px;
@@ -502,7 +489,6 @@
             .icp-info td.icp-info-sep { width: 2%; }
             .icp-info td.icp-info-isi { width: 31%; }
 
-            /* Tabel isi informasi */
             .icp-table {
                 width: 100%;
                 border-collapse: collapse;
@@ -537,7 +523,6 @@
                 vertical-align: middle;
             }
 
-            /* Kotak centang */
             .icp-box {
                 display: inline-block;
                 width: 12px;
@@ -555,7 +540,6 @@
                 margin-right: 0;
             }
 
-            /* Pernyataan */
             .icp-persetujuan {
                 margin-top: 12px;
                 page-break-inside: avoid;
@@ -585,7 +569,6 @@
                 text-align: right;
             }
 
-            /* Tanda tangan */
             .icp-ttd {
                 width: 100%;
                 border-collapse: collapse;
@@ -663,11 +646,33 @@
             ['UK', 'uk', 'minggu', 'mis. 12'],
         ];
 
-        $soapRows = [
-            ['S', 'subjective', 'textarea', 'Subjektif...'],
-            ['O', 'objective', 'textarea', 'Hasil pemeriksaan objektif...'],
-            ['A', 'assessment', 'textarea', 'Assessment / analisa...'],
-            ['P', 'plan', 'textarea', 'Rencana/plan...'],
+        // SOAP berkolom: [kode, nama textarea asli, [[label, placeholder], ...]]
+        $soapBlok = [
+            ['S', 'subjective', [
+                ['Keluhan Utama', 'Keluhan utama...'],
+                ['Riwayat Penyakit Sekarang', 'Riwayat penyakit sekarang...'],
+                ['Riwayat Penyakit Dahulu', 'Riwayat penyakit dahulu...'],
+                ['Riwayat Penyakit Keluarga', 'Riwayat penyakit keluarga...'],
+                ['Riwayat Pengobatan', 'Riwayat pengobatan...'],
+                ['Riwayat Sosial', 'Riwayat sosial...'],
+                ['Riwayat Operasi', 'Riwayat operasi...'],
+                ['Riwayat Alergi', 'Riwayat alergi...'],
+                ['Riwayat Imunisasi', 'Riwayat imunisasi...'],
+            ]],
+            ['O', 'objective', [
+                ['Pemeriksaan Tanda Vital', 'Klik centang ✓ di atas untuk menarik data TTV'],
+                ['Pemeriksaan Fisik Lainnya', 'Pemeriksaan fisik selain TTV...'],
+            ]],
+            ['A', 'assessment', [
+                ['Dx Utama', 'Diagnosa utama...'],
+                ['Dx Sekunder', 'Diagnosa sekunder...'],
+            ]],
+            ['P', 'plan', [
+                ['Tindakan Medis', 'Tindakan medis...'],
+                ['Konseling Edukasi', 'Konseling edukasi...'],
+                ['Rencana Tindak Lanjut', 'Rencana tindak lanjut...'],
+                ['Diet', 'Diet...'],
+            ]],
         ];
 
         $diagnosaFields = [
@@ -1005,44 +1010,45 @@
 
         <hr class="ob-divider">
 
-        {{-- SOAP --}}
+        {{-- SOAP BERKOLOM --}}
         <div class="ob-soap-title">SOAP</div>
 
         <div class="ob-soap-box">
-            @foreach ($soapRows as [$kode, $name, $tipe, $placeholder])
+            @foreach ($soapBlok as [$kode, $name, $fields])
                 <div class="ob-soap-row">
                     <div class="ob-soap-badge">{{ $kode }}</div>
 
-                    @if ($name === 'plan')
-                        <div class="ob-plan-wrap">
-                            <textarea
-                                name="{{ $name }}"
-                                {{ $soapReadonly($name) }}
-                                rows="4"
-                                placeholder="{{ $placeholder }}"
-                            >{{ old($name, $assesmen->plan ?? '') }}</textarea>
+                    <div class="ob-soap-group" data-target="{{ $name }}">
+                        @if ($kode === 'P')
+                            <div class="ob-sg-judul">Non Farmakologis</div>
+                        @endif
 
-                            <button
-                                type="button"
-                                class="ob-cetak-btn ob-cetak-plan"
-                                onclick="cetakResep()"
-                            >
-                                <i class="fa-solid fa-print"></i> Cetak
-                            </button>
-                        </div>
-                    @else
-                        <textarea
-                            name="{{ $name }}"
-                            {{ $soapReadonly($name) }}
-                            rows="4"
-                            placeholder="{{ $placeholder }}"
-                        >{{ old($name, match ($name) {
-                            'subjective' => $assesmen->subjek ?? '',
-                            'objective' => $assesmen->objek ?? '',
-                            'assessment' => $assesmen->assesmen ?? '',
-                            default => '',
-                        }) }}</textarea>
-                    @endif
+                        @foreach ($fields as $i => [$label, $ph])
+                            <div class="ob-sf">
+                                <label for="sf-{{ $name }}-{{ $i }}">{{ $label }}</label>
+                                <textarea
+                                    class="ob-sf-input"
+                                    id="sf-{{ $name }}-{{ $i }}"
+                                    data-label="{{ $label }}"
+                                    rows="1"
+                                    placeholder="{{ $ph }}"
+                                    {{ $soapReadonly($name) }}
+                                ></textarea>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- textarea asli (tersembunyi) tetap dipakai oleh JS & simpan --}}
+                    <textarea
+                        name="{{ $name }}"
+                        class="ob-soap-hidden"
+                        {{ $soapReadonly($name) }}
+                    >{{ old($name, match ($name) {
+                        'subjective' => $assesmen->subjek ?? '',
+                        'objective' => $assesmen->objek ?? '',
+                        'assessment' => $assesmen->assesmen ?? '',
+                        default => $assesmen->plan ?? '',
+                    }) }}</textarea>
                 </div>
             @endforeach
         </div>
@@ -1417,10 +1423,8 @@
     {{-- TAB RESUME MEDIS (tampilan mengikuti Poli Syaraf) --}}
     @php
         // Kotak kode SNOMED CT hanya untuk admin dan pmik.
-        // Role lain (dokter, perawat) tidak melihat kotak ini sama sekali.
         $bolehSnomed = in_array(auth()->user()->role ?? null, ['admin', 'pmik']);
 
-        // Kotak kode SNOMED CT di bawah tiap isian (tampilan saja)
         $snomed = fn ($kunci) => !$bolehSnomed ? '' : (
             '<div class="rm-snomed" data-kunci="' . $kunci . '">' .
                 '<div class="rm-snomed-isi">' .
@@ -1898,6 +1902,55 @@
     }
 
     // =========================================================
+    // SOAP BERKOLOM: gabungkan kolom kecil -> textarea asli
+    // Format: "Label: isi" per baris
+    // =========================================================
+    function gabungSoap(group) {
+        const target = document.querySelector('[name="' + group.dataset.target + '"]');
+        if (!target) return;
+
+        target.value = Array.from(group.querySelectorAll('.ob-sf-input'))
+            .map(el => {
+                const v = el.value.replace(/\s*\n\s*/g, ' ').trim();
+                return v ? el.dataset.label + ': ' + v : '';
+            })
+            .filter(Boolean)
+            .join('\n');
+    }
+
+    // Isi ulang kolom kecil dari data tersimpan
+    function isiSoapDariTersimpan() {
+        document.querySelectorAll('.ob-soap-group').forEach(function (group) {
+            const target = document.querySelector('[name="' + group.dataset.target + '"]');
+            const inputs = Array.from(group.querySelectorAll('.ob-sf-input'));
+            const teks = (target?.value ?? '').trim();
+
+            if (!teks) return;
+
+            let ada = false;
+
+            teks.split('\n').forEach(function (baris) {
+                const m = baris.match(/^(.+?):\s*(.*)$/);
+                const el = m && inputs.find(i => i.dataset.label === m[1].trim());
+
+                if (el) {
+                    el.value = m[2];
+                    ada = true;
+                }
+            });
+
+            // Data lama (teks bebas) masuk ke kolom pertama
+            if (!ada && inputs[0]) inputs[0].value = teks;
+        });
+    }
+
+    document.querySelectorAll('.ob-soap-group').forEach(function (group) {
+        group.addEventListener('input', () => gabungSoap(group));
+    });
+
+    isiSoapDariTersimpan();
+
+    // =========================================================
     // RESUME MEDIS (tampilan dulu, belum tersambung database)
     // =========================================================
 
@@ -2161,7 +2214,7 @@
 
         // 3) jika belum ada, pakai isi kolom A (Assessment) di SOAP
         if (!teksDx) {
-            const asesmen = document.querySelector('textarea[name="assessment"]');
+            const asesmen = document.querySelector('[name="assessment"]');
             teksDx = asesmen ? asesmen.value.trim() : '';
         }
 
@@ -2886,11 +2939,9 @@
 
     // =========================================================
     // TTV KE OBJECTIVE
-    // Centang TIDAK aktif otomatis saat TTV diisi.
-    // Centang hanya berubah (class "aktif") setelah di-klik.
+    // Data TTV ditarik ke kolom "Pemeriksaan Tanda Vital" (kolom O pertama).
+    // Centang berubah (class "aktif") hanya setelah di-klik.
     // =========================================================
-    let vitalTerakhir = '';
-
     function isiObjektifDariVital() {
         const bagian = [];
 
@@ -2926,28 +2977,18 @@
         }
 
         const teks = bagian.join(', ');
-        const objektif = document.querySelector(
-            'textarea[name="objective"]'
-        );
+        const kolomTtv = document.getElementById('sf-objective-0');
 
-        if (!objektif) return;
+        if (!kolomTtv) return;
 
-        let sisa = objektif.value;
-
-        if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
-            sisa = sisa
-                .slice(vitalTerakhir.length)
-                .replace(/^\n/, '');
-        }
-
-        objektif.value = sisa ? teks + '\n' + sisa : teks;
-        vitalTerakhir = teks;
+        kolomTtv.value = teks;
+        gabungSoap(kolomTtv.closest('.ob-soap-group'));
 
         // Centang aktif HANYA setelah di-klik
         const tombolCentang = document.getElementById('btnCentangVital');
         if (tombolCentang) tombolCentang.classList.add('aktif');
 
-        objektif.focus();
+        kolomTtv.focus();
     }
 
     // =========================================================

@@ -1132,3 +1132,58 @@ input.sembunyi { display: none; }                       /* was style="display:no
     .ob-ic-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ob-ic-aksi { grid-column: 1 / -1; }
 }
+
+
+/* =====================================================================
+   SOAP BERKOLOM (S: 9 kolom, O: 2 kolom, A: 2 kolom, P: 4 kolom)
+   Textarea asli name="subjective/objective/assessment/plan" disembunyikan
+   dan otomatis diisi gabungan dari kolom-kolom kecil ini.
+   ===================================================================== */
+.ob-soap-hidden { display: none !important; }
+
+.ob-soap-group {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #d9dce1;
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+.ob-sg-judul {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 13px;
+}
+.ob-sf {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+}
+.ob-sf label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    padding-top: 8px;
+}
+.ob-soap-box .ob-soap-row .ob-sf-input {
+    min-height: 36px;
+    padding: 7px 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+}
+.ob-soap-box .ob-soap-row .ob-sf-input:focus {
+    outline: none;
+    border-color: #b81d24;
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+}
+@media (max-width: 900px) {
+    .ob-sf { grid-template-columns: 1fr; gap: 4px; }
+    .ob-sf label { padding-top: 0; }
+}

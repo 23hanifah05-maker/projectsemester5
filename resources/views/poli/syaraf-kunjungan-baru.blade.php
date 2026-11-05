@@ -472,33 +472,59 @@
 
         <hr class="kb-divider">
 
-        {{-- ===== Kotak SOAP ===== --}}
+        {{-- ===== Kotak SOAP (kolom bertingkat) ===== --}}
+        @php
+            $soapBagian = [
+                'subjective' => ['S', [
+                    'Keluhan Utama', 'Riwayat Penyakit Sekarang', 'Riwayat Penyakit Dahulu',
+                    'Riwayat Penyakit Keluarga', 'Riwayat Pengobatan', 'Riwayat Sosial',
+                    'Riwayat Operasi', 'Riwayat Alergi', 'Riwayat Imunisasi',
+                ]],
+                'objective' => ['O', ['Pemeriksaan Tanda Vital', 'Pemeriksaan Fisik Lainnya']],
+                'assessment' => ['A', ['Dx Utama', 'Dx Sekunder']],
+                'plan' => ['P', ['Tindakan Medis', 'Konseling Edukasi', 'Rencana Tindak Lanjut', 'Diet']],
+            ];
+
+            $soapNilai = [
+                'subjective' => $assesmen->subjek ?? '',
+                'objective' => $assesmen->objek ?? '',
+                'assessment' => $assesmen->assesmen ?? '',
+                'plan' => $assesmen->plan ?? '',
+            ];
+        @endphp
+
         <div class="kb-soap-title">SOAP</div>
         <div class="kb-soap-box">
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">S</div>
-                <textarea name="subjective" rows="4" placeholder="Subjektif..." {{ $soapReadonly('subjective') }}>{{ old('subjective', $assesmen->subjek ?? '') }}</textarea>
-            </div>
+            @foreach ($soapBagian as $nama => [$huruf, $daftarKolom])
+                <div class="kb-soap-row">
+                    <div class="kb-soap-badge">{{ $huruf }}</div>
 
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">O</div>
-                <textarea name="objective" rows="4" placeholder="Hasil pemeriksaan objektif..." {{ $soapReadonly('objective') }}>{{ old('objective', $assesmen->objek ?? '') }}</textarea>
-            </div>
+                    @if ($nama === 'plan') <div class="kb-plan-wrap"> @endif
 
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">A</div>
-                <textarea name="assessment" rows="4" placeholder="Assessment / analisa..." {{ $soapReadonly('assessment') }}>{{ old('assessment', $assesmen->assesmen ?? '') }}</textarea>
-            </div>
+                    <div class="kb-sub" data-target="{{ $nama }}">
+                        @if ($nama === 'plan')
+                            <div class="kb-sub-judul">Non Farmakologis :</div>
+                        @endif
 
-            <div class="kb-soap-row">
-                <div class="kb-soap-badge">P</div>
-                <div class="kb-plan-wrap">
-                    <textarea name="plan" rows="4" placeholder="Rencana/plan..." {{ $soapReadonly('plan') }}>{{ old('plan', $assesmen->plan ?? '') }}</textarea>
-                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
-                        <i class="fa-solid fa-print"></i> Cetak
-                    </button>
+                        @foreach ($daftarKolom as $label)
+                            <div class="kb-sub-item">
+                                <label>{{ $label }}</label>
+                                <textarea rows="2" data-label="{{ $label }}" {{ $soapReadonly($nama) }}></textarea>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Penampung gabungan: dibaca oleh Simpan, Resume Medis, dan penjaga halaman --}}
+                    <textarea name="{{ $nama }}" hidden {{ $soapReadonly($nama) }}>{{ old($nama, $soapNilai[$nama]) }}</textarea>
+
+                    @if ($nama === 'plan')
+                        <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
+                            <i class="fa-solid fa-print"></i> Cetak
+                        </button>
+                        </div>
+                    @endif
                 </div>
-            </div>
+            @endforeach
         </div>
 
         {{-- RESEP OBAT + judul PATEN (TINDAK LANJUT :) --}}
@@ -1212,6 +1238,57 @@
         return hasil;
     }
 
+    // ===== SOAP bertingkat: gabung kolom kecil ke textarea tersembunyi =====
+    function gabungSOAP(target) {
+        const wadah = document.querySelector('.kb-sub[data-target="' + target + '"]');
+        const hidden = document.querySelector('textarea[name="' + target + '"]');
+        if (!wadah || !hidden) return;
+
+        const bagian = [];
+        wadah.querySelectorAll('textarea[data-label]').forEach(function (t) {
+            const v = t.value.trim();
+            if (v !== '') bagian.push(t.dataset.label + ': ' + v);
+        });
+
+        hidden.value = bagian.join('\n');
+    }
+
+    // Pecah teks tersimpan kembali ke kolom-kolomnya.
+    // Teks lama tanpa label masuk ke kolom pertama.
+    function muatSOAP(target) {
+        const wadah = document.querySelector('.kb-sub[data-target="' + target + '"]');
+        const hidden = document.querySelector('textarea[name="' + target + '"]');
+        if (!wadah || !hidden || hidden.value.trim() === '') return;
+
+        const kolom = Array.from(wadah.querySelectorAll('textarea[data-label]'));
+        const labels = kolom.map(k => k.dataset.label);
+        const peta = {};
+        let kunci = null;
+
+        hidden.value.split('\n').forEach(function (baris) {
+            const cocok = labels.find(l => baris.startsWith(l + ': ') || baris === l + ':');
+
+            if (cocok) {
+                kunci = cocok;
+                peta[kunci] = baris.slice(cocok.length + 1).trimStart();
+            } else {
+                if (kunci === null) kunci = labels[0];
+                peta[kunci] = (peta[kunci] !== undefined ? peta[kunci] + '\n' : '') + baris;
+            }
+        });
+
+        kolom.forEach(function (k) {
+            if (peta[k.dataset.label] !== undefined) k.value = peta[k.dataset.label];
+        });
+    }
+
+    ['subjective', 'objective', 'assessment', 'plan'].forEach(muatSOAP);
+
+    document.addEventListener('input', function (e) {
+        const wadah = e.target.closest ? e.target.closest('.kb-sub[data-target]') : null;
+        if (wadah) gabungSOAP(wadah.dataset.target);
+    });
+
     // ===== Tab =====
 
     // Cek apakah satu diagnosa termasuk HNP (ICD-10 M51)
@@ -1810,7 +1887,7 @@
     }
 
     // ===== Tanda vital -> Objective (lewat checkbox) =====
-    // Teks tanda vital yang terakhir dimasukkan otomatis ke Objective
+    // Teks tanda vital yang terakhir dimasukkan otomatis ke kolom Pemeriksaan Tanda Vital
     let vitalTerakhir = '';
 
     function bangunTeksVital() {
@@ -1834,8 +1911,12 @@
         return bagian.join(', ');
     }
 
+    function kolomTtvObjektif() {
+        return document.querySelector('.kb-sub[data-target="objective"] textarea[data-label="Pemeriksaan Tanda Vital"]');
+    }
+
     function hapusVitalDariObjektif() {
-        const objektif = document.querySelector('textarea[name="objective"]');
+        const objektif = kolomTtvObjektif();
         if (!objektif) return;
 
         if (vitalTerakhir && objektif.value.startsWith(vitalTerakhir)) {
@@ -1843,10 +1924,11 @@
         }
 
         vitalTerakhir = '';
+        objektif.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     function terapkanVitalKeObjektif(teks) {
-        const objektif = document.querySelector('textarea[name="objective"]');
+        const objektif = kolomTtvObjektif();
         if (!objektif) return;
 
         let sisa = objektif.value;
@@ -1857,6 +1939,7 @@
 
         objektif.value = sisa ? teks + '\n' + sisa : teks;
         vitalTerakhir = teks;
+        objektif.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     async function toggleVitalKeObjektif(cb) {
@@ -1879,9 +1962,9 @@
             return;
         }
 
-        // Masukkan TTV ke Objective setelah penyimpanan berhasil.
+        // Masukkan TTV ke kolom Pemeriksaan Tanda Vital setelah penyimpanan berhasil.
         terapkanVitalKeObjektif(teks);
-        document.querySelector('textarea[name="objective"]')?.focus();
+        kolomTtvObjektif()?.focus();
 
         alert('Data TTV berhasil disimpan dan dimasukkan ke Objective.');
     }

@@ -808,7 +808,6 @@ p.kb-kosong { color: #888; }
 
 /* =====================================================================
    TAB RESUME MEDIS + POPUP SNOMED CT
-   (tempel di PALING BAWAH syaraf-kunjungan-baru.css)
    ===================================================================== */
 
 #tab-resume { font-size: 13px; color: #333; }
@@ -1121,4 +1120,60 @@ p.kb-kosong { color: #888; }
     body.cetak-rm-mode .rm-btn-tambah,
     body.cetak-rm-mode .rm-aksi,
     body.cetak-rm-mode .rm-snomed-item button { display: none !important; }
+}
+
+/* =====================================================================
+   SOAP: KOLOM BERTINGKAT
+   ===================================================================== */
+.kb-soap-box .kb-soap-row textarea[hidden] { display: none !important; }
+
+.kb-soap-box .kb-sub {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.kb-soap-box .kb-sub-judul {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--kb-merah);
+}
+
+.kb-soap-box .kb-sub-item {
+    padding: 8px 12px 10px;
+    border: 1px solid var(--kb-garis);
+    border-radius: 6px;
+    background: #fff;
+}
+
+.kb-soap-box .kb-sub-item label {
+    display: block;
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--kb-merah);
+}
+
+.kb-soap-box .kb-sub .kb-sub-item textarea {
+    display: block;
+    flex: none;
+    width: 100%;
+    min-height: 40px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+}
+
+/* Tombol Cetak di bagian P: pindah ke pojok kanan atas agar tidak menutupi kolom */
+.kb-plan-wrap .kb-cetak-plan {
+    top: 0;
+    right: 0;
+    transform: none;
 }
