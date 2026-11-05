@@ -1179,11 +1179,22 @@
     }
 
     // ===== Tab =====
+
+    // Cek apakah satu diagnosa termasuk HNP (ICD-10 M51)
+    function adalahHNP(item) {
+        if (!item) return false;
+        const kode = String(item.kode || '').trim().toUpperCase();
+        return KODE_HNP.some(awalan => kode.startsWith(awalan));
+    }
+
+    // Diagnosa Utama = diagnosa urutan pertama di daftar penyakit
+    function diagnosaUtama() {
+        return diagnosaTerpilih.penyakit[0] || null;
+    }
+
+    // Clinical Pathway hanya boleh dibuka bila HNP menjadi Diagnosa Utama
     function cpBolehDiisi() {
-        return diagnosaTerpilih.penyakit.some(function (item) {
-            const kode = String(item.kode || '').trim().toUpperCase();
-            return KODE_HNP.some(awalan => kode.startsWith(awalan));
-        });
+        return adalahHNP(diagnosaUtama());
     }
 
     function cpTerisi() {
@@ -1200,8 +1211,8 @@
 
     function gantiTab(tab, event) {
         if (tab === 'pathway' && !cpBolehDiisi()) {
-            alert('Clinical Pathway hanya tersedia untuk diagnosa HNP (ICD-10 M51). ' +
-                  'Pilih diagnosa HNP terlebih dahulu.');
+            alert('Clinical Pathway hanya tersedia bila HNP (ICD-10 M51) menjadi Diagnosa Utama. ' +
+                  'Urutkan atau pilih HNP sebagai diagnosa pertama.');
             return;
         }
 
@@ -1218,27 +1229,24 @@
         document.getElementById('tab-' + tab).classList.add('active');
     }
 
-    // Sinkronkan tab Clinical Pathway dengan diagnosa penyakit yang dipilih.
+    // Sinkronkan tab Clinical Pathway dengan Diagnosa Utama yang dipilih.
     function perbaruiStatusCP() {
         const boleh = cpBolehDiisi();
         const tabCP = document.querySelector('.kb-tab[onclick*="pathway"]');
 
         if (tabCP) {
             tabCP.classList.toggle('terkunci', !boleh);
-            tabCP.title = boleh ? '' : 'Hanya tersedia untuk diagnosa HNP (ICD-10 M51)';
+            tabCP.title = boleh ? '' : 'Hanya tersedia bila HNP (ICD-10 M51) menjadi Diagnosa Utama';
         }
 
         const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
         if (dxUtama) {
-            const hnp = diagnosaTerpilih.penyakit.find(function (item) {
-                const kode = String(item.kode || '').trim().toUpperCase();
-                return KODE_HNP.some(awalan => kode.startsWith(awalan));
-            });
-            dxUtama.value = hnp ? hnp.kode + ' — ' + hnp.nama : '';
+            const utama = diagnosaUtama();
+            dxUtama.value = boleh ? utama.kode + ' — ' + utama.nama : '';
             perbaruiWaktuBaris(dxUtama.closest('tr'));
         }
 
-        // Bila sedang di tab CP lalu diagnosa HNP dihapus, kembalikan ke Assessment.
+        // Bila sedang di tab CP lalu HNP bukan lagi Diagnosa Utama, kembali ke Assessment
         if (!boleh && document.getElementById('tab-pathway').classList.contains('active')) {
             gantiTab('assesment');
         }
@@ -1517,7 +1525,7 @@
         }
 
         if (!cpBolehDiisi()) {
-            alert('Clinical Pathway hanya dapat disimpan untuk diagnosa HNP (ICD-10 M51).');
+            alert('Clinical Pathway hanya dapat disimpan bila HNP (ICD-10 M51) menjadi Diagnosa Utama.');
             return;
         }
 
@@ -2050,61 +2058,61 @@
     }
 
     function renderDiagnosa(jenis) {
-    const k = konfig[jenis];
-    const list = document.getElementById(k.list);
-    list.innerHTML = '';
+        const k = konfig[jenis];
+        const list = document.getElementById(k.list);
+        list.innerHTML = '';
 
-    diagnosaTerpilih[jenis].forEach(function (item, index) {
-        const baris = document.createElement('div');
-        baris.className = 'kb-diagnosa-item';
+        diagnosaTerpilih[jenis].forEach(function (item, index) {
+            const baris = document.createElement('div');
+            baris.className = 'kb-diagnosa-item';
 
-        const teks = document.createElement('span');
-        teks.className = 'kb-diagnosa-text';
+            const teks = document.createElement('span');
+            teks.className = 'kb-diagnosa-text';
 
-        const kode = document.createElement('b');
-        kode.textContent = item.kode;
-        teks.appendChild(kode);
-        teks.appendChild(document.createTextNode(' — ' + item.nama));
+            const kode = document.createElement('b');
+            kode.textContent = item.kode;
+            teks.appendChild(kode);
+            teks.appendChild(document.createTextNode(' — ' + item.nama));
 
-        // Diagnosa pertama otomatis menjadi Utama
-        // Diagnosa kedua dan seterusnya menjadi Sekunder
-        if (jenis === 'penyakit') {
-            const badge = document.createElement('span');
-            badge.className = 'kb-badge-utama';
-            badge.textContent = index === 0
-                ? 'Diagnosa Utama'
-                : 'Diagnosa Sekunder';
+            // Diagnosa pertama otomatis menjadi Utama
+            // Diagnosa kedua dan seterusnya menjadi Sekunder
+            if (jenis === 'penyakit') {
+                const badge = document.createElement('span');
+                badge.className = 'kb-badge-utama';
+                badge.textContent = index === 0
+                    ? 'Diagnosa Utama'
+                    : 'Diagnosa Sekunder';
 
-            teks.appendChild(badge);
-        }
+                teks.appendChild(badge);
+            }
 
-        const hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = k.name;
-        hidden.value = item.id;
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = k.name;
+            hidden.value = item.id;
 
-        const aksi = document.createElement('span');
-        aksi.className = 'kb-diagnosa-aksi';
+            const aksi = document.createElement('span');
+            aksi.className = 'kb-diagnosa-aksi';
 
-        const btnHapus = document.createElement('button');
-        btnHapus.type = 'button';
-        btnHapus.className = 'kb-aksi-hapus';
-        btnHapus.title = 'Hapus';
-        btnHapus.setAttribute('aria-label', 'Hapus');
-        btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-        btnHapus.onclick = function () {
-            hapusDiagnosa(jenis, item.id);
-        };
+            const btnHapus = document.createElement('button');
+            btnHapus.type = 'button';
+            btnHapus.className = 'kb-aksi-hapus';
+            btnHapus.title = 'Hapus';
+            btnHapus.setAttribute('aria-label', 'Hapus');
+            btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            btnHapus.onclick = function () {
+                hapusDiagnosa(jenis, item.id);
+            };
 
-        aksi.appendChild(btnHapus);
-        baris.appendChild(teks);
-        baris.appendChild(hidden);
-        baris.appendChild(aksi);
-        list.appendChild(baris);
-    });
+            aksi.appendChild(btnHapus);
+            baris.appendChild(teks);
+            baris.appendChild(hidden);
+            baris.appendChild(aksi);
+            list.appendChild(baris);
+        });
 
-    perbaruiStatusCP();
-}
+        perbaruiStatusCP();
+    }
 
     renderDiagnosa('penyakit');
     renderDiagnosa('tindakan');
