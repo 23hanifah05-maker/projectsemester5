@@ -3,8 +3,8 @@
         [
             'Hak dan Kewajiban Sebagai Pasien',
             "<div class='gc-sub-group'>
-                <span class='gc-sub-item'>a) Saya memiliki hak untuk mengambil bagian dalam keputusan mengenai penyakit saya dan dalam hal perawatan medis da rencana pengobatan.</span>
-                <span class='gc-sub-item'>b) Saya telah mendapat informasi ttentang Hak dan Kewajiban pasien di Klinik Merah Putih melalui leaflet dan banner yang disediakan oleh petugas.</span>
+                <span class='gc-sub-item'>a) Saya memiliki hak untuk mengambil bagian dalam keputusan mengenai penyakit saya dan dalam hal perawatan medis dan rencana pengobatan.</span>
+                <span class='gc-sub-item'>b) Saya telah mendapat informasi tentang Hak dan Kewajiban pasien di Klinik Merah Putih melalui leaflet dan banner yang disediakan oleh petugas.</span>
             </div>"
         ],
         [
@@ -19,7 +19,7 @@
                 <div class='gc-sub-indent'>
                     <span class='gc-sub-item'>a) Dokter dan tenaga kesehatan lain yang turut merawat / memberikan asuhan kepada saya.</span>
                     <span class='gc-sub-item'>b) Perusahaan asuransi kesehatan atau perusahaan lainnya atau pihak lain yang menjamin pembiayaan saya.</span>
-                    <span class='gc-sub-item'>c) Anggota keluarga saya:</span>
+                    <span class='gc-sub-item'>c) Pihak / anggota keluarga saya (maksimal 4 nama):</span>
                 </div>
             </div>"
         ],
@@ -47,9 +47,7 @@
     ];
 @endphp
 
-{{-- CSS khusus modal --}}
 <style>
-    /* Penyetaraan ukuran huruf dan rata kanan-kiri untuk seluruh deskripsi */
 .gc-text p,
 .gc-text div,
 .gc-sub-item {
@@ -60,15 +58,15 @@
     color: #222;
 }
 
-/* Judul poin utama (misal: 1. Hak dan Kewajiban Pasien) */
 .gc-text h4 {
     font-size: 13px !important;
     font-weight: 700;
-    margin-bottom: 6px;
+    margin: 0 0 6px;
     color: #000;
 }
 
-/* Struktur tata letak sub-poin agar simetris & sejajar */
+.gc-text p { margin: 0; }
+
 .gc-sub-group {
     display: flex;
     flex-direction: column;
@@ -88,501 +86,533 @@
     padding-left: 22px;
     text-indent: -22px;
 }
-    .gc-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(0,0,0,.55);
-        align-items: flex-start;
-        justify-content: center;
-        overflow-y: auto;
-        padding: 24px 12px;
-        font-family: 'Poppins','Segoe UI',Arial,sans-serif;
-        color: #222;
+
+.gc-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,.55);
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 24px 12px;
+    font-family: 'Poppins','Segoe UI',Arial,sans-serif;
+    color: #222;
+}
+
+.gc-overlay.show { display: flex; }
+
+.gc-paper {
+    position: relative;
+    background: #fff;
+    width: 100%;
+    max-width: 980px;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+
+.gc-frame {
+    border: 1px solid var(--gc-line, #d6d6d6);
+    border-radius: 10px;
+    padding: 16px 18px 18px;
+}
+
+.gc-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    border: 0;
+    background: none;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    color: #888;
+}
+
+.gc-close:hover { color: #c8102e; }
+
+.gc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.gc-head img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.gc-klinik {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    color: #444;
+}
+
+.gc-klinik-nama {
+    display: inline-block;
+    border: 1px solid var(--gc-line, #d6d6d6);
+    border-radius: 4px;
+    padding: 5px 40px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+    box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+
+.gc-klinik small {
+    display: block;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.gc-title {
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 10px 0;
+    border-top: 1px solid var(--gc-line, #d6d6d6);
+    border-bottom: 1px solid var(--gc-line, #d6d6d6);
+    margin-bottom: 4px;
+}
+
+.gc-paper .gc-section-title { margin-left: 0; }
+
+.gc-paper .gc-box,
+.gc-paper .gc-list {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.gc-label-kecil {
+    display: block;
+    margin: 8px 0 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gc-keluarga-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    margin-left: 6px;
+}
+
+.gc-keluarga-input {
+    flex: 0 1 55%;
+    border: 1px solid var(--gc-line, #d6d6d6);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.gc-keluarga-hapus {
+    border: 0;
+    background: #fbe9e9;
+    color: #c8102e;
+    border-radius: 4px;
+    width: 28px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.gc-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+    padding: 6px 10px;
+    background: #fbe9e9;
+    border: 1px solid #f0cccc;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.gc-banner input {
+    width: 15px;
+    height: 15px;
+    accent-color: #c8102e;
+}
+
+/* TABEL PERSETUJUAN (3 KOLOM) */
+.gc-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 8px;
+}
+
+/* Paksa struktur tabel asli agar tidak tertimpa CSS lain di aplikasi */
+.gc-table { display: table !important; }
+.gc-table thead { display: table-header-group !important; }
+.gc-table tbody { display: table-row-group !important; }
+.gc-table tr { display: table-row !important; }
+.gc-table th,
+.gc-table td { display: table-cell !important; }
+
+.gc-table th,
+.gc-table td {
+    border: 1px solid #000;
+    padding: 8px 10px;
+    box-sizing: border-box;
+}
+
+.gc-table thead th {
+    background: #fff;
+    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    padding: 6px 8px;
+}
+
+.gc-table .gc-col-pernyataan { width: auto; }
+.gc-table .gc-col-pilihan { width: 90px; }
+
+.gc-table td.gc-td-text {
+    vertical-align: top;
+}
+
+.gc-table td.gc-td-pilihan {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.gc-table tr { break-inside: avoid; page-break-inside: avoid; }
+
+/* RADIO BUTTON TAMPIL SEBAGAI KOTAK PERSEGI */
+.gc-kotak {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-block;
+    position: relative;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1.5px solid #1f2d4d;
+    border-radius: 2px;
+    background: #fff;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.gc-kotak:hover { background: #eef1f7; }
+
+.gc-kotak:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 4px;
+    height: 9px;
+    border: solid #1f2d4d;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.gc-ttd-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    align-items: flex-start;
+    border: 1px solid var(--gc-line, #d6d6d6);
+    border-radius: 10px;
+    padding: 14px 18px;
+}
+
+/* Dua kolom tanda tangan dibuat sama lebar & sama tinggi */
+.gc-ttd-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 220px;
+    max-width: 340px;
+}
+
+.gc-ttd-col .gc-ttd-box {
+    width: 100%;
+}
+
+.gc-ttd-label {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.gc-ttd-box {
+    border: 1px solid var(--gc-line, #d6d6d6);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.gc-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.gc-ttd-box .gc-canvas { pointer-events: none; }
+
+.gc-link {
+    margin-top: 4px;
+    border: 0;
+    background: none;
+    color: #c8102e;
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.gc-text .gc-link {
+    display: block;
+    margin: 6px 0 0 6px;
+}
+
+.gc-nama-terang {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gc-nama-terang input {
+    border: 0;
+    border-bottom: 1px solid #000;
+    text-align: center;
+    width: 180px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    outline: none;
+    background: transparent;
+}
+
+.gc-ttd-waktu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    padding-top: 20px;
+}
+
+.gc-ttd-waktu label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.gc-ttd-waktu input {
+    width: 130px;
+    border: 1px solid var(--gc-line, #d6d6d6);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-family: inherit;
+}
+
+.gc-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.gc-btn {
+    background: #c8102e;
+    color: #fff;
+    border: 0;
+    border-radius: 4px;
+    padding: 6px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.gc-btn:hover { background: #a50d26; }
+.gc-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.gc-sign-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: rgba(0, 0, 0, .45);
+    backdrop-filter: blur(3px);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.gc-sign-overlay.show { display: flex; }
+
+.gc-sign-modal {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+}
+
+.gc-sign-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #c8102e;
+    color: #fff;
+    padding: 17px 22px;
+}
+
+.gc-sign-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.gc-sign-close {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 26px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.gc-sign-body { padding: 22px; }
+
+.gc-sign-info {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.gc-sign-canvas-wrap {
+    width: 100%;
+    height: 260px;
+    border: 1px solid #d6d6d6;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+
+#gcTtdPopup {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.gc-sign-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.gc-sign-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.gc-sign-btn-clear { background: #fbe9e9; color: #c8102e; }
+.gc-sign-btn-cancel { background: #e9e9e9; color: #444; }
+.gc-sign-btn-save { background: #c8102e; color: #fff; }
+.gc-sign-btn-save:hover { background: #a50d26; }
+
+@media (max-width: 600px) {
+    .gc-sign-modal { max-width: 100%; }
+    .gc-sign-body { padding: 15px; }
+    .gc-sign-canvas-wrap { height: 220px; }
+    .gc-sign-footer { flex-wrap: wrap; }
+}
+
+@media (max-width: 700px) {
+    .gc-head img { width: 44px; height: 44px; }
+    .gc-keluarga-input { flex: 1; }
+    .gc-table .gc-col-pilihan { width: 64px; }
+    .gc-table thead th { font-size: 11px; }
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 6mm;
     }
-    .gc-overlay.show { display: flex; }
+
+    html, body {
+        background: #fff !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    body > *:not(#consentModal) { display: none !important; }
+
+    #consentModal {
+        display: block !important;
+        position: static !important;
+        background: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
 
     .gc-paper {
-        position: relative;
-        background: #fff;
-        width: 100%;
-        max-width: 980px;
-        border-radius: 12px;
-        padding: 18px;
-        box-shadow: 0 10px 40px rgba(0,0,0,.25);
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
     }
 
-    /* KOTAK LUAR FORMULIR */
+    .no-print { display: none !important; }
+
     .gc-frame {
-        border: 1px solid var(--gc-line, #d6d6d6);
-        border-radius: 10px;
-        padding: 16px 18px 18px;
+        zoom: .72;
+        padding: 10px 12px !important;
     }
 
-    .gc-close {
-        position: absolute;
-        top: 8px;
-        right: 12px;
-        border: 0;
-        background: none;
-        font-size: 28px;
-        line-height: 1;
-        cursor: pointer;
-        color: #888;
+    .gc-head { margin-bottom: 4px !important; }
+    .gc-title { padding: 6px 0 !important; }
+    .gc-table th,
+    .gc-table td { padding: 6px 8px !important; }
+    .gc-banner { margin: 6px 0 !important; }
+    .gc-ttd-wrap { padding: 8px 12px !important; }
+    .gc-ttd-col { max-width: 300px !important; }
+
+    .gc-ttd-wrap { break-inside: avoid; }
+
+    .gc-sign-overlay { display: none !important; }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
-    .gc-close:hover { color: #c8102e; }
-
-    .gc-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 10px;
-    }
-
-    .gc-head img {
-        width: 64px;
-        height: 64px;
-        object-fit: contain;
-        flex: 0 0 auto;
-    }
-
-    .gc-klinik {
-        flex: 1;
-        text-align: center;
-        font-size: 11px;
-        color: #444;
-    }
-
-    .gc-klinik-nama {
-        display: inline-block;
-        border: 1px solid var(--gc-line, #d6d6d6);
-        border-radius: 4px;
-        padding: 5px 40px;
-        margin-bottom: 6px;
-        font-size: 14px;
-        font-weight: 700;
-        color: #222;
-        box-shadow: 0 1px 4px rgba(0,0,0,.12);
-    }
-
-    .gc-klinik small {
-        display: block;
-        font-size: 11px;
-        line-height: 1.4;
-    }
-
-    .gc-title {
-        text-align: center;
-        font-size: 16px;
-        line-height: 1.5;
-        padding: 10px 0;
-        border-top: 1px solid var(--gc-line, #d6d6d6);
-        border-bottom: 1px solid var(--gc-line, #d6d6d6);
-        margin-bottom: 4px;
-    }
-
-    .gc-paper .gc-section-title { margin-left: 0; }
-
-    .gc-paper .gc-box,
-    .gc-paper .gc-list {
-        margin-left: 0;
-        margin-right: 0;
-    }
-
-    /* Nama anggota keluarga */
-    .gc-keluarga-row {
-        display: flex;
-        gap: 6px;
-        margin-top: 6px;
-        margin-left: 6px;
-    }
-
-    .gc-keluarga-input {
-        flex: 0 1 55%;
-        border: 1px solid var(--gc-line, #d6d6d6);
-        border-radius: 6px;
-        padding: 6px 10px;
-        font-family: inherit;
-        font-size: 12px;
-    }
-
-    .gc-keluarga-hapus {
-        border: 0;
-        background: #fbe9e9;
-        color: #c8102e;
-        border-radius: 4px;
-        width: 28px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .gc-banner {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 12px 0;
-        padding: 6px 10px;
-        background: #fbe9e9;
-        border: 1px solid #f0cccc;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 500;
-        cursor: pointer;
-    }
-
-    .gc-banner input {
-        width: 15px;
-        height: 15px;
-        accent-color: #c8102e;
-    }
-
-    /* TANDA TANGAN */
-    .gc-ttd-wrap {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 24px;
-        justify-content: center;
-        align-items: flex-start;
-        border: 1px solid var(--gc-line, #d6d6d6);
-        border-radius: 10px;
-        padding: 14px 18px;
-    }
-
-    .gc-ttd-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .gc-ttd-label {
-        font-size: 11px;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
-
-    .gc-ttd-box {
-        border: 1px solid var(--gc-line, #d6d6d6);
-        border-radius: 6px;
-        background: #fff;
-        cursor: pointer;
-    }
-
-    .gc-canvas {
-        display: block;
-        cursor: crosshair;
-        touch-action: none;
-    }
-
-    /* Canvas utama hanya untuk menampilkan hasil tanda tangan */
-    .gc-ttd-box .gc-canvas {
-        pointer-events: none;
-    }
-
-    .gc-link {
-        margin-top: 4px;
-        border: 0;
-        background: none;
-        color: #c8102e;
-        font-size: 11px;
-        cursor: pointer;
-        text-decoration: underline;
-        padding: 0;
-    }
-
-    .gc-text .gc-link {
-        display: block;
-        margin: 6px 0 0 6px;
-    }
-
-    .gc-nama-terang {
-        margin-top: 8px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .gc-nama-terang input {
-        border: 0;
-        border-bottom: 1px solid #000;
-        text-align: center;
-        width: 180px;
-        font-family: inherit;
-        font-size: 12px;
-        font-weight: 600;
-        outline: none;
-        background: transparent;
-    }
-
-    .gc-ttd-waktu {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        font-size: 11px;
-        font-weight: 600;
-        padding-top: 20px;
-    }
-
-    .gc-ttd-waktu label {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-
-    .gc-ttd-waktu input {
-        width: 130px;
-        border: 1px solid var(--gc-line, #d6d6d6);
-        border-radius: 6px;
-        padding: 5px 8px;
-        font-size: 12px;
-        font-family: inherit;
-    }
-
-    .gc-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 14px;
-    }
-
-    .gc-btn {
-        background: #c8102e;
-        color: #fff;
-        border: 0;
-        border-radius: 4px;
-        padding: 6px 20px;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: inherit;
-    }
-
-    .gc-btn:hover { background: #a50d26; }
-    .gc-btn:disabled { opacity: .6; cursor: not-allowed; }
-
-    /* POPUP TANDA TANGAN */
-    .gc-sign-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 10001;
-        background: rgba(0, 0, 0, .45);
-        backdrop-filter: blur(3px);
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-    }
-
-    .gc-sign-overlay.show {
-        display: flex;
-    }
-
-    .gc-sign-modal {
-        width: 100%;
-        max-width: 600px;
-        background: #fff;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
-        font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
-    }
-
-    .gc-sign-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #c8102e;
-        color: #fff;
-        padding: 17px 22px;
-    }
-
-    .gc-sign-header h3 {
-        margin: 0;
-        font-size: 17px;
-        font-weight: 600;
-    }
-
-    .gc-sign-close {
-        border: 0;
-        background: transparent;
-        color: #fff;
-        font-size: 26px;
-        cursor: pointer;
-        line-height: 1;
-    }
-
-    .gc-sign-body {
-        padding: 22px;
-    }
-
-    .gc-sign-info {
-        font-size: 13px;
-        color: #666;
-        margin-bottom: 12px;
-    }
-
-    .gc-sign-canvas-wrap {
-        width: 100%;
-        height: 260px;
-        border: 1px solid #d6d6d6;
-        border-radius: 8px;
-        background: #fff;
-        overflow: hidden;
-    }
-
-    #gcTtdPopup {
-        display: block;
-        width: 100%;
-        height: 100%;
-        cursor: crosshair;
-        touch-action: none;
-    }
-
-    .gc-sign-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 18px;
-    }
-
-    .gc-sign-btn {
-        border: none;
-        border-radius: 6px;
-        padding: 10px 22px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: inherit;
-    }
-
-    .gc-sign-btn-clear {
-        background: #fbe9e9;
-        color: #c8102e;
-    }
-
-    .gc-sign-btn-cancel {
-        background: #e9e9e9;
-        color: #444;
-    }
-
-    .gc-sign-btn-save {
-        background: #c8102e;
-        color: #fff;
-    }
-
-    .gc-sign-btn-save:hover {
-        background: #a50d26;
-    }
-
-    @media (max-width: 600px) {
-        .gc-sign-modal {
-            max-width: 100%;
-        }
-
-        .gc-sign-body {
-            padding: 15px;
-        }
-
-        .gc-sign-canvas-wrap {
-            height: 220px;
-        }
-
-        .gc-sign-footer {
-            flex-wrap: wrap;
-        }
-    }
-
-    @media (max-width: 700px) {
-        .gc-head img {
-            width: 44px;
-            height: 44px;
-        }
-
-        .gc-keluarga-input {
-            flex: 1;
-        }
-    }
-
-    @media print {
-        @page {
-            size: A4;
-            margin: 6mm;
-        }
-
-        html, body {
-            background: #fff !important;
-            height: auto !important;
-            overflow: visible !important;
-        }
-
-        body > *:not(#consentModal) {
-            display: none !important;
-        }
-
-        #consentModal {
-            display: block !important;
-            position: static !important;
-            background: none !important;
-            padding: 0 !important;
-            overflow: visible !important;
-            height: auto !important;
-        }
-
-        .gc-paper {
-            box-shadow: none !important;
-            max-width: 100% !important;
-            width: 100% !important;
-            padding: 0 !important;
-            border-radius: 0 !important;
-        }
-
-        .no-print {
-            display: none !important;
-        }
-
-        .gc-frame {
-            zoom: .72;
-            padding: 10px 12px !important;
-        }
-
-        .gc-head {
-            margin-bottom: 4px !important;
-        }
-
-        .gc-title {
-            padding: 6px 0 !important;
-        }
-
-        .gc-text {
-            padding: 6px 10px !important;
-        }
-
-        .gc-banner {
-            margin: 6px 0 !important;
-        }
-
-        .gc-ttd-wrap {
-            padding: 8px 12px !important;
-        }
-
-        .gc-canvas {
-            height: 90px !important;
-        }
-
-        .gc-item,
-        .gc-ttd-wrap {
-            break-inside: avoid;
-        }
-
-        .gc-sign-overlay {
-            display: none !important;
-        }
-
-        * {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-    }
+}
 </style>
 
 <div class="gc-overlay" id="consentModal">
@@ -616,7 +646,6 @@
                 (GENERAL CONSENT) RAWAT JALAN
             </div>
 
-            {{-- DATA PASIEN --}}
             <div class="gc-section-title">Data Pasien</div>
 
             <div class="gc-box gc-pasien">
@@ -653,72 +682,108 @@
 
             </div>
 
-            {{-- DAFTAR PERSETUJUAN --}}
+            {{-- TABEL PERSETUJUAN: 3 KOLOM (Pernyataan | Setuju | Tidak Setuju) --}}
             <div class="gc-list">
 
-                @foreach ($butir as $i => $b)
+                <table class="gc-table">
 
-                    <div class="gc-item">
+                    <colgroup>
+                        <col class="gc-col-pernyataan">
+                        <col class="gc-col-pilihan">
+                        <col class="gc-col-pilihan">
+                    </colgroup>
 
-                        <div class="gc-text">
-                            <h4>{{ $i + 1 }}. {{ $b[0] }}</h4>
-                            <p>{!! $b[1] !!}</p>
+                    <thead>
+                        <tr>
+                            <th>Pernyataan</th>
+                            <th>Setuju</th>
+                            <th>Tidak Setuju</th>
+                        </tr>
+                    </thead>
 
-                            @if ($i === 2)
+                    <tbody>
 
-                                <label class="gc-label-kecil">
-                                    Nama Anggota Keluarga Yang Diperbolehkan Melihat Informasi Pasien:
-                                </label>
+                        @foreach ($butir as $i => $b)
 
-                                <div id="gc-keluarga-list">
-                                    <div class="gc-keluarga-row">
-                                        <input type="text"
-                                               class="gc-keluarga-input"
-                                               placeholder="Nama anggota keluarga">
+                            <tr class="gc-row" data-index="{{ $i + 1 }}">
 
-                                        <button type="button"
-                                                class="gc-keluarga-hapus no-print"
-                                                style="display:none"
-                                                onclick="gcHapusKeluarga(this)">
-                                            &times;
-                                        </button>
+                                <td class="gc-td-text">
+                                    <div class="gc-text">
+
+                                        <h4>{{ $i + 1 }}. {{ $b[0] }}</h4>
+                                        <p>{!! $b[1] !!}</p>
+
+                                        @if ($i === 2)
+
+                                            <label class="gc-label-kecil">
+                                                Nama Pihak / Anggota Keluarga Yang Diperbolehkan Melihat Informasi RM Pasien (maksimal 4):
+                                            </label>
+
+                                            <div id="gc-keluarga-list">
+                                                <div class="gc-keluarga-row">
+                                                    <input type="text"
+                                                           class="gc-keluarga-input"
+                                                           placeholder="Nama pihak / anggota keluarga">
+
+                                                    <button type="button"
+                                                            class="gc-keluarga-hapus no-print"
+                                                            style="display:none"
+                                                            onclick="gcHapusKeluarga(this)">
+                                                        &times;
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <button type="button"
+                                                    id="gc-tambah-keluarga"
+                                                    class="gc-link no-print"
+                                                    onclick="gcTambahKeluarga()">
+                                                + Tambah nama
+                                            </button>
+
+                                        @endif
+
                                     </div>
-                                </div>
+                                </td>
 
-                                <button type="button"
-                                        class="gc-link no-print"
-                                        onclick="gcTambahKeluarga()">
-                                    + Tambah anggota keluarga
-                                </button>
+                                <td class="gc-td-pilihan">
+                                    <input type="radio"
+                                           class="gc-cek gc-kotak"
+                                           name="gc_persetujuan[{{ $i + 1 }}]"
+                                           value="setuju"
+                                           aria-label="Setuju butir {{ $i + 1 }}">
+                                </td>
 
-                            @endif
-                        </div>
+                                <td class="gc-td-pilihan">
+                                    <input type="radio"
+                                           class="gc-cek gc-kotak"
+                                           name="gc_persetujuan[{{ $i + 1 }}]"
+                                           value="tidak_setuju"
+                                           aria-label="Tidak setuju butir {{ $i + 1 }}">
+                                </td>
 
-                        <label class="gc-check">
-                            <input type="checkbox" class="gc-cek">
-                            Setuju
-                        </label>
+                            </tr>
 
-                    </div>
+                        @endforeach
 
-                @endforeach
+                    </tbody>
+
+                </table>
 
             </div>
 
+            {{-- KONFIRMASI SAJA, TIDAK MENGUBAH PILIHAN DI ATAS --}}
             <label class="gc-banner">
                 <input type="checkbox" id="gc-semua">
-                Dengan ini saya menyatakan bahwa seluruh informasi di atas telah saya baca, pahami, dan saya setuju dengan sebenar-benarnya.
+                Dengan ini saya menyatakan bahwa seluruh informasi di atas telah saya baca dan saya pahami dengan sebenar-benarnya.
             </label>
 
             {{-- TANDA TANGAN --}}
             <div class="gc-ttd-wrap">
 
-                {{-- PEMBERI INFORMASI --}}
                 <div class="gc-ttd-col">
 
-                    <div class="gc-ttd-label">
-                        Pemberi Informasi
-                    </div>
+                    <div class="gc-ttd-label">Pemberi Informasi</div>
 
                     <div class="gc-ttd-box"
                          onclick="gcBukaPopupTtd('gcTtdPemberi')"
@@ -726,8 +791,8 @@
 
                         <canvas id="gcTtdPemberi"
                                 class="gc-canvas"
-                                width="220"
-                                height="110">
+                                width="400"
+                                height="186">
                         </canvas>
 
                     </div>
@@ -748,12 +813,9 @@
 
                 </div>
 
-                {{-- TANDA TANGAN PASIEN --}}
                 <div class="gc-ttd-col">
 
-                    <div class="gc-ttd-label">
-                        Tanda tangan Pasien/Keluarga
-                    </div>
+                    <div class="gc-ttd-label">Tanda tangan Penerima Informasi</div>
 
                     <div class="gc-ttd-box"
                          onclick="gcBukaPopupTtd('gcTtd')"
@@ -762,7 +824,7 @@
                         <canvas id="gcTtd"
                                 class="gc-canvas"
                                 width="400"
-                                height="110">
+                                height="186">
                         </canvas>
 
                     </div>
@@ -783,7 +845,6 @@
 
                 </div>
 
-                {{-- TANGGAL DAN JAM --}}
                 <div class="gc-ttd-waktu">
 
                     <label>
@@ -827,9 +888,7 @@
 
             <div class="gc-sign-header">
 
-                <h3 id="gcSignTitle">
-                    Tanda Tangan
-                </h3>
+                <h3 id="gcSignTitle">Tanda Tangan</h3>
 
                 <button type="button"
                         class="gc-sign-close"
@@ -888,13 +947,19 @@
 
     'use strict';
 
+    const GC_MAKS_KELUARGA = 4;
+
     let gcDataPasien = {};
     let gcTargetTtd = null;
+
+    // No RM pasien yang isian General Consent-nya sedang tersimpan di form.
+    // Selama No RM sama, isian tidak direset saat modal dibuka lagi.
+    let gcNormTerakhir = null;
 
     window.gcPad = window.gcPad || {};
 
     /* MENGISI DATA PASIEN */
-    function gcIsiData(data) {
+    function gcIsiData(data, jagaWaktu) {
 
         document.getElementById('gc-norm').value = data.norm || '';
         document.getElementById('gc-nama').value = data.nama || '';
@@ -902,6 +967,11 @@
         document.getElementById('gc-umur').value = data.umur || '';
         document.getElementById('gc-jk').value = data.jk || '';
         document.getElementById('gc-hp').value = data.hp || '';
+
+        // Jika isian dipertahankan, tanggal & jam tidak diubah.
+        if (jagaWaktu) {
+            return;
+        }
 
         const sekarang = new Date();
         const pad = n => String(n).padStart(2, '0');
@@ -922,9 +992,26 @@
 
         gcDataPasien = data || {};
 
-        gcIsiData(gcDataPasien);
+        const norm = String(gcDataPasien.norm || '').trim();
 
-        gcReset();
+        const pasienSama = norm !== '' && norm === gcNormTerakhir;
+
+        if (pasienSama) {
+
+            // Pasien yang sama: pertahankan semua isian (pilihan, nama,
+            // tanda tangan, tanggal & jam). Hanya data pasien yang disegarkan.
+            gcIsiData(gcDataPasien, true);
+
+        } else {
+
+            // Pasien berbeda / belum pernah diisi: mulai dari kosong.
+            gcReset();
+
+            gcIsiData(gcDataPasien, false);
+
+            gcNormTerakhir = norm !== '' ? norm : null;
+
+        }
 
         document.getElementById('consentModal').classList.add('show');
 
@@ -993,7 +1080,7 @@
 
     };
 
-    /* MENYIMPAN TANDA TANGAN POPUP KE CANVAS UTAMA GENERAL CONSENT */
+    /* MENYIMPAN TANDA TANGAN POPUP */
     window.gcSimpanPopupTtd = function () {
 
         if (!gcTargetTtd) {
@@ -1046,6 +1133,8 @@
     /* RESET GENERAL CONSENT */
     function gcReset() {
 
+        gcNormTerakhir = null;
+
         document.querySelectorAll('.gc-cek').forEach(c => {
             c.checked = false;
         });
@@ -1085,7 +1174,7 @@
 
     window.gcReset = gcReset;
 
-    /* REFRESH ANGGOTA KELUARGA */
+    /* REFRESH DAFTAR NAMA (TOMBOL HAPUS & TOMBOL TAMBAH, MAKS 4) */
     function gcRefreshKeluarga() {
 
         const rows = document.querySelectorAll(
@@ -1105,12 +1194,35 @@
 
         });
 
+        const tambah = document.getElementById('gc-tambah-keluarga');
+
+        if (tambah) {
+
+            tambah.style.display =
+                rows.length >= GC_MAKS_KELUARGA ? 'none' : 'block';
+
+        }
+
     }
 
-    /* TAMBAH ANGGOTA KELUARGA */
+    /* TAMBAH NAMA */
     window.gcTambahKeluarga = function () {
 
         const list = document.getElementById('gc-keluarga-list');
+
+        if (!list) {
+            return;
+        }
+
+        const jumlah = list.querySelectorAll('.gc-keluarga-row').length;
+
+        if (jumlah >= GC_MAKS_KELUARGA) {
+
+            alert('Maksimal ' + GC_MAKS_KELUARGA + ' nama yang dapat ditambahkan.');
+
+            return;
+
+        }
 
         const awal = list.querySelector('.gc-keluarga-row');
 
@@ -1130,7 +1242,7 @@
 
     };
 
-    /* HAPUS ANGGOTA KELUARGA */
+    /* HAPUS NAMA */
     window.gcHapusKeluarga = function (button) {
 
         const row = button.closest('.gc-keluarga-row');
@@ -1143,14 +1255,34 @@
 
     };
 
-    /* MENGAMBIL DATA ANGGOTA KELUARGA */
+    /* MENGAMBIL DATA NAMA (MAKS 4) */
     function gcAmbilKeluarga() {
 
         return Array.from(
             document.querySelectorAll('.gc-keluarga-input')
         )
         .map(input => input.value.trim())
-        .filter(Boolean);
+        .filter(Boolean)
+        .slice(0, GC_MAKS_KELUARGA);
+
+    }
+
+    /* MENGAMBIL PILIHAN PERSETUJUAN SETIAP BUTIR */
+    function gcAmbilPersetujuan() {
+
+        const hasil = {};
+
+        document.querySelectorAll('.gc-row').forEach((item, index) => {
+
+            const pilihan = item.querySelector(
+                'input[type="radio"]:checked'
+            );
+
+            hasil[index + 1] = pilihan ? pilihan.value : '';
+
+        });
+
+        return hasil;
 
     }
 
@@ -1207,11 +1339,8 @@
             const p = posisi(event);
 
             ctx.beginPath();
-
             ctx.moveTo(p.x, p.y);
-
             ctx.lineTo(p.x + 0.1, p.y + 0.1);
-
             ctx.stroke();
 
             state.dirty = true;
@@ -1229,7 +1358,6 @@
             const p = posisi(event);
 
             ctx.lineTo(p.x, p.y);
-
             ctx.stroke();
 
             state.dirty = true;
@@ -1240,9 +1368,7 @@
             function (eventName) {
 
                 canvas.addEventListener(eventName, function () {
-
                     state.drawing = false;
-
                 });
 
             }
@@ -1285,20 +1411,30 @@
     function gcValidasi() {
 
         const semuaButir = Array.from(
-            document.querySelectorAll('.gc-cek')
+            document.querySelectorAll('.gc-row')
         );
 
-        if (!semuaButir.every(checkbox => checkbox.checked)) {
+        // Setiap butir wajib memilih Setuju atau Tidak Setuju.
+        const semuaSudahDipilih = semuaButir.every(item => {
 
-            alert('Semua butir persetujuan harus dicentang "Setuju".');
+            return item.querySelector(
+                'input[type="radio"]:checked'
+            ) !== null;
+
+        });
+
+        if (!semuaSudahDipilih) {
+
+            alert('Semua butir harus dipilih Setuju atau Tidak Setuju.');
 
             return false;
 
         }
 
+        // Checkbox bawah hanya validasi konfirmasi.
         if (!document.getElementById('gc-semua').checked) {
 
-            alert('Pernyataan persetujuan di bawah butir belum dicentang.');
+            alert('Pernyataan konfirmasi di bawah butir belum dicentang.');
 
             return false;
 
@@ -1380,9 +1516,7 @@
             if (!input) {
 
                 input = document.createElement('input');
-
                 input.type = 'hidden';
-
                 input.name = name;
 
                 form.appendChild(input);
@@ -1395,47 +1529,52 @@
 
         setHidden('general_consent', '1');
 
+        // Ambil hasil pilihan masing-masing butir.
+        const persetujuan = gcAmbilPersetujuan();
+
+        // Simpan masing-masing butir ke hidden input terpisah.
+        setHidden('gc_hak_kewajiban', persetujuan[1]);
+        setHidden('gc_persetujuan_pelayanan', persetujuan[2]);
+        setHidden('gc_pelepasan_informasi', persetujuan[3]);
+        setHidden('gc_pengajuan_keluhan', persetujuan[4]);
+        setHidden('gc_informasi_rawat_jalan', persetujuan[5]);
+        setHidden('gc_kewajiban_pembayaran', persetujuan[6]);
+        setHidden('gc_pernyataan_persetujuan', persetujuan[7]);
+
+        // Simpan status centang konfirmasi secara terpisah.
         setHidden(
-            'gc_ttd_pemberi',
-            gcAmbilTtd('gcTtdPemberi')
+            'gc_konfirmasi',
+            document.getElementById('gc-semua').checked ? '1' : '0'
         );
+
+        setHidden('gc_ttd_pemberi', gcAmbilTtd('gcTtdPemberi'));
 
         setHidden(
             'gc_nama_pemberi',
             document.getElementById('gc-nama-pemberi').value.trim()
         );
 
-        setHidden(
-            'gc_ttd_pasien',
-            gcAmbilTtd('gcTtd')
-        );
+        setHidden('gc_ttd_pasien', gcAmbilTtd('gcTtd'));
 
         setHidden(
             'gc_nama_penandatangan',
             document.getElementById('gc-nama-pasien').value.trim()
         );
 
+        // Maksimal 4 nama pihak yang boleh mengakses informasi RM.
         setHidden(
             'gc_anggota_keluarga',
             JSON.stringify(gcAmbilKeluarga())
         );
 
-        setHidden(
-            'gc_tanggal',
-            document.getElementById('gc-tgl').value
-        );
-
-        setHidden(
-            'gc_jam',
-            document.getElementById('gc-jam').value
-        );
+        setHidden('gc_tanggal', document.getElementById('gc-tgl').value);
+        setHidden('gc_jam', document.getElementById('gc-jam').value);
 
         const tombolConsent = document.getElementById('btnConsent');
 
         if (tombolConsent) {
 
             tombolConsent.textContent = '✔ General Consent';
-
             tombolConsent.classList.add('sudah');
 
         }
@@ -1456,28 +1595,10 @@
         );
 
         gcInitPad('gcTtdPemberi');
-
         gcInitPad('gcTtd');
-
         gcInitPad('gcTtdPopup');
 
         gcRefreshKeluarga();
-
-        const semua = document.getElementById('gc-semua');
-
-        if (semua) {
-
-            semua.addEventListener('change', function () {
-
-                document.querySelectorAll('.gc-cek').forEach(
-                    checkbox => {
-                        checkbox.checked = this.checked;
-                    }
-                );
-
-            });
-
-        }
 
         const popup = document.getElementById('gcSignModal');
 
