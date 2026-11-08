@@ -148,7 +148,7 @@ class PendaftaranController extends Controller
     }
 
     /**
-     * Menyimpan data pasien dan pendaftaran.
+     * Menyimpan data pasien, pendaftaran, dan General Consent.
      */
     public function store(Request $request)
     {
@@ -187,7 +187,6 @@ class PendaftaranController extends Controller
             'pj_no_hp' => 'required|string|max:13',
 
             'poli' => 'required|string|exists:poli,slug',
-
             'dokter' => 'required|string|max:100',
 
             'pembayaran' => [
@@ -195,14 +194,30 @@ class PendaftaranController extends Controller
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
 
-            'general_consent'       => 'required|in:1',
-            'gc_anggota_keluarga'   => 'nullable|json',
-            'gc_ttd_pemberi'        => 'required|string',
-            'gc_nama_pemberi'       => 'required|string|max:100',
-            'gc_ttd_pasien'         => 'required|string',
+            'general_consent' => 'required|in:1',
+
+            'gc_hak_kewajiban' => 'required|in:setuju,tidak_setuju',
+            'gc_persetujuan_pelayanan' => 'required|in:setuju,tidak_setuju',
+            'gc_pelepasan_informasi' => 'required|in:setuju,tidak_setuju',
+            'gc_pengajuan_keluhan' => 'required|in:setuju,tidak_setuju',
+            'gc_informasi_rawat_jalan' => 'required|in:setuju,tidak_setuju',
+            'gc_kewajiban_pembayaran' => 'required|in:setuju,tidak_setuju',
+            'gc_pernyataan_persetujuan' => 'required|in:setuju,tidak_setuju',
+
+            'gc_konfirmasi' => 'required|in:1',
+            'gc_anggota_keluarga' => 'nullable|json',
+
+            'gc_ttd_pemberi' => 'required|string',
+            'gc_nama_pemberi' => 'required|string|max:100',
+            'gc_ttd_pasien' => 'required|string',
             'gc_nama_penandatangan' => 'required|string|max:100',
+
+            'gc_tanggal' => 'nullable|string|max:20',
+            'gc_jam' => 'nullable|string|max:20',
+
         ], [
             'general_consent.in' => 'General Consent belum disetujui.',
+            'gc_konfirmasi.in' => 'Konfirmasi General Consent belum dicentang.',
         ]);
 
         $dataPoli = Poli::where(
@@ -232,7 +247,7 @@ class PendaftaranController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use (
+        $idPendaftaran = DB::transaction(function () use (
             $validated,
             $dataPoli,
             $jenisPembayaran,
@@ -265,16 +280,21 @@ class PendaftaranController extends Controller
                 'pj_no_hp' => $pjNoHp,
             ]);
 
-            Pendaftaran::create([
+            $pendaftaran = Pendaftaran::create([
                 'tgl_registrasi' => now(),
                 'no_rm' => $validated['no_rm'],
                 'id_poli' => $dataPoli->id_poli,
                 'dpjp' => $validated['dokter'],
                 'jenis_pembayaran' => $jenisPembayaran,
             ]);
+
+            return $pendaftaran->id_pendaftaran;
         });
 
-        $this->simpanGeneralConsent($validated);
+        $this->simpanGeneralConsent(
+            $validated,
+            $idPendaftaran
+        );
 
         Audit::catat(
             'Menambah data pasien baru: ' . $validated['nama_pasien'],
@@ -300,14 +320,47 @@ class PendaftaranController extends Controller
         $validated = $request->validate([
             'poli' => 'required|string|exists:poli,slug',
             'dokter' => 'required|string|max:100',
-            'pembayaran' => ['required', Rule::in(['umum', 'asuransi', 'bpjs'])],
+
+            'pembayaran' => [
+                'required',
+                Rule::in(['umum', 'asuransi', 'bpjs']),
+            ],
+
             'pj_nama' => 'required|string|max:100',
             'pj_hubungan' => 'required|string|max:20',
             'pj_jenis_kelamin' => 'required|integer|between:0,4',
             'pj_no_hp' => 'required|string|max:13',
+
+            'general_consent' => 'required|in:1',
+
+            'gc_hak_kewajiban' => 'required|in:setuju,tidak_setuju',
+            'gc_persetujuan_pelayanan' => 'required|in:setuju,tidak_setuju',
+            'gc_pelepasan_informasi' => 'required|in:setuju,tidak_setuju',
+            'gc_pengajuan_keluhan' => 'required|in:setuju,tidak_setuju',
+            'gc_informasi_rawat_jalan' => 'required|in:setuju,tidak_setuju',
+            'gc_kewajiban_pembayaran' => 'required|in:setuju,tidak_setuju',
+            'gc_pernyataan_persetujuan' => 'required|in:setuju,tidak_setuju',
+
+            'gc_konfirmasi' => 'required|in:1',
+            'gc_anggota_keluarga' => 'nullable|json',
+
+            'gc_ttd_pemberi' => 'required|string',
+            'gc_nama_pemberi' => 'required|string|max:100',
+            'gc_ttd_pasien' => 'required|string',
+            'gc_nama_penandatangan' => 'required|string|max:100',
+
+            'gc_tanggal' => 'nullable|string|max:20',
+            'gc_jam' => 'nullable|string|max:20',
+
+        ], [
+            'general_consent.in' => 'General Consent belum disetujui.',
+            'gc_konfirmasi.in' => 'Konfirmasi General Consent belum dicentang.',
         ]);
 
-        $dataPoli = Poli::where('slug', $validated['poli'])->firstOrFail();
+        $dataPoli = Poli::where(
+            'slug',
+            $validated['poli']
+        )->firstOrFail();
 
         $jenisPembayaran = match ($validated['pembayaran']) {
             'umum' => 'Umum',
@@ -315,15 +368,25 @@ class PendaftaranController extends Controller
             'bpjs' => 'BPJS',
         };
 
-        $pjNoHp = $this->normalisasiNomorHp($validated['pj_no_hp']);
+        $pjNoHp = $this->normalisasiNomorHp(
+            $validated['pj_no_hp']
+        );
 
         if (strlen($pjNoHp) > 13) {
             return back()
-                ->withErrors(['pj_no_hp' => 'Nomor HP maksimal 13 karakter, termasuk +62.'])
+                ->withErrors([
+                    'pj_no_hp' => 'Nomor HP maksimal 13 karakter, termasuk +62.',
+                ])
                 ->withInput();
         }
 
-        DB::transaction(function () use ($pasien, $validated, $dataPoli, $jenisPembayaran, $pjNoHp) {
+        $idPendaftaran = DB::transaction(function () use (
+            $pasien,
+            $validated,
+            $dataPoli,
+            $jenisPembayaran,
+            $pjNoHp
+        ) {
             Pasien::where('no_rm', $pasien->no_rm)->update([
                 'pj_nama' => $validated['pj_nama'],
                 'pj_hubungan' => $validated['pj_hubungan'],
@@ -331,14 +394,23 @@ class PendaftaranController extends Controller
                 'pj_no_hp' => $pjNoHp,
             ]);
 
-            Pendaftaran::create([
+            $pendaftaran = Pendaftaran::create([
                 'tgl_registrasi' => now(),
                 'no_rm' => $pasien->no_rm,
                 'id_poli' => $dataPoli->id_poli,
                 'dpjp' => $validated['dokter'],
                 'jenis_pembayaran' => $jenisPembayaran,
             ]);
+
+            return $pendaftaran->id_pendaftaran;
         });
+
+        $validated['no_rm'] = $pasien->no_rm;
+
+        $this->simpanGeneralConsent(
+            $validated,
+            $idPendaftaran
+        );
 
         Audit::catat(
             'Menambah kunjungan baru ke ' . $dataPoli->nama_poli,
@@ -351,6 +423,9 @@ class PendaftaranController extends Controller
             ->with('success', 'Kunjungan baru berhasil disimpan.');
     }
 
+    /**
+     * Membuat nomor rekam medis baru.
+     */
     private function generateNoRm()
     {
         $angkaTerbesar = Pasien::pluck('no_rm')
@@ -373,14 +448,36 @@ class PendaftaranController extends Controller
         return $noRm;
     }
 
-    private function simpanGeneralConsent(array $validated): void
-    {
+    /**
+     * Menyimpan General Consent ke database dan file storage.
+     */
+    private function simpanGeneralConsent(
+        array $validated,
+        int $idPendaftaran
+    ): void {
         $folder = 'general_consent/' . $validated['no_rm'];
 
-        $this->simpanGambarBase64($validated['gc_ttd_pemberi'], $folder . '/ttd_pemberi.png');
-        $this->simpanGambarBase64($validated['gc_ttd_pasien'], $folder . '/ttd_pasien.png');
+        // Nama file dibuat unik berdasarkan ID pendaftaran.
+        $pathTtdPemberi = $folder . '/ttd_pemberi_' . $idPendaftaran . '.png';
+        $pathTtdPasien = $folder . '/ttd_pasien_' . $idPendaftaran . '.png';
 
-        $anggota = json_decode($validated['gc_anggota_keluarga'] ?? '[]', true);
+        // Simpan tanda tangan sebagai PNG.
+        $this->simpanGambarBase64(
+            $validated['gc_ttd_pemberi'],
+            $pathTtdPemberi
+        );
+
+        $this->simpanGambarBase64(
+            $validated['gc_ttd_pasien'],
+            $pathTtdPasien
+        );
+
+        // Ambil data anggota keluarga.
+        $anggota = json_decode(
+            $validated['gc_anggota_keluarga'] ?? '[]',
+            true
+        );
+
         $anggota = is_array($anggota)
             ? array_values(array_filter(array_map(
                 fn ($n) => is_string($n) ? trim($n) : '',
@@ -388,18 +485,52 @@ class PendaftaranController extends Controller
             )))
             : [];
 
+        // Simpan data General Consent ke database.
+        DB::table('general_consent')->insert([
+            'id_pendaftaran' => $idPendaftaran,
+
+            'hak_kewajiban' => $validated['gc_hak_kewajiban'],
+            'persetujuan_pelayanan' => $validated['gc_persetujuan_pelayanan'],
+            'pelepasan_informasi' => $validated['gc_pelepasan_informasi'],
+            'pengajuan_keluhan' => $validated['gc_pengajuan_keluhan'],
+            'informasi_rawat_jalan' => $validated['gc_informasi_rawat_jalan'],
+            'kewajiban_pembayaran' => $validated['gc_kewajiban_pembayaran'],
+            'pernyataan_persetujuan' => $validated['gc_pernyataan_persetujuan'],
+
+            'konfirmasi' => $validated['gc_konfirmasi'],
+
+            'anggota_keluarga' => json_encode(
+                $anggota,
+                JSON_UNESCAPED_UNICODE
+            ),
+
+            'ttd_pemberi' => $pathTtdPemberi,
+            'nama_pemberi' => $validated['gc_nama_pemberi'],
+
+            'ttd_pasien' => $pathTtdPasien,
+            'nama_penandatangan' => $validated['gc_nama_penandatangan'],
+
+            'tanggal' => $validated['gc_tanggal'] ?? now()->format('d/m/Y'),
+            'jam' => $validated['gc_jam'] ?? now()->format('H.i'),
+        ]);
+
+        // Tetap menyimpan file JSON seperti mekanisme sebelumnya.
         Storage::disk('public')->put(
-            $folder . '/data.json',
+            $folder . '/data_' . $idPendaftaran . '.json',
             json_encode([
-                'no_rm'              => $validated['no_rm'],
-                'nama_pemberi'       => $validated['gc_nama_pemberi'],
+                'no_rm' => $validated['no_rm'],
+                'id_pendaftaran' => $idPendaftaran,
+                'nama_pemberi' => $validated['gc_nama_pemberi'],
                 'nama_penandatangan' => $validated['gc_nama_penandatangan'],
-                'anggota_keluarga'   => $anggota,
-                'disetujui_pada'     => now()->toDateTimeString(),
+                'anggota_keluarga' => $anggota,
+                'disetujui_pada' => now()->toDateTimeString(),
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
     }
 
+    /**
+     * Menyimpan gambar tanda tangan Base64 sebagai file PNG.
+     */
     private function simpanGambarBase64(?string $data, string $path): void
     {
         $awalan = 'data:image/png;base64,';
@@ -408,7 +539,10 @@ class PendaftaranController extends Controller
             return;
         }
 
-        $biner = base64_decode(substr($data, strlen($awalan)), true);
+        $biner = base64_decode(
+            substr($data, strlen($awalan)),
+            true
+        );
 
         if ($biner === false) {
             return;
@@ -417,6 +551,9 @@ class PendaftaranController extends Controller
         Storage::disk('public')->put($path, $biner);
     }
 
+    /**
+     * Menormalisasi nomor HP.
+     */
     private function normalisasiNomorHp($nomor)
     {
         $nomor = trim($nomor);
@@ -463,32 +600,36 @@ class PendaftaranController extends Controller
         $pasien = Pasien::where('no_rm', $id)->firstOrFail();
 
         $validated = $request->validate([
-            'nama_pasien'   => 'required|string|max:100',
-            'nik'           => [
+            'nama_pasien' => 'required|string|max:100',
+
+            'nik' => [
                 'required',
                 'string',
                 'size:16',
                 Rule::unique('pasien', 'nik')->ignore($pasien->no_rm, 'no_rm'),
             ],
-            'tempat_lahir'  => 'required|string|max:50',
-            'tgl_lahir'     => 'required|date',
+
+            'tempat_lahir' => 'required|string|max:50',
+            'tgl_lahir' => 'required|date',
             'jenis_kelamin' => 'required|integer|between:0,4',
-            'agama'         => 'required|integer|between:1,8',
-            'pendidikan'    => 'required|integer|between:0,8',
-            'pekerjaan'     => 'required|integer|between:0,5',
-            'no_hp'         => 'required|string|max:13',
-            'suku'          => 'required|string|max:30',
-            'bangsa'        => 'required|string|max:30',
-            'bahasa'        => 'required|string|max:30',
-            'alamat'        => 'required|string',
-            'kelurahan'     => 'required|string|max:255',
-            'kecamatan'     => 'required|string',
-            'kabupaten'     => 'required|string',
-            'provinsi'      => 'required|string|max:100',
-            'kode_pos'      => 'required|digits_between:1,10',
+            'agama' => 'required|integer|between:1,8',
+            'pendidikan' => 'required|integer|between:0,8',
+            'pekerjaan' => 'required|integer|between:0,5',
+            'no_hp' => 'required|string|max:13',
+            'suku' => 'required|string|max:30',
+            'bangsa' => 'required|string|max:30',
+            'bahasa' => 'required|string|max:30',
+            'alamat' => 'required|string',
+            'kelurahan' => 'required|string|max:255',
+            'kecamatan' => 'required|string',
+            'kabupaten' => 'required|string',
+            'provinsi' => 'required|string|max:100',
+            'kode_pos' => 'required|digits_between:1,10',
         ]);
 
-        $noHp = $this->normalisasiNomorHp($validated['no_hp']);
+        $noHp = $this->normalisasiNomorHp(
+            $validated['no_hp']
+        );
 
         if (strlen($noHp) > 13) {
             return response()->json([
@@ -511,24 +652,24 @@ class PendaftaranController extends Controller
             $lama,
             $validated,
             [
-                'nama_pasien'   => 'nama pasien',
-                'nik'           => 'NIK',
-                'tempat_lahir'  => 'tempat lahir',
-                'tgl_lahir'     => 'tanggal lahir',
+                'nama_pasien' => 'nama pasien',
+                'nik' => 'NIK',
+                'tempat_lahir' => 'tempat lahir',
+                'tgl_lahir' => 'tanggal lahir',
                 'jenis_kelamin' => 'jenis kelamin',
-                'agama'         => 'agama',
-                'pendidikan'    => 'pendidikan',
-                'pekerjaan'     => 'pekerjaan',
-                'no_hp'         => 'no HP',
-                'suku'          => 'suku',
-                'bangsa'        => 'bangsa',
-                'bahasa'        => 'bahasa',
-                'alamat'        => 'alamat',
-                'kelurahan'     => 'kelurahan',
-                'kecamatan'     => 'kecamatan',
-                'kabupaten'     => 'kabupaten',
-                'provinsi'      => 'provinsi',
-                'kode_pos'      => 'kode pos',
+                'agama' => 'agama',
+                'pendidikan' => 'pendidikan',
+                'pekerjaan' => 'pekerjaan',
+                'no_hp' => 'no HP',
+                'suku' => 'suku',
+                'bangsa' => 'bangsa',
+                'bahasa' => 'bahasa',
+                'alamat' => 'alamat',
+                'kelurahan' => 'kelurahan',
+                'kecamatan' => 'kecamatan',
+                'kabupaten' => 'kabupaten',
+                'provinsi' => 'provinsi',
+                'kode_pos' => 'kode pos',
             ]
         );
 

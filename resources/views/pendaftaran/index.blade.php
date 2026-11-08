@@ -352,14 +352,30 @@
             @csrf
 
             {{-- DATA GENERAL CONSENT (diisi dari modal General Consent) --}}
-            <input type="hidden" name="general_consent" value="0">
-            <input type="hidden" name="gc_anggota_keluarga" value="">
-            <input type="hidden" name="gc_ttd_pemberi" value="">
-            <input type="hidden" name="gc_nama_pemberi" value="">
-            <input type="hidden" name="gc_ttd_pasien" value="">
-            <input type="hidden" name="gc_nama_penandatangan" value="">
-            <input type="hidden" name="gc_tanggal" value="">
-            <input type="hidden" name="gc_jam" value="">
+<input type="hidden" name="general_consent" value="0">
+
+{{-- Pernyataan General Consent --}}
+<input type="hidden" name="gc_hak_kewajiban" value="">
+<input type="hidden" name="gc_persetujuan_pelayanan" value="">
+<input type="hidden" name="gc_pelepasan_informasi" value="">
+<input type="hidden" name="gc_pengajuan_keluhan" value="">
+<input type="hidden" name="gc_informasi_rawat_jalan" value="">
+<input type="hidden" name="gc_kewajiban_pembayaran" value="">
+<input type="hidden" name="gc_pernyataan_persetujuan" value="">
+
+{{-- Konfirmasi pemahaman --}}
+<input type="hidden" name="gc_konfirmasi" value="0">
+
+{{-- Anggota keluarga dan tanda tangan --}}
+<input type="hidden" name="gc_anggota_keluarga" value="">
+<input type="hidden" name="gc_ttd_pemberi" value="">
+<input type="hidden" name="gc_nama_pemberi" value="">
+<input type="hidden" name="gc_ttd_pasien" value="">
+<input type="hidden" name="gc_nama_penandatangan" value="">
+
+{{-- Tanggal dan jam persetujuan --}}
+<input type="hidden" name="gc_tanggal" value="">
+<input type="hidden" name="gc_jam" value="">
 
             <div class="custom-modal-body">
 
