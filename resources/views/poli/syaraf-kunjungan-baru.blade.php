@@ -247,6 +247,82 @@
         .rm-pj-item select {
             padding: 4px 6px;
         }
+
+        /* =====================================================
+           SOAP: tampilan mengikuti Poli Obgyn
+           (label di kiri, isian memanjang di kanan)
+           ===================================================== */
+        .kb-soap-box .kb-soap-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .kb-soap-box .kb-sub,
+        .kb-soap-box .kb-plan-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .kb-soap-box .kb-sub {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .kb-soap-box .kb-sub-judul {
+            margin: 0 0 2px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #b81d24;
+        }
+
+        .kb-soap-box .kb-sub-item {
+            display: grid;
+            grid-template-columns: 170px 1fr;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+
+        .kb-soap-box .kb-sub-item label {
+            margin: 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .kb-soap-box .kb-sub-item textarea {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 0;
+            height: auto;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font: inherit;
+            font-size: 11px;
+            resize: vertical;
+        }
+
+        .kb-soap-box .kb-plan-wrap .kb-cetak-plan {
+            margin-top: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .kb-soap-box .kb-sub-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+        }
     </style>
 @endsection
 
@@ -472,7 +548,7 @@
 
         <hr class="kb-divider">
 
-        {{-- ===== Kotak SOAP (kolom bertingkat) ===== --}}
+        {{-- ===== Kotak SOAP (label kiri, isian kanan: sama dengan Obgyn) ===== --}}
         @php
             $soapBagian = [
                 'subjective' => ['S', [
@@ -482,7 +558,7 @@
                 ]],
                 'objective' => ['O', ['Pemeriksaan Tanda Vital', 'Pemeriksaan Fisik Lainnya']],
                 'assessment' => ['A', ['Dx Utama', 'Dx Sekunder']],
-                'plan' => ['P', ['Tindakan Medis', 'Konseling Edukasi', 'Rencana Tindak Lanjut', 'Diet']],
+                'plan' => ['P', ['Tindakan Medis', 'Konseling Edukasi', 'Rencana Tindak Lanjut', 'Diet', 'Resep Obat']],
             ];
 
             $soapNilai = [
@@ -490,6 +566,27 @@
                 'objective' => $assesmen->objek ?? '',
                 'assessment' => $assesmen->assesmen ?? '',
                 'plan' => $assesmen->plan ?? '',
+            ];
+
+            $soapPlaceholder = [
+                'Keluhan Utama' => 'Keluhan utama...',
+                'Riwayat Penyakit Sekarang' => 'Riwayat penyakit sekarang...',
+                'Riwayat Penyakit Dahulu' => 'Riwayat penyakit dahulu...',
+                'Riwayat Penyakit Keluarga' => 'Riwayat penyakit keluarga...',
+                'Riwayat Pengobatan' => 'Riwayat pengobatan...',
+                'Riwayat Sosial' => 'Riwayat sosial...',
+                'Riwayat Operasi' => 'Riwayat operasi...',
+                'Riwayat Alergi' => 'Riwayat alergi...',
+                'Riwayat Imunisasi' => 'Riwayat imunisasi...',
+                'Pemeriksaan Tanda Vital' => 'Klik centang ✓ di atas untuk menarik data TTV',
+                'Pemeriksaan Fisik Lainnya' => 'Pemeriksaan fisik selain TTV...',
+                'Dx Utama' => 'Diagnosa utama...',
+                'Dx Sekunder' => 'Diagnosa sekunder...',
+                'Tindakan Medis' => 'Tindakan medis...',
+                'Konseling Edukasi' => 'Konseling edukasi...',
+                'Rencana Tindak Lanjut' => 'Rencana tindak lanjut...',
+                'Diet' => 'Diet...',
+                'Resep Obat' => 'Resep obat...',
             ];
         @endphp
 
@@ -499,36 +596,32 @@
                 <div class="kb-soap-row">
                     <div class="kb-soap-badge">{{ $huruf }}</div>
 
-                    @if ($nama === 'plan') <div class="kb-plan-wrap"> @endif
-
                     <div class="kb-sub" data-target="{{ $nama }}">
-                        @if ($nama === 'plan')
-                            <div class="kb-sub-judul">Non Farmakologis :</div>
-                        @endif
-
                         @foreach ($daftarKolom as $label)
                             <div class="kb-sub-item">
                                 <label>{{ $label }}</label>
-                                <textarea rows="2" data-label="{{ $label }}" {{ $soapReadonly($nama) }}></textarea>
+                                <textarea rows="{{ $label === 'Resep Obat' ? 3 : 1 }}" data-label="{{ $label }}" placeholder="{{ $soapPlaceholder[$label] ?? '' }}" {{ $soapReadonly($nama) }}></textarea>
                             </div>
                         @endforeach
+
+                        {{-- Tombol Cetak tepat di bawah kolom Resep Obat (sama seperti Obgyn) --}}
+                        @if ($nama === 'plan')
+                            <div class="kb-sub-item">
+                                <label>&nbsp;</label>
+                                <div>
+                                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
+                                        <i class="fa-solid fa-print"></i> Cetak
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Penampung gabungan: dibaca oleh Simpan, Resume Medis, dan penjaga halaman --}}
                     <textarea name="{{ $nama }}" hidden {{ $soapReadonly($nama) }}>{{ old($nama, $soapNilai[$nama]) }}</textarea>
-
-                    @if ($nama === 'plan')
-                        <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
-                            <i class="fa-solid fa-print"></i> Cetak
-                        </button>
-                        </div>
-                    @endif
                 </div>
             @endforeach
         </div>
-
-        {{-- RESEP OBAT + judul PATEN (TINDAK LANJUT :) --}}
-        @include('partials.resep-obat')
 
         <hr class="kb-divider">
 
@@ -1260,6 +1353,16 @@
         const hidden = document.querySelector('textarea[name="' + target + '"]');
         if (!wadah || !hidden || hidden.value.trim() === '') return;
 
+        // Data lama format "Tindak Lanjut :" / "Resep Obat :" diubah ke format baru
+        if (target === 'plan') {
+            const lama = hidden.value.trim().match(/^Tindak Lanjut\s*:\s*\n?([\s\S]*?)\n*\s*Resep Obat\s*:\s*\n?([\s\S]*)$/);
+
+            if (lama) {
+                hidden.value = 'Rencana Tindak Lanjut: ' + lama[1].trim().replace(/\s*\n\s*/g, ' ') +
+                               '\nResep Obat: ' + lama[2].trim();
+            }
+        }
+
         const kolom = Array.from(wadah.querySelectorAll('textarea[data-label]'));
         const labels = kolom.map(k => k.dataset.label);
         const peta = {};
@@ -1364,18 +1467,19 @@
     }
 
     // ===== Cetak resep =====
-    // Catatan: cetakResep() ini digantikan oleh versi di partial
-    // partials/resep-obat.blade.php (mencetak Plan + daftar obat).
+    // Yang dicetak hanya isi kolom "Resep Obat" di bagian P (sama seperti Obgyn).
     function cetakResep() {
-        const planEl = document.querySelector('textarea[name="plan"]');
-        const planText = planEl ? planEl.value.trim() : '';
+        const resepEl = document.querySelector('.kb-sub[data-target="plan"] textarea[data-label="Resep Obat"]');
+        const resepObat = resepEl ? resepEl.value.trim() : '';
 
-        if (planText === '') {
-            alert('Isi bagian Plan (P) di SOAP dulu sebelum mencetak resep.');
+        if (resepObat === '') {
+            alert('Isi kolom Resep Obat dulu sebelum mencetak resep.');
             return;
         }
 
-        document.getElementById('resep-isi-plan').innerText = planText;
+        const isiPlan = document.getElementById('resep-isi-plan');
+        isiPlan.style.whiteSpace = 'pre-wrap';
+        isiPlan.innerText = resepObat;
         document.getElementById('resep-tanggal').innerText = tanggalIndonesia();
 
         document.body.appendChild(document.getElementById('cetak-resep-area'));

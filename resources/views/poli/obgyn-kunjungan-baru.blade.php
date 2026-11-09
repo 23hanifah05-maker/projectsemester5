@@ -672,6 +672,7 @@
                 ['Konseling Edukasi', 'Konseling edukasi...'],
                 ['Rencana Tindak Lanjut', 'Rencana tindak lanjut...'],
                 ['Diet', 'Diet...'],
+                ['Resep Obat', 'Resep obat...'],
             ]],
         ];
 
@@ -1019,10 +1020,6 @@
                     <div class="ob-soap-badge">{{ $kode }}</div>
 
                     <div class="ob-soap-group" data-target="{{ $name }}">
-                        @if ($kode === 'P')
-                            <div class="ob-sg-judul">Non Farmakologis</div>
-                        @endif
-
                         @foreach ($fields as $i => [$label, $ph])
                             <div class="ob-sf">
                                 <label for="sf-{{ $name }}-{{ $i }}">{{ $label }}</label>
@@ -1030,11 +1027,27 @@
                                     class="ob-sf-input"
                                     id="sf-{{ $name }}-{{ $i }}"
                                     data-label="{{ $label }}"
-                                    rows="1"
+                                    rows="{{ $label === 'Resep Obat' ? 3 : 1 }}"
                                     placeholder="{{ $ph }}"
                                     {{ $soapReadonly($name) }}
                                 ></textarea>
                             </div>
+
+                            {{-- Tombol Cetak resep tepat di bawah kolom Resep Obat --}}
+                            @if ($kode === 'P' && $label === 'Resep Obat')
+                                <div class="ob-sf">
+                                    <label>&nbsp;</label>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            class="ob-btn ob-btn-reset ob-btn-rujuk"
+                                            onclick="cetakResep()"
+                                        >
+                                            <i class="fa-solid fa-print"></i> Cetak
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
                         @endforeach
                     </div>
 
@@ -1052,9 +1065,6 @@
                 </div>
             @endforeach
         </div>
-
-        {{-- RESEP OBAT + label Plan (Tindak Lanjut) --}}
-        @include('partials.resep-obat')
 
         <hr class="ob-divider">
 
@@ -1903,7 +1913,8 @@
 
     // =========================================================
     // SOAP BERKOLOM: gabungkan kolom kecil -> textarea asli
-    // Format: "Label: isi" per baris
+    // Format: "Label: isi" per baris. Isi yang lebih dari satu baris
+    // (mis. Resep Obat) disimpan sebagai baris lanjutan di bawahnya.
     // =========================================================
     function gabungSoap(group) {
         const target = document.querySelector('[name="' + group.dataset.target + '"]');
@@ -1911,7 +1922,7 @@
 
         target.value = Array.from(group.querySelectorAll('.ob-sf-input'))
             .map(el => {
-                const v = el.value.replace(/\s*\n\s*/g, ' ').trim();
+                const v = el.value.trim();
                 return v ? el.dataset.label + ': ' + v : '';
             })
             .filter(Boolean)
@@ -1923,11 +1934,22 @@
         document.querySelectorAll('.ob-soap-group').forEach(function (group) {
             const target = document.querySelector('[name="' + group.dataset.target + '"]');
             const inputs = Array.from(group.querySelectorAll('.ob-sf-input'));
-            const teks = (target?.value ?? '').trim();
+            let teks = (target?.value ?? '').trim();
 
             if (!teks) return;
 
+            // Data lama format "Tindak Lanjut :" / "Resep Obat :" diubah ke format baru
+            if (group.dataset.target === 'plan') {
+                const lama = teks.match(/^Tindak Lanjut :\s*\n?([\s\S]*?)\n*\s*Resep Obat :\s*\n?([\s\S]*)$/);
+
+                if (lama) {
+                    teks = 'Rencana Tindak Lanjut: ' + lama[1].trim().replace(/\s*\n\s*/g, ' ') +
+                           '\nResep Obat: ' + lama[2].trim();
+                }
+            }
+
             let ada = false;
+            let terakhir = null;
 
             teks.split('\n').forEach(function (baris) {
                 const m = baris.match(/^(.+?):\s*(.*)$/);
@@ -1935,7 +1957,11 @@
 
                 if (el) {
                     el.value = m[2];
+                    terakhir = el;
                     ada = true;
+                } else if (terakhir) {
+                    // Baris lanjutan dari kolom sebelumnya
+                    terakhir.value += '\n' + baris;
                 }
             });
 
@@ -2158,18 +2184,20 @@
         });
     }
 
-    // Catatan: cetakResep() ini digantikan oleh versi di partial
-    // partials/resep-obat.blade.php (mencetak Plan + daftar obat).
+    // Cetak resep: yang dicetak hanya isi kolom "Resep Obat" di bagian P.
     function cetakResep() {
-        const planEl = document.querySelector('textarea[name="plan"]');
-        const planText = planEl ? planEl.value.trim() : '';
+        const resepEl = document.getElementById('sf-plan-4');
+        const resepObat = resepEl ? resepEl.value.trim() : '';
 
-        if (!planText) {
-            alert('Isi bagian Plan (P) di SOAP dulu sebelum mencetak resep.');
+        if (!resepObat) {
+            alert('Isi kolom Resep Obat dulu sebelum mencetak resep.');
             return;
         }
 
-        document.getElementById('resep-isi-plan').innerText = planText;
+        const isiPlan = document.getElementById('resep-isi-plan');
+        isiPlan.style.whiteSpace = 'pre-wrap';
+        isiPlan.innerText = resepObat;
+
         document.getElementById('resep-tanggal').innerText = tanggalIndonesia(new Date());
 
         siapkanCetak('cetak-resep-area', 'cetak-resep-mode');
@@ -3420,7 +3448,7 @@
     // PEMBATASAN TAMPILAN PER ROLE
     // =========================================================
     (function () {
-        // Diagnosa & tindakan: hanya dokter / admin yang boleh menghapus
+        // Diagnosa & tindakan: hanya pmik / admin yang boleh menghapus
         if (!BOLEH_DIAGNOSA) {
             const css = document.createElement('style');
             css.textContent = '.ob-aksi-hapus{display:none !important;}';
