@@ -11,8 +11,36 @@ use Illuminate\Support\Facades\Validator;
 
 class AssesmenController extends Controller
 {
+    /**
+     * Bagian yang boleh disimpan oleh tiap role.
+     *   admin   : S, O, A, P, dan kode ICD
+     *   dokter  : S, O, A, P
+     *   perawat : S, O
+     *   pmik    : kode ICD saja
+     */
+    private function izinRole(?string $role): array
+    {
+        return match ($role) {
+            'admin'   => ['subjective', 'objective', 'assessment', 'plan', 'icd'],
+            'dokter'  => ['subjective', 'objective', 'assessment', 'plan'],
+            'perawat' => ['subjective', 'objective'],
+            'pmik'    => ['icd'],
+            default   => [],
+        };
+    }
+
     public function store(Request $request)
     {
+        $role = optional($request->user())->role;
+        $izin = $this->izinRole($role);
+
+        if (empty($izin)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki hak akses untuk menyimpan data ini.',
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'id_pendaftaran' => [
                 'required',
@@ -20,10 +48,11 @@ class AssesmenController extends Controller
                 'exists:pendaftaran,id_pendaftaran',
             ],
 
-            'subjective' => ['present', 'nullable', 'string'],
-            'objective' => ['present', 'nullable', 'string'],
-            'assessment' => ['present', 'nullable', 'string'],
-            'plan' => ['present', 'nullable', 'string'],
+            // Field SOAP hanya diperiksa bila dikirim (tiap role mengirim bagiannya saja).
+            'subjective' => ['sometimes', 'nullable', 'string'],
+            'objective' => ['sometimes', 'nullable', 'string'],
+            'assessment' => ['sometimes', 'nullable', 'string'],
+            'plan' => ['sometimes', 'nullable', 'string'],
 
             'penyakit_id' => ['sometimes', 'nullable', 'array'],
             'penyakit_id.*' => [
@@ -56,29 +85,69 @@ class AssesmenController extends Controller
         }
 
         $data = $validator->validated();
+        $idPendaftaran = (int) $data['id_pendaftaran'];
+
+        // ------------------------------------------------------------------
+        // Tentukan bagian mana yang benar-benar boleh diubah oleh role ini.
+        // Field yang tidak diizinkan diabaikan walaupun dikirim lewat cara lain.
+        // ------------------------------------------------------------------
+        $petaSoap = [
+            'subjective' => 'subjek',
+            'objective'  => 'objek',
+            'assessment' => 'assesmen',
+            'plan'       => 'plan',
+        ];
+
+        $ubahSoap = [];
+
+        foreach ($petaSoap as $input => $kolom) {
+            if (in_array($input, $izin, true) && $request->has($input)) {
+                $ubahSoap[$kolom] = (string) ($data[$input] ?? '');
+            }
+        }
+
+        $icdBoleh = in_array('icd', $izin, true);
+        $ubahPenyakit = $icdBoleh && $request->has('penyakit_id');
+        $ubahTindakan = $icdBoleh && $request->has('tindakan_id');
+
+        $diagnosisIds = $ubahPenyakit
+            ? array_values(array_unique(array_map('intval', $data['penyakit_id'] ?? [])))
+            : [];
+
+        $tindakanIds = $ubahTindakan
+            ? array_values(array_unique(array_map('intval', $data['tindakan_id'] ?? [])))
+            : [];
 
         /*
-         * PEMERIKSAAN KHUSUS POLI OBGYN
-         * Poli Saraf tidak terkena pemeriksaan ini.
+         * PEMERIKSAAN KHUSUS POLI OBGYN (tindakan IUD, ICD-9-CM 69.7)
+         * Berlaku saat dokter / admin menyimpan asesmen: Informed Consent
+         * harus sudah tersimpan dengan keputusan "setuju".
+         * PMIK yang menyimpan kode ICD tidak diperiksa, karena consent baru
+         * bisa diisi dokter setelah kode tindakan IUD tersimpan.
          */
-        if ($request->routeIs('poli.obgyn.assesmen.store')) {
-            $idPendaftaran = (int) $data['id_pendaftaran'];
+        $role_boleh_assplan = in_array('assessment', $izin, true) || in_array('plan', $izin, true);
 
-            $tindakanIds = array_map(
-                'intval',
-                $data['tindakan_id'] ?? []
-            );
+        if ($request->routeIs('poli.obgyn.assesmen.store') && $role_boleh_assplan) {
+            $assesmenAda = Assesmen::where('id_pendaftaran', $idPendaftaran)->first();
 
-            // Periksa apakah tindakan IUD (kode ICD-9-CM 69.7) dipilih.
-            $adaIud = !empty($tindakanIds)
+            // Pakai tindakan yang dikirim; bila tidak, pakai yang sudah tersimpan.
+            $idTindakanPeriksa = $ubahTindakan
+                ? $tindakanIds
+                : ($assesmenAda
+                    ? DB::table('detail_tindakan')
+                        ->where('id_assesmen', $assesmenAda->id_assesmen)
+                        ->pluck('id_kode9')
+                        ->map(fn ($id) => (int) $id)
+                        ->all()
+                    : []);
+
+            $adaIud = !empty($idTindakanPeriksa)
                 && DB::table('kode_tindakan')
-                    ->whereIn('id_icd9', $tindakanIds)
+                    ->whereIn('id_icd9', $idTindakanPeriksa)
                     ->where('icd_9', 'like', '69.7%')
                     ->exists();
 
             if ($adaIud) {
-                // Consent harus tersimpan untuk kunjungan yang sama
-                // dan keputusan pasien harus "setuju".
                 $consentDisetujui = DB::table('informed_consent')
                     ->where('id_kunjungan', $idPendaftaran)
                     ->where('keputusan', 'setuju')
@@ -96,17 +165,14 @@ class AssesmenController extends Controller
 
         try {
             // Ambil data lama sebelum diubah, untuk audit trail.
-            $assesmenLama = Assesmen::where(
-                'id_pendaftaran',
-                (int) $data['id_pendaftaran']
-            )->first();
+            $assesmenLama = Assesmen::where('id_pendaftaran', $idPendaftaran)->first();
 
             $soapLama = $assesmenLama
                 ? [
-                    'subjek'    => (string) $assesmenLama->subjek,
-                    'objek'     => (string) $assesmenLama->objek,
-                    'assesmen'  => (string) $assesmenLama->assesmen,
-                    'plan'      => (string) $assesmenLama->plan,
+                    'subjek'   => (string) $assesmenLama->subjek,
+                    'objek'    => (string) $assesmenLama->objek,
+                    'assesmen' => (string) $assesmenLama->assesmen,
+                    'plan'     => (string) $assesmenLama->plan,
                 ]
                 : null;
 
@@ -126,72 +192,87 @@ class AssesmenController extends Controller
                     ->all()
                 : [];
 
-            $idAssesmen = DB::transaction(function () use ($data) {
-                $idPendaftaran = (int) $data['id_pendaftaran'];
+            $idAssesmen = DB::transaction(function () use (
+                $idPendaftaran,
+                $ubahSoap,
+                $ubahPenyakit,
+                $ubahTindakan,
+                $diagnosisIds,
+                $tindakanIds
+            ) {
+                $assesmen = Assesmen::where('id_pendaftaran', $idPendaftaran)->first();
 
-                $diagnosisIds = array_values(array_unique(array_map(
-                    'intval',
-                    $data['penyakit_id'] ?? []
-                )));
+                if (!$assesmen) {
+                    $assesmen = new Assesmen();
+                    $assesmen->id_pendaftaran = $idPendaftaran;
 
-                $tindakanIds = array_values(array_unique(array_map(
-                    'intval',
-                    $data['tindakan_id'] ?? []
-                )));
-
-                // Simpan SOAP dan kode utama.
-                $assesmen = Assesmen::updateOrCreate(
-                    ['id_pendaftaran' => $idPendaftaran],
-                    [
-                        'subjek' => $data['subjective'] ?? '',
-                        'objek' => $data['objective'] ?? '',
-                        'assesmen' => $data['assessment'] ?? '',
-                        'plan' => $data['plan'] ?? '',
-                        'id_kode10' => $diagnosisIds[0] ?? null,
-                        'id_kode9' => $tindakanIds[0] ?? null,
-                    ]
-                );
-
-                // Perbarui detail diagnosis.
-                DB::table('detail_diagnosis')
-                    ->where('id_assesmen', $assesmen->id_assesmen)
-                    ->delete();
-
-                if (!empty($diagnosisIds)) {
-                    $detailDiagnosis = [];
-
-                    foreach ($diagnosisIds as $idKode10) {
-                        $detailDiagnosis[] = [
-                            'id_assesmen' => $assesmen->id_assesmen,
-                            'id_kode10' => $idKode10,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                    }
-
-                    DB::table('detail_diagnosis')
-                        ->insert($detailDiagnosis);
+                    // Nilai awal untuk data baru (kolom SOAP tidak boleh null).
+                    $assesmen->subjek = '';
+                    $assesmen->objek = '';
+                    $assesmen->assesmen = '';
+                    $assesmen->plan = '';
+                    $assesmen->id_kode10 = null;
+                    $assesmen->id_kode9 = null;
                 }
 
-                // Perbarui detail tindakan.
-                DB::table('detail_tindakan')
-                    ->where('id_assesmen', $assesmen->id_assesmen)
-                    ->delete();
+                // Hanya kolom yang diizinkan dan dikirim yang diubah.
+                // Kolom lain (mis. A dan P milik dokter) tidak tersentuh.
+                foreach ($ubahSoap as $kolom => $nilai) {
+                    $assesmen->{$kolom} = $nilai;
+                }
 
-                if (!empty($tindakanIds)) {
-                    $detailTindakan = [];
+                if ($ubahPenyakit) {
+                    $assesmen->id_kode10 = $diagnosisIds[0] ?? null;
+                }
 
-                    foreach ($tindakanIds as $idKode9) {
-                        $detailTindakan[] = [
-                            'id_assesmen' => $assesmen->id_assesmen,
-                            'id_kode9' => $idKode9,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+                if ($ubahTindakan) {
+                    $assesmen->id_kode9 = $tindakanIds[0] ?? null;
+                }
+
+                $assesmen->save();
+
+                // Perbarui detail diagnosis (hanya bila dikirim oleh role yang berhak).
+                if ($ubahPenyakit) {
+                    DB::table('detail_diagnosis')
+                        ->where('id_assesmen', $assesmen->id_assesmen)
+                        ->delete();
+
+                    if (!empty($diagnosisIds)) {
+                        $detailDiagnosis = [];
+
+                        foreach ($diagnosisIds as $idKode10) {
+                            $detailDiagnosis[] = [
+                                'id_assesmen' => $assesmen->id_assesmen,
+                                'id_kode10' => $idKode10,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+
+                        DB::table('detail_diagnosis')->insert($detailDiagnosis);
                     }
+                }
 
+                // Perbarui detail tindakan (hanya bila dikirim oleh role yang berhak).
+                if ($ubahTindakan) {
                     DB::table('detail_tindakan')
-                        ->insert($detailTindakan);
+                        ->where('id_assesmen', $assesmen->id_assesmen)
+                        ->delete();
+
+                    if (!empty($tindakanIds)) {
+                        $detailTindakan = [];
+
+                        foreach ($tindakanIds as $idKode9) {
+                            $detailTindakan[] = [
+                                'id_assesmen' => $assesmen->id_assesmen,
+                                'id_kode9' => $idKode9,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+
+                        DB::table('detail_tindakan')->insert($detailTindakan);
+                    }
                 }
 
                 return $assesmen->id_assesmen;
@@ -202,31 +283,11 @@ class AssesmenController extends Controller
                 ? 'Poli Obgyn'
                 : 'Poli Syaraf';
 
-            $noRm = Pendaftaran::where(
-                'id_pendaftaran',
-                (int) $data['id_pendaftaran']
-            )->value('no_rm');
-
-            $diagnosisBaru = array_values(array_unique(array_map(
-                'intval',
-                $data['penyakit_id'] ?? []
-            )));
-
-            $tindakanBaru = array_values(array_unique(array_map(
-                'intval',
-                $data['tindakan_id'] ?? []
-            )));
+            $noRm = Pendaftaran::where('id_pendaftaran', $idPendaftaran)->value('no_rm');
 
             if ($soapLama === null) {
                 Audit::catat('Menyimpan SOAP dan kode ICD', $modul, $noRm);
             } else {
-                $soapBaru = [
-                    'subjek'   => (string) ($data['subjective'] ?? ''),
-                    'objek'    => (string) ($data['objective'] ?? ''),
-                    'assesmen' => (string) ($data['assessment'] ?? ''),
-                    'plan'     => (string) ($data['plan'] ?? ''),
-                ];
-
                 $labelSoap = [
                     'subjek'   => 'Subjective (S)',
                     'objek'    => 'Objective (O)',
@@ -234,13 +295,10 @@ class AssesmenController extends Controller
                     'plan'     => 'Plan (P)',
                 ];
 
-                foreach ($soapBaru as $field => $nilaiBaru) {
-                    if ($soapLama[$field] !== $nilaiBaru) {
-                        Audit::catat(
-                            'Mengubah ' . $labelSoap[$field],
-                            $modul,
-                            $noRm
-                        );
+                // Hanya field yang memang diubah role ini yang dibandingkan.
+                foreach ($ubahSoap as $kolom => $nilaiBaru) {
+                    if ($soapLama[$kolom] !== $nilaiBaru) {
+                        Audit::catat('Mengubah ' . $labelSoap[$kolom], $modul, $noRm);
                     }
                 }
 
@@ -251,23 +309,23 @@ class AssesmenController extends Controller
                     return $a === $b;
                 };
 
-                if (!$sama($diagnosisLama, $diagnosisBaru)) {
+                if ($ubahPenyakit && !$sama($diagnosisLama, $diagnosisIds)) {
                     Audit::catat(
                         'Mengubah diagnosis ICD-10: ['
                             . $this->kodeDiagnosis($diagnosisLama)
                             . '] menjadi ['
-                            . $this->kodeDiagnosis($diagnosisBaru) . ']',
+                            . $this->kodeDiagnosis($diagnosisIds) . ']',
                         $modul,
                         $noRm
                     );
                 }
 
-                if (!$sama($tindakanLama, $tindakanBaru)) {
+                if ($ubahTindakan && !$sama($tindakanLama, $tindakanIds)) {
                     Audit::catat(
                         'Mengubah tindakan ICD-9-CM: ['
                             . $this->kodeTindakan($tindakanLama)
                             . '] menjadi ['
-                            . $this->kodeTindakan($tindakanBaru) . ']',
+                            . $this->kodeTindakan($tindakanIds) . ']',
                         $modul,
                         $noRm
                     );
@@ -276,7 +334,7 @@ class AssesmenController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'SOAP dan kode ICD berhasil disimpan.',
+                'message' => 'Data berhasil disimpan.',
                 'id_assesmen' => $idAssesmen,
             ]);
         } catch (\Throwable $e) {

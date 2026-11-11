@@ -33,7 +33,7 @@
             <a href="#" class="master-data-title">Daftar Pasien</a>
         </div>
 
-        
+
 <form method="GET" action="{{ route('poli.obgyn') }}" class="filter-row">
     {{-- Filter Periode --}}
     <div class="filter-item">
@@ -122,7 +122,8 @@
                     <td>{{ $item->no_rm }}</td>
                     <td>{{ $item->nama_pasien }}</td>
 
-                        <td>{{ $item->nik }}</td>
+                        {{-- NIK disamarkan: 4 digit awal tampil, sisanya X --}}
+                        <td>{{ \App\Helpers\Mask::nik($item->nik, 4, 'X') }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
                         <td>{{ $item->jenis_kelamin_label ?? '-' }}</td>
                         <td>{{ $item->alamat }}</td>

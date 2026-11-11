@@ -268,7 +268,8 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->no_rm }}</td>
                         <td>{{ $item->nama_pasien }}</td>
-                        <td>{{ $item->nik }}</td>
+                        {{-- NIK disamarkan: 4 digit awal tampil, sisanya X --}}
+                        <td>{{ \App\Helpers\Mask::nik($item->nik, 4, 'X') }}</td>
                         <td>
                             {{ $item->tgl_lahir ? \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') : '-' }}
                         </td>
@@ -516,12 +517,12 @@ function terapkanStatusPeriksa() {
             return;
         }
 
-       const kunci = String(data.no_rm || '').trim().toUpperCase();
+        const kunci = String(data.no_rm || '').trim().toUpperCase();
 
-// Status dari database menjadi sumber utama.
-const status = String(data.status_periksa || 'periksa').toLowerCase() === 'selesai'
-    ? 'selesai'
-    : 'periksa';
+        // Status dari database menjadi sumber utama.
+        const status = String(data.status_periksa || 'periksa').toLowerCase() === 'selesai'
+            ? 'selesai'
+            : 'periksa';
 
         row.dataset.statusPeriksa = status;
         row.dataset.waktuSelesai = waktu[kunci] || 0;

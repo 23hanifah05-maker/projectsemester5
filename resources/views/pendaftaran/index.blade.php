@@ -210,7 +210,8 @@
 
                         <td>{{ $item->nama_pasien ?? '-' }}</td>
 
-                        <td>{{ $item->nik ?? '-' }}</td>
+                        {{-- NIK disamarkan: 4 digit awal tampil, sisanya X --}}
+                        <td>{{ \App\Helpers\Mask::nik($item->nik, 4, 'X') }}</td>
 
                         <td>
                             @if (!empty($item->tgl_lahir))
@@ -548,7 +549,7 @@
                     <div class="col-left">
                         <div class="row"><label>No. Rekam Medis</label><input type="text" id="editRm" readonly class="input-terkunci"></div>
                         <div class="row"><label>Nama Lengkap</label><input type="text" id="editNama" maxlength="100"></div>
-                        <div class="row"><label>NIK</label><input type="text" id="editNik" inputmode="numeric" maxlength="16"
+                        <div class="row"><label>NIK</label><input type="text" id="editNik" inputmode="numeric" maxlength="16" minlength="16" placeholder="16 digit NIK"
                              oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                         <div class="row">
                             <label>Tempat/Tgl Lahir</label>
@@ -1058,6 +1059,13 @@ async function simpanEdit() {
     }
 
     const nilai = id => (document.getElementById(id)?.value ?? '').trim();
+
+    // NIK wajib lengkap 16 digit angka
+    if (!/^\d{16}$/.test(nilai('editNik'))) {
+        alert('NIK harus terdiri dari 16 digit angka.');
+        document.getElementById('editNik').focus();
+        return;
+    }
 
     const payload = {
         nama_pasien: nilai('editNama'),
