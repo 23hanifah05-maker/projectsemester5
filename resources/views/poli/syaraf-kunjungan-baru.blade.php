@@ -1264,8 +1264,8 @@
     // Penyimpanan Clinical Pathway ke database.
     const CP_SIMPAN_KE_DB = true;
 
-    // Kode ICD-10 HNP. Harus sama dengan KODE_HNP di ClinicalPathwayController.
-    const KODE_HNP = ['M51'];
+    // Kode ICD-10 HNP (M50 dan M51). Harus sama dengan KODE_HNP di ClinicalPathwayController.
+    const KODE_HNP = ['M50', 'M51'];
 
     // true hanya sesaat sebelum pindah halaman setelah Simpan berhasil.
     // Selama false, halaman ini tidak bisa ditinggalkan bila ada data belum disimpan.
@@ -1385,7 +1385,7 @@
 
     // ===== Tab =====
 
-    // Cek apakah satu diagnosa termasuk HNP (ICD-10 M51)
+    // Cek apakah satu diagnosa termasuk HNP (ICD-10 M50 atau M51)
     function adalahHNP(item) {
         if (!item) return false;
         const kode = String(item.kode || '').trim().toUpperCase();
@@ -1397,7 +1397,7 @@
         return diagnosaTerpilih.penyakit[0] || null;
     }
 
-    // Clinical Pathway hanya boleh dibuka bila HNP menjadi Diagnosa Utama
+    // Clinical Pathway hanya boleh dibuka bila HNP (M50/M51) menjadi Diagnosa Utama
     function cpBolehDiisi() {
         return adalahHNP(diagnosaUtama());
     }
@@ -1416,7 +1416,7 @@
 
     function gantiTab(tab, event) {
         if (tab === 'pathway' && !cpBolehDiisi()) {
-            alert('Clinical Pathway hanya tersedia bila HNP (ICD-10 M51) menjadi Diagnosa Utama. ' +
+            alert('Clinical Pathway hanya tersedia bila HNP (ICD-10 M50/M51) menjadi Diagnosa Utama. ' +
                   'Urutkan atau pilih HNP sebagai diagnosa pertama.');
             return;
         }
@@ -1441,7 +1441,7 @@
 
         if (tabCP) {
             tabCP.classList.toggle('terkunci', !boleh);
-            tabCP.title = boleh ? '' : 'Hanya tersedia bila HNP (ICD-10 M51) menjadi Diagnosa Utama';
+            tabCP.title = boleh ? '' : 'Hanya tersedia bila HNP (ICD-10 M50/M51) menjadi Diagnosa Utama';
         }
 
         const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
@@ -1731,7 +1731,7 @@
         }
 
         if (!cpBolehDiisi()) {
-            alert('Clinical Pathway hanya dapat disimpan bila HNP (ICD-10 M51) menjadi Diagnosa Utama.');
+            alert('Clinical Pathway hanya dapat disimpan bila HNP (ICD-10 M50/M51) menjadi Diagnosa Utama.');
             return;
         }
 
