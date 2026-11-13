@@ -353,30 +353,30 @@
             @csrf
 
             {{-- DATA GENERAL CONSENT (diisi dari modal General Consent) --}}
-<input type="hidden" name="general_consent" value="0">
+            <input type="hidden" name="general_consent" value="0">
 
-{{-- Pernyataan General Consent --}}
-<input type="hidden" name="gc_hak_kewajiban" value="">
-<input type="hidden" name="gc_persetujuan_pelayanan" value="">
-<input type="hidden" name="gc_pelepasan_informasi" value="">
-<input type="hidden" name="gc_pengajuan_keluhan" value="">
-<input type="hidden" name="gc_informasi_rawat_jalan" value="">
-<input type="hidden" name="gc_kewajiban_pembayaran" value="">
-<input type="hidden" name="gc_pernyataan_persetujuan" value="">
+            {{-- Pernyataan General Consent --}}
+            <input type="hidden" name="gc_hak_kewajiban" value="">
+            <input type="hidden" name="gc_persetujuan_pelayanan" value="">
+            <input type="hidden" name="gc_pelepasan_informasi" value="">
+            <input type="hidden" name="gc_pengajuan_keluhan" value="">
+            <input type="hidden" name="gc_informasi_rawat_jalan" value="">
+            <input type="hidden" name="gc_kewajiban_pembayaran" value="">
+            <input type="hidden" name="gc_pernyataan_persetujuan" value="">
 
-{{-- Konfirmasi pemahaman --}}
-<input type="hidden" name="gc_konfirmasi" value="0">
+            {{-- Konfirmasi pemahaman --}}
+            <input type="hidden" name="gc_konfirmasi" value="0">
 
-{{-- Anggota keluarga dan tanda tangan --}}
-<input type="hidden" name="gc_anggota_keluarga" value="">
-<input type="hidden" name="gc_ttd_pemberi" value="">
-<input type="hidden" name="gc_nama_pemberi" value="">
-<input type="hidden" name="gc_ttd_pasien" value="">
-<input type="hidden" name="gc_nama_penandatangan" value="">
+            {{-- Anggota keluarga dan tanda tangan --}}
+            <input type="hidden" name="gc_anggota_keluarga" value="">
+            <input type="hidden" name="gc_ttd_pemberi" value="">
+            <input type="hidden" name="gc_nama_pemberi" value="">
+            <input type="hidden" name="gc_ttd_pasien" value="">
+            <input type="hidden" name="gc_nama_penandatangan" value="">
 
-{{-- Tanggal dan jam persetujuan --}}
-<input type="hidden" name="gc_tanggal" value="">
-<input type="hidden" name="gc_jam" value="">
+            {{-- Tanggal dan jam persetujuan --}}
+            <input type="hidden" name="gc_tanggal" value="">
+            <input type="hidden" name="gc_jam" value="">
 
             <div class="custom-modal-body">
 
@@ -1140,14 +1140,57 @@ async function simpanEdit() {
     }
 }
 
-function hapusPasien(button) {
+async function hapusPasien(button) {
     const hasil = ambilDataBaris(button);
     if (!hasil) return;
 
-    alert(
-        'Data pasien tidak dihapus karena route hapus database belum dihubungkan.\n' +
-        'Ini untuk mencegah data hanya hilang dari tampilan browser.'
-    );
+    const d = hasil.data || {};
+    const noRm = String(d.no_rm || '').trim();
+    const namaPasien = String(d.nama_pasien || noRm).trim();
+
+    if (!noRm) {
+        alert('Nomor RM pasien tidak ditemukan.');
+        return;
+    }
+
+    if (!confirm(`Yakin ingin menghapus data pasien ${namaPasien} (No. RM: ${noRm}) secara permanen?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "{{ url('pendaftaran') }}/" + encodeURIComponent(noRm),
+            {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                }
+            }
+        );
+
+        const teks = await response.text();
+        let data;
+
+        try {
+            data = JSON.parse(teks);
+        } catch (e) {
+            console.error('Respons bukan JSON:', response.status, teks);
+            throw new Error('Server tidak mengirim respons JSON (status ' + response.status + ').');
+        }
+
+        if (response.ok && data.success) {
+            alert(data.message || 'Data pasien berhasil dihapus.');
+            window.location.reload();
+        } else {
+            alert(data.message || 'Gagal menghapus data pasien.');
+        }
+    } catch (error) {
+        console.error('Gagal menghapus pasien:', error);
+        alert('Terjadi kesalahan saat mencoba menghapus data pasien: ' + error.message);
+    }
 }
 
 document.addEventListener('dblclick', function(event) {

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Baru - Poli Obgyn')
-@section('header-icon', '🩺')
+@section('header-icon')
 @section('header-title', 'Poli Obgyn')
 
 @section('extra-css')
@@ -1004,26 +1004,6 @@
                     </div>
                 @endforeach
 
-                <div class="ob-vital-row">
-                    <label>Alergi</label>
-                    <input
-                        type="text"
-                        name="alergi"
-                        {{ $bolehTtv ? '' : 'readonly' }}
-                        placeholder="mis. tidak ada"
-                        value="{{ old('alergi', $ttv->alergi ?? '') }}"
-                    >
-
-                    <div class="ob-vital-check">
-                        <span
-                            class="ob-check-icon"
-                            id="btnCentangVital"
-                            role="button"
-                            title="Masukkan tanda vital ke Objective"
-                            onclick="isiObjektifDariVital()"
-                        >✓</span>
-                    </div>
-                </div>
             </div>
         </div>
 

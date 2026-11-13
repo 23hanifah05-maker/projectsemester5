@@ -6,7 +6,7 @@
     <i class="fa-solid fa-stethoscope"></i>
 @endsection
 
-@section('header-title', $poli->nama_poli ?? 'Poli Syaraf')
+@section('header-title', $poli->nama_poli ?? 'Poli Saraf')
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
