@@ -986,26 +986,6 @@
                     </div>
                 @endforeach
 
-                <div class="ob-vital-row">
-                    <label>Alergi</label>
-                    <input
-                        type="text"
-                        name="alergi"
-                        {{ $bolehTtv ? '' : 'readonly' }}
-                        placeholder="mis. tidak ada"
-                        value="{{ old('alergi', $ttv->alergi ?? '') }}"
-                    >
-
-                    <div class="ob-vital-check">
-                        <span
-                            class="ob-check-icon"
-                            id="btnCentangVital"
-                            role="button"
-                            title="Masukkan tanda vital ke Objective"
-                            onclick="isiObjektifDariVital()"
-                        >✓</span>
-                    </div>
-                </div>
             </div>
         </div>
 
