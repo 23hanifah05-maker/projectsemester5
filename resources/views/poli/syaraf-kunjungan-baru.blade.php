@@ -534,15 +534,6 @@
                     <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">x/menit</span>
                 </div>
-                <div class="kb-vital-row kb-vital-lainnya">
-                    <label for="chkVital">Alergi</label>
-                    <input type="text" id="alergi" name="alergi" data-field="alergi" value="{{ old('alergi', $ttv->alergi ?? '') }}" placeholder="mis. tidak ada" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
-                    <span class="kb-check-box">
-                        <input type="checkbox" class="kb-vital-check" id="chkVital"
-                               title="Centang untuk menyimpan TTV ke database dan memasukkannya ke Objective"
-                               onchange="toggleVitalKeObjektif(this)" {{ $bolehTtv ? '' : 'disabled' }}>
-                    </span>
-                </div>
             </div>
         </div>
 
@@ -578,7 +569,7 @@
                 'Riwayat Operasi' => 'Riwayat operasi...',
                 'Riwayat Alergi' => 'Riwayat alergi...',
                 'Riwayat Imunisasi' => 'Riwayat imunisasi...',
-                'Pemeriksaan Tanda Vital' => 'Klik centang ✓ di atas untuk menarik data TTV',
+                'Pemeriksaan Tanda Vital' => 'Pemeriksaan tanda vital...',
                 'Pemeriksaan Fisik Lainnya' => 'Pemeriksaan fisik selain TTV...',
                 'Dx Utama' => 'Diagnosa utama...',
                 'Dx Sekunder' => 'Diagnosa sekunder...',
@@ -2165,7 +2156,6 @@
                     heart_rate: ambilNilai('heart_rate'),
                     respiratory_rate: ambilNilai('respiratory_rate'),
                     spo2: ambilNilai('spo2'),
-                    alergi: ambilNilai('alergi')
                 },
                 'Gagal menyimpan TTV.'
             );
@@ -2849,7 +2839,7 @@
             (document.querySelector('textarea[name="' + nama + '"]')?.value ?? '').trim();
 
         return JSON.stringify({
-            ttv: ['tekanan_darah', 'heart_rate', 'spo2', 'suhu', 'respiratory_rate', 'alergi'].map(nilai),
+            ttv: ['tekanan_darah', 'heart_rate', 'spo2', 'suhu', 'respiratory_rate'].map(nilai),
             soap: ['subjective', 'objective', 'assessment', 'plan'].map(teks),
             penyakit: diagnosaTerpilih.penyakit.map(d => String(d.id)).sort(),
             tindakan: diagnosaTerpilih.tindakan.map(d => String(d.id)).sort()
