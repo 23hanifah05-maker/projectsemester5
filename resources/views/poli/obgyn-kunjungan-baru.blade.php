@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Baru - Poli Obgyn')
-@section('header-icon', '🩺')
+@section('header-icon')
 @section('header-title', 'Poli Obgyn')
 
 @section('extra-css')
