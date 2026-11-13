@@ -315,7 +315,9 @@
                         </select>
                     </div>
 
-                    <div class="row">
+                    {{-- No. BPJS: hanya tampil jika pembayaran = BPJS --}}
+                    <div class="row" id="row_no_bpjs"
+                         @if (old('pembayaran') !== 'bpjs') style="display:none;" @endif>
                         <label for="no_bpjs">No. BPJS</label>
                         <input type="text" name="no_bpjs" id="no_bpjs"
                                value="{{ old('no_bpjs') }}"
@@ -511,6 +513,31 @@ function aturInputLainnya(selectId, inputId, kode) {
     perbarui();
 }
 
+/* Tampilkan No. BPJS hanya jika pembayaran = BPJS */
+function aturNoBpjs() {
+    const pembayaran = document.getElementById('pembayaran');
+    const baris = document.getElementById('row_no_bpjs');
+    const input = document.getElementById('no_bpjs');
+    const error = document.getElementById('noBpjsError');
+
+    if (!pembayaran || !baris || !input) return;
+
+    function perbarui() {
+        const tampil = pembayaran.value === 'bpjs';
+        baris.style.display = tampil ? '' : 'none';
+        input.required = tampil;
+
+        if (!tampil) {
+            input.value = '';
+            input.style.borderColor = '';
+            if (error) error.style.display = 'none';
+        }
+    }
+
+    pembayaran.addEventListener('change', perbarui);
+    perbarui();
+}
+
 function hitungUmur() {
     const tanggal = document.getElementById('tgl_lahir');
     const val = tanggal.value;
@@ -619,6 +646,7 @@ function bukaConsentDariPendaftaran() {
 document.addEventListener('DOMContentLoaded', function () {
     aturInputLainnya('agama', 'agama_lainnya', '8');
     aturInputLainnya('pekerjaan', 'pekerjaan_lainnya', '5');
+    aturNoBpjs();
 
     const poli = document.getElementById('poli');
     const dokter = document.getElementById('dokter');
