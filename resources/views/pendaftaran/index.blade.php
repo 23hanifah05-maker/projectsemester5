@@ -674,17 +674,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!form) return;
 
-    let timer;
-
-    function kirimFilter() {
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-            form.requestSubmit();
-        }, 400);
-    }
-
+    // Keyword baru dicari saat menekan Enter (bukan otomatis saat berhenti mengetik)
     if (keyword) {
-        keyword.addEventListener('input', kirimFilter);
+        keyword.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
     }
 
     // Batasi kalender: tanggal akhir tidak boleh sebelum tanggal awal
