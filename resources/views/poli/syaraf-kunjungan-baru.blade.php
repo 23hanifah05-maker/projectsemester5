@@ -548,45 +548,63 @@
 
         <hr class="kb-divider">
 
-        {{-- ===== Kotak SOAP (label kiri, isian kanan: sama dengan Obgyn) ===== --}}
+        {{-- ===== Kotak SOAP: setiap isian disimpan pada kolom database masing-masing ===== --}}
         @php
             $soapBagian = [
                 'subjective' => ['S', [
-                    'Keluhan Utama', 'Riwayat Penyakit Sekarang', 'Riwayat Penyakit Dahulu',
-                    'Riwayat Penyakit Keluarga', 'Riwayat Pengobatan', 'Riwayat Sosial',
-                    'Riwayat Operasi', 'Riwayat Alergi', 'Riwayat Imunisasi',
+                    'keluhan_utama' => 'Keluhan Utama',
+                    'riwayat_penyakit_sekarang' => 'Riwayat Penyakit Sekarang',
+                    'riwayat_penyakit_dahulu' => 'Riwayat Penyakit Dahulu',
+                    'riwayat_penyakit_keluarga' => 'Riwayat Penyakit Keluarga',
+                    'riwayat_pengobatan' => 'Riwayat Pengobatan',
+                    'riwayat_sosial' => 'Riwayat Sosial',
+                    'riwayat_operasi' => 'Riwayat Operasi',
+                    'riwayat_alergi' => 'Riwayat Alergi',
+                    'riwayat_imunisasi' => 'Riwayat Imunisasi',
                 ]],
-                'objective' => ['O', ['Pemeriksaan Tanda Vital', 'Pemeriksaan Fisik Lainnya']],
-                'assessment' => ['A', ['Dx Utama', 'Dx Sekunder']],
-                'plan' => ['P', ['Tindakan Medis', 'Konseling Edukasi', 'Rencana Tindak Lanjut', 'Diet', 'Resep Obat']],
+                'objective' => ['O', [
+                    'pemeriksaan_fisik_lainnya' => 'Pemeriksaan Fisik Lainnya',
+                ]],
+                'assessment' => ['A', [
+                    'dx_utama' => 'Dx Utama',
+                    'dx_sekunder' => 'Dx Sekunder',
+                ]],
+                'plan' => ['P', [
+                    'tindakan_medis' => 'Tindakan Medis',
+                    'konseling_edukasi' => 'Konseling Edukasi',
+                    'rencana_tindak_lanjut' => 'Rencana Tindak Lanjut',
+                    'diet' => 'Diet',
+                    'resep_obat' => 'Resep Obat',
+                ]],
             ];
 
+            $soapPlaceholder = [
+                'keluhan_utama' => 'Keluhan utama...',
+                'riwayat_penyakit_sekarang' => 'Riwayat penyakit sekarang...',
+                'riwayat_penyakit_dahulu' => 'Riwayat penyakit dahulu...',
+                'riwayat_penyakit_keluarga' => 'Riwayat penyakit keluarga...',
+                'riwayat_pengobatan' => 'Riwayat pengobatan...',
+                'riwayat_sosial' => 'Riwayat sosial...',
+                'riwayat_operasi' => 'Riwayat operasi...',
+                'riwayat_alergi' => 'Riwayat alergi...',
+                'riwayat_imunisasi' => 'Riwayat imunisasi...',
+                'pemeriksaan_fisik_lainnya' => 'Pemeriksaan fisik selain TTV...',
+                'dx_utama' => 'Diagnosa utama...',
+                'dx_sekunder' => 'Diagnosa sekunder...',
+                'tindakan_medis' => 'Tindakan medis...',
+                'konseling_edukasi' => 'Konseling edukasi...',
+                'rencana_tindak_lanjut' => 'Rencana tindak lanjut...',
+                'diet' => 'Diet...',
+                'resep_obat' => 'Resep obat...',
+            ];
+
+            // Penampung gabungan hanya untuk fungsi lama di sisi browser (resume/cetak/guard).
+            // Kolom ini tidak lagi dikirim ke endpoint penyimpanan SOAP.
             $soapNilai = [
                 'subjective' => $assesmen->subjek ?? '',
                 'objective' => $assesmen->objek ?? '',
                 'assessment' => $assesmen->assesmen ?? '',
                 'plan' => $assesmen->plan ?? '',
-            ];
-
-            $soapPlaceholder = [
-                'Keluhan Utama' => 'Keluhan utama...',
-                'Riwayat Penyakit Sekarang' => 'Riwayat penyakit sekarang...',
-                'Riwayat Penyakit Dahulu' => 'Riwayat penyakit dahulu...',
-                'Riwayat Penyakit Keluarga' => 'Riwayat penyakit keluarga...',
-                'Riwayat Pengobatan' => 'Riwayat pengobatan...',
-                'Riwayat Sosial' => 'Riwayat sosial...',
-                'Riwayat Operasi' => 'Riwayat operasi...',
-                'Riwayat Alergi' => 'Riwayat alergi...',
-                'Riwayat Imunisasi' => 'Riwayat imunisasi...',
-                'Pemeriksaan Tanda Vital' => 'Klik centang ✓ di atas untuk menarik data TTV',
-                'Pemeriksaan Fisik Lainnya' => 'Pemeriksaan fisik selain TTV...',
-                'Dx Utama' => 'Diagnosa utama...',
-                'Dx Sekunder' => 'Diagnosa sekunder...',
-                'Tindakan Medis' => 'Tindakan medis...',
-                'Konseling Edukasi' => 'Konseling edukasi...',
-                'Rencana Tindak Lanjut' => 'Rencana tindak lanjut...',
-                'Diet' => 'Diet...',
-                'Resep Obat' => 'Resep obat...',
             ];
         @endphp
 
@@ -595,16 +613,19 @@
             @foreach ($soapBagian as $nama => [$huruf, $daftarKolom])
                 <div class="kb-soap-row">
                     <div class="kb-soap-badge">{{ $huruf }}</div>
-
                     <div class="kb-sub" data-target="{{ $nama }}">
-                        @foreach ($daftarKolom as $label)
+                        @if ($nama === 'objective')
+                            <div class="kb-sub-item">
+                                <label>Pemeriksaan Tanda Vital</label>
+                                <textarea rows="1" data-label="Pemeriksaan Tanda Vital" data-soap-ttv placeholder="Klik centang ✓ di atas untuk menarik data TTV" {{ $soapReadonly($nama) }}></textarea>
+                            </div>
+                        @endif
+                        @foreach ($daftarKolom as $kolom => $label)
                             <div class="kb-sub-item">
                                 <label>{{ $label }}</label>
-                                <textarea rows="{{ $label === 'Resep Obat' ? 3 : 1 }}" data-label="{{ $label }}" placeholder="{{ $soapPlaceholder[$label] ?? '' }}" {{ $soapReadonly($nama) }}></textarea>
+                                <textarea name="{{ $kolom }}" data-soap-field="{{ $kolom }}" rows="{{ $kolom === 'resep_obat' ? 3 : 1 }}" data-label="{{ $label }}" placeholder="{{ $soapPlaceholder[$kolom] ?? '' }}" {{ $soapReadonly($nama) }}>{{ old($kolom, $assesmen->$kolom ?? '') }}</textarea>
                             </div>
                         @endforeach
-
-                        {{-- Tombol Cetak tepat di bawah kolom Resep Obat (sama seperti Obgyn) --}}
                         @if ($nama === 'plan')
                             <div class="kb-sub-item">
                                 <label>&nbsp;</label>
@@ -616,8 +637,6 @@
                             </div>
                         @endif
                     </div>
-
-                    {{-- Penampung gabungan: dibaca oleh Simpan, Resume Medis, dan penjaga halaman --}}
                     <textarea name="{{ $nama }}" hidden {{ $soapReadonly($nama) }}>{{ old($nama, $soapNilai[$nama]) }}</textarea>
                 </div>
             @endforeach
@@ -1381,11 +1400,15 @@
         });
 
         kolom.forEach(function (k) {
-            if (peta[k.dataset.label] !== undefined) k.value = peta[k.dataset.label];
+            if (peta[k.dataset.label] !== undefined && k.value.trim() === '') k.value = peta[k.dataset.label];
         });
     }
 
     ['subjective', 'objective', 'assessment', 'plan'].forEach(muatSOAP);
+
+    // Sinkronkan textarea tersembunyi dari kolom SOAP individual saat halaman dibuka.
+    // Ini diperlukan agar resume, cetak, dan snapshot membaca data kolom baru.
+    ['subjective', 'objective', 'assessment', 'plan'].forEach(gabungSOAP);
 
     document.addEventListener('input', function (e) {
         const wadah = e.target.closest ? e.target.closest('.kb-sub[data-target]') : null;
@@ -2016,7 +2039,7 @@
     }
 
     function kolomTtvObjektif() {
-        return document.querySelector('.kb-sub[data-target="objective"] textarea[data-label="Pemeriksaan Tanda Vital"]');
+        return document.querySelector('.kb-sub[data-target="objective"] textarea[data-soap-ttv]');
     }
 
     function hapusVitalDariObjektif() {
@@ -2100,20 +2123,24 @@
             return false;
         }
 
-        const ambilTeks = nama =>
-            (document.querySelector(`textarea[name="${nama}"]`)?.value ?? '').trim();
-
         const payload = { id_pendaftaran: Number(idPendaftaran) };
+        const fieldSOAP = [
+            'keluhan_utama', 'riwayat_penyakit_sekarang', 'riwayat_penyakit_dahulu',
+            'riwayat_penyakit_keluarga', 'riwayat_pengobatan', 'riwayat_sosial',
+            'riwayat_operasi', 'riwayat_alergi', 'riwayat_imunisasi',
+            'pemeriksaan_fisik_lainnya', 'dx_utama', 'dx_sekunder',
+            'tindakan_medis', 'konseling_edukasi', 'rencana_tindak_lanjut',
+            'diet', 'resep_obat'
+        ];
 
-        if (BOLEH_SO) {
-            payload.subjective = ambilTeks('subjective');
-            payload.objective = ambilTeks('objective');
-        }
-
-        if (BOLEH_ASS_PLAN) {
-            payload.assessment = ambilTeks('assessment');
-            payload.plan = ambilTeks('plan');
-        }
+        fieldSOAP.forEach(function (nama) {
+            const el = document.querySelector('textarea[data-soap-field="' + nama + '"]');
+            if (!el) return;
+            const bagian = el.closest('.kb-soap-row');
+            const grup = bagian?.querySelector('.kb-sub')?.dataset.target;
+            const bolehEdit = (grup === 'subjective' || grup === 'objective') ? BOLEH_SO : BOLEH_ASS_PLAN;
+            if (bolehEdit) payload[nama] = el.value.trim();
+        });
 
         if (BOLEH_ICD) {
             payload.penyakit_id = diagnosaTerpilih.penyakit.map(item => Number(item.id));

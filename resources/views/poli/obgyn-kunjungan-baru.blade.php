@@ -646,6 +646,24 @@
             ['UK', 'uk', 'minggu', 'mis. 12'],
         ];
 
+        // Pemetaan kolom SOAP individual ke database.
+        $soapKolom = [
+            'subjective' => [
+                'keluhan_utama', 'riwayat_penyakit_sekarang',
+                'riwayat_penyakit_dahulu', 'riwayat_penyakit_keluarga',
+                'riwayat_pengobatan', 'riwayat_sosial', 'riwayat_operasi',
+                'riwayat_alergi', 'riwayat_imunisasi',
+            ],
+            'objective' => [
+                null, 'pemeriksaan_fisik_lainnya',
+            ],
+            'assessment' => ['dx_utama', 'dx_sekunder'],
+            'plan' => [
+                'tindakan_medis', 'konseling_edukasi',
+                'rencana_tindak_lanjut', 'diet', 'resep_obat',
+            ],
+        ];
+
         // SOAP berkolom: [kode, nama textarea asli, [[label, placeholder], ...]]
         $soapBlok = [
             ['S', 'subjective', [
@@ -1030,7 +1048,7 @@
                                     rows="{{ $label === 'Resep Obat' ? 3 : 1 }}"
                                     placeholder="{{ $ph }}"
                                     {{ $soapReadonly($name) }}
-                                ></textarea>
+                                >{{ old($soapKolom[$name][$i] ?? '', $soapKolom[$name][$i] ? ($assesmen->{$soapKolom[$name][$i]} ?? '') : '') }}</textarea>
                             </div>
 
                             {{-- Tombol Cetak resep tepat di bawah kolom Resep Obat --}}
@@ -1934,8 +1952,12 @@
         document.querySelectorAll('.ob-soap-group').forEach(function (group) {
             const target = document.querySelector('[name="' + group.dataset.target + '"]');
             const inputs = Array.from(group.querySelectorAll('.ob-sf-input'));
-            let teks = (target?.value ?? '').trim();
 
+            // Jika kolom individual sudah terisi dari database, jangan timpa
+            // dengan format SOAP gabungan dari kolom lama.
+            if (inputs.some(el => el.value.trim() !== '')) return;
+
+            let teks = (target?.value ?? '').trim();
             if (!teks) return;
 
             // Data lama format "Tindak Lanjut :" / "Resep Obat :" diubah ke format baru
@@ -2454,16 +2476,35 @@
                 item => Number(item.id)
             );
 
+            // Kirim setiap komponen SOAP ke kolom database masing-masing.
+            // TTV tetap disimpan melalui endpoint TTV, bukan kolom SOAP.
+            const nilaiSoap = id => {
+                const el = document.getElementById(id);
+                return el ? el.value.trim() : '';
+            };
+
             const assesmenPayload = {
                 id_pendaftaran: Number(ID_PENDAFTARAN),
-                // Hanya field yang boleh diedit oleh role ini yang dikirim.
                 ...(BOLEH_SO ? {
-                    subjective: ambilNilai('subjective'),
-                    objective: ambilNilai('objective')
+                    keluhan_utama: nilaiSoap('sf-subjective-0'),
+                    riwayat_penyakit_sekarang: nilaiSoap('sf-subjective-1'),
+                    riwayat_penyakit_dahulu: nilaiSoap('sf-subjective-2'),
+                    riwayat_penyakit_keluarga: nilaiSoap('sf-subjective-3'),
+                    riwayat_pengobatan: nilaiSoap('sf-subjective-4'),
+                    riwayat_sosial: nilaiSoap('sf-subjective-5'),
+                    riwayat_operasi: nilaiSoap('sf-subjective-6'),
+                    riwayat_alergi: nilaiSoap('sf-subjective-7'),
+                    riwayat_imunisasi: nilaiSoap('sf-subjective-8'),
+                    pemeriksaan_fisik_lainnya: nilaiSoap('sf-objective-1')
                 } : {}),
                 ...(BOLEH_ASS_PLAN ? {
-                    assessment: ambilNilai('assessment'),
-                    plan: ambilNilai('plan')
+                    dx_utama: nilaiSoap('sf-assessment-0'),
+                    dx_sekunder: nilaiSoap('sf-assessment-1'),
+                    tindakan_medis: nilaiSoap('sf-plan-0'),
+                    konseling_edukasi: nilaiSoap('sf-plan-1'),
+                    rencana_tindak_lanjut: nilaiSoap('sf-plan-2'),
+                    diet: nilaiSoap('sf-plan-3'),
+                    resep_obat: nilaiSoap('sf-plan-4')
                 } : {}),
                 ...(BOLEH_DIAGNOSA ? {
                     penyakit_id: penyakitIds,
