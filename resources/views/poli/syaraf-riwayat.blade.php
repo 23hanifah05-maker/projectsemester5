@@ -2,7 +2,7 @@
 
 @section('title', 'Kunjungan Poli Syaraf - Klinik Utama Merah Putih')
 @section('header-icon', '🩺')
-@section('header-title', 'Poli Syaraf')
+@section('header-title', 'Poli Saraf')
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
