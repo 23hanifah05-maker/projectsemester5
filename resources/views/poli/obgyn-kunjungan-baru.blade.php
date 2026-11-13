@@ -1,14 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Baru - Poli Obgyn')
-@section('header-icon', '🩺')
 @section('header-title', 'Poli Obgyn')
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/obgyn-kunjungan-baru.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/obgyn.css') }}?v={{ @filemtime(public_path('css/obgyn.css')) }}">
+
 
     <style>
         .ob-ttd-wrap {
