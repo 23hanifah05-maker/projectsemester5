@@ -993,16 +993,6 @@
                         <div class="rm-blok rm-grow">
                             <label class="rm-judul" for="rm_{{ $kunci }}">{{ $judul }}</label>
                             <textarea id="rm_{{ $kunci }}" data-rm="{{ $kunci }}" placeholder="{{ $ph }}">{{ data_get($rm, $kunci, $kunci === 'penunjang' ? $penunjangDefault : '') }}</textarea>
-
-                            @if ($bolehSnomed)
-                                <div class="rm-snomed" data-snomed="{{ $kunci }}">
-                                    <div class="rm-snomed-head">
-                                        <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
-                                        <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
-                                    </div>
-                                    <div class="rm-snomed-list"></div>
-                                </div>
-                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -1013,16 +1003,6 @@
                         <div class="rm-blok rm-grow">
                             <label class="rm-judul" for="rm_{{ $kunci }}">{{ $judul }}</label>
                             <textarea id="rm_{{ $kunci }}" data-rm="{{ $kunci }}" placeholder="{{ $ph }}">{{ data_get($rm, $kunci, '') }}</textarea>
-
-                            @if ($bolehSnomed)
-                                <div class="rm-snomed" data-snomed="{{ $kunci }}">
-                                    <div class="rm-snomed-head">
-                                        <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
-                                        <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
-                                    </div>
-                                    <div class="rm-snomed-list"></div>
-                                </div>
-                            @endif
                         </div>
                     @endforeach
 
@@ -1034,16 +1014,6 @@
                                 <label><input type="checkbox" name="rm_edukasi[]" value="{{ $item }}"> {{ $item }}</label>
                             @endforeach
                         </div>
-
-                        @if ($bolehSnomed)
-                            <div class="rm-snomed" data-snomed="edukasi">
-                                <div class="rm-snomed-head">
-                                    <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
-                                    <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('edukasi')">Tambah Kode <b>+</b></button>
-                                </div>
-                                <div class="rm-snomed-list"></div>
-                            </div>
-                        @endif
                     </div>
 
                     {{-- Prognosis, Kondisi, Cara Keluar --}}
