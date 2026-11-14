@@ -7,10 +7,15 @@
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/general-consent.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/syaraf-kunjungan-baru.css')) }}">
 
     <style>
+        /* ===== Tab terkunci / belum consent ===== */
+        .kb-tab.terkunci { opacity: .5; cursor: not-allowed; }
+        .kb-tab.belum-consent { color: #c8102e; }
+
         /* ===== Resume Medis: kolom simetris seperti Obgyn ===== */
         #tab-resume .rm-ringkasan-body { align-items: stretch; }
 
@@ -341,6 +346,12 @@
 
         $tglKunjungan = request()->route('tanggal');
 
+        // Status General Consent kunjungan ini (Resume Medis terkunci sampai terisi)
+        $generalConsent = $generalConsent ?? \App\Models\GeneralConsent::where(
+            'id_pendaftaran',
+            $id_pendaftaran ?? request()->route('id_pendaftaran')
+        )->first();
+
         // ---------- HAK AKSES PER ROLE ----------
         $role = auth()->user()->role ?? null;
         $bolehTtv          = in_array($role, ['admin', 'perawat']);
@@ -397,7 +408,8 @@
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assessment</div>
         <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
-        <div class="kb-tab" onclick="gantiTab('resume', event)"><i class="fa-solid fa-file-medical"></i> Resume Medis</div>
+        <div class="kb-tab {{ !empty($generalConsent) ? '' : 'belum-consent' }}" id="tabConsentBtn" onclick="gantiTab('consent', event)"><i class="fa-solid fa-file-signature"></i> <span id="tabConsentLabel">{{ !empty($generalConsent) ? '✔ ' : '' }}General Consent</span></div>
+        <div class="kb-tab {{ !empty($generalConsent) ? '' : 'terkunci' }}" id="tabResumeBtn" onclick="gantiTab('resume', event)"><i class="fa-solid fa-file-medical"></i> Resume Medis</div>
     </div>
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print) ===== --}}
@@ -869,6 +881,44 @@
         </div>
     </div>
 
+    {{-- ===== TAB GENERAL CONSENT ===== --}}
+    @php
+        $gcTtl = ($pasien->tempat_lahir ?? '-') . ', ' .
+            (!empty($pasien->tgl_lahir) ? \Carbon\Carbon::parse($pasien->tgl_lahir)->format('d-m-Y') : '-');
+
+        $gcData = [
+            'norm' => $pasien->no_rm ?? '',
+            'nama' => $pasien->nama_pasien ?? '',
+            'ttl'  => $gcTtl,
+            'umur' => $pasien->umur ?? '-',
+            'jk'   => $pasien->jenis_kelamin ?? '-',
+            'hp'   => $pasien->no_hp ?? '-',
+        ];
+    @endphp
+
+    <div id="tab-consent" class="kb-tab-content">
+        <div class="kb-card" style="padding:20px;">
+            <div class="kb-section-title">General Consent</div>
+
+            <p id="gcStatusTeks" style="margin:10px 0 14px;">
+                @if (!empty($generalConsent))
+                    <span style="color:#198754;font-weight:600;">✔ Sudah diisi</span>
+                    pada {{ $generalConsent->tanggal }} pukul {{ $generalConsent->jam }}
+                    oleh {{ $generalConsent->nama_penandatangan }}.
+                @else
+                    General Consent wajib diisi sebelum membuka Resume Medis.
+                @endif
+            </p>
+
+            <button type="button" id="btnConsent"
+                    class="kb-btn kb-btn-simpan {{ !empty($generalConsent) ? 'sudah' : '' }}"
+                    onclick="bukaGeneralConsent()">
+                <i class="fa-solid fa-file-signature"></i>
+                {{ !empty($generalConsent) ? '✔ General Consent (isi ulang)' : 'Isi General Consent' }}
+            </button>
+        </div>
+    </div>
+
     {{-- =========================================================
          TAB RESUME MEDIS (disesuaikan dengan Poli Obgyn)
          ========================================================= --}}
@@ -1249,6 +1299,15 @@
         </div>
     </div>
 
+    {{-- ===== MODAL GENERAL CONSENT (memakai formulir dari halaman Pendaftaran) ===== --}}
+    @include('pendaftaran.partials.general-consent')
+
+    <script>
+        window.GC_URL_SIMPAN     = @json(route('poli.syaraf.general-consent.simpan'));
+        window.GC_CSRF           = @json(csrf_token());
+        window.GC_ID_PENDAFTARAN = @json($id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? request()->route('id_pendaftaran')));
+    </script>
+
 @endsection
 
 @section('extra-js')
@@ -1266,6 +1325,38 @@
     const BOLEH_CP       = @json($bolehCp);
     const BOLEH_RESUME   = @json($bolehResume);
     const BOLEH_SIMPAN   = @json($bolehSimpan);
+
+    // Status General Consent kunjungan ini. Resume Medis terkunci sampai true.
+    let SUDAH_CONSENT = @json(!empty($generalConsent));
+    const DATA_PASIEN_GC = @json($gcData);
+
+    function bukaGeneralConsent() {
+        if (typeof window.bukaConsent !== 'function') {
+            alert('Modal General Consent belum dimuat. Periksa file modal yang di-include di halaman ini.');
+            return;
+        }
+        if (SUDAH_CONSENT && !confirm('General Consent kunjungan ini sudah pernah diisi. Isi ulang dan timpa data lama?')) {
+            return;
+        }
+        window.bukaConsent(DATA_PASIEN_GC);
+    }
+
+    // Dipanggil modal setelah consent berhasil tersimpan di server
+    window.gcSetelahSimpan = function () {
+        SUDAH_CONSENT = true;
+
+        document.getElementById('tabResumeBtn')?.classList.remove('terkunci');
+        document.getElementById('tabConsentBtn')?.classList.remove('belum-consent');
+
+        const label = document.getElementById('tabConsentLabel');
+        if (label) label.textContent = '✔ General Consent';
+
+        const status = document.getElementById('gcStatusTeks');
+        if (status) status.innerHTML = '<span style="color:#198754;font-weight:600;">✔ Sudah diisi</span> pada kunjungan ini.';
+
+        const tombol = document.getElementById('btnConsent');
+        if (tombol) tombol.innerHTML = '<i class="fa-solid fa-file-signature"></i> ✔ General Consent (isi ulang)';
+    };
 
     // Saklar penyimpanan Clinical Pathway ke database.
     // false = hanya validasi + tanda "Tersimpan" (belum kirim ke server).
@@ -1427,6 +1518,12 @@
         if (tab === 'pathway' && !cpBolehDiisi()) {
             alert('Clinical Pathway hanya tersedia bila HNP (ICD-10 M51) menjadi Diagnosa Utama. ' +
                   'Urutkan atau pilih HNP sebagai diagnosa pertama.');
+            return;
+        }
+
+        // Resume Medis baru terbuka setelah General Consent kunjungan ini tersimpan
+        if (tab === 'resume' && !SUDAH_CONSENT) {
+            alert('Isi General Consent terlebih dahulu sebelum membuka Resume Medis.');
             return;
         }
 

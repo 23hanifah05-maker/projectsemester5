@@ -411,10 +411,17 @@ class PoliController extends Controller
         $informedConsent = InformedConsent::where('id_kunjungan', $id_pendaftaran)->first();
         $bolehInformed = $tindakanTersimpan->contains(fn ($t) => str_starts_with($t->kode, '69.7'));
 
+        // General Consent kunjungan ini (null bila belum diisi).
+        // Dipakai untuk membuka kunci tab Resume Medis.
+        $generalConsent = DB::table('general_consent')
+            ->where('id_pendaftaran', $id_pendaftaran)
+            ->first();
+
         return view('poli.obgyn-kunjungan-baru', compact(
             'poli', 'pasien', 'pendaftaran', 'no_rm', 'id_pendaftaran',
             'ttv', 'assesmen', 'diagnosisTersimpan', 'tindakanTersimpan',
-            'semuaPasienObgyn', 'radiologi', 'informedConsent', 'bolehInformed'
+            'semuaPasienObgyn', 'radiologi', 'informedConsent', 'bolehInformed',
+            'generalConsent'
         ));
     }
 
@@ -563,6 +570,79 @@ class PoliController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Informed Consent gagal disimpan.',
+            ], 500);
+        }
+    }
+
+    public function simpanGeneralConsent(Request $request)
+    {
+        $data = $request->validate([
+            'no_rm'                 => 'required|string|exists:pasien,no_rm',
+            'id_pendaftaran'        => 'required|integer|exists:pendaftaran,id_pendaftaran',
+            'gc_ttd_pemberi'        => 'required|string',
+            'gc_nama_pemberi'       => 'required|string|max:100',
+            'gc_ttd_pasien'         => 'required|string',
+            'gc_nama_penandatangan' => 'required|string|max:100',
+            'gc_anggota_keluarga'   => 'nullable|string',
+            'gc_tanggal'            => 'required|string|max:20',
+            'gc_jam'                => 'required|string|max:10',
+        ]);
+
+        $pendaftaran = Pendaftaran::where('id_pendaftaran', $data['id_pendaftaran'])
+            ->where('no_rm', $data['no_rm'])
+            ->first();
+
+        if (!$pendaftaran) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kunjungan tidak sesuai dengan pasien.',
+            ], 422);
+        }
+
+        // Modal mengirim tanggal "13/11/2026" dan jam "09.05"
+        try {
+            $tanggal = Carbon::createFromFormat('d/m/Y', $data['gc_tanggal'])->format('Y-m-d');
+        } catch (\Throwable $e) {
+            $tanggal = now()->format('Y-m-d');
+        }
+
+        $jam = str_replace('.', ':', $data['gc_jam']) . ':00';
+
+        try {
+            DB::table('general_consent')->updateOrInsert(
+                ['id_pendaftaran' => $data['id_pendaftaran']],
+                [
+                    // Modal hanya bisa disimpan bila semua butir sudah dicentang
+                    'hak_kewajiban'          => 1,
+                    'persetujuan_pelayanan'  => 1,
+                    'pelepasan_informasi'    => 1,
+                    'pengajuan_keluhan'      => 1,
+                    'informasi_rawat_jalan'  => 1,
+                    'kewajiban_pembayaran'   => 1,
+                    'pernyataan_persetujuan' => 1,
+                    'konfirmasi'             => 1,
+                    'anggota_keluarga'       => $data['gc_anggota_keluarga'] ?? null,
+                    'ttd_pemberi'            => $data['gc_ttd_pemberi'],
+                    'nama_pemberi'           => $data['gc_nama_pemberi'],
+                    'ttd_pasien'             => $data['gc_ttd_pasien'],
+                    'nama_penandatangan'     => $data['gc_nama_penandatangan'],
+                    'tanggal'                => $tanggal,
+                    'jam'                    => $jam,
+                ]
+            );
+
+            Audit::catat('Menyimpan General Consent', 'Poli Obgyn', $data['no_rm']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'General Consent berhasil disimpan.',
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'General Consent gagal disimpan.',
             ], 500);
         }
     }

@@ -1,49 +1,1189 @@
-/* Baris pasien bisa diklik */
-.row-pasien {
-     cursor: pointer;
-}
-.row-pasien:hover td {
-     background-color: #fbeaea;
+/* ===== Reset dasar agar padding/border tidak bikin elemen meluber ===== */
+.ob-card, .ob-card * {
+    box-sizing: border-box;
 }
 
-/* ===== Aksi: tombol mata + penanda status periksa ===== */
-.aksi-wrap {
+/* ===== Data Pasien card (top box, reused on both pages) ===== */
+.ob-card {
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+.ob-section-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 0 18px 12px;
+    margin: 0 -18px 14px;
+    border-bottom: 1px solid #999;
+}
+.ob-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 32px;
+}
+.ob-field { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ob-field .ob-label {
+    flex: 0 0 auto; min-width: 110px;
+    font-size: 13px; font-weight: 700; color: #333; white-space: nowrap;
+}
+.ob-field .ob-value {
+    flex: 1 1 auto; min-width: 0; border: 1px solid #ccc; border-radius: 4px;
+    padding: 6px 12px; font-size: 13px; color: #333; background: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ===== Tabs ===== */
+.ob-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0;
+    width: 100%;
+}
+.ob-tab {
+    background: #f1f1f1;
+    color: #555;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 22px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    border: 1px solid #d9d9d9;
+    border-bottom: none;
+}
+.ob-tab i { margin-right: 6px; }
+.ob-tab.active {
+    background: #b81d24;
+    color: #fff;
+    border-color: #b81d24;
+}
+.ob-tab-content {
+    display: none;
+    border: 1px solid #d9d9d9;
+    border-radius: 0 8px 8px 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 20px;
+    width: 100%;
+}
+.ob-tab-content.active { display: block; }
+.ob-tab-content, .ob-tab-content * { box-sizing: border-box; }
+
+/* ===== Vital signs (Assesment) ===== */
+.ob-vitals-box {
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+    width: 100%;
+}
+.ob-vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px 24px;
+    width: 100%;
+}
+.ob-vital-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.ob-vital-row label {
+    flex: 0 0 auto;
+    min-width: 46px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+}
+.ob-vital-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+.ob-vital-unit {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: #777;
+    white-space: nowrap;
+}
+.ob-check-icon {
+    color: #1a9c4a;
+    font-weight: 700;
+    font-size: 16px;
+    flex: 0 0 auto;
+}
+
+/* Kotak centang Vital Signs: kosong = abu-abu, ada tanda vital terisi = hijau */
+.ob-vitals-grid .ob-vital-row .ob-vital-check {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
 }
-.btn-aksi svg {
-    width: 20px;
-    height: 20px;
-    stroke: #fff;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    vertical-align: middle;
+.ob-vitals-grid .ob-vital-row .ob-vital-check .ob-check-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #555;
+    border-radius: 4px;
+    background: #fff;
+    color: transparent;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
 }
-.badge-periksa {
-    display: inline-block;
-    min-width: 70px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: center;
+.ob-vitals-grid .ob-vital-row .ob-vital-check .ob-check-icon.aktif {
+    background: #1e9e4a;
+    border-color: #1e9e4a;
     color: #fff;
 }
-.badge-periksa.periksa { background-color: #f4b400; color: #333; } /* kuning = periksa */
-.badge-periksa.selesai { background-color: #2e9e4f; }              /* hijau = selesai */
 
-.table-pendaftaran th:last-child { min-width: 170px; }
+.ob-divider {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 18px 0;
+}
+
+/* ===== SOAP ===== */
+.ob-soap-title, .ob-diagnosa-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.ob-soap-box {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 18px 20px;
+}
+.ob-soap-row { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.ob-soap-badge {
+    background: #b81d24;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+.ob-soap-row input,
+.ob-soap-row textarea {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    line-height: 1.5;
+    min-height: 56px;
+    resize: vertical;
+}
+.ob-soap-row textarea {
+    min-height: 110px;
+}
+
+/* ===== Diagnosa ===== */
+.ob-diagnosa-box {
+    position: relative;
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+}
+.ob-diagnosa-actions,
+.ob-soap-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.ob-soap-actions {
+    flex-direction: column;
+    margin-bottom: 0;
+    align-self: end;
+}
+.ob-soap-actions .ob-cetak-btn,
+.ob-soap-actions .ob-rujuk-btn {
+    width: 100%;
+}
+.ob-cetak-btn, .ob-rujuk-btn {
+    background: #fff;
+    color: #b81d24;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 16px;
+    border: 1px solid #b81d24;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.ob-cetak-btn:hover, .ob-rujuk-btn:hover {
+    background: #b81d24;
+    color: #fff;
+}
+.ob-diagnosa-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 20px;
+    width: 100%;
+}
+.ob-search-field { min-width: 0; }
+.ob-search-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 6px;
+}
+.ob-search-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.ob-search-box {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.ob-search-box input {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 34px 8px 12px;
+    font-size: 13px;
+}
+.ob-search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+.ob-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 2px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 20;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.ob-dropdown-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+.ob-dropdown-item:hover { background: #f5f5f5; }
+.ob-dropdown-empty { color: #999; cursor: default; }
+.ob-dropdown-empty:hover { background: none; }
+
+/* Kotak centang Penyakit/Tindakan: kosong = abu-abu, aktif = hijau */
+.ob-check-box {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+}
+.ob-check-box .ob-check-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #555;
+    border-radius: 4px;
+    background: #fff;
+    color: transparent;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+}
+.ob-check-box .ob-check-icon.aktif {
+    background: #1e9e4a;
+    border-color: #1e9e4a;
+    color: #fff;
+}
+
+/* ===== Action buttons (Simpan / Reset) ===== */
+.ob-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+.ob-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 9px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+.ob-btn-simpan { background: #b81d24; color: #fff; }
+.ob-btn-simpan:hover { background: #9c161c; }
+.ob-btn-reset { background: #fff; color: #555; border: 1px solid #ccc; }
+.ob-btn-reset:hover { background: #f2f2f2; }
+
+/* ===== Radiologi tab ===== */
+.ob-radio-card {
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px 18px;
+}
+.ob-radio-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 0 18px 12px;
+    margin: 0 -18px 16px;
+    border-bottom: 1px solid #999;
+}
+.ob-radio-sub {
+    font-weight: 700;
+    font-size: 13px;
+    color: #333;
+    margin: 18px 0 10px;
+}
+.ob-checklist-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+    width: 100%;
+}
+.ob-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    min-width: 0;
+}
+.ob-checklist-item input[type=checkbox] { width: 16px; height: 16px; flex: 0 0 auto; }
+.ob-checklist-lainnya { flex-wrap: wrap; }
+.ob-checklist-lainnya input[type=text] {
+    flex: 1 1 auto;
+    min-width: 140px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+.ob-checklist-lainnya input[type=text]:disabled { background: #f5f5f5; color: #aaa; }
+
+.ob-upload-box {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 26px 16px;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    cursor: pointer;
+    background: #fafafa;
+    width: 100%;
+}
+.ob-upload-box:hover { border-color: #b81d24; color: #b81d24; }
+.ob-upload-hint { font-size: 11px; color: #999; }
+
+.ob-hasil-textarea {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+/* ===== Area Cetak Resep ===== */
+.cetak-resep-only {
+    display: none;
+}
+.resep-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.resep-header h2 {
+    margin: 0;
+    font-size: 16px;
+}
+.resep-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+.resep-info p {
+    margin: 4px 0;
+    font-size: 13px;
+}
+.resep-rp {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 16px 0 8px;
+}
+.resep-isi {
+    min-height: 120px;
+    font-size: 14px;
+    white-space: pre-wrap;
+    padding: 0 8px;
+}
+.resep-footer {
+    margin-top: 40px;
+    text-align: right;
+    font-size: 13px;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .cetak-resep-only,
+    .cetak-resep-only * {
+        visibility: visible;
+    }
+    .cetak-resep-only {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 24px;
+    }
+}
+
+@media (max-width: 900px) {
+    .ob-vitals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ob-diagnosa-row { grid-template-columns: 1fr; }
+    .ob-soap-actions { justify-content: flex-end; align-self: stretch; }
+    .ob-checklist-grid { grid-template-columns: 1fr; }
+    .ob-fields { grid-template-columns: 1fr; }
+}
+
+
+/* =====================================================================
+   DIPINDAHKAN DARI <style> INTERNAL BLADE (urutan sama seperti aslinya)
+   ===================================================================== */
+
+/* ---------- Blok 1: Ukuran kolom SOAP, tombol Cetak di kolom Plan, daftar diagnosa ---------- */
+:root {
+    --kb-merah: #b81d24;
+    --kb-garis: #d9dce1;
+}
+
+.ob-soap-box {
+    gap: 16px;
+    padding: 18px 20px;
+}
+.ob-soap-box .ob-soap-row {
+    gap: 12px;
+}
+.ob-soap-box .ob-soap-badge {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+}
+.ob-soap-box .ob-soap-row textarea {
+    min-height: 110px;
+    padding: 12px 16px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.ob-plan-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+.ob-plan-wrap textarea[name="plan"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 110px; /* ruang untuk tombol Cetak */
+}
+.ob-plan-wrap .ob-cetak-plan {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    bottom: auto;
+    margin: 0;
+    transform: translateY(-50%);
+    white-space: nowrap;
+}
+
+/* Diagnosa: daftar hasil tampil di bawah kolom */
+.ob-diagnosa-row {
+    align-items: start;
+}
+.ob-diagnosa-row .ob-soap-actions {
+    align-self: start;
+    margin-top: 26px;
+}
+.ob-diagnosa-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+.ob-diagnosa-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #333;
+    background: #fdecea;
+    border: 1px solid #f3c2bd;
+    border-radius: 8px;
+}
+.ob-diagnosa-aksi {
+    display: flex;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+.ob-diagnosa-aksi button {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.ob-aksi-hapus { color: #b81d24; }
+.ob-aksi-hapus:hover { background: rgba(184, 29, 36, 0.14); }
+
+/* Tombol Rujuk di baris bawah (di samping Simpan) */
+.ob-actions .ob-btn-rujuk {
+    color: #b81d24;
+    border: 1px solid #b81d24;
+    background: #fff;
+}
+.ob-actions .ob-btn-rujuk:hover {
+    background: #b81d24;
+    color: #fff;
+}
+
+/* ===== Data Pasien: 2 kolom sama lebar, label & isi sejajar ===== */
+.ob-card .ob-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 40px;
+}
+.ob-card .ob-fields .ob-field {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+.ob-card .ob-fields .ob-label {
+    font-weight: 600;
+}
+.ob-card .ob-fields .ob-value {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 0 14px;
+    border: 1px solid #d9dce1;
+    border-radius: 6px;
+    background: #fff;
+}
+@media (max-width: 900px) {
+    .ob-card .ob-fields { grid-template-columns: 1fr; }
+}
+
+/* ===== Kotak Tanda Vital: 2 baris x 4 kolom =====
+   12 kolom: [label | isian | satuan] x 4. Label & satuan selebar isinya,
+   sisa lebar dibagi rata ke 4 kolom isian (sejajar & mentok ke tepi kanan). */
+.ob-vitals-box {
+    padding: 12px 14px 12px 18px;
+    border: 1px solid #d9dce1;
+    border-radius: 10px;
+    background: #fff;
+    box-sizing: border-box;
+}
+#tab-assessment .ob-vitals-box .ob-vitals-grid {
+    display: grid !important;
+    grid-template-columns:
+        max-content minmax(0, 1fr) max-content
+        max-content minmax(0, 1fr) max-content
+        max-content minmax(0, 1fr) max-content
+        max-content minmax(0, 1fr) max-content !important;
+    column-gap: 6px !important;
+    row-gap: 10px !important;
+    align-items: center;
+}
+#tab-assessment .ob-vitals-grid .ob-vital-row {
+    display: contents !important;
+}
+#tab-assessment .ob-vitals-grid .ob-vital-row label {
+    font-weight: 600;
+    margin: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    white-space: nowrap;
+    box-sizing: border-box;
+    padding-right: 4px;
+}
+/* jarak antar kelompok kolom (kolom ke-2, 3, 4) */
+#tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n+2) label,
+#tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n+3) label,
+#tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(4n) label {
+    padding-left: 14px;
+}
+#tab-assessment .ob-vitals-grid .ob-vital-row input {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    flex: none !important;
+    height: 34px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+}
+#tab-assessment .ob-vitals-grid .ob-vital-row input[type=date] {
+    padding: 0 8px;
+    cursor: pointer;
+    color: #333;
+}
+#tab-assessment .ob-vitals-grid .ob-vital-row input:focus {
+    outline: none;
+    border-color: #b81d24;
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+}
+#tab-assessment .ob-vitals-grid .ob-vital-unit {
+    color: #8a8f98;
+    font-size: 13px;
+    white-space: nowrap;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+#tab-assessment .ob-vitals-grid .ob-vital-row .ob-vital-check {
+    justify-self: start;
+    width: 34px;
+    height: 34px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+}
+.ob-vitals-grid .ob-vital-check .ob-check-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #555;
+    border-radius: 4px;
+    background: #fff;
+    color: transparent;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+}
+.ob-vitals-grid .ob-vital-check .ob-check-icon.aktif {
+    background: #1e9e4a;
+    border-color: #1e9e4a;
+    color: #fff;
+}
+
+/* Layar sedang: 2 kelompok kolom */
+@media (max-width: 1100px) {
+    #tab-assessment .ob-vitals-box .ob-vitals-grid {
+        grid-template-columns:
+            max-content minmax(0, 1fr) max-content
+            max-content minmax(0, 1fr) max-content !important;
+    }
+    #tab-assessment .ob-vitals-grid .ob-vital-row label { padding-left: 0; }
+    #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(even) label { padding-left: 14px; }
+}
+/* Layar kecil: 1 kelompok kolom */
+@media (max-width: 640px) {
+    #tab-assessment .ob-vitals-box .ob-vitals-grid {
+        grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+    }
+    #tab-assessment .ob-vitals-grid .ob-vital-row label,
+    #tab-assessment .ob-vitals-grid .ob-vital-row:nth-child(even) label { padding-left: 0; }
+}
+
+/* ---------- Blok 2: Form Rujukan (disalin dari Poli Syaraf) ---------- */
+#view-rujukan { display: none; }
+body.mode-rujukan #view-rujukan { display: block; }
+body.mode-rujukan #kartu-pasien-utama,
+body.mode-rujukan .ob-tabs,
+body.mode-rujukan .ob-tab-content { display: none !important; }
+
+#view-rujukan .rj-box {
+    border: 1px solid var(--kb-garis);
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+#view-rujukan .rj-back {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--kb-garis);
+}
+#view-rujukan .rj-back button {
+    border: none;
+    background: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+}
+#view-rujukan .rj-body { padding: 16px 20px; }
+#view-rujukan .rj-title {
+    color: var(--kb-merah);
+    font-weight: 700;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--kb-garis);
+}
+#view-rujukan .rj-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 40px;
+}
+#view-rujukan .rj-field {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+}
+#view-rujukan .rj-field.rj-top { align-items: start; }
+#view-rujukan .rj-field label { font-size: 13px; font-weight: 600; }
+#view-rujukan .rj-field input[type=text],
+#view-rujukan .rj-field input[type=date],
+#view-rujukan .rj-field select,
+#view-rujukan .rj-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    height: 34px;
+    padding: 0 10px;
+    font: inherit;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+}
+#view-rujukan .rj-field textarea { height: 110px; padding: 8px 10px; resize: vertical; }
+#view-rujukan .rj-field input[readonly] { background: #f7f7f7; }
+#view-rujukan .rj-field input:focus,
+#view-rujukan .rj-field select:focus,
+#view-rujukan .rj-field textarea:focus {
+    outline: none;
+    border-color: var(--kb-merah);
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+}
+#view-rujukan .rj-cek-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+#view-rujukan .rj-cek-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin: 6px 0;
+    cursor: pointer;
+}
+#view-rujukan .rj-cek-item input[type=checkbox] { accent-color: var(--kb-merah); margin: 0; }
+#view-rujukan .rj-cek-item input[type=text] {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    padding: 0 10px;
+    font: inherit;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+#view-rujukan .rj-cek-item input[type=text]:disabled { background: #f1f1f1; cursor: not-allowed; }
+#view-rujukan .rj-actions { display: flex; justify-content: flex-end; }
+#view-rujukan .rj-kirim {
+    background: var(--kb-merah);
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 20px;
+    cursor: pointer;
+}
+@media (max-width: 900px) {
+    #view-rujukan .rj-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+    #view-rujukan .rj-field { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* ---------- Blok 3: Area cetak resep (hasil 1 lembar) ---------- */
+@page {
+    size: A4;
+    margin: 0; /* juga menghilangkan tanggal & URL bawaan browser di kertas */
+}
+@media screen {
+    .cetak-resep-only {
+        display: none;
+    }
+}
+@media print {
+    /* Saat mode cetak, semua elemen lain dihilangkan total agar tidak menambah halaman */
+    body.cetak-resep-mode > *:not(#cetak-resep-area) {
+        display: none !important;
+    }
+    html, body.cetak-resep-mode {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+    body.cetak-resep-mode #cetak-resep-area {
+        display: block !important;
+        visibility: visible !important;
+        position: static !important;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 15mm 18mm;
+        font-family: Arial, sans-serif;
+        color: #000;
+        page-break-inside: avoid;
+    }
+    body.cetak-resep-mode #cetak-resep-area * {
+        visibility: visible !important;
+    }
+    .cetak-header {
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .cetak-logo {
+        width: 80px;
+        height: 80px;
+        margin-right: 20px;
+        object-fit: contain;
+    }
+    .cetak-header-text {
+        flex-grow: 1;
+        text-align: center;
+    }
+    .cetak-header-text h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+    .cetak-header-text p {
+        margin: 3px 0;
+        font-size: 12px;
+    }
+    .cetak-info-table {
+        width: 100%;
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+    .cetak-info-table td {
+        padding: 3px 0;
+        vertical-align: top;
+    }
+    .cetak-divider {
+        border-bottom: 2px solid #000;
+        margin-bottom: 15px;
+    }
+    .cetak-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    .cetak-body {
+        display: flex;
+        gap: 15px;
+        min-height: 250px;
+        font-size: 14px;
+    }
+    .resep-rp {
+        font-weight: bold;
+        font-size: 18px;
+        margin: 0;
+    }
+    .resep-isi {
+        white-space: pre-wrap;
+        flex-grow: 1;
+        line-height: 1.5;
+        min-height: 0;
+        padding: 0;
+    }
+    .cetak-footer {
+        margin-top: 20px;
+        text-align: right;
+        font-size: 12px;
+    }
+    .cetak-footer p {
+        margin: 2px 0;
+    }
+    .cetak-signature {
+        margin-top: 70px; /* Jarak untuk tanda tangan manual */
+    }
+}
 
 /* ---------- Pengganti atribut style="..." (inline) ---------- */
-/* was style="background-color:#e9e9e9; color:#666; cursor:not-allowed;"
-   pada input editRm, editNama, editNik (modal Edit).
-   !important dipakai agar tetap menang seperti inline style sebelumnya. */
-.input-readonly-abu {
-    background-color: #e9e9e9 !important;
-    color: #666 !important;
-    cursor: not-allowed !important;
+p.teks-kosong { color: #888; }                          /* was style="color:#888;" */
+#view-rujukan .rj-grid.rj-grid-mt { margin-top: 22px; } /* was style="margin-top:22px;" */
+#view-rujukan .rj-field.rj-mb { margin-bottom: 14px; }  /* was style="margin-bottom:14px;" */
+input.sembunyi { display: none; }                       /* was style="display:none;" */
+
+
+/* =====================================================================
+   TAB INFORMED CONSENT (sesuai Figma Poli Obgyn)
+   Gaya mengikuti tab Radiologi: kotak border #999, judul merah #b81d24
+   ===================================================================== */
+.ob-ic-card {
+    width: 100%;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px 18px;
+}
+.ob-ic-title {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 0 18px 12px;
+    margin: 0 -18px 16px;
+    border-bottom: 1px solid #999;
+}
+.ob-ic-subtitle {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+/* Tabel */
+.ob-ic-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #999;
+    border-radius: 6px;
+}
+.ob-ic-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    color: #333;
+}
+.ob-ic-table thead th {
+    background: #fdecea;
+    color: #b81d24;
+    font-weight: 700;
+    padding: 9px 12px;
+    text-align: center;
+    border-bottom: 1px solid #999;
+    border-right: 1px solid #f3c2bd;
+}
+.ob-ic-table thead th:last-child { border-right: none; }
+.ob-ic-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #eee;
+}
+.ob-ic-table td:last-child { border-right: none; }
+.ob-ic-table tbody tr:last-child td { border-bottom: none; }
+.ob-ic-table tbody tr:hover { background: #fafafa; }
+.ob-ic-col-kategori { width: 22%; }
+.ob-ic-col-cek { width: 90px; }
+.ob-ic-cek { text-align: center; }
+.ob-ic-cek input {
+    width: 16px;
+    height: 16px;
+    accent-color: #b81d24;
+    cursor: pointer;
+}
+
+/* Pernyataan persetujuan */
+.ob-ic-persetujuan { margin-top: 20px; }
+.ob-ic-radio {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+.ob-ic-radio label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+.ob-ic-radio input { accent-color: #b81d24; }
+.ob-ic-pernyataan {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #333;
+}
+
+/* Form bawah */
+.ob-ic-form {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+    gap: 14px;
+    align-items: end;
+}
+.ob-ic-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+.ob-ic-field label {
+    font-weight: 700;
+    font-size: 13px;
+    color: #333;
+}
+.ob-ic-field input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    background: #fff;
+}
+.ob-ic-field input:focus {
+    outline: none;
+    border-color: #b81d24;
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+}
+.ob-ic-input-icon { position: relative; }
+.ob-ic-input-icon input { padding-right: 32px; }
+.ob-ic-input-icon i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    pointer-events: none;
+}
+.ob-ic-aksi {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 1100px) {
+    .ob-ic-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ob-ic-aksi { grid-column: 1 / -1; }
+}
+
+
+/* =====================================================================
+   SOAP BERKOLOM (S: 9 kolom, O: 2 kolom, A: 2 kolom, P: 4 kolom)
+   Textarea asli name="subjective/objective/assessment/plan" disembunyikan
+   dan otomatis diisi gabungan dari kolom-kolom kecil ini.
+   ===================================================================== */
+.ob-soap-hidden { display: none !important; }
+
+.ob-soap-group {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #d9dce1;
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+.ob-sg-judul {
+    color: #b81d24;
+    font-weight: 700;
+    font-size: 13px;
+}
+.ob-sf {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+}
+.ob-sf label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    padding-top: 8px;
+}
+.ob-soap-box .ob-soap-row .ob-sf-input {
+    min-height: 36px;
+    padding: 7px 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+}
+.ob-soap-box .ob-soap-row .ob-sf-input:focus {
+    outline: none;
+    border-color: #b81d24;
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
+}
+@media (max-width: 900px) {
+    .ob-sf { grid-template-columns: 1fr; gap: 4px; }
+    .ob-sf label { padding-top: 0; }
 }

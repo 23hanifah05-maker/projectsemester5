@@ -6,10 +6,14 @@
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/general-consent.css') }}">
     <link rel="stylesheet" href="{{ asset('css/obgyn.css') }}?v={{ @filemtime(public_path('css/obgyn.css')) }}">
 
 
     <style>
+        /* ===== Tab General Consent / Resume Medis ===== */
+        .ob-tab.belum-consent { color: #c8102e; }
+
         .ob-ttd-wrap {
             display: flex;
             gap: 24px;
@@ -751,6 +755,18 @@
             ];
         })->values()->all();
 
+        // ---------- GENERAL CONSENT ----------
+        $sudahConsent = !empty($generalConsent);
+
+        $gcData = [
+            'norm' => $pasien->no_rm ?? '',
+            'nama' => $pasien->nama_pasien ?? '',
+            'ttl'  => ($pasien->tempat_lahir ?? '-') . ', ' . $tanggalLahir,
+            'umur' => $umur,
+            'jk'   => $jenisKelamin,
+            'hp'   => $pasien->no_hp ?? '-',
+        ];
+
     @endphp
 
     {{-- DATA PASIEN --}}
@@ -799,7 +815,13 @@
             <i class="fa-solid fa-file-signature"></i> Informed Consent
         </div>
 
-        <div class="ob-tab" id="ob-tab-btn-resume"
+        <div class="ob-tab {{ $sudahConsent ? '' : 'belum-consent' }}" id="ob-tab-btn-consent"
+             onclick="gantiTab('consent', event)">
+            <i class="fa-solid fa-file-signature"></i>
+            <span id="tabConsentLabel">{{ $sudahConsent ? '✔ ' : '' }}General Consent</span>
+        </div>
+
+        <div class="ob-tab {{ $sudahConsent ? '' : 'ob-tab-terkunci' }}" id="ob-tab-btn-resume"
              onclick="gantiTab('resume', event)">
             <i class="fa-solid fa-file-medical"></i> Resume Medis
         </div>
@@ -1429,6 +1451,33 @@
         </div>
     </div>
 
+    {{-- TAB GENERAL CONSENT --}}
+    <div id="tab-consent" class="ob-tab-content">
+        <div class="ob-card" style="padding:20px;">
+            <div class="ob-section-title">General Consent</div>
+
+            <p id="gcStatusTeks" style="margin:10px 0 14px;">
+                @if ($sudahConsent)
+                    <span style="color:#198754;font-weight:600;">✔ Sudah diisi</span>
+                    pada {{ $generalConsent->tanggal }} pukul {{ $generalConsent->jam }}
+                    oleh {{ $generalConsent->nama_penandatangan }}.
+                @else
+                    General Consent wajib diisi sebelum membuka Resume Medis.
+                @endif
+            </p>
+
+            <button
+                type="button"
+                id="btnConsent"
+                class="ob-btn ob-btn-simpan {{ $sudahConsent ? 'sudah' : '' }}"
+                onclick="bukaGeneralConsent()"
+            >
+                <i class="fa-solid fa-file-signature"></i>
+                {{ $sudahConsent ? '✔ General Consent (isi ulang)' : 'Isi General Consent' }}
+            </button>
+        </div>
+    </div>
+
     {{-- TAB RESUME MEDIS (tampilan mengikuti Poli Syaraf) --}}
     @php
         // Kotak kode SNOMED CT hanya untuk admin dan pmik.
@@ -1788,6 +1837,15 @@
         </div>
     </div>
 
+    {{-- MODAL GENERAL CONSENT (file modal yang sama dengan Poli Saraf) --}}
+    @include('poli.partials.general-consent-modal')
+
+    <script>
+        window.GC_URL_SIMPAN     = "{{ route('poli.obgyn.general-consent.simpan') }}";
+        window.GC_CSRF           = "{{ csrf_token() }}";
+        window.GC_ID_PENDAFTARAN = "{{ $id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? '') }}";
+    </script>
+
 @endsection
 
 @section('extra-js')
@@ -1836,6 +1894,43 @@
     // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
     let izinkanKeluar = false;
 
+    // =========================================================
+    // GENERAL CONSENT
+    // Resume Medis terkunci sampai General Consent kunjungan ini tersimpan.
+    // =========================================================
+    let SUDAH_CONSENT = @json($sudahConsent);
+    const DATA_PASIEN_GC = @json($gcData);
+
+    function bukaGeneralConsent() {
+        if (typeof window.bukaConsent !== 'function') {
+            alert('Modal General Consent belum dimuat. Periksa file modal yang di-include di halaman ini.');
+            return;
+        }
+
+        if (SUDAH_CONSENT && !confirm('General Consent kunjungan ini sudah pernah diisi. Isi ulang dan timpa data lama?')) {
+            return;
+        }
+
+        window.bukaConsent(DATA_PASIEN_GC);
+    }
+
+    // Dipanggil modal setelah consent berhasil tersimpan di server
+    window.gcSetelahSimpan = function () {
+        SUDAH_CONSENT = true;
+
+        document.getElementById('ob-tab-btn-resume')?.classList.remove('ob-tab-terkunci');
+        document.getElementById('ob-tab-btn-consent')?.classList.remove('belum-consent');
+
+        const label = document.getElementById('tabConsentLabel');
+        if (label) label.textContent = '✔ General Consent';
+
+        const status = document.getElementById('gcStatusTeks');
+        if (status) status.innerHTML = '<span style="color:#198754;font-weight:600;">✔ Sudah diisi</span> pada kunjungan ini.';
+
+        const tombol = document.getElementById('btnConsent');
+        if (tombol) tombol.innerHTML = '<i class="fa-solid fa-file-signature"></i> ✔ General Consent (isi ulang)';
+    };
+
     // Membaca respons server dengan aman, supaya error HTML/500 terlihat jelas.
     async function bacaJson(response, namaProses) {
         const teks = await response.text();
@@ -1863,6 +1958,12 @@
         // Tab Informed Consent terkunci bila tidak ada tindakan KB IUD
         if (tab === 'informed' && !tabInformedTerbuka()) {
             alert('Informed Consent hanya tersedia untuk tindakan KB IUD (kode 69.7). Pilih tindakan tersebut terlebih dahulu.');
+            return;
+        }
+
+        // Resume Medis baru terbuka setelah General Consent kunjungan ini tersimpan
+        if (tab === 'resume' && !SUDAH_CONSENT) {
+            alert('Isi General Consent terlebih dahulu sebelum membuka Resume Medis.');
             return;
         }
 

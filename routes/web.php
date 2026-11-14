@@ -24,6 +24,10 @@ use App\Http\Controllers\ClinicalPathwayController;
 | pmik      : edit pendaftaran dan kode ICD (+ SNOMED).
 |             Hanya LIHAT: riwayat kunjungan, SOAP, resume.
 | radiologi : dashboard dan halaman radiologi.
+|
+| General Consent (halaman Poli Obgyn dan Poli Saraf): dokter, perawat,
+| pmik (+ admin) boleh mengisi dan menyimpan. Resume Medis baru terbuka
+| setelah General Consent kunjungan tersebut tersimpan.
 */
 
 
@@ -181,6 +185,20 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/poli/obgyn/assesmen', [AssesmenController::class, 'store'])
             ->name('poli.obgyn.assesmen.store');
+    });
+
+
+    // ------------------------------------------------------------------
+    // General Consent (simpan dari halaman Poli Obgyn dan Poli Saraf):
+    // dokter, perawat, pmik (+ admin)
+    // ------------------------------------------------------------------
+    Route::middleware('role:dokter,perawat,pmik')->group(function () {
+
+        Route::post('/poli/obgyn/general-consent/simpan', [PoliController::class, 'simpanGeneralConsent'])
+            ->name('poli.obgyn.general-consent.simpan');
+
+        Route::post('/poli/syaraf/general-consent/simpan', [PoliController::class, 'simpanGeneralConsent'])
+            ->name('poli.syaraf.general-consent.simpan');
     });
 
 
