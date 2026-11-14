@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Baru - Poli Saraf')
-@section('header-icon', '🩺')
+@section('header-icon')
 @section('header-title', 'Poli Saraf')
 
 @section('extra-css')
@@ -672,30 +672,7 @@
                 'assessment' => $assesmen->assesmen ?? '',
                 'plan' => $assesmen->plan ?? '',
             ];
-<<<<<<< HEAD
-=======
 
-            $soapPlaceholder = [
-                'Keluhan Utama' => 'Keluhan utama...',
-                'Riwayat Penyakit Sekarang' => 'Riwayat penyakit sekarang...',
-                'Riwayat Penyakit Dahulu' => 'Riwayat penyakit dahulu...',
-                'Riwayat Penyakit Keluarga' => 'Riwayat penyakit keluarga...',
-                'Riwayat Pengobatan' => 'Riwayat pengobatan...',
-                'Riwayat Sosial' => 'Riwayat sosial...',
-                'Riwayat Operasi' => 'Riwayat operasi...',
-                'Riwayat Alergi' => 'Riwayat alergi...',
-                'Riwayat Imunisasi' => 'Riwayat imunisasi...',
-                'Pemeriksaan Tanda Vital' => 'Pemeriksaan tanda vital...',
-                'Pemeriksaan Fisik Lainnya' => 'Pemeriksaan fisik selain TTV...',
-                'Dx Utama' => 'Diagnosa utama...',
-                'Dx Sekunder' => 'Diagnosa sekunder...',
-                'Tindakan Medis' => 'Tindakan medis...',
-                'Konseling Edukasi' => 'Konseling edukasi...',
-                'Rencana Tindak Lanjut' => 'Rencana tindak lanjut...',
-                'Diet' => 'Diet...',
-                'Resep Obat' => 'Resep obat...',
-            ];
->>>>>>> 3ae1ec2ec747487eda06bed8361c681c9d180e36
         @endphp
 
         <div class="kb-soap-title">SOAP</div>
