@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Baru - Poli Saraf')
-@section('header-icon', '🩺')
+@section('header-icon')
 @section('header-title', 'Poli Saraf')
 
 @section('extra-css')
@@ -328,6 +328,75 @@
                 gap: 4px;
             }
         }
+
+        /* =====================================================
+           Kode ICD: checklist simbol Dagger (†) / Asterisk (*)
+           ===================================================== */
+        .kb-simbol {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 8px;
+            margin: 0 10px;
+        }
+
+        /* Kartu simbol: ukuran sama tinggi dengan kolom input */
+        .kb-simbol-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 40px;
+            padding: 0;
+            border: 1.5px solid #d6d6d6;
+            border-radius: 8px;
+            background: #fff;
+            color: #b81d24;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+            transition: background .15s, border-color .15s, color .15s, box-shadow .15s, transform .05s;
+        }
+
+        /* Tanda * tampak kecil dan naik ke atas: dibesarkan dan diturunkan */
+        .kb-simbol-btn[data-simbol="*"] {
+            font-size: 32px;
+            padding-top: 10px;
+        }
+
+        .kb-simbol-btn:hover {
+            border-color: #c8102e;
+            background: #fdf1f2;
+        }
+
+        .kb-simbol-btn:active {
+            transform: scale(.95);
+        }
+
+        .kb-simbol-btn.aktif {
+            border-color: #c8102e;
+            background: #c8102e;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(200, 16, 46, .35);
+        }
+
+        .kb-simbol-btn:focus-visible {
+            outline: 2px solid #c8102e;
+            outline-offset: 2px;
+        }
+
+        /* Centang kecil TTV -> Objective (sejajar baris RR) */
+        .kb-vital-chk {
+            flex: 0 0 auto;
+            width: 15px;
+            height: 15px;
+            margin: 0 0 0 8px;
+            accent-color: #c8102e;
+            cursor: pointer;
+        }
     </style>
 @endsection
 
@@ -545,34 +614,70 @@
                     <label>RR</label>
                     <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">x/menit</span>
-                </div>
-                <div class="kb-vital-row kb-vital-lainnya">
-                    <label for="chkVital">Alergi</label>
-                    <input type="text" id="alergi" name="alergi" data-field="alergi" value="{{ old('alergi', $ttv->alergi ?? '') }}" placeholder="mis. tidak ada" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
-                    <span class="kb-check-box">
-                        <input type="checkbox" class="kb-vital-check" id="chkVital"
-                               title="Centang untuk menyimpan TTV ke database dan memasukkannya ke Objective"
-                               onchange="toggleVitalKeObjektif(this)" {{ $bolehTtv ? '' : 'disabled' }}>
-                    </span>
+                    @if ($bolehTtv)
+                        <input type="checkbox" id="chkVital" class="kb-vital-chk"
+                               title="Masukkan TTV ke O (Objective) - Pemeriksaan Tanda Vital"
+                               aria-label="Masukkan TTV ke Objective"
+                               onchange="toggleVitalKeObjektif(this)">
+                    @endif
                 </div>
             </div>
         </div>
 
         <hr class="kb-divider">
 
-        {{-- ===== Kotak SOAP (label kiri, isian kanan: sama dengan Obgyn) ===== --}}
+        {{-- ===== Kotak SOAP: setiap isian disimpan pada kolom database masing-masing ===== --}}
         @php
             $soapBagian = [
                 'subjective' => ['S', [
-                    'Keluhan Utama', 'Riwayat Penyakit Sekarang', 'Riwayat Penyakit Dahulu',
-                    'Riwayat Penyakit Keluarga', 'Riwayat Pengobatan', 'Riwayat Sosial',
-                    'Riwayat Operasi', 'Riwayat Alergi', 'Riwayat Imunisasi',
+                    'keluhan_utama' => 'Keluhan Utama',
+                    'riwayat_penyakit_sekarang' => 'Riwayat Penyakit Sekarang',
+                    'riwayat_penyakit_dahulu' => 'Riwayat Penyakit Dahulu',
+                    'riwayat_penyakit_keluarga' => 'Riwayat Penyakit Keluarga',
+                    'riwayat_pengobatan' => 'Riwayat Pengobatan',
+                    'riwayat_sosial' => 'Riwayat Sosial',
+                    'riwayat_operasi' => 'Riwayat Operasi',
+                    'riwayat_alergi' => 'Riwayat Alergi',
+                    'riwayat_imunisasi' => 'Riwayat Imunisasi',
                 ]],
-                'objective' => ['O', ['Pemeriksaan Tanda Vital', 'Pemeriksaan Fisik Lainnya']],
-                'assessment' => ['A', ['Dx Utama', 'Dx Sekunder']],
-                'plan' => ['P', ['Tindakan Medis', 'Konseling Edukasi', 'Rencana Tindak Lanjut', 'Diet', 'Resep Obat']],
+                'objective' => ['O', [
+                    'pemeriksaan_fisik_lainnya' => 'Pemeriksaan Fisik Lainnya',
+                ]],
+                'assessment' => ['A', [
+                    'dx_utama' => 'Dx Utama',
+                    'dx_sekunder' => 'Dx Sekunder',
+                ]],
+                'plan' => ['P', [
+                    'tindakan_medis' => 'Tindakan Medis',
+                    'konseling_edukasi' => 'Konseling Edukasi',
+                    'rencana_tindak_lanjut' => 'Rencana Tindak Lanjut',
+                    'diet' => 'Diet',
+                    'resep_obat' => 'Resep Obat',
+                ]],
             ];
 
+            $soapPlaceholder = [
+                'keluhan_utama' => 'Keluhan utama...',
+                'riwayat_penyakit_sekarang' => 'Riwayat penyakit sekarang...',
+                'riwayat_penyakit_dahulu' => 'Riwayat penyakit dahulu...',
+                'riwayat_penyakit_keluarga' => 'Riwayat penyakit keluarga...',
+                'riwayat_pengobatan' => 'Riwayat pengobatan...',
+                'riwayat_sosial' => 'Riwayat sosial...',
+                'riwayat_operasi' => 'Riwayat operasi...',
+                'riwayat_alergi' => 'Riwayat alergi...',
+                'riwayat_imunisasi' => 'Riwayat imunisasi...',
+                'pemeriksaan_fisik_lainnya' => 'Pemeriksaan fisik selain TTV...',
+                'dx_utama' => 'Diagnosa utama...',
+                'dx_sekunder' => 'Diagnosa sekunder...',
+                'tindakan_medis' => 'Tindakan medis...',
+                'konseling_edukasi' => 'Konseling edukasi...',
+                'rencana_tindak_lanjut' => 'Rencana tindak lanjut...',
+                'diet' => 'Diet...',
+                'resep_obat' => 'Resep obat...',
+            ];
+
+            // Penampung gabungan hanya untuk fungsi lama di sisi browser (resume/cetak/guard).
+            // Kolom ini tidak lagi dikirim ke endpoint penyimpanan SOAP.
             $soapNilai = [
                 'subjective' => $assesmen->subjek ?? '',
                 'objective' => $assesmen->objek ?? '',
@@ -580,26 +685,6 @@
                 'plan' => $assesmen->plan ?? '',
             ];
 
-            $soapPlaceholder = [
-                'Keluhan Utama' => 'Keluhan utama...',
-                'Riwayat Penyakit Sekarang' => 'Riwayat penyakit sekarang...',
-                'Riwayat Penyakit Dahulu' => 'Riwayat penyakit dahulu...',
-                'Riwayat Penyakit Keluarga' => 'Riwayat penyakit keluarga...',
-                'Riwayat Pengobatan' => 'Riwayat pengobatan...',
-                'Riwayat Sosial' => 'Riwayat sosial...',
-                'Riwayat Operasi' => 'Riwayat operasi...',
-                'Riwayat Alergi' => 'Riwayat alergi...',
-                'Riwayat Imunisasi' => 'Riwayat imunisasi...',
-                'Pemeriksaan Tanda Vital' => 'Klik centang ✓ di atas untuk menarik data TTV',
-                'Pemeriksaan Fisik Lainnya' => 'Pemeriksaan fisik selain TTV...',
-                'Dx Utama' => 'Diagnosa utama...',
-                'Dx Sekunder' => 'Diagnosa sekunder...',
-                'Tindakan Medis' => 'Tindakan medis...',
-                'Konseling Edukasi' => 'Konseling edukasi...',
-                'Rencana Tindak Lanjut' => 'Rencana tindak lanjut...',
-                'Diet' => 'Diet...',
-                'Resep Obat' => 'Resep obat...',
-            ];
         @endphp
 
         <div class="kb-soap-title">SOAP</div>
@@ -607,16 +692,19 @@
             @foreach ($soapBagian as $nama => [$huruf, $daftarKolom])
                 <div class="kb-soap-row">
                     <div class="kb-soap-badge">{{ $huruf }}</div>
-
                     <div class="kb-sub" data-target="{{ $nama }}">
-                        @foreach ($daftarKolom as $label)
+                        @if ($nama === 'objective')
+                            <div class="kb-sub-item">
+                                <label>Pemeriksaan Tanda Vital</label>
+                                <textarea rows="1" data-label="Pemeriksaan Tanda Vital" data-soap-ttv placeholder="Klik centang ✓ di atas untuk menarik data TTV" {{ $soapReadonly($nama) }}></textarea>
+                            </div>
+                        @endif
+                        @foreach ($daftarKolom as $kolom => $label)
                             <div class="kb-sub-item">
                                 <label>{{ $label }}</label>
-                                <textarea rows="{{ $label === 'Resep Obat' ? 3 : 1 }}" data-label="{{ $label }}" placeholder="{{ $soapPlaceholder[$label] ?? '' }}" {{ $soapReadonly($nama) }}></textarea>
+                                <textarea name="{{ $kolom }}" data-soap-field="{{ $kolom }}" rows="{{ $kolom === 'resep_obat' ? 3 : 1 }}" data-label="{{ $label }}" placeholder="{{ $soapPlaceholder[$kolom] ?? '' }}" {{ $soapReadonly($nama) }}>{{ old($kolom, $assesmen->$kolom ?? '') }}</textarea>
                             </div>
                         @endforeach
-
-                        {{-- Tombol Cetak tepat di bawah kolom Resep Obat (sama seperti Obgyn) --}}
                         @if ($nama === 'plan')
                             <div class="kb-sub-item">
                                 <label>&nbsp;</label>
@@ -628,8 +716,6 @@
                             </div>
                         @endif
                     </div>
-
-                    {{-- Penampung gabungan: dibaca oleh Simpan, Resume Medis, dan penjaga halaman --}}
                     <textarea name="{{ $nama }}" hidden {{ $soapReadonly($nama) }}>{{ old($nama, $soapNilai[$nama]) }}</textarea>
                 </div>
             @endforeach
@@ -650,12 +736,23 @@
                         <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <div class="kb-dropdown" id="dropdownPenyakit"></div>
                     </div>
+                    {{-- Checklist simbol: Dagger (†) / Asterisk (*) di antara input dan tombol ✓ --}}
+                    <div class="kb-simbol" role="group" aria-label="Simbol ICD">
+                        <button type="button" class="kb-simbol-btn" id="simbolDagger" data-simbol="†"
+                                title="Dagger (†)" aria-label="Dagger" aria-pressed="false"
+                                onclick="ubahSimbol(this)">†</button>
+                        <button type="button" class="kb-simbol-btn" id="simbolAsterisk" data-simbol="*"
+                                title="Asterisk (*)" aria-label="Asterisk" aria-pressed="false"
+                                onclick="ubahSimbol(this)">*</button>
+                    </div>
+
                     <div class="kb-check-box">
                         <span class="kb-check-icon" id="checkPenyakit" role="button"
                               title="Tambahkan penyakit ke daftar"
                               onclick="tambahDiagnosa('penyakit')">✓</span>
                     </div>
                 </div>
+
                 <div class="kb-diagnosa-list" id="listPenyakit"></div>
             </div>
             <div class="kb-search-field">
@@ -1472,11 +1569,15 @@
         });
 
         kolom.forEach(function (k) {
-            if (peta[k.dataset.label] !== undefined) k.value = peta[k.dataset.label];
+            if (peta[k.dataset.label] !== undefined && k.value.trim() === '') k.value = peta[k.dataset.label];
         });
     }
 
     ['subjective', 'objective', 'assessment', 'plan'].forEach(muatSOAP);
+
+    // Sinkronkan textarea tersembunyi dari kolom SOAP individual saat halaman dibuka.
+    // Ini diperlukan agar resume, cetak, dan snapshot membaca data kolom baru.
+    ['subjective', 'objective', 'assessment', 'plan'].forEach(gabungSOAP);
 
     document.addEventListener('input', function (e) {
         const wadah = e.target.closest ? e.target.closest('.kb-sub[data-target]') : null;
@@ -1485,7 +1586,14 @@
 
     // ===== Tab =====
 
+    // Teks satu diagnosa lengkap dengan simbol dagger/asterisk bila ada.
+    // Contoh: "A18.0† — Tuberculosis of bones"
+    function kodeDenganSimbol(item) {
+        return (item.kode ?? '') + (item.simbol ?? '');
+    }
+
     // Cek apakah satu diagnosa termasuk HNP (ICD-10 M51)
+    // Memakai kode asli tanpa simbol.
     function adalahHNP(item) {
         if (!item) return false;
         const kode = String(item.kode || '').trim().toUpperCase();
@@ -1553,7 +1661,7 @@
         const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
         if (dxUtama) {
             const utama = diagnosaUtama();
-            dxUtama.value = boleh ? utama.kode + ' — ' + utama.nama : '';
+            dxUtama.value = boleh ? kodeDenganSimbol(utama) + ' — ' + utama.nama : '';
             perbaruiWaktuBaris(dxUtama.closest('tr'));
         }
 
@@ -1969,7 +2077,7 @@
 
         // Diagnosa rujukan otomatis dari diagnosa penyakit di form Assessment
         document.getElementById('rjDiagnosa').value = diagnosaTerpilih.penyakit
-            .map(item => item.kode + ' — ' + item.nama)
+            .map(item => kodeDenganSimbol(item) + ' — ' + item.nama)
             .join('; ');
 
         document.body.classList.add('mode-rujukan');
@@ -2113,7 +2221,7 @@
     }
 
     function kolomTtvObjektif() {
-        return document.querySelector('.kb-sub[data-target="objective"] textarea[data-label="Pemeriksaan Tanda Vital"]');
+        return document.querySelector('.kb-sub[data-target="objective"] textarea[data-soap-ttv]');
     }
 
     function hapusVitalDariObjektif() {
@@ -2197,24 +2305,35 @@
             return false;
         }
 
-        const ambilTeks = nama =>
-            (document.querySelector(`textarea[name="${nama}"]`)?.value ?? '').trim();
-
         const payload = { id_pendaftaran: Number(idPendaftaran) };
+        const fieldSOAP = [
+            'keluhan_utama', 'riwayat_penyakit_sekarang', 'riwayat_penyakit_dahulu',
+            'riwayat_penyakit_keluarga', 'riwayat_pengobatan', 'riwayat_sosial',
+            'riwayat_operasi', 'riwayat_alergi', 'riwayat_imunisasi',
+            'pemeriksaan_fisik_lainnya', 'dx_utama', 'dx_sekunder',
+            'tindakan_medis', 'konseling_edukasi', 'rencana_tindak_lanjut',
+            'diet', 'resep_obat'
+        ];
 
-        if (BOLEH_SO) {
-            payload.subjective = ambilTeks('subjective');
-            payload.objective = ambilTeks('objective');
-        }
-
-        if (BOLEH_ASS_PLAN) {
-            payload.assessment = ambilTeks('assessment');
-            payload.plan = ambilTeks('plan');
-        }
+        fieldSOAP.forEach(function (nama) {
+            const el = document.querySelector('textarea[data-soap-field="' + nama + '"]');
+            if (!el) return;
+            const bagian = el.closest('.kb-soap-row');
+            const grup = bagian?.querySelector('.kb-sub')?.dataset.target;
+            const bolehEdit = (grup === 'subjective' || grup === 'objective') ? BOLEH_SO : BOLEH_ASS_PLAN;
+            if (bolehEdit) payload[nama] = el.value.trim();
+        });
 
         if (BOLEH_ICD) {
             payload.penyakit_id = diagnosaTerpilih.penyakit.map(item => Number(item.id));
             payload.tindakan_id = diagnosaTerpilih.tindakan.map(item => Number(item.id));
+
+            // Simbol dagger (†) / asterisk (*) per penyakit: { id_penyakit: simbol }
+            // Nilai yang sah hanya '', '†', atau '*'.
+            payload.penyakit_simbol = {};
+            diagnosaTerpilih.penyakit.forEach(function (item) {
+                payload.penyakit_simbol[item.id] = item.simbol || '';
+            });
         }
 
         try {
@@ -2262,7 +2381,6 @@
                     heart_rate: ambilNilai('heart_rate'),
                     respiratory_rate: ambilNilai('respiratory_rate'),
                     spo2: ambilNilai('spo2'),
-                    alergi: ambilNilai('alergi')
                 },
                 'Gagal menyimpan TTV.'
             );
@@ -2284,6 +2402,8 @@
 
     const pilihan = { penyakit: null, tindakan: null };
 
+    // Tiap item penyakit: { id, kode, nama, simbol }
+    // 'simbol' berisi '', '†', atau '*' (boleh tidak ada pada data lama).
     const diagnosaTerpilih = {
         penyakit: @json($diagnosisTersimpan ?? []),
         tindakan: @json($tindakanTersimpan ?? [])
@@ -2291,6 +2411,43 @@
 
     const timerCari = {};
     const urutanCari = { penyakit: 0, tindakan: 0 };
+
+    // ===== Simbol Dagger (†) / Asterisk (*) =====
+    // Simbol yang sedang aktif ('' bila tidak ada).
+    function simbolTerpilih() {
+        return document.querySelector('.kb-simbol-btn.aktif')?.dataset.simbol || '';
+    }
+
+    // Teks yang tampil di kolom input penyakit: "kode+simbol — nama"
+    function teksInputPenyakit(item) {
+        return item.kode + simbolTerpilih() + ' — ' + item.nama;
+    }
+
+    function resetSimbol() {
+        document.querySelectorAll('.kb-simbol-btn').forEach(function (btn) {
+            btn.classList.remove('aktif');
+            btn.setAttribute('aria-pressed', 'false');
+        });
+    }
+
+    // Klik kartu simbol: aktif / nonaktif. Hanya satu simbol yang boleh aktif.
+    function ubahSimbol(btn) {
+        const aktifkan = !btn.classList.contains('aktif');
+
+        resetSimbol();
+
+        if (aktifkan) {
+            btn.classList.add('aktif');
+            btn.setAttribute('aria-pressed', 'true');
+        }
+
+        // Bila kode sudah dipilih dari dropdown, simbol langsung masuk ke kolom input.
+        if (pilihan.penyakit) {
+            document.getElementById('cariPenyakit').value = teksInputPenyakit(pilihan.penyakit);
+        }
+
+        document.getElementById('cariPenyakit')?.focus();
+    }
 
     function updateCentang(jenis) {
         document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
@@ -2365,7 +2522,12 @@
     function pilihItem(jenis, item) {
         const k = konfig[jenis];
         pilihan[jenis] = item;
-        document.getElementById(k.input).value = item.kode + ' — ' + item.nama;
+
+        // Khusus penyakit: simbol yang dicentang langsung ikut ditampilkan setelah kode
+        document.getElementById(k.input).value = (jenis === 'penyakit')
+            ? teksInputPenyakit(item)
+            : item.kode + ' — ' + item.nama;
+
         document.getElementById(k.dropdown).style.display = 'none';
         updateCentang(jenis);
     }
@@ -2382,12 +2544,17 @@
         if (diagnosaTerpilih[jenis].some(d => String(d.id) === String(item.id))) {
             alert('Item ini sudah ada di daftar.');
         } else {
-            diagnosaTerpilih[jenis].push(item);
+            // Simbol ikut disimpan bersama item (khusus penyakit)
+            const baru = (jenis === 'penyakit')
+                ? Object.assign({}, item, { simbol: simbolTerpilih() })
+                : item;
+            diagnosaTerpilih[jenis].push(baru);
         }
 
         pilihan[jenis] = null;
         document.getElementById(k.input).value = '';
         document.getElementById(k.dropdown).style.display = 'none';
+        if (jenis === 'penyakit') resetSimbol();
         updateCentang(jenis);
         renderDiagnosa(jenis);
     }
@@ -2410,7 +2577,7 @@
             teks.className = 'kb-diagnosa-text';
 
             const kode = document.createElement('b');
-            kode.textContent = item.kode;
+            kode.textContent = item.kode + (item.simbol || '');
             teks.appendChild(kode);
             teks.appendChild(document.createTextNode(' — ' + item.nama));
 
@@ -2661,7 +2828,8 @@
             document.querySelector('textarea[name="' + nama + '"]')?.value ?? ''
         ).trim();
 
-        const teksKode = item => (item.kode ?? '') + ' — ' + (item.nama ?? '');
+        // Kode + simbol dagger/asterisk (bila ada) + nama
+        const teksKode = item => kodeDenganSimbol(item) + ' — ' + (item.nama ?? '');
 
         const isi = (id, nilai) => {
             const el = document.getElementById(id);
@@ -2929,7 +3097,7 @@
 
     /* =========================================================
        CEGAH KELUAR HALAMAN SEBELUM DATA DISIMPAN
-       Mencakup: TTV, SOAP, diagnosa (penyakit), dan tindakan.
+       Mencakup: TTV, SOAP, diagnosa (penyakit + simbol), dan tindakan.
        - Tombol Back browser: ditahan, muncul peringatan.
        - Klik menu / link lain: dibatalkan, muncul peringatan.
        - Refresh / tutup tab: browser menampilkan konfirmasi.
@@ -2946,9 +3114,10 @@
             (document.querySelector('textarea[name="' + nama + '"]')?.value ?? '').trim();
 
         return JSON.stringify({
-            ttv: ['tekanan_darah', 'heart_rate', 'spo2', 'suhu', 'respiratory_rate', 'alergi'].map(nilai),
+            ttv: ['tekanan_darah', 'heart_rate', 'spo2', 'suhu', 'respiratory_rate'].map(nilai),
             soap: ['subjective', 'objective', 'assessment', 'plan'].map(teks),
-            penyakit: diagnosaTerpilih.penyakit.map(d => String(d.id)).sort(),
+            // Simbol ikut dihitung agar perubahan dagger/asterisk terdeteksi sebagai belum disimpan
+            penyakit: diagnosaTerpilih.penyakit.map(d => String(d.id) + (d.simbol || '')).sort(),
             tindakan: diagnosaTerpilih.tindakan.map(d => String(d.id)).sort()
         });
     }

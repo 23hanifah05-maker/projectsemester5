@@ -679,11 +679,82 @@ class PendaftaranController extends Controller
         ]);
     }
 
+    /**
+     * Menghapus data pasien beserta seluruh relasi pendaftaran dan pemeriksaan medis.
+     */
     public function destroy($id)
     {
-        return redirect()
-            ->route('pendaftaran.index')
-            ->with('success', 'Fitur hapus belum diaktifkan.');
+        $pasien = Pasien::where('no_rm', $id)->firstOrFail();
+        $namaPasien = $pasien->nama_pasien;
+        $noRm = $pasien->no_rm;
+
+        try {
+            DB::transaction(function () use ($noRm, $pasien) {
+                $databaseName = DB::getDatabaseName();
+
+                // 1. Ambil semua id_pendaftaran milik pasien ini
+                $idPendaftaranList = Pendaftaran::where('no_rm', $noRm)
+                    ->pluck('id_pendaftaran');
+
+                // 2. Hapus otomatis semua baris pada tabel yang memiliki foreign key ke pendaftaran(id_pendaftaran)
+                if ($idPendaftaranList->isNotEmpty()) {
+                    $relasiPendaftaran = DB::table('information_schema.KEY_COLUMN_USAGE')
+                        ->where('TABLE_SCHEMA', $databaseName)
+                        ->where('REFERENCED_TABLE_NAME', 'pendaftaran')
+                        ->where('REFERENCED_COLUMN_NAME', 'id_pendaftaran')
+                        ->select('TABLE_NAME', 'COLUMN_NAME')
+                        ->get();
+
+                    foreach ($relasiPendaftaran as $rel) {
+                        DB::table($rel->TABLE_NAME)
+                            ->whereIn($rel->COLUMN_NAME, $idPendaftaranList)
+                            ->delete();
+                    }
+                }
+
+                // 3. Hapus otomatis semua baris pada tabel yang memiliki foreign key ke pasien(no_rm)
+                $relasiPasien = DB::table('information_schema.KEY_COLUMN_USAGE')
+                    ->where('TABLE_SCHEMA', $databaseName)
+                    ->where('REFERENCED_TABLE_NAME', 'pasien')
+                    ->where('REFERENCED_COLUMN_NAME', 'no_rm')
+                    ->select('TABLE_NAME', 'COLUMN_NAME')
+                    ->get();
+
+                foreach ($relasiPasien as $rel) {
+                    if ($rel->TABLE_NAME !== 'pendaftaran') {
+                        DB::table($rel->TABLE_NAME)
+                            ->where($rel->COLUMN_NAME, $noRm)
+                            ->delete();
+                    }
+                }
+
+                // 4. Hapus riwayat pendaftaran pasien
+                Pendaftaran::where('no_rm', $noRm)->delete();
+
+                // 5. Hapus master data pasien
+                $pasien->delete();
+            });
+
+            // 6. Hapus folder file tanda tangan & JSON General Consent di storage
+            Storage::disk('public')->deleteDirectory('general_consent/' . $noRm);
+
+            // 7. Catat ke Audit Trail
+            Audit::catat(
+                'Menghapus data pasien: ' . $namaPasien,
+                'Pendaftaran',
+                $noRm
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pasien dan seluruh riwayatnya berhasil dihapus dari database.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus data pasien: ' . $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function tambah($id)

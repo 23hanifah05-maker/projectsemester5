@@ -13,10 +13,11 @@ class AssesmenController extends Controller
 {
     /**
      * Bagian yang boleh disimpan oleh tiap role.
-     *   admin   : S, O, A, P, dan kode ICD
-     *   dokter  : S, O, A, P
-     *   perawat : S, O
-     *   pmik    : kode ICD saja
+     *
+     * admin   : S, O, A, P, dan kode ICD
+     * dokter  : S, O, A, P
+     * perawat : S, O
+     * pmik    : kode ICD saja
      */
     private function izinRole(?string $role): array
     {
@@ -48,12 +49,32 @@ class AssesmenController extends Controller
                 'exists:pendaftaran,id_pendaftaran',
             ],
 
-            // Field SOAP hanya diperiksa bila dikirim (tiap role mengirim bagiannya saja).
-            'subjective' => ['sometimes', 'nullable', 'string'],
-            'objective' => ['sometimes', 'nullable', 'string'],
-            'assessment' => ['sometimes', 'nullable', 'string'],
-            'plan' => ['sometimes', 'nullable', 'string'],
+            // SUBJECTIVE
+            'keluhan_utama' => ['sometimes', 'nullable', 'string'],
+            'riwayat_penyakit_sekarang' => ['sometimes', 'nullable', 'string'],
+            'riwayat_penyakit_dahulu' => ['sometimes', 'nullable', 'string'],
+            'riwayat_penyakit_keluarga' => ['sometimes', 'nullable', 'string'],
+            'riwayat_pengobatan' => ['sometimes', 'nullable', 'string'],
+            'riwayat_sosial' => ['sometimes', 'nullable', 'string'],
+            'riwayat_operasi' => ['sometimes', 'nullable', 'string'],
+            'riwayat_alergi' => ['sometimes', 'nullable', 'string'],
+            'riwayat_imunisasi' => ['sometimes', 'nullable', 'string'],
 
+            // OBJECTIVE
+            'pemeriksaan_fisik_lainnya' => ['sometimes', 'nullable', 'string'],
+
+            // ASSESSMENT
+            'dx_utama' => ['sometimes', 'nullable', 'string'],
+            'dx_sekunder' => ['sometimes', 'nullable', 'string'],
+
+            // PLAN
+            'tindakan_medis' => ['sometimes', 'nullable', 'string'],
+            'konseling_edukasi' => ['sometimes', 'nullable', 'string'],
+            'rencana_tindak_lanjut' => ['sometimes', 'nullable', 'string'],
+            'diet' => ['sometimes', 'nullable', 'string'],
+            'resep_obat' => ['sometimes', 'nullable', 'string'],
+
+            // ICD-10
             'penyakit_id' => ['sometimes', 'nullable', 'array'],
             'penyakit_id.*' => [
                 'required',
@@ -62,6 +83,7 @@ class AssesmenController extends Controller
                 'exists:kode_diagnosis,id_icd10',
             ],
 
+            // ICD-9-CM
             'tindakan_id' => ['sometimes', 'nullable', 'array'],
             'tindakan_id.*' => [
                 'required',
@@ -87,50 +109,96 @@ class AssesmenController extends Controller
         $data = $validator->validated();
         $idPendaftaran = (int) $data['id_pendaftaran'];
 
-        // ------------------------------------------------------------------
-        // Tentukan bagian mana yang benar-benar boleh diubah oleh role ini.
-        // Field yang tidak diizinkan diabaikan walaupun dikirim lewat cara lain.
-        // ------------------------------------------------------------------
+        /*
+         * PEMETAAN KOLOM SOAP
+         */
         $petaSoap = [
-            'subjective' => 'subjek',
-            'objective'  => 'objek',
-            'assessment' => 'assesmen',
-            'plan'       => 'plan',
+            // SUBJECTIVE
+            'keluhan_utama' => 'subjective',
+            'riwayat_penyakit_sekarang' => 'subjective',
+            'riwayat_penyakit_dahulu' => 'subjective',
+            'riwayat_penyakit_keluarga' => 'subjective',
+            'riwayat_pengobatan' => 'subjective',
+            'riwayat_sosial' => 'subjective',
+            'riwayat_operasi' => 'subjective',
+            'riwayat_alergi' => 'subjective',
+            'riwayat_imunisasi' => 'subjective',
+
+            // OBJECTIVE
+            'pemeriksaan_fisik_lainnya' => 'objective',
+
+            // ASSESSMENT
+            'dx_utama' => 'assessment',
+            'dx_sekunder' => 'assessment',
+
+            // PLAN
+            'tindakan_medis' => 'plan',
+            'konseling_edukasi' => 'plan',
+            'rencana_tindak_lanjut' => 'plan',
+            'diet' => 'plan',
+            'resep_obat' => 'plan',
         ];
 
+        /*
+         * Hanya kolom yang diizinkan untuk role tersebut
+         * dan benar-benar dikirim dalam request yang diubah.
+         */
         $ubahSoap = [];
 
-        foreach ($petaSoap as $input => $kolom) {
-            if (in_array($input, $izin, true) && $request->has($input)) {
-                $ubahSoap[$kolom] = (string) ($data[$input] ?? '');
+        foreach ($petaSoap as $kolom => $bagian) {
+            if (
+                in_array($bagian, $izin, true)
+                && array_key_exists($kolom, $data)
+            ) {
+                $ubahSoap[$kolom] = (string) ($data[$kolom] ?? '');
             }
         }
 
         $icdBoleh = in_array('icd', $izin, true);
-        $ubahPenyakit = $icdBoleh && $request->has('penyakit_id');
-        $ubahTindakan = $icdBoleh && $request->has('tindakan_id');
+
+        $ubahPenyakit = $icdBoleh
+            && array_key_exists('penyakit_id', $data);
+
+        $ubahTindakan = $icdBoleh
+            && array_key_exists('tindakan_id', $data);
 
         $diagnosisIds = $ubahPenyakit
-            ? array_values(array_unique(array_map('intval', $data['penyakit_id'] ?? [])))
+            ? array_values(array_unique(array_map(
+                'intval',
+                $data['penyakit_id'] ?? []
+            )))
             : [];
 
         $tindakanIds = $ubahTindakan
-            ? array_values(array_unique(array_map('intval', $data['tindakan_id'] ?? [])))
+            ? array_values(array_unique(array_map(
+                'intval',
+                $data['tindakan_id'] ?? []
+            )))
             : [];
 
         /*
-         * PEMERIKSAAN KHUSUS POLI OBGYN (tindakan IUD, ICD-9-CM 69.7)
-         * Berlaku saat dokter / admin menyimpan asesmen: Informed Consent
-         * harus sudah tersimpan dengan keputusan "setuju".
-         * PMIK yang menyimpan kode ICD tidak diperiksa, karena consent baru
-         * bisa diisi dokter setelah kode tindakan IUD tersimpan.
+         * PEMERIKSAAN KHUSUS POLI OBGYN
+         *
+         * Tindakan IUD (ICD-9-CM 69.7) hanya dapat disimpan
+         * jika Informed Consent sudah disetujui.
+         *
+         * Berlaku untuk admin/dokter yang menyimpan A/P
+         * dan PMIK yang mengubah tindakan ICD-9-CM.
          */
-        $role_boleh_assplan = in_array('assessment', $izin, true) || in_array('plan', $izin, true);
+        $roleBolehAssPlan =
+            in_array('assessment', $izin, true)
+            || in_array('plan', $izin, true);
 
-        if ($request->routeIs('poli.obgyn.assesmen.store') && $role_boleh_assplan) {
-            $assesmenAda = Assesmen::where('id_pendaftaran', $idPendaftaran)->first();
+        if (
+            $request->routeIs('poli.obgyn.assesmen.store')
+            && ($roleBolehAssPlan || $ubahTindakan)
+        ) {
+            $assesmenAda = Assesmen::where(
+                'id_pendaftaran',
+                $idPendaftaran
+            )->first();
 
-            // Pakai tindakan yang dikirim; bila tidak, pakai yang sudah tersimpan.
+            // Gunakan tindakan yang dikirim atau yang sudah tersimpan.
             $idTindakanPeriksa = $ubahTindakan
                 ? $tindakanIds
                 : ($assesmenAda
@@ -164,17 +232,23 @@ class AssesmenController extends Controller
         }
 
         try {
-            // Ambil data lama sebelum diubah, untuk audit trail.
-            $assesmenLama = Assesmen::where('id_pendaftaran', $idPendaftaran)->first();
+            // Ambil data lama sebelum diubah untuk audit trail.
+            $assesmenLama = Assesmen::where(
+                'id_pendaftaran',
+                $idPendaftaran
+            )->first();
 
-            $soapLama = $assesmenLama
-                ? [
-                    'subjek'   => (string) $assesmenLama->subjek,
-                    'objek'    => (string) $assesmenLama->objek,
-                    'assesmen' => (string) $assesmenLama->assesmen,
-                    'plan'     => (string) $assesmenLama->plan,
-                ]
-                : null;
+            $soapLama = null;
+
+            if ($assesmenLama) {
+                $soapLama = [];
+
+                foreach (array_keys($petaSoap) as $kolom) {
+                    $soapLama[$kolom] = (string) (
+                        $assesmenLama->{$kolom} ?? ''
+                    );
+                }
+            }
 
             $diagnosisLama = $assesmenLama
                 ? DB::table('detail_diagnosis')
@@ -192,6 +266,9 @@ class AssesmenController extends Controller
                     ->all()
                 : [];
 
+            /*
+             * TRANSAKSI DATABASE
+             */
             $idAssesmen = DB::transaction(function () use (
                 $idPendaftaran,
                 $ubahSoap,
@@ -200,23 +277,30 @@ class AssesmenController extends Controller
                 $diagnosisIds,
                 $tindakanIds
             ) {
-                $assesmen = Assesmen::where('id_pendaftaran', $idPendaftaran)->first();
+                $assesmen = Assesmen::where(
+                    'id_pendaftaran',
+                    $idPendaftaran
+                )->first();
 
                 if (!$assesmen) {
                     $assesmen = new Assesmen();
+
                     $assesmen->id_pendaftaran = $idPendaftaran;
 
-                    // Nilai awal untuk data baru (kolom SOAP tidak boleh null).
+                    /*
+                     * Kolom lama masih NOT NULL.
+                     * Beri nilai kosong agar record baru dapat disimpan.
+                     */
                     $assesmen->subjek = '';
                     $assesmen->objek = '';
                     $assesmen->assesmen = '';
                     $assesmen->plan = '';
+
                     $assesmen->id_kode10 = null;
                     $assesmen->id_kode9 = null;
                 }
 
-                // Hanya kolom yang diizinkan dan dikirim yang diubah.
-                // Kolom lain (mis. A dan P milik dokter) tidak tersentuh.
+                // Simpan masing-masing isian ke kolom tersendiri.
                 foreach ($ubahSoap as $kolom => $nilai) {
                     $assesmen->{$kolom} = $nilai;
                 }
@@ -231,7 +315,10 @@ class AssesmenController extends Controller
 
                 $assesmen->save();
 
-                // Perbarui detail diagnosis (hanya bila dikirim oleh role yang berhak).
+                /*
+                 * Perbarui detail diagnosis ICD-10
+                 * hanya jika dikirim oleh role yang berhak.
+                 */
                 if ($ubahPenyakit) {
                     DB::table('detail_diagnosis')
                         ->where('id_assesmen', $assesmen->id_assesmen)
@@ -249,11 +336,15 @@ class AssesmenController extends Controller
                             ];
                         }
 
-                        DB::table('detail_diagnosis')->insert($detailDiagnosis);
+                        DB::table('detail_diagnosis')
+                            ->insert($detailDiagnosis);
                     }
                 }
 
-                // Perbarui detail tindakan (hanya bila dikirim oleh role yang berhak).
+                /*
+                 * Perbarui detail tindakan ICD-9-CM
+                 * hanya jika dikirim oleh role yang berhak.
+                 */
                 if ($ubahTindakan) {
                     DB::table('detail_tindakan')
                         ->where('id_assesmen', $assesmen->id_assesmen)
@@ -271,34 +362,61 @@ class AssesmenController extends Controller
                             ];
                         }
 
-                        DB::table('detail_tindakan')->insert($detailTindakan);
+                        DB::table('detail_tindakan')
+                            ->insert($detailTindakan);
                     }
                 }
 
                 return $assesmen->id_assesmen;
             });
 
-            // ===== Audit trail =====
+            /*
+             * AUDIT TRAIL
+             */
             $modul = $request->routeIs('poli.obgyn.assesmen.store')
                 ? 'Poli Obgyn'
                 : 'Poli Syaraf';
 
-            $noRm = Pendaftaran::where('id_pendaftaran', $idPendaftaran)->value('no_rm');
+            $noRm = Pendaftaran::where(
+                'id_pendaftaran',
+                $idPendaftaran
+            )->value('no_rm');
 
             if ($soapLama === null) {
-                Audit::catat('Menyimpan SOAP dan kode ICD', $modul, $noRm);
+                Audit::catat(
+                    'Menyimpan SOAP dan kode ICD',
+                    $modul,
+                    $noRm
+                );
             } else {
                 $labelSoap = [
-                    'subjek'   => 'Subjective (S)',
-                    'objek'    => 'Objective (O)',
-                    'assesmen' => 'Assessment (A)',
-                    'plan'     => 'Plan (P)',
+                    'keluhan_utama' => 'Keluhan Utama',
+                    'riwayat_penyakit_sekarang' => 'Riwayat Penyakit Sekarang',
+                    'riwayat_penyakit_dahulu' => 'Riwayat Penyakit Dahulu',
+                    'riwayat_penyakit_keluarga' => 'Riwayat Penyakit Keluarga',
+                    'riwayat_pengobatan' => 'Riwayat Pengobatan',
+                    'riwayat_sosial' => 'Riwayat Sosial',
+                    'riwayat_operasi' => 'Riwayat Operasi',
+                    'riwayat_alergi' => 'Riwayat Alergi',
+                    'riwayat_imunisasi' => 'Riwayat Imunisasi',
+                    'pemeriksaan_fisik_lainnya' => 'Pemeriksaan Fisik Lainnya',
+                    'dx_utama' => 'Diagnosis Utama',
+                    'dx_sekunder' => 'Diagnosis Sekunder',
+                    'tindakan_medis' => 'Tindakan Medis',
+                    'konseling_edukasi' => 'Konseling Edukasi',
+                    'rencana_tindak_lanjut' => 'Rencana Tindak Lanjut',
+                    'diet' => 'Diet',
+                    'resep_obat' => 'Resep Obat',
                 ];
 
-                // Hanya field yang memang diubah role ini yang dibandingkan.
+                // Catat perubahan masing-masing kolom SOAP.
                 foreach ($ubahSoap as $kolom => $nilaiBaru) {
-                    if ($soapLama[$kolom] !== $nilaiBaru) {
-                        Audit::catat('Mengubah ' . $labelSoap[$kolom], $modul, $noRm);
+                    if (($soapLama[$kolom] ?? '') !== $nilaiBaru) {
+                        Audit::catat(
+                            'Mengubah ' . $labelSoap[$kolom],
+                            $modul,
+                            $noRm
+                        );
                     }
                 }
 
@@ -309,7 +427,10 @@ class AssesmenController extends Controller
                     return $a === $b;
                 };
 
-                if ($ubahPenyakit && !$sama($diagnosisLama, $diagnosisIds)) {
+                if (
+                    $ubahPenyakit
+                    && !$sama($diagnosisLama, $diagnosisIds)
+                ) {
                     Audit::catat(
                         'Mengubah diagnosis ICD-10: ['
                             . $this->kodeDiagnosis($diagnosisLama)
@@ -320,7 +441,10 @@ class AssesmenController extends Controller
                     );
                 }
 
-                if ($ubahTindakan && !$sama($tindakanLama, $tindakanIds)) {
+                if (
+                    $ubahTindakan
+                    && !$sama($tindakanLama, $tindakanIds)
+                ) {
                     Audit::catat(
                         'Mengubah tindakan ICD-9-CM: ['
                             . $this->kodeTindakan($tindakanLama)
@@ -337,6 +461,7 @@ class AssesmenController extends Controller
                 'message' => 'Data berhasil disimpan.',
                 'id_assesmen' => $idAssesmen,
             ]);
+
         } catch (\Throwable $e) {
             report($e);
 

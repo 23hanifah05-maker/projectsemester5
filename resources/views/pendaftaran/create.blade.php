@@ -315,7 +315,9 @@
                         </select>
                     </div>
 
-                    <div class="row">
+                    {{-- No. BPJS: hanya tampil jika pembayaran = BPJS --}}
+                    <div class="row" id="row_no_bpjs"
+                         @if (old('pembayaran') !== 'bpjs') style="display:none;" @endif>
                         <label for="no_bpjs">No. BPJS</label>
                         <input type="text" name="no_bpjs" id="no_bpjs"
                                value="{{ old('no_bpjs') }}"
@@ -381,44 +383,40 @@
         </div>
 
         {{-- TOMBOL DAN DATA GENERAL CONSENT --}}
-<div class="form-actions">
-    <button type="button"
-            class="btn-consent"
-            id="btnConsent"
-            onclick="bukaConsentDariPendaftaran()">
-        General Consent
-    </button>
+        <div class="form-actions">
+            <button type="button"
+                    class="btn-consent"
+                    id="btnConsent"
+                    onclick="bukaConsentDariPendaftaran()">
+                General Consent
+            </button>
 
-    <input type="hidden" name="general_consent" id="general_consent" value="0">
+            <input type="hidden" name="general_consent" id="general_consent" value="0">
 
-    {{-- Pernyataan General Consent --}}
-    <input type="hidden" name="gc_hak_kewajiban" value="">
-    <input type="hidden" name="gc_persetujuan_pelayanan" value="">
-    <input type="hidden" name="gc_pelepasan_informasi" value="">
-    <input type="hidden" name="gc_pengajuan_keluhan" value="">
-    <input type="hidden" name="gc_informasi_rawat_jalan" value="">
-    <input type="hidden" name="gc_kewajiban_pembayaran" value="">
-    <input type="hidden" name="gc_pernyataan_persetujuan" value="">
+            {{-- Pernyataan General Consent --}}
+            <input type="hidden" name="gc_hak_kewajiban" value="">
+            <input type="hidden" name="gc_persetujuan_pelayanan" value="">
+            <input type="hidden" name="gc_pelepasan_informasi" value="">
+            <input type="hidden" name="gc_pengajuan_keluhan" value="">
+            <input type="hidden" name="gc_informasi_rawat_jalan" value="">
+            <input type="hidden" name="gc_kewajiban_pembayaran" value="">
+            <input type="hidden" name="gc_pernyataan_persetujuan" value="">
 
-    {{-- Konfirmasi pemahaman --}}
-    <input type="hidden" name="gc_konfirmasi" value="0">
+            {{-- Konfirmasi pemahaman --}}
+            <input type="hidden" name="gc_konfirmasi" value="0">
 
-    {{-- Anggota keluarga dan tanda tangan --}}
-    <input type="hidden" name="gc_anggota_keluarga" value="">
-    <input type="hidden" name="gc_ttd_pemberi" value="">
-    <input type="hidden" name="gc_nama_pemberi" value="">
-    <input type="hidden" name="gc_ttd_pasien" value="">
-    <input type="hidden" name="gc_nama_penandatangan" value="">
+            {{-- Anggota keluarga dan tanda tangan --}}
+            <input type="hidden" name="gc_anggota_keluarga" value="">
+            <input type="hidden" name="gc_ttd_pemberi" value="">
+            <input type="hidden" name="gc_nama_pemberi" value="">
+            <input type="hidden" name="gc_ttd_pasien" value="">
+            <input type="hidden" name="gc_nama_penandatangan" value="">
 
-    {{-- Tanggal dan jam persetujuan --}}
-    <input type="hidden" name="gc_tanggal" value="">
-    <input type="hidden" name="gc_jam" value="">
+            {{-- Tanggal dan jam persetujuan --}}
+            <input type="hidden" name="gc_tanggal" value="">
+            <input type="hidden" name="gc_jam" value="">
 
-    <div class="form-actions-right">
-        <button type="submit" class="btn-simpan">Simpan</button>
-        <button type="reset" class="btn-reset">↺ Reset</button>
-    </div>
-</div>
+            <div class="form-actions-right">
                 <button type="submit" class="btn-simpan">Simpan</button>
                 <button type="reset" class="btn-reset">↺ Reset</button>
             </div>
@@ -512,6 +510,31 @@ function aturInputLainnya(selectId, inputId, kode) {
     }
 
     select.addEventListener('change', perbarui);
+    perbarui();
+}
+
+/* Tampilkan No. BPJS hanya jika pembayaran = BPJS */
+function aturNoBpjs() {
+    const pembayaran = document.getElementById('pembayaran');
+    const baris = document.getElementById('row_no_bpjs');
+    const input = document.getElementById('no_bpjs');
+    const error = document.getElementById('noBpjsError');
+
+    if (!pembayaran || !baris || !input) return;
+
+    function perbarui() {
+        const tampil = pembayaran.value === 'bpjs';
+        baris.style.display = tampil ? '' : 'none';
+        input.required = tampil;
+
+        if (!tampil) {
+            input.value = '';
+            input.style.borderColor = '';
+            if (error) error.style.display = 'none';
+        }
+    }
+
+    pembayaran.addEventListener('change', perbarui);
     perbarui();
 }
 
@@ -623,6 +646,7 @@ function bukaConsentDariPendaftaran() {
 document.addEventListener('DOMContentLoaded', function () {
     aturInputLainnya('agama', 'agama_lainnya', '8');
     aturInputLainnya('pekerjaan', 'pekerjaan_lainnya', '5');
+    aturNoBpjs();
 
     const poli = document.getElementById('poli');
     const dokter = document.getElementById('dokter');
