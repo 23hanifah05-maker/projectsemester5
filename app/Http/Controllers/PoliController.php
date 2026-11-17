@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Audit;
+use App\Helpers\Mask;
 use App\Models\Poli;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
@@ -89,24 +90,11 @@ class PoliController extends Controller
     {
         $poli = Poli::where('slug', 'saraf')->firstOrFail();
 
+        // Daftar pasien Poli hanya menampilkan kunjungan HARI INI.
+        // Riwayat hari-hari sebelumnya tetap ada di halaman riwayat kunjungan.
         $query = Pendaftaran::with(['pasien', 'poli'])
-            ->where('id_poli', $poli->id_poli);
-
-        if ($request->filled('dari')) {
-            $query->whereDate(
-                'tgl_registrasi',
-                '>=',
-                $request->input('dari')
-            );
-        }
-
-        if ($request->filled('sampai')) {
-            $query->whereDate(
-                'tgl_registrasi',
-                '<=',
-                $request->input('sampai')
-            );
-        }
+            ->where('id_poli', $poli->id_poli)
+            ->whereDate('tgl_registrasi', today());
 
         if ($request->filled('keyword')) {
             $keyword = trim($request->input('keyword'));
@@ -162,7 +150,8 @@ class PoliController extends Controller
                     'tgl_registrasi' => $item->tgl_registrasi,
                     'no_rm' => $p->no_rm,
                     'nama_pasien' => $p->nama_pasien,
-                    'nik' => $p->nik,
+                    // NIK disamarkan di daftar Poli (4 digit awal saja)
+                    'nik' => Mask::nik($p->nik),
                     'tgl_lahir' => $p->tgl_lahir,
                     'tempat_lahir' => $p->tempat_lahir,
                     'jenis_kelamin' => $this->formatJenisKelamin($p->jenis_kelamin),
@@ -307,16 +296,11 @@ class PoliController extends Controller
     {
         $poli = Poli::where('slug', 'obgyn')->firstOrFail();
 
+        // Daftar pasien Poli hanya menampilkan kunjungan HARI INI.
+        // Riwayat hari-hari sebelumnya tetap ada di halaman riwayat kunjungan.
         $query = Pendaftaran::with(['pasien', 'poli'])
-            ->where('id_poli', $poli->id_poli);
-
-        if ($request->filled('dari')) {
-            $query->whereDate('tgl_registrasi', '>=', $request->input('dari'));
-        }
-
-        if ($request->filled('sampai')) {
-            $query->whereDate('tgl_registrasi', '<=', $request->input('sampai'));
-        }
+            ->where('id_poli', $poli->id_poli)
+            ->whereDate('tgl_registrasi', today());
 
         if ($request->filled('keyword')) {
             $keyword = trim($request->input('keyword'));
@@ -344,6 +328,11 @@ class PoliController extends Controller
                 $data->status_periksa = $item->status_periksa;
                 $data->jenis_kelamin_label = $this->formatJenisKelamin($data->jenis_kelamin);
                 $data->umur = $data->tgl_lahir ? Carbon::parse($data->tgl_lahir)->age . ' tahun' : '-';
+
+                // NIK disamarkan di daftar Poli (4 digit awal saja).
+                // Hanya untuk tampilan: objek ini tidak pernah disimpan ke database.
+                $data->nik = Mask::nik($data->nik);
+
                 return $data;
             })
             ->values();
