@@ -99,6 +99,7 @@
                     <th>Tgl. Lahir</th>
                     <th>Jenis Kelamin</th>
                     <th>Alamat</th>
+                    <th>Tgl. Kunjungan</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -225,6 +226,14 @@
 
                         <td>{{ $item->alamat ?? '-' }}</td>
 
+                        <td>
+                            @if (!empty($item->tgl_registrasi))
+                                {{ \Carbon\Carbon::parse($item->tgl_registrasi)->format('d-m-Y') }}
+                            @else
+                                -
+                            @endif
+                        </td>
+
                         <td class="aksi-cell">
 
                             <button
@@ -271,7 +280,7 @@
 
                 @empty
                     <tr>
-                        <td colspan="8" class="td-kosong">
+                        <td colspan="9" class="td-kosong">
                             Data pasien tidak ditemukan.
                         </td>
                     </tr>

@@ -109,6 +109,7 @@
                     <th>Tgl. Lahir</th>
                     <th>Jenis Kelamin</th>
                     <th>Alamat</th>
+                    <th>Tgl. Kunjungan</th>
                     <th>Pembayaran</th>
                     <th>Aksi</th>
                 </tr>
@@ -127,6 +128,7 @@
                         <td>{{ \Carbon\Carbon::parse($item->tgl_lahir)->format('d-m-Y') }}</td>
                         <td>{{ $item->jenis_kelamin_label ?? '-' }}</td>
                         <td>{{ $item->alamat }}</td>
+                        <td>{{ !empty($item->tgl_registrasi) ? \Carbon\Carbon::parse($item->tgl_registrasi)->format('d-m-Y') : '-' }}</td>
                         <td>{{ $item->pembayaran }}</td>
                         <td class="aksi-cell">
                             <div class="aksi-wrap">
@@ -150,6 +152,7 @@
                     @for ($i = 0; $i < 6; $i++)
                         <tr>
                             <td>{{ $i + 1 }}</td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
