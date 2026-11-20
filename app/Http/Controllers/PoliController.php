@@ -86,6 +86,24 @@ class PoliController extends Controller
             ->values();
     }
 
+    // BARU: halaman /poli diarahkan ke poli milik dokter yang login,
+    // role lain diarahkan ke Poli Syaraf
+    public function index()
+    {
+        $rute = [
+            'saraf'   => 'poli.syaraf',
+            'obgyn'   => 'poli.obgyn',
+            'jantung' => 'poli.jantung',
+            'jiwa'    => 'poli.jiwa',
+        ];
+
+        $slug = DB::table('poli')
+            ->where('nama_dokter', auth()->user()->username)
+            ->value('slug');
+
+        return redirect()->route($rute[$slug] ?? 'poli.syaraf');
+    }
+
     public function saraf(Request $request)
     {
         $poli = Poli::where('slug', 'saraf')->firstOrFail();
