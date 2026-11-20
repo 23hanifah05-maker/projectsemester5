@@ -125,6 +125,47 @@
             font-size: 0.75rem;
             color: #777;
         }
+
+        /* TOMBOL KEMBALI
+           Berbentuk kotak putih berbingkai, senada dengan panel di bawahnya. */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 36px;
+            margin: -6px 0 12px;
+            padding: 0;
+            background: #ffffff;
+            border: 1px solid #e3e3e3;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            color: #d90000;
+            font-size: 16px;
+            line-height: 1;
+            text-decoration: none;
+            cursor: pointer;
+            position: relative;
+            z-index: 5;
+            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+        }
+
+        .btn-back:hover {
+            background: #d90000;
+            border-color: #d90000;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(217, 0, 0, 0.25);
+        }
+
+        .btn-back:active {
+            background: #a93226;
+            border-color: #a93226;
+        }
+
+        .btn-back:focus-visible {
+            outline: 2px solid #d90000;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
@@ -148,13 +189,21 @@
             'warna' => '#d12027',
         ];
         $namaUser = session('username', Auth::user()?->username ?? 'Admin');
+
+        // Tujuan cadangan tombol kembali (kalau tidak ada riwayat halaman sebelumnya)
+        $urlKembali = \Illuminate\Support\Facades\Route::has('dashboard')
+            ? route('dashboard')
+            : url('/');
+
+        // Tombol kembali tidak ditampilkan di Dashboard
+        $tampilkanKembali = !request()->routeIs('dashboard');
     @endphp
 
     <main class="main">
         <header class="header">
             <div class="header-left">
                 {{-- Tombol buka/tutup sidebar --}}
-                <button class="header-toggle-btn" onclick="toggleSidebar()" title="Buka/Tutup Sidebar">
+                <button type="button" class="header-toggle-btn" onclick="toggleSidebar()" title="Buka/Tutup Sidebar">
                     <i class="fa-solid fa-bars"></i>
                 </button>
 
@@ -178,9 +227,50 @@
         </header>
 
         <section class="content" style="padding: 30px;">
+
+            {{-- TOMBOL KEMBALI (otomatis di semua halaman kecuali Dashboard).
+                 Untuk menyembunyikan di halaman tertentu, tambahkan di blade halaman itu:
+                 @section('hide-back')@endsection --}}
+            @if ($tampilkanKembali && !View::hasSection('hide-back'))
+                <a href="{{ $urlKembali }}"
+                   id="btnBack"
+                   class="btn-back"
+                   title="Kembali"
+                   aria-label="Kembali">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+            @endif
+
             @yield('content')
         </section>
     </main>
+
+    <script>
+        /* Tombol kembali:
+           - Ada riwayat halaman dari situs ini  -> kembali satu halaman.
+           - Tidak ada (dibuka langsung / tab baru) -> ke Dashboard (href cadangan). */
+        (function () {
+            const tombol = document.getElementById('btnBack');
+            if (!tombol) return;
+
+            tombol.addEventListener('click', function (e) {
+                let dariSitusIni = false;
+
+                try {
+                    dariSitusIni = document.referrer !== '' &&
+                        new URL(document.referrer).origin === window.location.origin;
+                } catch (err) {
+                    dariSitusIni = false;
+                }
+
+                if (dariSitusIni && window.history.length > 1) {
+                    e.preventDefault();
+                    window.history.back();
+                }
+                // Selain itu biarkan link berjalan normal ke halaman cadangan.
+            });
+        })();
+    </script>
 
     @yield('extra-js')
 </body>

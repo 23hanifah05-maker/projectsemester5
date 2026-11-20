@@ -1,0 +1,112 @@
+/* ===== Poli Jantung - riwayat kunjungan (tampilan sama dengan Poli Obgyn) ===== */
+.jr-card {
+    margin-top: 6px;
+    padding: 16px 18px 20px;
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    background: #fff;
+}
+
+/* Kotak: judul + garis pemisah, lalu isi */
+.jr-box {
+    margin-bottom: 18px;
+    border: 1px solid #cfcfcf;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.jr-box:last-child { margin-bottom: 0; }
+
+.jr-box-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid #cfcfcf;
+    font-size: 14px;
+    font-weight: 700;
+    color: #b81d24;
+}
+
+.jr-box-head.tanpa-garis { border-bottom: 0; padding-bottom: 6px; }
+
+.jr-box-body { padding: 14px 18px 16px; }
+
+/* ---- Data pasien: 2 kolom, label di kiri, kotak isian di kanan ---- */
+.jr-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 28px;
+}
+
+.jr-field {
+    display: grid;
+    grid-template-columns: 112px 1fr;
+    align-items: center;
+    gap: 10px;
+}
+
+.jr-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #222;
+}
+
+.jr-value {
+    min-height: 32px;
+    padding: 6px 12px;
+    border: 1px solid #cfcfcf;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #333;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+}
+
+/* ---- Tabel riwayat ---- */
+.jr-table-wrap { overflow-x: auto; padding: 0 18px 18px; }
+
+.jr-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #555;
+    font-size: 12px;
+}
+
+.jr-table th,
+.jr-table td {
+    padding: 8px 14px;
+    border: 1px solid #cfcfcf;
+    text-align: left;
+}
+
+.jr-table thead th {
+    border-color: #b81d24;
+    background: #b81d24;
+    color: #fff;
+    font-weight: 700;
+}
+
+.jr-table th:first-child,
+.jr-table td:first-child {
+    width: 60px;
+    text-align: center;
+}
+
+.jr-link {
+    color: #b81d24;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.jr-link:hover { text-decoration: underline; }
+
+.jr-kosong {
+    padding: 14px;
+    text-align: center;
+    color: #777;
+    font-size: 12px;
+}
+
+@media (max-width: 900px) {
+    .jr-fields { grid-template-columns: 1fr; }
+}
