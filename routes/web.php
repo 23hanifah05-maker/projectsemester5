@@ -131,9 +131,21 @@ Route::middleware(['auth', \App\Http\Middleware\BatasiPoliDokter::class])->group
         Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', [PoliController::class, 'kunjunganObgyn'])
             ->name('poli.obgyn.kunjungan-baru');
 
-        // Poli Jantung & Jiwa
-        Route::get('/poli/jantung', [PoliController::class, 'jantung'])
-            ->name('poli.jantung');
+        // ===== POLI JANTUNG =====
+Route::get('/poli/jantung', function () {
+    return view('poli.jantung');
+})->name('poli.jantung');
+
+Route::get('/poli/jantung/detail/{no_rm}', [PoliController::class, 'riwayatJantung'])
+    ->name('poli.jantung.riwayat');
+
+Route::get('/poli/jantung/kunjungan/{no_rm}', [PoliController::class, 'kunjunganJantung'])
+    ->name('poli.jantung.kunjungan');
+
+Route::get('/poli/jantung/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::class, 'kunjunganJantung'])
+    ->name('poli.jantung.kunjungan.detail');
+
+    //poli jiwa
 
         Route::get('/poli/jiwa', [PoliController::class, 'jiwa'])
             ->name('poli.jiwa');
