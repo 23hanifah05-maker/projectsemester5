@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/syaraf-kunjungan-baru.css')) }}">
 
     <style>
-        /* ===== Tab terkunci (Resume Medis sebelum General Consent diisi) ===== */
+        /* ===== Tab terkunci (Resume Medis sebelum General Consent diisi, Clinical Pathway bila Dx Utama bukan HNP) ===== */
         .kb-tab.terkunci { opacity: .5; cursor: not-allowed; }
 
         /* ===== Resume Medis: kolom simetris seperti Obgyn ===== */
@@ -1433,8 +1433,14 @@
     // Penyimpanan Clinical Pathway ke database.
     const CP_SIMPAN_KE_DB = true;
 
-    // Kode ICD-10 HNP. Harus sama dengan KODE_HNP di ClinicalPathwayController.
-    const KODE_HNP = ['M51'];
+    // Kata kunci Diagnosa Utama (SOAP bagian A) yang membuka Clinical Pathway:
+    // HNP, Hernia Nukleus Pulposus (termasuk salah eja "nuleus"), saraf kejepit, saraf terjepit.
+    // Tidak peka huruf besar/kecil. Harus sama dengan POLA_DX_HNP di ClinicalPathwayController.
+    const POLA_DX_HNP = /\bhnp\b|hernia\s+nuk?leus\s+pulposus|saraf\s+(?:kejepit|terjepit)/i;
+
+    const PESAN_CP_SYARAT =
+        'Clinical Pathway hanya tersedia bila Diagnosa Utama (SOAP bagian A) berisi ' +
+        'HNP, Hernia Nukleus Pulposus, saraf kejepit, atau saraf terjepit.';
 
     // true hanya sesaat sebelum pindah halaman setelah Simpan berhasil.
     // Selama false, halaman ini tidak bisa ditinggalkan bila ada data belum disimpan.
@@ -1564,22 +1570,15 @@
         return (item.kode ?? '') + (item.simbol ?? '');
     }
 
-    // Cek apakah satu diagnosa termasuk HNP (ICD-10 M51)
-    // Memakai kode asli tanpa simbol.
-    function adalahHNP(item) {
-        if (!item) return false;
-        const kode = String(item.kode || '').trim().toUpperCase();
-        return KODE_HNP.some(awalan => kode.startsWith(awalan));
+    // Isi kolom Diagnosa Utama (Dx Utama) di SOAP bagian A
+    function teksDxUtamaSOAP() {
+        return (document.querySelector('textarea[data-soap-field="dx_utama"]')?.value ?? '').trim();
     }
 
-    // Diagnosa Utama = diagnosa urutan pertama di daftar penyakit
-    function diagnosaUtama() {
-        return diagnosaTerpilih.penyakit[0] || null;
-    }
-
-    // Clinical Pathway hanya boleh dibuka bila HNP menjadi Diagnosa Utama
+    // Clinical Pathway hanya boleh dibuka bila Dx Utama di SOAP A berisi
+    // HNP / Hernia Nukleus Pulposus / saraf kejepit / saraf terjepit
     function cpBolehDiisi() {
-        return adalahHNP(diagnosaUtama());
+        return POLA_DX_HNP.test(teksDxUtamaSOAP());
     }
 
     function cpTerisi() {
@@ -1596,8 +1595,7 @@
 
     function gantiTab(tab, event) {
         if (tab === 'pathway' && !cpBolehDiisi()) {
-            alert('Clinical Pathway hanya tersedia bila HNP (ICD-10 M51) menjadi Diagnosa Utama. ' +
-                  'Urutkan atau pilih HNP sebagai diagnosa pertama.');
+            alert(PESAN_CP_SYARAT);
             return;
         }
 
@@ -1620,24 +1618,23 @@
         document.getElementById('tab-' + tab).classList.add('active');
     }
 
-    // Sinkronkan tab Clinical Pathway dengan Diagnosa Utama yang dipilih.
+    // Sinkronkan tab Clinical Pathway dengan Diagnosa Utama (SOAP A) yang diisi.
     function perbaruiStatusCP() {
         const boleh = cpBolehDiisi();
         const tabCP = document.querySelector('.kb-tab[onclick*="pathway"]');
 
         if (tabCP) {
             tabCP.classList.toggle('terkunci', !boleh);
-            tabCP.title = boleh ? '' : 'Hanya tersedia bila HNP (ICD-10 M51) menjadi Diagnosa Utama';
+            tabCP.title = boleh ? '' : 'Hanya tersedia bila Diagnosa Utama (SOAP A) berisi HNP / Hernia Nukleus Pulposus / saraf kejepit / saraf terjepit';
         }
 
         const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
         if (dxUtama) {
-            const utama = diagnosaUtama();
-            dxUtama.value = boleh ? kodeDenganSimbol(utama) + ' — ' + utama.nama : '';
+            dxUtama.value = boleh ? teksDxUtamaSOAP() : '';
             perbaruiWaktuBaris(dxUtama.closest('tr'));
         }
 
-        // Bila sedang di tab CP lalu HNP bukan lagi Diagnosa Utama, kembali ke Assessment
+        // Bila sedang di tab CP lalu Dx Utama bukan HNP lagi, kembali ke Assessment
         if (!boleh && document.getElementById('tab-pathway').classList.contains('active')) {
             gantiTab('assesment');
         }
@@ -1880,6 +1877,7 @@
     }
 
     // ===== Clinical Pathway: simpan ke database =====
+    // Server memeriksa ulang bahwa Dx Utama (SOAP A) berisi HNP / saraf terjepit.
     async function simpanCPKeDatabase() {
         const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
 
@@ -1889,7 +1887,7 @@
                 'POST',
                 {
                     id_pendaftaran: Number(idPendaftaran),
-                    penyakit_id: diagnosaTerpilih.penyakit.map(item => Number(item.id)),
+                    dx_utama_soap: teksDxUtamaSOAP(),
                     data: kumpulkanDataCP()
                 },
                 'Clinical Pathway gagal disimpan.'
@@ -1917,7 +1915,8 @@
         }
 
         if (!cpBolehDiisi()) {
-            alert('Clinical Pathway hanya dapat disimpan bila HNP (ICD-10 M51) menjadi Diagnosa Utama.');
+            alert('Clinical Pathway hanya dapat disimpan bila Diagnosa Utama (SOAP bagian A) berisi ' +
+                  'HNP, Hernia Nukleus Pulposus, saraf kejepit, atau saraf terjepit.');
             return;
         }
 
@@ -1973,7 +1972,7 @@
         }
 
         if (BOLEH_CP && cpBolehDiisi() && !cpTerisi()) {
-            alert('Diagnosa utama pasien adalah HNP. Clinical Pathway wajib diisi sebelum menyimpan.');
+            alert('Diagnosa utama pasien adalah HNP / saraf terjepit. Clinical Pathway wajib diisi sebelum menyimpan.');
             gantiTab('pathway');
             return;
         }
@@ -1990,7 +1989,7 @@
             // 2. SOAP dan ICD (field disesuaikan dengan role)
             if (!await simpanSOAPdanICDKeDatabase()) return;
 
-            // 2b. Clinical Pathway (hanya bila boleh, diagnosa HNP, dan saklar DB aktif)
+            // 2b. Clinical Pathway (hanya bila boleh, Dx Utama HNP, dan saklar DB aktif)
             if (CP_SIMPAN_KE_DB && BOLEH_CP && cpBolehDiisi()) {
                 if (!await simpanCPKeDatabase()) return;
             }
@@ -2589,12 +2588,20 @@
             baris.appendChild(aksi);
             list.appendChild(baris);
         });
-
-        perbaruiStatusCP();
     }
 
     renderDiagnosa('penyakit');
     renderDiagnosa('tindakan');
+
+    // Tab Clinical Pathway terbuka / terkunci otomatis saat Dx Utama (SOAP A) diketik
+    document.addEventListener('input', function (e) {
+        if (e.target.matches && e.target.matches('textarea[data-soap-field="dx_utama"]')) {
+            perbaruiStatusCP();
+        }
+    });
+
+    // Status awal saat halaman dibuka (Dx Utama yang sudah tersimpan)
+    perbaruiStatusCP();
 
     // Tutup dropdown pencarian saat klik di luar kotak pencarian.
     document.addEventListener('click', function (e) {
