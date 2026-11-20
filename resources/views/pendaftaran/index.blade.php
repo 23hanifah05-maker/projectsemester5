@@ -190,6 +190,7 @@
                                 'bpjs' => 'BPJS',
                                 default => $item->pembayaran ?? '',
                             },
+                            'no_bpjs' => $item->no_bpjs ?? '',
                             'poli' => $item->nama_poli ?? '',
                             'dokter' => $item->dokter ?? '',
                             'pj_nama' => $item->pj_nama ?? '',
@@ -473,6 +474,15 @@
                                     <option value="umum">Umum</option>
                                     <option value="asuransi">Asuransi swasta</option>
                                 </select>
+                            </div>
+
+                            {{-- No. BPJS: hanya tampil jika pembayaran = BPJS --}}
+                            <div class="row" id="kj-row-no-bpjs" style="display:none;">
+                                <label for="kj-no-bpjs">No. BPJS</label>
+                                <input type="text" name="no_bpjs" id="kj-no-bpjs"
+                                       inputmode="numeric" maxlength="13"
+                                       oninput="formatBpjsKj(this)">
+                                <small class="err" id="kjNoBpjsError"></small>
                             </div>
                         </div>
                     </div>
@@ -831,6 +841,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('kj-dokter').value = dokterPerPoliKj[poli.value] || '';
         });
     }
+
+    // Tampilkan/sembunyikan No. BPJS saat metode pembayaran diganti
+    const bayar = document.getElementById('kj-pembayaran');
+    if (bayar) bayar.addEventListener('change', aturNoBpjsKj);
 });
 
 function formatHpKj(input) {
@@ -838,6 +852,47 @@ function formatHpKj(input) {
     let digit = sisa.replace(/[^0-9]/g, '').replace(/^0+/, '');
     if (digit.startsWith('62')) digit = digit.slice(2);
     input.value = '+62' + digit.slice(0, 10);
+}
+
+// Tampilkan No. BPJS hanya jika pembayaran = BPJS
+function aturNoBpjsKj() {
+    const sel = document.getElementById('kj-pembayaran');
+    const baris = document.getElementById('kj-row-no-bpjs');
+    const input = document.getElementById('kj-no-bpjs');
+    const error = document.getElementById('kjNoBpjsError');
+
+    if (!sel || !baris || !input) return;
+
+    const tampil = sel.value === 'bpjs';
+    baris.style.display = tampil ? '' : 'none';
+    input.required = tampil;
+
+    if (!tampil) {
+        input.value = '';
+        input.style.borderColor = '';
+        if (error) error.style.display = 'none';
+    }
+}
+
+// No. BPJS: hanya angka, maksimal 13 digit
+function formatBpjsKj(input) {
+    const error = document.getElementById('kjNoBpjsError');
+    const adaNonAngka = /[^0-9]/.test(input.value);
+
+    input.value = input.value.replace(/[^0-9]/g, '').slice(0, 13);
+
+    const kurang = input.value.length > 0 && input.value.length < 13;
+
+    if (adaNonAngka || kurang) {
+        if (error) {
+            error.textContent = 'Nomor BPJS harus 13 digit angka.';
+            error.style.display = 'block';
+        }
+        input.style.borderColor = 'red';
+    } else {
+        if (error) error.style.display = 'none';
+        input.style.borderColor = '';
+    }
 }
 
 // Kosongkan hasil General Consent sebelumnya pada form kunjungan
@@ -879,6 +934,14 @@ function bukaConsentDariKunjungan() {
 
 // Wajib mengisi General Consent sebelum kunjungan disimpan
 function validasiKunjungan(form) {
+    // No. BPJS wajib 13 digit kalau pembayaran = BPJS
+    if (form.elements['pembayaran'].value === 'bpjs' &&
+        !/^\d{13}$/.test(form.elements['no_bpjs'].value)) {
+        alert('Nomor BPJS harus 13 digit angka.');
+        document.getElementById('kj-no-bpjs').focus();
+        return false;
+    }
+
     if (form.elements['general_consent'].value !== '1') {
         alert('General Consent belum disetujui. Lengkapi General Consent terlebih dahulu.');
         bukaConsentDariKunjungan();
@@ -936,6 +999,10 @@ function bukaKunjungan(button) {
         bayar === 'bpjs' ? 'bpjs' :
         bayar === 'umum' ? 'umum' :
         bayar.includes('asuransi') ? 'asuransi' : '';
+
+    // No. BPJS terakhir pasien jadi nilai awal (kalau ada), lalu atur tampilannya
+    document.getElementById('kj-no-bpjs').value = d.no_bpjs || '';
+    aturNoBpjsKj();
 
     // Poli, dokter, dan penanggung jawab dikosongkan
     ['kj-poli', 'kj-dokter', 'kj-pj-nama', 'kj-pj-jk', 'kj-pj-hubungan']

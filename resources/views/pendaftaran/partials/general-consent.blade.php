@@ -1,4 +1,8 @@
 @php
+    // true  = formulir tampil langsung di dalam halaman/tab (Poli Saraf, Obgyn, dst.)
+    // false = formulir tampil sebagai popup (halaman Pendaftaran)
+    $inline = $inline ?? false;
+
     $butir = [
         [
             'Hak dan Kewajiban Sebagai Pasien',
@@ -102,6 +106,25 @@
 }
 
 .gc-overlay.show { display: flex; }
+
+/* ===== Mode inline (tampil langsung di dalam tab poli) ===== */
+.gc-overlay.gc-inline {
+    display: block;
+    position: static;
+    inset: auto;
+    z-index: auto;
+    background: none;
+    overflow: visible;
+    padding: 0;
+}
+
+.gc-overlay.gc-inline .gc-paper {
+    max-width: 100%;
+    box-shadow: none;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 14px;
+}
 
 .gc-paper {
     position: relative;
@@ -570,6 +593,7 @@
         overflow: visible !important;
     }
 
+    @unless ($inline)
     body > *:not(#consentModal) { display: none !important; }
 
     #consentModal {
@@ -580,6 +604,20 @@
         overflow: visible !important;
         height: auto !important;
     }
+    @endunless
+
+    @if ($inline)
+    body.gc-cetak-inline * { visibility: hidden !important; }
+    body.gc-cetak-inline #consentModal,
+    body.gc-cetak-inline #consentModal * { visibility: visible !important; }
+    body.gc-cetak-inline #consentModal {
+        position: absolute !important;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+    }
+    @endif
 
     .gc-paper {
         box-shadow: none !important;
@@ -587,6 +625,7 @@
         width: 100% !important;
         padding: 0 !important;
         border-radius: 0 !important;
+        border: 0 !important;
     }
 
     .no-print { display: none !important; }
@@ -615,15 +654,17 @@
 }
 </style>
 
-<div class="gc-overlay" id="consentModal">
+<div class="gc-overlay {{ $inline ? 'gc-inline' : '' }}" id="consentModal">
 
     <div class="gc-paper" id="consentPaper">
 
-        <button type="button"
-                class="gc-close no-print"
-                onclick="tutupConsent()">
-            &times;
-        </button>
+        @unless ($inline)
+            <button type="button"
+                    class="gc-close no-print"
+                    onclick="tutupConsent()">
+                &times;
+            </button>
+        @endunless
 
         <div class="gc-frame">
 
@@ -872,7 +913,7 @@
 
                 <button type="button"
                         class="gc-btn"
-                        onclick="window.print()">
+                        onclick="gcCetak()">
                     Cetak
                 </button>
 
@@ -947,6 +988,9 @@
 
     'use strict';
 
+    // true = formulir tampil langsung di dalam tab (tanpa popup utama)
+    const GC_INLINE = @json($inline);
+
     const GC_MAKS_KELUARGA = 4;
 
     let gcDataPasien = {};
@@ -1013,7 +1057,10 @@
 
         }
 
-        document.getElementById('consentModal').classList.add('show');
+        // Mode popup: tampilkan overlay. Mode inline: sudah tampil di dalam tab.
+        if (!GC_INLINE) {
+            document.getElementById('consentModal').classList.add('show');
+        }
 
         gcInitPad('gcTtdPemberi');
         gcInitPad('gcTtd');
@@ -1021,12 +1068,31 @@
 
     };
 
-    /* MENUTUP GENERAL CONSENT */
+    /* MENUTUP GENERAL CONSENT (tidak berlaku untuk mode inline) */
     window.tutupConsent = function () {
+
+        if (GC_INLINE) {
+            return;
+        }
 
         document.getElementById('consentModal').classList.remove('show');
 
     };
+
+    /* CETAK */
+    window.gcCetak = function () {
+
+        if (GC_INLINE) {
+            document.body.classList.add('gc-cetak-inline');
+        }
+
+        window.print();
+
+    };
+
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('gc-cetak-inline');
+    });
 
     /* MEMBUKA POPUP TANDA TANGAN */
     window.gcBukaPopupTtd = function (id) {
@@ -1477,7 +1543,7 @@
     }
 
     /* SIMPAN GENERAL CONSENT */
-    window.simpanConsent = function () {
+    window.simpanConsent = async function () {
 
         if (!gcValidasi()) {
             return;
@@ -1495,6 +1561,101 @@
 
         }
 
+        // Hasil pilihan masing-masing butir.
+        const p = gcAmbilPersetujuan();
+
+        const data = {
+            general_consent: '1',
+            gc_hak_kewajiban: p[1],
+            gc_persetujuan_pelayanan: p[2],
+            gc_pelepasan_informasi: p[3],
+            gc_pengajuan_keluhan: p[4],
+            gc_informasi_rawat_jalan: p[5],
+            gc_kewajiban_pembayaran: p[6],
+            gc_pernyataan_persetujuan: p[7],
+            // Status centang konfirmasi secara terpisah.
+            gc_konfirmasi: document.getElementById('gc-semua').checked ? '1' : '0',
+            gc_ttd_pemberi: gcAmbilTtd('gcTtdPemberi'),
+            gc_nama_pemberi: document.getElementById('gc-nama-pemberi').value.trim(),
+            gc_ttd_pasien: gcAmbilTtd('gcTtd'),
+            gc_nama_penandatangan: document.getElementById('gc-nama-pasien').value.trim(),
+            // Maksimal 4 nama pihak yang boleh mengakses informasi RM.
+            gc_anggota_keluarga: JSON.stringify(gcAmbilKeluarga()),
+            gc_tanggal: document.getElementById('gc-tgl').value,
+            gc_jam: document.getElementById('gc-jam').value
+        };
+
+        /* ===== Mode poli: kirim langsung ke server ===== */
+        if (window.GC_URL_SIMPAN) {
+
+            if (window.GC_SUDAH_ADA &&
+                !confirm('General Consent kunjungan ini sudah pernah diisi. Timpa data lama?')) {
+                return;
+            }
+
+            const tombol = document.getElementById('gc-btn-simpan');
+            tombol.disabled = true;
+
+            try {
+
+                const res = await fetch(window.GC_URL_SIMPAN, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': window.GC_CSRF
+                    },
+                    body: JSON.stringify(Object.assign({
+                        id_pendaftaran: Number(window.GC_ID_PENDAFTARAN),
+                        no_rm: noRm
+                    }, data))
+                });
+
+                const teks = await res.text();
+                let hasil;
+
+                try {
+                    hasil = JSON.parse(teks);
+                } catch (e) {
+                    throw new Error('Server tidak mengirim respons JSON. Periksa route dan log Laravel.');
+                }
+
+                if (!res.ok || hasil.success !== true) {
+
+                    let pesan = hasil.message || 'General Consent gagal disimpan.';
+
+                    if (hasil.errors) {
+                        const daftar = Object.values(hasil.errors).flat();
+                        if (daftar.length) pesan = daftar.join('\n');
+                    }
+
+                    throw new Error(pesan);
+                }
+
+                window.GC_SUDAH_ADA = true;
+
+                if (typeof window.gcSetelahSimpan === 'function') {
+                    window.gcSetelahSimpan(hasil);
+                }
+
+                alert('General Consent berhasil disimpan.');
+
+            } catch (error) {
+
+                console.error('Gagal menyimpan General Consent:', error);
+                alert(error.message || 'General Consent gagal disimpan.');
+
+            } finally {
+
+                tombol.disabled = false;
+
+            }
+
+            return;
+        }
+
+        /* ===== Mode Pendaftaran (seperti sebelumnya): isi hidden input form ===== */
         const form =
             document.getElementById('formPendaftaran') ||
             document.getElementById('formKunjungan');
@@ -1507,11 +1668,9 @@
 
         }
 
-        function setHidden(name, value) {
+        Object.keys(data).forEach(function (name) {
 
-            let input = form.querySelector(
-                '[name="' + name + '"]'
-            );
+            let input = form.querySelector('[name="' + name + '"]');
 
             if (!input) {
 
@@ -1523,52 +1682,9 @@
 
             }
 
-            input.value = value;
+            input.value = data[name];
 
-        }
-
-        setHidden('general_consent', '1');
-
-        // Ambil hasil pilihan masing-masing butir.
-        const persetujuan = gcAmbilPersetujuan();
-
-        // Simpan masing-masing butir ke hidden input terpisah.
-        setHidden('gc_hak_kewajiban', persetujuan[1]);
-        setHidden('gc_persetujuan_pelayanan', persetujuan[2]);
-        setHidden('gc_pelepasan_informasi', persetujuan[3]);
-        setHidden('gc_pengajuan_keluhan', persetujuan[4]);
-        setHidden('gc_informasi_rawat_jalan', persetujuan[5]);
-        setHidden('gc_kewajiban_pembayaran', persetujuan[6]);
-        setHidden('gc_pernyataan_persetujuan', persetujuan[7]);
-
-        // Simpan status centang konfirmasi secara terpisah.
-        setHidden(
-            'gc_konfirmasi',
-            document.getElementById('gc-semua').checked ? '1' : '0'
-        );
-
-        setHidden('gc_ttd_pemberi', gcAmbilTtd('gcTtdPemberi'));
-
-        setHidden(
-            'gc_nama_pemberi',
-            document.getElementById('gc-nama-pemberi').value.trim()
-        );
-
-        setHidden('gc_ttd_pasien', gcAmbilTtd('gcTtd'));
-
-        setHidden(
-            'gc_nama_penandatangan',
-            document.getElementById('gc-nama-pasien').value.trim()
-        );
-
-        // Maksimal 4 nama pihak yang boleh mengakses informasi RM.
-        setHidden(
-            'gc_anggota_keluarga',
-            JSON.stringify(gcAmbilKeluarga())
-        );
-
-        setHidden('gc_tanggal', document.getElementById('gc-tgl').value);
-        setHidden('gc_jam', document.getElementById('gc-jam').value);
+        });
 
         const tombolConsent = document.getElementById('btnConsent');
 
@@ -1590,9 +1706,22 @@
     /* DOM CONTENT LOADED */
     document.addEventListener('DOMContentLoaded', function () {
 
-        document.body.appendChild(
-            document.getElementById('consentModal')
-        );
+        const sign = document.getElementById('gcSignModal');
+
+        if (GC_INLINE) {
+
+            // Formulir tetap di dalam tab; hanya popup tanda tangan dipindah ke <body>.
+            if (sign) {
+                document.body.appendChild(sign);
+            }
+
+        } else {
+
+            document.body.appendChild(
+                document.getElementById('consentModal')
+            );
+
+        }
 
         gcInitPad('gcTtdPemberi');
         gcInitPad('gcTtd');
@@ -1600,18 +1729,21 @@
 
         gcRefreshKeluarga();
 
-        const popup = document.getElementById('gcSignModal');
+        if (sign) {
 
-        if (popup) {
+            sign.addEventListener('click', function (event) {
 
-            popup.addEventListener('click', function (event) {
-
-                if (event.target === popup) {
+                if (event.target === sign) {
                     gcTutupPopupTtd();
                 }
 
             });
 
+        }
+
+        // Mode inline: langsung isi data pasien saat halaman dibuka.
+        if (GC_INLINE) {
+            window.bukaConsent(window.GC_DATA_PASIEN || {});
         }
 
     });

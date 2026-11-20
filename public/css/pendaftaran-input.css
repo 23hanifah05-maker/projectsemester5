@@ -295,31 +295,22 @@
     }
 }
 
-/* ================= KHUSUS PEKERJAAN ================= */
-/* Berlaku di dalam maupun di luar media query.
-   Label di kiri, input di sampingnya. */
-
-.col-left .row.pekerjaan-row {
-    display: grid !important;
-    grid-template-columns: 150px minmax(0, 1fr) !important;
-    column-gap: 0 !important;
-    align-items: center !important;
+/* ================= SELECT + KOLOM "LAIN-LAIN" (Agama & Pekerjaan) =================
+   Select dan kolom teks dibungkus .lainnya-wrap, ditumpuk ke bawah.
+   (Aturan lama "KHUSUS PEKERJAAN" dihapus karena memaksa select dan
+   kolom teks menempati grid-row 1 / grid-column 2 yang sama, sehingga
+   saling menimpa dan select tidak bisa diklik lagi.) */
+.lainnya-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
 }
 
-.col-left .row.pekerjaan-row > label {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-    text-align: left !important;
-    padding-right: 0 !important;
-}
-
-.col-left .row.pekerjaan-row > #pekerjaan,
-.col-left .row.pekerjaan-row > #pekerjaan_lainnya {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    width: 100% !important;
-    max-width: 300px !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    margin: 0 !important;
+.lainnya-wrap select,
+.lainnya-wrap input {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
 }

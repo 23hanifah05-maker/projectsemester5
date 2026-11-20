@@ -11,20 +11,57 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/obgyn.css') }}?v={{ @filemtime(public_path('css/obgyn.css')) }}">
+
+    <style>
+        /* =====================================================
+           STATUS PASIEN: 2 BULATAN
+           Kuning = selesai koding (kode ICD sudah disimpan)
+           Hijau  = selesai pelayanan (SOAP / Assessment sudah disimpan)
+           Abu-abu = belum
+           ===================================================== */
+        .status-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .status-dot {
+            display: inline-block;
+            flex: 0 0 auto;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #d9d9d9;
+            border: 1px solid #c4c4c4;
+            box-sizing: border-box;
+            transition: background .15s, border-color .15s, box-shadow .15s;
+        }
+
+        .status-dot.koding.on {
+            background: #f5b700;
+            border-color: #d99f00;
+            box-shadow: 0 0 0 2px rgba(245, 183, 0, .25);
+        }
+
+        .status-dot.assesment.on {
+            background: #28a745;
+            border-color: #1e8e3a;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, .25);
+        }
+    </style>
 @endsection
 
 @section('content')
 
     {{-- =====================================================
-         DATA DUMMY PASIEN POLI OBGYN
-         (5 pasien perempuan dari Master Data Pendaftaran:
-         RM-0002, RM-0004, RM-0006, RM-0008, RM-0010)
-         Data dilengkapi penuh (NIK, PJ, dll) agar modal Detail
-         dan Edit bisa berfungsi sama seperti di Master Data.
+         DAFTAR PASIEN POLI OBGYN
 
-         status_periksa: semua pasien otomatis 'periksa' (kuning) saat
-         masuk dari Pendaftaran. Berubah jadi 'selesai' (hijau) setelah
-         tombol Simpan di halaman kunjungan diklik.
+         Status tiap pasien ditampilkan dengan 2 bulatan:
+         - Kuning : selesai koding (data $item->status_koding)
+         - Hijau  : selesai pelayanan, SOAP/Assessment sudah
+                    disimpan (data $item->status_periksa = 'selesai')
     ===================================================== --}}
 
     <div class="panel">
@@ -140,9 +177,16 @@
                                     </svg>
                                 </button>
 
-                                @php $sp = $item->status_periksa ?? 'periksa'; @endphp
-                                <span class="badge-periksa {{ $sp }}">
-                                    {{ $sp === 'selesai' ? 'Selesai' : 'Periksa' }}
+                                @php
+                                    $sudahKoding = in_array($item->status_koding ?? false, [true, 1, '1', 'selesai'], true);
+                                    $sudahAssesment = strtolower((string) ($item->status_periksa ?? 'periksa')) === 'selesai';
+                                @endphp
+
+                                <span class="status-dots">
+                                    <span class="status-dot koding {{ $sudahKoding ? 'on' : '' }}"
+                                          title="{{ $sudahKoding ? 'Selesai koding' : 'Belum dikoding' }}"></span>
+                                    <span class="status-dot assesment {{ $sudahAssesment ? 'on' : '' }}"
+                                          title="{{ $sudahAssesment ? 'Selesai pelayanan (SOAP/Assessment disimpan)' : 'SOAP/Assessment belum disimpan' }}"></span>
                                 </span>
                             </div>
                         </td>
@@ -357,13 +401,15 @@ function bacaWaktuSelesai() {
     }
 }
 
-// Warna & teks badge mengikuti status tersimpan, lalu baris diurutkan:
-// - yang masih "Periksa" (kuning) di atas
-// - yang "Selesai" (hijau) di bawah, urut dari yang paling dulu selesai
-//   sampai yang paling baru selesai (paling baru ada di paling bawah)
-// Belum ada status tersimpan = 'periksa'.
+// Nilai dari database dianggap "aktif" bila true / 1 / '1' / 'selesai'
+function statusAktif(nilai) {
+    return nilai === true || nilai === 1 || nilai === '1' || nilai === 'selesai';
+}
 
-
+// Menyesuaikan 2 bulatan status tiap baris, lalu mengurutkan baris:
+// - 🟡 kuning = selesai koding   (data.status_koding)
+// - 🟢 hijau  = selesai pelayanan, SOAP/Assessment disimpan (data.status_periksa = 'selesai')
+// Pasien yang SOAP-nya belum disimpan ada di atas, yang sudah disimpan di bawah.
 function terapkanStatusPeriksa() {
     const rows = Array.from(
         document.querySelectorAll('.row-pasien')
@@ -377,7 +423,6 @@ function terapkanStatusPeriksa() {
             row.dataset.urutAwal = index;
         }
 
-        const badge = row.querySelector('.badge-periksa');
         let data;
 
         try {
@@ -387,22 +432,33 @@ function terapkanStatusPeriksa() {
             return;
         }
 
-        const status = data.status_periksa === 'selesai'
-            ? 'selesai'
-            : 'periksa';
+        const selesaiAssesment =
+            String(data.status_periksa || 'periksa').toLowerCase() === 'selesai';
+        const selesaiKoding = statusAktif(data.status_koding);
 
-        row.dataset.statusPeriksa = status;
+        row.dataset.statusPeriksa = selesaiAssesment ? 'selesai' : 'periksa';
+        row.dataset.statusKoding = selesaiKoding ? 'selesai' : 'belum';
 
-        if (badge) {
-            badge.classList.remove('periksa', 'selesai');
-            badge.classList.add(status);
-            badge.textContent =
-                status === 'selesai' ? 'Selesai' : 'Periksa';
+        const dotKoding = row.querySelector('.status-dot.koding');
+        const dotAssesment = row.querySelector('.status-dot.assesment');
+
+        if (dotKoding) {
+            dotKoding.classList.toggle('on', selesaiKoding);
+            dotKoding.title = selesaiKoding
+                ? 'Selesai koding'
+                : 'Belum dikoding';
+        }
+
+        if (dotAssesment) {
+            dotAssesment.classList.toggle('on', selesaiAssesment);
+            dotAssesment.title = selesaiAssesment
+                ? 'Selesai pelayanan (SOAP/Assessment disimpan)'
+                : 'SOAP/Assessment belum disimpan';
         }
     });
 
-    // Urutkan pasien yang masih diperiksa di atas,
-    // lalu pasien selesai di bagian bawah.
+    // Urutkan pasien yang SOAP-nya belum disimpan di atas,
+    // lalu pasien yang sudah selesai di bagian bawah.
     rows.sort(function (a, b) {
         const statusA = a.dataset.statusPeriksa;
         const statusB = b.dataset.statusPeriksa;
@@ -596,7 +652,7 @@ function perbaruiNomor() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Sesuaikan warna badge (kuning/hijau) dengan status terakhir
+    // Sesuaikan 2 bulatan status (kuning/hijau) dengan status terakhir
     terapkanStatusPeriksa();
 
     document.querySelectorAll('.row-pasien').forEach(function (row) {
