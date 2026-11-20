@@ -7,14 +7,13 @@
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
-<<<<<<< HEAD
+HEAD
     <link rel="stylesheet" href="{{ asset('css/general-consent.css') }}">
     <link rel="stylesheet" href="{{ asset('css/obgyn.css') }}?v={{ @filemtime(public_path('css/obgyn.css')) }}">
 
-=======
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/obgyn-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/obgyn-kunjungan-baru.css')) }}">
->>>>>>> 8f4afc517ae15a46da32b59e1c4b5e831375ec90
+
 
     <style>
         /* ===== Tab General Consent / Resume Medis ===== */
@@ -139,9 +138,8 @@
             text-decoration: underline;
         }
 
-        /* =====================================================
            RESUME MEDIS (tampilan mengikuti Poli Syaraf)
-           ===================================================== */
+           */
         .rm-wrap {
             display: flex;
             flex-direction: column;
@@ -390,9 +388,8 @@
             }
         }
 
-        /* =====================================================
            FORMULIR CETAK INFORMED CONSENT (A4, 1 lembar)
-           ===================================================== */
+           */
         @page ic {
             size: A4;
             margin: 0;
@@ -1854,9 +1851,9 @@
 
 @section('extra-js')
 <script>
-    // =========================================================
+    // 
     // KONFIGURASI
-    // =========================================================
+    // 
     const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
     const ID_PENDAFTARAN = @json($id_pendaftaran ?? null);
 
@@ -1888,7 +1885,7 @@
 
     // Status consent yang sudah tersimpan dan disetujui.
     let informedConsentTersimpan = Boolean(
-        DATA_INFORMED && DATA_INFORMED.keputusan === 'setuju'
+        DATA_INFORMED && DATA_INFORMED.keputusan  'setuju'
     );
 
     // Bernilai true jika tombol Simpan menunggu consent
@@ -1898,10 +1895,10 @@
     // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
     let izinkanKeluar = false;
 
-    // =========================================================
+    
     // GENERAL CONSENT
     // Resume Medis terkunci sampai General Consent kunjungan ini tersimpan.
-    // =========================================================
+    
     let SUDAH_CONSENT = @json($sudahConsent);
     const DATA_PASIEN_GC = @json($gcData);
 
@@ -1955,9 +1952,8 @@
         }
     }
 
-    // =========================================================
     // TAB
-    // =========================================================
+
     function gantiTab(tab, event) {
         // Tab Informed Consent terkunci bila tidak ada tindakan KB IUD
         if (tab === 'informed' && !tabInformedTerbuka()) {
@@ -2015,11 +2011,11 @@
         }
     }
 
-    // =========================================================
-    // SOAP BERKOLOM: gabungkan kolom kecil -> textarea asli
+   
     // Format: "Label: isi" per baris. Isi yang lebih dari satu baris
     // (mis. Resep Obat) disimpan sebagai baris lanjutan di bawahnya.
-    // =========================================================
+   
+
     function gabungSoap(group) {
         const target = document.querySelector('[name="' + group.dataset.target + '"]');
         if (!target) return;
@@ -2084,9 +2080,9 @@
 
     isiSoapDariTersimpan();
 
-    // =========================================================
+    
     // RESUME MEDIS (tampilan dulu, belum tersambung database)
-    // =========================================================
+    
 
     // Kolom yang diisi otomatis dari SOAP / diagnosa / tindakan.
     // Selama belum diketik manual, isinya ikut diperbarui setiap
@@ -2246,13 +2242,12 @@
         const jam = document.getElementById('rmJamTtd');
         if (jam && !jam.value) jam.value = dua(d.getHours()) + ':' + dua(d.getMinutes());
     })();
-
-    // =========================================================
+ 
     // CETAK (resep & informed consent)
     // Area cetak dipindah ke <body> sementara agar hanya area itu
     // yang tampil di kertas, lalu dikembalikan setelah dialog print
     // ditutup (afterprint).
-    // =========================================================
+   
     let areaCetakAktif = null;
 
     function siapkanCetak(idArea, kelasMode) {
@@ -2313,9 +2308,9 @@
         window.print();
     }
 
-    // =========================================================
+    
     // RUJUKAN
-    // =========================================================
+   
     function rujukPasien() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -2497,9 +2492,9 @@
         }
     }
 
-    // =========================================================
+   
     // SIMPAN TTV, SOAP, DAN RESUME MEDIS KE DATABASE
-    // =========================================================
+    
     async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -2700,9 +2695,8 @@
         }
     }
 
-    // =========================================================
     // INFORMED CONSENT - TAMPILAN FRONT-END
-    // =========================================================
+    
     (function () {
         const d = new Date();
         const tgl = document.getElementById('icTanggal');
@@ -2978,12 +2972,12 @@
         }
     }
 
-    // =========================================================
+    
     // INFORMED CONSENT - CETAK FORMULIR
     // Mengisi area cetak dari isian form, lalu membuka dialog print.
     // Di dialog print pilih "Save as PDF" atau printer (mis. Epson).
     // Cetak boleh dengan tanda tangan kosong (untuk ditandatangani manual).
-    // =========================================================
+    
     function buatKotak(terisi, ikutiTeks) {
         const kotak = document.createElement('span');
 
@@ -3092,11 +3086,11 @@
         window.print();
     }
 
-    // =========================================================
+    
     // TTV KE OBJECTIVE
     // Data TTV ditarik ke kolom "Pemeriksaan Tanda Vital" (kolom O pertama).
     // Centang berubah (class "aktif") hanya setelah di-klik.
-    // =========================================================
+    
     function isiObjektifDariVital() {
         const bagian = [];
 
@@ -3146,9 +3140,9 @@
         kolomTtv.focus();
     }
 
-    // =========================================================
+   
     // PENCARIAN ICD DARI DATABASE
-    // =========================================================
+    
     const konfig = {
         penyakit: {
             input: 'cariPenyakit',
@@ -3450,7 +3444,7 @@
     updateCentang('penyakit');
     updateCentang('tindakan');
 
-    /* =========================================================
+   
        CEGAH KELUAR HALAMAN SEBELUM ASESMEN DISIMPAN
        Berlaku bila:
        - pasien baru (kunjungan ini belum punya data asesmen), atau
@@ -3461,7 +3455,7 @@
        - Klik menu / link lain: dibatalkan, muncul peringatan.
        - Refresh / tutup tab: browser menampilkan konfirmasi.
        Setelah Simpan atau Rujuk berhasil, semua pembatasan dilepas.
-       ========================================================= */
+     
     const PESAN_BELUM_SIMPAN =
         'Data pasien belum disimpan.\n' +
         'Klik tombol Simpan terlebih dahulu sebelum meninggalkan halaman ini.';
@@ -3571,9 +3565,9 @@
         }
     });
 
-    // =========================================================
+   
     // PEMBATASAN TAMPILAN PER ROLE
-    // =========================================================
+   
     (function () {
         // Diagnosa & tindakan: hanya pmik / admin yang boleh menghapus
         if (!BOLEH_DIAGNOSA) {
