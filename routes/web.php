@@ -19,6 +19,8 @@ use App\Http\Controllers\ClinicalPathwayController;
 | admin     : edit semua
 | dokter    : edit SOAP, rujukan, informed consent, clinical pathway, resume.
 |             Hanya LIHAT: TTV, kode ICD, radiologi, daftar pasien per poli.
+|             Hanya bisa membuka poli miliknya sendiri (username = nama_dokter
+|             di tabel poli), poli lain menampilkan 403.
 | perawat   : edit TTV, S, O, clinical pathway.
 |             Hanya LIHAT: A, P, ICD, rujukan, informed consent, resume, radiologi.
 | pmik      : edit pendaftaran dan kode ICD (+ SNOMED).
@@ -54,7 +56,8 @@ Route::post('/logout', [LoginController::class, 'logout'])
 // HARUS LOGIN
 // ======================================================================
 
-Route::middleware('auth')->group(function () {
+// DIUBAH: ditambah BatasiPoliDokter agar dokter hanya bisa membuka poli miliknya
+Route::middleware(['auth', \App\Http\Middleware\BatasiPoliDokter::class])->group(function () {
 
     // ------------------------------------------------------------------
     // Dashboard: semua role

@@ -12,9 +12,8 @@
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/syaraf-kunjungan-baru.css')) }}">
 
     <style>
-        /* ===== Tab terkunci / belum consent ===== */
+        /* ===== Tab terkunci (Resume Medis sebelum General Consent diisi) ===== */
         .kb-tab.terkunci { opacity: .5; cursor: not-allowed; }
-        .kb-tab.belum-consent { color: #c8102e; }
 
         /* ===== Resume Medis: kolom simetris seperti Obgyn ===== */
         #tab-resume .rm-ringkasan-body { align-items: stretch; }
@@ -477,7 +476,7 @@
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assessment</div>
         <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
         <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
-        <div class="kb-tab {{ !empty($generalConsent) ? '' : 'belum-consent' }}" id="tabConsentBtn" onclick="gantiTab('consent', event)"><i class="fa-solid fa-file-signature"></i> <span id="tabConsentLabel">{{ !empty($generalConsent) ? '✔ ' : '' }}General Consent</span></div>
+        <div class="kb-tab" id="tabConsentBtn" onclick="gantiTab('consent', event)"><i class="fa-solid fa-file-signature"></i> General Consent</div>
         <div class="kb-tab {{ !empty($generalConsent) ? '' : 'terkunci' }}" id="tabResumeBtn" onclick="gantiTab('resume', event)"><i class="fa-solid fa-file-medical"></i> Resume Medis</div>
     </div>
 
@@ -978,7 +977,7 @@
         </div>
     </div>
 
-    {{-- ===== TAB GENERAL CONSENT ===== --}}
+    {{-- ===== TAB GENERAL CONSENT (formulir langsung tampil, tanpa tombol "Isi General Consent") ===== --}}
     @php
         $gcTtl = ($pasien->tempat_lahir ?? '-') . ', ' .
             (!empty($pasien->tgl_lahir) ? \Carbon\Carbon::parse($pasien->tgl_lahir)->format('d-m-Y') : '-');
@@ -994,26 +993,23 @@
     @endphp
 
     <div id="tab-consent" class="kb-tab-content">
-        <div class="kb-card" style="padding:20px;">
-            <div class="kb-section-title">General Consent</div>
+        <script>
+            window.GC_URL_SIMPAN     = @json(route('poli.syaraf.general-consent.simpan'));
+            window.GC_CSRF           = @json(csrf_token());
+            window.GC_ID_PENDAFTARAN = @json($id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? request()->route('id_pendaftaran')));
+            window.GC_DATA_PASIEN    = @json($gcData);
+            window.GC_SUDAH_ADA      = @json(!empty($generalConsent));
+        </script>
 
-            <p id="gcStatusTeks" style="margin:10px 0 14px;">
-                @if (!empty($generalConsent))
-                    <span style="color:#198754;font-weight:600;">✔ Sudah diisi</span>
-                    pada {{ $generalConsent->tanggal }} pukul {{ $generalConsent->jam }}
-                    oleh {{ $generalConsent->nama_penandatangan }}.
-                @else
-                    General Consent wajib diisi sebelum membuka Resume Medis.
-                @endif
-            </p>
+        <p id="gcStatusTeks" style="margin:0 0 10px;font-size:12px;">
+            @if (!empty($generalConsent))
+                <span style="color:#198754;font-weight:600;">✔ Sudah diisi</span>
+                pada {{ $generalConsent->tanggal }} pukul {{ $generalConsent->jam }}
+                oleh {{ $generalConsent->nama_penandatangan }}.
+            @endif
+        </p>
 
-            <button type="button" id="btnConsent"
-                    class="kb-btn kb-btn-simpan {{ !empty($generalConsent) ? 'sudah' : '' }}"
-                    onclick="bukaGeneralConsent()">
-                <i class="fa-solid fa-file-signature"></i>
-                {{ !empty($generalConsent) ? '✔ General Consent (isi ulang)' : 'Isi General Consent' }}
-            </button>
-        </div>
+        @include('pendaftaran.partials.general-consent', ['inline' => true])
     </div>
 
     {{-- =========================================================
@@ -1396,15 +1392,6 @@
         </div>
     </div>
 
-    {{-- ===== MODAL GENERAL CONSENT (memakai formulir dari halaman Pendaftaran) ===== --}}
-    @include('pendaftaran.partials.general-consent')
-
-    <script>
-        window.GC_URL_SIMPAN     = @json(route('poli.syaraf.general-consent.simpan'));
-        window.GC_CSRF           = @json(csrf_token());
-        window.GC_ID_PENDAFTARAN = @json($id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? request()->route('id_pendaftaran')));
-    </script>
-
 @endsection
 
 @section('extra-js')
@@ -1425,34 +1412,19 @@
 
     // Status General Consent kunjungan ini. Resume Medis terkunci sampai true.
     let SUDAH_CONSENT = @json(!empty($generalConsent));
-    const DATA_PASIEN_GC = @json($gcData);
 
-    function bukaGeneralConsent() {
-        if (typeof window.bukaConsent !== 'function') {
-            alert('Modal General Consent belum dimuat. Periksa file modal yang di-include di halaman ini.');
-            return;
-        }
-        if (SUDAH_CONSENT && !confirm('General Consent kunjungan ini sudah pernah diisi. Isi ulang dan timpa data lama?')) {
-            return;
-        }
-        window.bukaConsent(DATA_PASIEN_GC);
-    }
-
-    // Dipanggil modal setelah consent berhasil tersimpan di server
+    // Dipanggil formulir General Consent setelah berhasil tersimpan di server
     window.gcSetelahSimpan = function () {
         SUDAH_CONSENT = true;
 
         document.getElementById('tabResumeBtn')?.classList.remove('terkunci');
-        document.getElementById('tabConsentBtn')?.classList.remove('belum-consent');
-
-        const label = document.getElementById('tabConsentLabel');
-        if (label) label.textContent = '✔ General Consent';
 
         const status = document.getElementById('gcStatusTeks');
         if (status) status.innerHTML = '<span style="color:#198754;font-weight:600;">✔ Sudah diisi</span> pada kunjungan ini.';
 
-        const tombol = document.getElementById('btnConsent');
-        if (tombol) tombol.innerHTML = '<i class="fa-solid fa-file-signature"></i> ✔ General Consent (isi ulang)';
+        // Consent tersimpan: Resume Medis langsung terbuka
+        gantiTab('resume');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     // Saklar penyimpanan Clinical Pathway ke database.

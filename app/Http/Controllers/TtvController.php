@@ -23,7 +23,6 @@ class TtvController extends Controller
             'heart_rate' => ['nullable', 'integer', 'min:0', 'max:300'],
             'respiratory_rate' => ['nullable', 'integer', 'min:0', 'max:100'],
             'spo2' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'alergi' => ['nullable', 'string', 'max:255'],
 
             // Khusus input tambahan Poli Obgyn
             'hpht' => ['nullable', 'date', 'before_or_equal:today'],
@@ -68,7 +67,6 @@ class TtvController extends Controller
                 'heart_rate' => $validated['heart_rate'] ?? null,
                 'respiratory_rate' => $validated['respiratory_rate'] ?? null,
                 'spo2' => $validated['spo2'] ?? null,
-                'alergi' => $validated['alergi'] ?? null,
             ];
 
             // Tambahkan data kehamilan hanya jika dikirim oleh form.
@@ -120,7 +118,6 @@ class TtvController extends Controller
                         'heart_rate'       => 'heart rate',
                         'respiratory_rate' => 'respiratory rate',
                         'spo2'             => 'SpO2',
-                        'alergi'           => 'alergi',
                         'hpht'             => 'HPHT',
                         'usia_kehamilan'   => 'usia kehamilan',
                     ]
