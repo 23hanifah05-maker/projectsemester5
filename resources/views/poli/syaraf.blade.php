@@ -12,6 +12,46 @@
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/syaraf.css') }}?v={{ @filemtime(public_path('css/syaraf.css')) }}">
+
+    <style>
+        /* =====================================================
+           STATUS PASIEN: 2 BULATAN
+           Kuning = selesai koding (kode ICD sudah disimpan)
+           Hijau  = selesai pelayanan (SOAP / Assessment sudah disimpan)
+           Abu-abu = belum
+           ===================================================== */
+        .status-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .status-dot {
+            display: inline-block;
+            flex: 0 0 auto;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #d9d9d9;
+            border: 1px solid #c4c4c4;
+            box-sizing: border-box;
+            transition: background .15s, border-color .15s, box-shadow .15s;
+        }
+
+        .status-dot.koding.on {
+            background: #f5b700;
+            border-color: #d99f00;
+            box-shadow: 0 0 0 2px rgba(245, 183, 0, .25);
+        }
+
+        .status-dot.assesment.on {
+            background: #28a745;
+            border-color: #1e8e3a;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, .25);
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -45,6 +85,7 @@
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
                 'status_periksa' => 'periksa',
+                'status_koding' => false,
                 'pj_nama' => 'Siti Aminah',
                 'pj_hubungan' => 'Istri',
                 'pj_jenis_kelamin' => 'Perempuan',
@@ -76,6 +117,7 @@
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
                 'status_periksa' => 'periksa',
+                'status_koding' => false,
                 'pj_nama' => 'Dewi Lestari',
                 'pj_hubungan' => 'Istri',
                 'pj_jenis_kelamin' => 'Perempuan',
@@ -107,6 +149,7 @@
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
                 'status_periksa' => 'periksa',
+                'status_koding' => false,
                 'pj_nama' => 'Lina Marlina',
                 'pj_hubungan' => 'Istri',
                 'pj_jenis_kelamin' => 'Perempuan',
@@ -138,6 +181,7 @@
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
                 'status_periksa' => 'periksa',
+                'status_koding' => false,
                 'pj_nama' => 'Nur Aisyah',
                 'pj_hubungan' => 'Ibu',
                 'pj_jenis_kelamin' => 'Perempuan',
@@ -169,6 +213,7 @@
                 'dokter' => '',
                 'status' => 'Sudah Terdaftar',
                 'status_periksa' => 'periksa',
+                'status_koding' => false,
                 'pj_nama' => 'Sri Wahyuni',
                 'pj_hubungan' => 'Istri',
                 'pj_jenis_kelamin' => 'Perempuan',
@@ -293,11 +338,15 @@
                                 </button>
 
                                 @php
-                                    $sp = $item->status_periksa ?? 'periksa';
+                                    $sudahKoding = in_array($item->status_koding ?? false, [true, 1, '1', 'selesai'], true);
+                                    $sudahAssesment = strtolower((string) ($item->status_periksa ?? 'periksa')) === 'selesai';
                                 @endphp
 
-                                <span class="badge-periksa {{ $sp }}">
-                                    {{ $sp === 'selesai' ? 'Selesai' : 'Periksa' }}
+                                <span class="status-dots">
+                                    <span class="status-dot koding {{ $sudahKoding ? 'on' : '' }}"
+                                          title="{{ $sudahKoding ? 'Selesai koding' : 'Belum dikoding' }}"></span>
+                                    <span class="status-dot assesment {{ $sudahAssesment ? 'on' : '' }}"
+                                          title="{{ $sudahAssesment ? 'Selesai pelayanan (SOAP/Assessment disimpan)' : 'SOAP/Assessment belum disimpan' }}"></span>
                                 </span>
                             </div>
                         </td>
@@ -499,8 +548,15 @@ function bacaWaktuSelesai() {
     }
 }
 
+// Nilai dari database dianggap "aktif" bila true / 1 / '1' / 'selesai'
+function statusAktif(nilai) {
+    return nilai === true || nilai === 1 || nilai === '1' || nilai === 'selesai';
+}
+
+// Menyesuaikan 2 bulatan status tiap baris:
+// - 🟡 kuning = selesai koding   (data.status_koding)
+// - 🟢 hijau  = selesai pelayanan, SOAP/Assessment disimpan (data.status_periksa = 'selesai')
 function terapkanStatusPeriksa() {
-    const tersimpan = bacaStatusPeriksa();
     const waktu = bacaWaktuSelesai();
     const rows = Array.from(document.querySelectorAll('.row-pasien'));
 
@@ -511,7 +567,6 @@ function terapkanStatusPeriksa() {
             row.dataset.urutAwal = i;
         }
 
-        const badge = row.querySelector('.badge-periksa');
         let data;
 
         try {
@@ -523,17 +578,29 @@ function terapkanStatusPeriksa() {
         const kunci = String(data.no_rm || '').trim().toUpperCase();
 
         // Status dari database menjadi sumber utama.
-        const status = String(data.status_periksa || 'periksa').toLowerCase() === 'selesai'
-            ? 'selesai'
-            : 'periksa';
+        const selesaiAssesment =
+            String(data.status_periksa || 'periksa').toLowerCase() === 'selesai';
+        const selesaiKoding = statusAktif(data.status_koding);
 
-        row.dataset.statusPeriksa = status;
+        row.dataset.statusPeriksa = selesaiAssesment ? 'selesai' : 'periksa';
+        row.dataset.statusKoding = selesaiKoding ? 'selesai' : 'belum';
         row.dataset.waktuSelesai = waktu[kunci] || 0;
 
-        if (badge) {
-            badge.classList.remove('periksa', 'selesai');
-            badge.classList.add(status);
-            badge.textContent = status === 'selesai' ? 'Selesai' : 'Periksa';
+        const dotKoding = row.querySelector('.status-dot.koding');
+        const dotAssesment = row.querySelector('.status-dot.assesment');
+
+        if (dotKoding) {
+            dotKoding.classList.toggle('on', selesaiKoding);
+            dotKoding.title = selesaiKoding
+                ? 'Selesai koding'
+                : 'Belum dikoding';
+        }
+
+        if (dotAssesment) {
+            dotAssesment.classList.toggle('on', selesaiAssesment);
+            dotAssesment.title = selesaiAssesment
+                ? 'Selesai pelayanan (SOAP/Assessment disimpan)'
+                : 'SOAP/Assessment belum disimpan';
         }
     });
 
