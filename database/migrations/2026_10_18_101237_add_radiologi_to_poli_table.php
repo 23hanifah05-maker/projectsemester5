@@ -13,7 +13,7 @@ return new class extends Migration
             DB::table('poli')->insert([
                 'nama_poli' => 'Radiologi',
                 'slug' => 'radiologi',
-                'nama_dokter' => 'Dr. Spesialis Radiologi',
+                'nama_dokter' => 'Dokter Spesialis Radiologi',
             ]);
         }
     }
