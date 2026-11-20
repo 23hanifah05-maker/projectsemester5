@@ -6,48 +6,30 @@ use App\Helpers\Audit;
 use App\Models\ClinicalPathway;
 use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 class ClinicalPathwayController extends Controller
 {
-    // Harus sama dengan KODE_HNP pada view.
-    private const KODE_HNP = ['M51'];
+    // Harus sama dengan POLA_DX_HNP pada view.
+    // Cocok: HNP, hernia nukleus pulposus (termasuk salah eja "nuleus"),
+    // saraf kejepit, saraf terjepit. Tidak peka huruf besar/kecil.
+    private const POLA_DX_HNP = '/\bhnp\b|hernia\s+nuk?leus\s+pulposus|saraf\s+(?:kejepit|terjepit)/i';
 
     public function store(Request $request)
     {
         $request->validate([
             'id_pendaftaran' => 'required|integer',
-            'penyakit_id'    => 'required|array|min:1',
-            'penyakit_id.*'  => 'integer',
+            'dx_utama_soap'  => 'required|string',
             'data'           => 'required|array',
+        ], [
+            'dx_utama_soap.required' => 'Diagnosa Utama (SOAP bagian A) belum diisi.',
         ]);
 
-        // Nama kolom tabel kode_diagnosis dicari otomatis.
-        $kolom = Schema::getColumnListing('kode_diagnosis');
-
-        $kolomId = $kolom[0];
-
-        $kolomKode = collect([
-            'kode', 'kode_icd', 'kode_icd10', 'kode_diagnosa',
-            'icd10', 'icd', 'code',
-        ])->first(fn ($nama) => in_array($nama, $kolom)) ?? ($kolom[1] ?? $kolom[0]);
-
-        // Diagnosa Utama = diagnosa urutan pertama yang dikirim dari form.
-        $idDiagnosaUtama = array_values($request->penyakit_id)[0];
-
-        $kodeUtama = DB::table('kode_diagnosis')
-            ->where($kolomId, $idDiagnosaUtama)
-            ->value($kolomKode);
-
-        $utamaAdalahHnp = $kodeUtama !== null
-            && Str::startsWith(strtoupper(trim($kodeUtama)), self::KODE_HNP);
-
-        if (!$utamaAdalahHnp) {
+        // Clinical Pathway hanya untuk Diagnosa Utama HNP / saraf terjepit.
+        if (!preg_match(self::POLA_DX_HNP, $request->input('dx_utama_soap'))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Clinical Pathway hanya dapat disimpan bila HNP (ICD-10 M51) menjadi Diagnosa Utama.',
+                'message' => 'Clinical Pathway hanya dapat disimpan bila Diagnosa Utama (SOAP bagian A) '
+                           . 'berisi HNP, Hernia Nukleus Pulposus, saraf kejepit, atau saraf terjepit.',
             ], 422);
         }
 
@@ -70,7 +52,7 @@ class ClinicalPathwayController extends Controller
         $clinicalPathway = ClinicalPathway::updateOrCreate(
             ['id_pendaftaran' => $request->id_pendaftaran],
             [
-                'dx_utama'              => $kosongJadiNull($data['dx_utama'] ?? null),
+                'dx_utama'              => $kosongJadiNull($data['dx_utama'] ?? $request->input('dx_utama_soap')),
                 'dx_sekunder'           => $kosongJadiNull($data['dx_sekunder'] ?? null),
                 'dx_banding'            => $kosongJadiNull($data['dx_banding'] ?? null),
                 'waktu_dx_utama'        => $kosongJadiNull($data['waktu_dx_utama'] ?? null),
