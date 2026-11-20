@@ -17,7 +17,6 @@ class Ttv extends Model
         'heart_rate',
         'respiratory_rate',
         'spo2',
-        'alergi',
         'hpht',
         'usia_kehamilan',
     ];

@@ -58,6 +58,7 @@ class PendaftaranController extends Controller
                 'pasien.*',
                 'p.tgl_registrasi',
                 'p.jenis_pembayaran as pembayaran',
+                'p.nomor_bpjs',
                 'p.dpjp as dokter',
                 'po.nama_poli as nama_poli'
             );
@@ -193,6 +194,12 @@ class PendaftaranController extends Controller
                 'required',
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
+            'nomor_bpjs' => [
+                'nullable',
+                'required_if:pembayaran,bpjs',
+                'string',
+                'digits_between:1,13',
+            ],
 
             'general_consent' => 'required|in:1',
 
@@ -226,10 +233,14 @@ class PendaftaranController extends Controller
         )->firstOrFail();
 
         $jenisPembayaran = match ($validated['pembayaran']) {
-            'umum' => 'Umum',
-            'asuransi' => 'Asuransi Swasta',
+            'umum' => 'umum',
+            'asuransi' => 'asuransi swasta',
             'bpjs' => 'BPJS',
         };
+
+        $nomorBpjs = $validated['pembayaran'] === 'bpjs'
+            ? $validated['nomor_bpjs']
+            : null;
 
         $noHp = $this->normalisasiNomorHp(
             $validated['no_hp']
@@ -251,6 +262,7 @@ class PendaftaranController extends Controller
             $validated,
             $dataPoli,
             $jenisPembayaran,
+            $nomorBpjs,
             $noHp,
             $pjNoHp
         ) {
@@ -286,6 +298,7 @@ class PendaftaranController extends Controller
                 'id_poli' => $dataPoli->id_poli,
                 'dpjp' => $validated['dokter'],
                 'jenis_pembayaran' => $jenisPembayaran,
+                'nomor_bpjs' => $nomorBpjs,
             ]);
 
             return $pendaftaran->id_pendaftaran;
@@ -325,6 +338,12 @@ class PendaftaranController extends Controller
                 'required',
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
+            'nomor_bpjs' => [
+                'nullable',
+                'required_if:pembayaran,bpjs',
+                'string',
+                'digits_between:1,13',
+            ],
 
             'pj_nama' => 'required|string|max:100',
             'pj_hubungan' => 'required|string|max:20',
@@ -363,10 +382,14 @@ class PendaftaranController extends Controller
         )->firstOrFail();
 
         $jenisPembayaran = match ($validated['pembayaran']) {
-            'umum' => 'Umum',
-            'asuransi' => 'Asuransi Swasta',
+            'umum' => 'umum',
+            'asuransi' => 'asuransi swasta',
             'bpjs' => 'BPJS',
         };
+
+        $nomorBpjs = $validated['pembayaran'] === 'bpjs'
+            ? $validated['nomor_bpjs']
+            : null;
 
         $pjNoHp = $this->normalisasiNomorHp(
             $validated['pj_no_hp']
@@ -385,6 +408,7 @@ class PendaftaranController extends Controller
             $validated,
             $dataPoli,
             $jenisPembayaran,
+            $nomorBpjs,
             $pjNoHp
         ) {
             Pasien::where('no_rm', $pasien->no_rm)->update([
@@ -400,6 +424,7 @@ class PendaftaranController extends Controller
                 'id_poli' => $dataPoli->id_poli,
                 'dpjp' => $validated['dokter'],
                 'jenis_pembayaran' => $jenisPembayaran,
+                'nomor_bpjs' => $nomorBpjs,
             ]);
 
             return $pendaftaran->id_pendaftaran;
