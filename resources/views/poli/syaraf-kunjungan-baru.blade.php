@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Baru - Poli Saraf')
-@section('header-icon')
+@section('header-icon', '')
 @section('header-title', 'Poli Saraf')
 
 @section('extra-css')
@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/syaraf-kunjungan-baru.css')) }}">
 
     <style>
-        /* ===== Tab terkunci (Resume Medis sebelum General Consent diisi, Clinical Pathway bila Dx Utama bukan HNP) ===== */
+        /* ===== Tab terkunci (Resume Medis sebelum General Consent diisi, Clinical Pathway bila Dx Utama bukan HNP,
+                  dan semua tab selain Assessment untuk PMIK) ===== */
         .kb-tab.terkunci { opacity: .5; cursor: not-allowed; }
 
         /* ===== Resume Medis: kolom simetris seperti Obgyn ===== */
@@ -404,6 +405,59 @@
             accent-color: #c8102e;
             cursor: pointer;
         }
+
+        /* =====================================================
+           Dropdown hasil pencarian Kode ICD
+           Memakai position: fixed (posisi dihitung lewat JS) agar
+           tidak terpotong oleh kotak induk yang overflow-nya hidden.
+           ===================================================== */
+        .kb-diagnosa-row,
+        .kb-search-field,
+        .kb-search-inline {
+            overflow: visible;
+        }
+
+        .kb-search-box {
+            position: relative;
+            overflow: visible;
+        }
+
+        .kb-search-box .kb-dropdown {
+            position: fixed;
+            z-index: 5000;
+            display: none;
+            max-height: 260px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #d6d6d6;
+            border-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+        }
+
+        .kb-search-box .kb-dropdown-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            line-height: 1.4;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .kb-search-box .kb-dropdown-item:last-child {
+            border-bottom: 0;
+        }
+
+        .kb-search-box .kb-dropdown-item:hover {
+            background: #fdf1f2;
+        }
+
+        .kb-search-box .kb-dropdown-item.kb-dropdown-empty {
+            color: #777;
+            cursor: default;
+        }
+
+        .kb-search-box .kb-dropdown-item.kb-dropdown-empty:hover {
+            background: #fff;
+        }
     </style>
 @endsection
 
@@ -438,7 +492,14 @@
         $bolehCp           = in_array($role, ['admin', 'dokter', 'perawat']);          // clinical pathway
         $bolehResume       = in_array($role, ['admin', 'dokter']);                     // edit resume
         $bolehSimpan       = in_array($role, ['admin', 'dokter', 'perawat', 'pmik']);
-        $bolehSimpanResume = in_array($role, ['admin', 'dokter', 'pmik']);             // pmik: kode SNOMED
+        $bolehSimpanResume = in_array($role, ['admin', 'dokter', 'pmik']);
+
+        // PMIK hanya boleh membuka tab Assessment.
+        // Tab lain tetap tampil (disamarkan, tidak bisa diklik), tetapi isi formulirnya tidak dirender.
+        $hanyaAssesmen = ($role === 'pmik');
+
+        // Kotak kode SNOMED CT (hanya ada di Resume Medis)
+        $bolehSnomed = in_array($role, ['admin', 'pmik']);
 
         $soapReadonly = fn ($n) => in_array($n, ['subjective', 'objective'])
             ? ($bolehSubjOb ? '' : 'readonly')
@@ -480,12 +541,29 @@
         @endif
     </div>
 
+    {{-- Semua tab selalu tampil. Untuk PMIK, tab selain Assessment disamarkan dan tidak bisa diklik. --}}
     <div class="kb-tabs">
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assessment</div>
-        <div class="kb-tab" onclick="gantiTab('radiologi', event)"><i class="fa-solid fa-x-ray"></i> Radiologi</div>
-        <div class="kb-tab" onclick="gantiTab('pathway', event)"><i class="fa-solid fa-diagram-project"></i> Clinical Pathway</div>
-        <div class="kb-tab" id="tabConsentBtn" onclick="gantiTab('consent', event)"><i class="fa-solid fa-file-signature"></i> General Consent</div>
-        <div class="kb-tab {{ !empty($generalConsent) ? '' : 'terkunci' }}" id="tabResumeBtn" onclick="gantiTab('resume', event)"><i class="fa-solid fa-file-medical"></i> Resume Medis</div>
+
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('radiologi', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-x-ray"></i> Radiologi
+        </div>
+
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('pathway', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-diagram-project"></i> Clinical Pathway
+        </div>
+
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" id="tabConsentBtn" onclick="gantiTab('consent', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-file-signature"></i> General Consent
+        </div>
+
+        <div class="kb-tab {{ ($hanyaAssesmen || empty($generalConsent)) ? 'terkunci' : '' }}" id="tabResumeBtn" onclick="gantiTab('resume', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-file-medical"></i> Resume Medis
+        </div>
     </div>
 
     {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print) ===== --}}
@@ -532,6 +610,7 @@
     </div>
 
     {{-- ===== AREA CETAK CLINICAL PATHWAY (tersembunyi, hanya muncul saat print) ===== --}}
+    @unless ($hanyaAssesmen)
     <div id="cetak-cp-area" class="cetak-resep-only">
         <div class="cetak-header">
             <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
@@ -589,6 +668,7 @@
             </div>
         </div>
     </div>
+    @endunless
 
     <div id="tab-assesment" class="kb-tab-content active">
         <input type="hidden" id="id_pendaftaran" value="{{ $id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? '') }}">
@@ -745,6 +825,7 @@
                     <div class="kb-search-box">
                         <input type="text" id="cariPenyakit" placeholder="Cari kode / nama penyakit..." autocomplete="off"
                                oninput="cariItem('penyakit')"
+                               onfocus="cariItem('penyakit')"
                                onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('penyakit'); }">
                         <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <div class="kb-dropdown" id="dropdownPenyakit"></div>
@@ -774,6 +855,7 @@
                     <div class="kb-search-box">
                         <input type="text" id="cariTindakan" placeholder="Cari kode / nama tindakan..." autocomplete="off"
                                oninput="cariItem('tindakan')"
+                               onfocus="cariItem('tindakan')"
                                onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('tindakan'); }">
                         <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <div class="kb-dropdown" id="dropdownTindakan"></div>
@@ -801,6 +883,13 @@
             @endif
         </div>
     </div>
+
+{{-- =====================================================================
+     SEMUA FORMULIR DI BAWAH INI TIDAK DIRENDER UNTUK PMIK
+     (Radiologi, Clinical Pathway, General Consent, Resume Medis, popup, Rujukan)
+     Tabnya tetap tampil di atas, tetapi disamarkan dan tidak bisa diklik.
+     ===================================================================== --}}
+@unless ($hanyaAssesmen)
 
     {{-- ===== TAB RADIOLOGI (hanya untuk dilihat, tidak bisa diisi) ===== --}}
     @php
@@ -1030,10 +1119,6 @@
          TAB RESUME MEDIS (disesuaikan dengan Poli Obgyn)
          ========================================================= --}}
     @php
-        // Kotak kode SNOMED CT hanya untuk admin dan pmik.
-        // Role lain (dokter, perawat) tidak melihat kotak ini sama sekali.
-        $bolehSnomed = in_array(auth()->user()->role ?? null, ['admin', 'pmik']);
-
         // Kolom kiri: 6 blok
         $rmBlokKiri = [
             ['keluhan',     'Keluhan Saat Masuk',                    'Tuliskan keluhan saat masuk...'],
@@ -1282,7 +1367,7 @@
         </div>
     </div>
 
-    {{-- ===== POPUP PENCARIAN & PENGKODEAN SNOMED CT (hanya admin dan pmik) ===== --}}
+    {{-- ===== POPUP PENCARIAN & PENGKODEAN SNOMED CT ===== --}}
     @if ($bolehSnomed)
         <div class="rm-modal-overlay" id="rmModal" role="dialog" aria-modal="true" aria-labelledby="rmModalJudul">
             <div class="rm-modal">
@@ -1406,6 +1491,8 @@
         </div>
     </div>
 
+@endunless
+
 @endsection
 
 @section('extra-js')
@@ -1424,6 +1511,11 @@
     const BOLEH_RESUME   = @json($bolehResume);
     const BOLEH_SIMPAN   = @json($bolehSimpan);
 
+    // true bila user hanya boleh membuka tab Assessment (PMIK).
+    // Tab lain tetap tampil tetapi disamarkan; formulirnya tidak dirender oleh server,
+    // jadi kode di bawah harus aman tanpa elemennya.
+    const HANYA_ASSESMEN = @json($hanyaAssesmen);
+
     // Status General Consent kunjungan ini. Resume Medis terkunci sampai true.
     let SUDAH_CONSENT = @json(!empty($generalConsent));
 
@@ -1441,9 +1533,6 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Saklar penyimpanan Clinical Pathway ke database.
-    // false = hanya validasi + tanda "Tersimpan" (belum kirim ke server).
-    // Ubah ke true bila route dan tabel clinical_pathway sudah siap.
     // Penyimpanan Clinical Pathway ke database.
     const CP_SIMPAN_KE_DB = true;
 
@@ -1473,6 +1562,25 @@
             if (el) el.style.display = 'none';
         });
     }
+
+    // Dropdown memakai position: fixed, jadi posisinya dihitung dari kolom input
+    // agar tidak terpotong oleh kotak induk yang overflow-nya hidden.
+    function posisiDropdown(dropdown) {
+        const input = dropdown.closest('.kb-search-box')?.querySelector('input');
+        if (!input) return;
+
+        const r = input.getBoundingClientRect();
+        dropdown.style.left  = r.left + 'px';
+        dropdown.style.top   = (r.bottom + 2) + 'px';
+        dropdown.style.width = r.width + 'px';
+    }
+
+    // Posisi fixed tidak ikut bergeser saat halaman di-scroll / ukuran jendela berubah, jadi ditutup saja.
+    window.addEventListener('scroll', function (e) {
+        if (e.target.closest && e.target.closest('.kb-dropdown')) return; // scroll di dalam dropdown
+        sembunyiDropdown();
+    }, true);
+    window.addEventListener('resize', sembunyiDropdown);
 
     // Kirim JSON ke server dan pastikan respons berupa JSON dengan success = true.
     async function kirimJson(url, method, body, pesanGagal) {
@@ -1608,6 +1716,12 @@
     }
 
     function gantiTab(tab, event) {
+        // PMIK hanya boleh berada di tab Assessment (tab lain tampil tetapi tidak bisa diklik)
+        if (HANYA_ASSESMEN && tab !== 'assesment') return;
+
+        const panel = document.getElementById('tab-' + tab);
+        if (!panel) return;
+
         if (tab === 'pathway' && !cpBolehDiisi()) {
             alert(PESAN_CP_SYARAT);
             return;
@@ -1629,7 +1743,7 @@
         document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
         if (tombol) tombol.classList.add('active');
-        document.getElementById('tab-' + tab).classList.add('active');
+        panel.classList.add('active');
     }
 
     // Sinkronkan tab Clinical Pathway dengan Diagnosa Utama (SOAP A) yang diisi.
@@ -1638,8 +1752,11 @@
         const tabCP = document.querySelector('.kb-tab[onclick*="pathway"]');
 
         if (tabCP) {
-            tabCP.classList.toggle('terkunci', !boleh);
-            tabCP.title = boleh ? '' : 'Hanya tersedia bila Diagnosa Utama (SOAP A) berisi HNP / Hernia Nukleus Pulposus / saraf kejepit / saraf terjepit';
+            // PMIK: tab selalu samar. Role lain: samar bila Dx Utama bukan HNP.
+            tabCP.classList.toggle('terkunci', HANYA_ASSESMEN || !boleh);
+            tabCP.title = HANYA_ASSESMEN
+                ? 'Tidak dapat diakses oleh PMIK'
+                : (boleh ? '' : 'Hanya tersedia bila Diagnosa Utama (SOAP A) berisi HNP / Hernia Nukleus Pulposus / saraf kejepit / saraf terjepit');
         }
 
         const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
@@ -1649,7 +1766,8 @@
         }
 
         // Bila sedang di tab CP lalu Dx Utama bukan HNP lagi, kembali ke Assessment
-        if (!boleh && document.getElementById('tab-pathway').classList.contains('active')) {
+        const panelCP = document.getElementById('tab-pathway');
+        if (!boleh && panelCP && panelCP.classList.contains('active')) {
             gantiTab('assesment');
         }
     }
@@ -1683,7 +1801,8 @@
             const angka = parseInt(input.value.replace(/\D/g, ''), 10);
             if (!isNaN(angka)) total += angka;
         });
-        document.getElementById('cpTotal').value = total ? total.toLocaleString('id-ID') : '';
+        const el = document.getElementById('cpTotal');
+        if (el) el.value = total ? total.toLocaleString('id-ID') : '';
     }
 
     // ===== Clinical Pathway: kolom Waktu terisi otomatis saat baris diisi =====
@@ -1695,6 +1814,7 @@
     }
 
     function perbaruiWaktuBaris(tr) {
+        if (!tr) return;
         const waktu = tr.querySelector('.cp-waktu');
         if (!waktu) return;
 
@@ -1779,6 +1899,7 @@
     // ===== Clinical Pathway: cetak hasil isian =====
     function cetakCP() {
         const tbody = document.getElementById('cp-cetak-body');
+        if (!tbody) return;
         tbody.innerHTML = '';
         let adaIsi = false;
 
@@ -1885,7 +2006,7 @@
             };
         });
 
-        hasil.total = document.getElementById('cpTotal').value.replace(/\D/g, '');
+        hasil.total = (document.getElementById('cpTotal')?.value ?? '').replace(/\D/g, '');
 
         return hasil;
     }
@@ -1985,7 +2106,7 @@
             return;
         }
 
-        if (BOLEH_CP && cpBolehDiisi() && !cpTerisi()) {
+        if (BOLEH_CP && !HANYA_ASSESMEN && cpBolehDiisi() && !cpTerisi()) {
             alert('Diagnosa utama pasien adalah HNP / saraf terjepit. Clinical Pathway wajib diisi sebelum menyimpan.');
             gantiTab('pathway');
             return;
@@ -2004,7 +2125,7 @@
             if (!await simpanSOAPdanICDKeDatabase()) return;
 
             // 2b. Clinical Pathway (hanya bila boleh, Dx Utama HNP, dan saklar DB aktif)
-            if (CP_SIMPAN_KE_DB && BOLEH_CP && cpBolehDiisi()) {
+            if (CP_SIMPAN_KE_DB && BOLEH_CP && !HANYA_ASSESMEN && cpBolehDiisi()) {
                 if (!await simpanCPKeDatabase()) return;
             }
 
@@ -2053,6 +2174,8 @@
         }
 
         const tgl = document.getElementById('rjTanggal');
+        if (!tgl) return;
+
         if (!tgl.value) {
             const d = new Date();
             tgl.value = d.getFullYear() + '-' +
@@ -2435,13 +2558,29 @@
     }
 
     function updateCentang(jenis) {
-        document.getElementById(konfig[jenis].icon).classList.toggle('aktif', pilihan[jenis] !== null);
+        document.getElementById(konfig[jenis].icon)?.classList.toggle('aktif', pilihan[jenis] !== null);
+    }
+
+    // Teks yang sedang tampil di kolom input untuk item yang sudah dipilih
+    function teksTerpilih(jenis) {
+        const item = pilihan[jenis];
+        if (!item) return null;
+        return jenis === 'penyakit'
+            ? teksInputPenyakit(item)
+            : item.kode + ' — ' + item.nama;
     }
 
     function cariItem(jenis) {
         const k = konfig[jenis];
+        const input = document.getElementById(k.input);
         const dropdown = document.getElementById(k.dropdown);
-        const keyword = document.getElementById(k.input).value.trim();
+        if (!input || !dropdown) return;
+
+        const keyword = input.value.trim();
+
+        // Item sudah dipilih dan teks di kolom belum diubah: jangan cari ulang
+        // (penting karena pencarian juga dipicu saat kolom difokuskan).
+        if (pilihan[jenis] && input.value === teksTerpilih(jenis)) return;
 
         pilihan[jenis] = null;
         updateCentang(jenis);
@@ -2457,13 +2596,22 @@
             const nomor = ++urutanCari[jenis];
             try {
                 const res = await fetch(URL_CARI + '/' + jenis + '?q=' + encodeURIComponent(keyword), {
-                    headers: { 'Accept': 'application/json' }
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
                 const data = await res.json();
                 if (nomor !== urutanCari[jenis]) return; // abaikan hasil pencarian lama
                 renderDropdown(jenis, data);
             } catch (e) {
-                tampilPesan(dropdown, 'Gagal memuat data');
+                console.error('Pencarian kode ICD gagal:', e);
+                if (nomor !== urutanCari[jenis]) return;
+                tampilPesan(dropdown, 'Gagal memuat data (' + (e.message || 'error') + ')');
             }
         }, 250);
     }
@@ -2479,11 +2627,12 @@
         div.textContent = teks;
         dropdown.appendChild(div);
         dropdown.style.display = 'block';
+        posisiDropdown(dropdown);
     }
 
     function renderDropdown(jenis, data) {
         const dropdown = document.getElementById(konfig[jenis].dropdown);
-        if (!data.length) {
+        if (!Array.isArray(data) || !data.length) {
             tampilPesan(dropdown, 'Tidak ditemukan');
             return;
         }
@@ -2494,14 +2643,19 @@
             div.className = 'kb-dropdown-item';
 
             const kode = document.createElement('b');
-            kode.textContent = item.kode;
+            kode.textContent = item.kode ?? '';
             div.appendChild(kode);
-            div.appendChild(document.createTextNode(' — ' + item.nama));
+            div.appendChild(document.createTextNode(' — ' + (item.nama ?? '')));
 
-            div.onclick = function () { pilihItem(jenis, item); };
+            // mousedown agar pilihan tetap terbaca sebelum kolom kehilangan fokus
+            div.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                pilihItem(jenis, item);
+            });
             dropdown.appendChild(div);
         });
         dropdown.style.display = 'block';
+        posisiDropdown(dropdown);
     }
 
     function pilihItem(jenis, item) {
@@ -2552,6 +2706,7 @@
     function renderDiagnosa(jenis) {
         const k = konfig[jenis];
         const list = document.getElementById(k.list);
+        if (!list) return;
         list.innerHTML = '';
 
         diagnosaTerpilih[jenis].forEach(function (item, index) {
@@ -2624,6 +2779,7 @@
 
     /* =========================================================
        RESUME MEDIS + POPUP SNOMED CT
+       (elemennya tidak ada untuk PMIK; semua pemanggilan aman terhadap null)
        ========================================================= */
 
     // Ubah ke true bila route penyimpanan Resume Medis sudah siap.
@@ -2650,7 +2806,6 @@
     let rmKolomAktif = null;
 
     // Pindahkan popup ke <body> supaya tidak terpotong container halaman.
-    // (Popup hanya ada untuk admin dan pmik, jadi dicek dulu.)
     (function () {
         const modal = document.getElementById('rmModal');
         if (modal) document.body.appendChild(modal);
@@ -2715,6 +2870,7 @@
 
     // ----- Popup -----
     function rmBukaModal(kolom) {
+        if (!document.getElementById('rmModal')) return;
         rmKolomAktif = kolom;
         document.getElementById('rmKeyword').value = '';
         document.getElementById('rmManualKode').value = '';
@@ -2730,8 +2886,10 @@
     }
 
     function rmCariKode() {
-        const kw = document.getElementById('rmKeyword').value.trim().toLowerCase();
         const hasil = document.getElementById('rmHasil');
+        if (!hasil) return;
+
+        const kw = document.getElementById('rmKeyword').value.trim().toLowerCase();
         hasil.innerHTML = '';
 
         const sudah = (rmKode[rmKolomAktif] || []).map(d => d.kode);
@@ -3197,7 +3355,6 @@
         }
 
         // Resume medis: hanya dokter / admin yang mengedit.
-        // PMIK tetap bisa mengelola kode SNOMED (tombol Tambah Kode).
         if (!BOLEH_RESUME) {
             document.querySelectorAll('#tab-resume input, #tab-resume textarea, #tab-resume select')
                 .forEach(el => { el.disabled = true; });

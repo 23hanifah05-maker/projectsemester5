@@ -65,6 +65,14 @@
             margin-top: 16px;
         }
 
+        /* Cetak di kiri, Simpan di kanan, satu baris (di bawah Resep Obat) */
+        .ob-plan-aksi {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
         .ob-btn-simpan:disabled {
             opacity: .6;
             cursor: not-allowed;
@@ -82,7 +90,8 @@
             color: #777;
         }
 
-        /* Tab Informed Consent terkunci bila tidak ada tindakan KB IUD */
+        /* Tab terkunci: Informed Consent bila tidak ada tindakan KB IUD,
+           Resume Medis sebelum General Consent, dan semua tab selain Assessment untuk PMIK */
         .ob-tab-terkunci {
             opacity: .5;
             cursor: not-allowed;
@@ -639,6 +648,10 @@
         $bolehSimpan       = in_array($role, ['admin', 'dokter', 'perawat', 'pmik']);
         $bolehSimpanResume = in_array($role, ['admin', 'dokter', 'pmik']);
 
+        // PMIK hanya boleh membuka tab Assessment.
+        // Tab lain tetap tampil (disamarkan, tidak bisa diklik), tetapi isi formulirnya tidak dirender.
+        $hanyaAssesmen = ($role === 'pmik');
+
         $soapReadonly = fn ($n) => in_array($n, ['subjective', 'objective'])
             ? ($bolehSubjOb ? '' : 'readonly')
             : ($bolehAssPlan ? '' : 'readonly');
@@ -820,31 +833,37 @@
         @endif
     </div>
 
-    {{-- TAB --}}
+    {{-- TAB
+         Semua tab selalu tampil. Untuk PMIK, tab selain Assessment disamarkan dan tidak bisa diklik. --}}
     <div class="ob-tabs">
         <div class="ob-tab active" id="ob-tab-btn-assessment"
              onclick="gantiTab('assessment', event)">
             <i class="fa-solid fa-clipboard-list"></i> Assessment
         </div>
 
-        <div class="ob-tab" id="ob-tab-btn-radiologi"
-             onclick="gantiTab('radiologi', event)">
+        <div class="ob-tab {{ $hanyaAssesmen ? 'ob-tab-terkunci' : '' }}" id="ob-tab-btn-radiologi"
+             onclick="gantiTab('radiologi', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
             <i class="fa-solid fa-x-ray"></i> Radiologi
         </div>
 
-        <div class="ob-tab" id="ob-tab-btn-informed"
-             onclick="gantiTab('informed', event)">
+        <div class="ob-tab {{ $hanyaAssesmen ? 'ob-tab-terkunci' : '' }}" id="ob-tab-btn-informed"
+             onclick="gantiTab('informed', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
             <i class="fa-solid fa-file-signature"></i> Informed Consent
         </div>
 
-        <div class="ob-tab {{ $sudahConsent ? '' : 'belum-consent' }}" id="ob-tab-btn-consent"
-             onclick="gantiTab('consent', event)">
+        <div class="ob-tab {{ $hanyaAssesmen ? 'ob-tab-terkunci' : ($sudahConsent ? '' : 'belum-consent') }}"
+             id="ob-tab-btn-consent"
+             onclick="gantiTab('consent', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
             <i class="fa-solid fa-file-signature"></i>
             <span id="tabConsentLabel">{{ $sudahConsent ? '✔ ' : '' }}General Consent</span>
         </div>
 
-        <div class="ob-tab {{ $sudahConsent ? '' : 'ob-tab-terkunci' }}" id="ob-tab-btn-resume"
-             onclick="gantiTab('resume', event)">
+        <div class="ob-tab {{ ($hanyaAssesmen || !$sudahConsent) ? 'ob-tab-terkunci' : '' }}" id="ob-tab-btn-resume"
+             onclick="gantiTab('resume', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
             <i class="fa-solid fa-file-medical"></i> Resume Medis
         </div>
     </div>
@@ -899,7 +918,8 @@
         </div>
     </div>
 
-    {{-- AREA CETAK INFORMED CONSENT (tersembunyi, hanya muncul saat print) --}}
+    {{-- AREA CETAK INFORMED CONSENT (tersembunyi, hanya muncul saat print; tidak dirender untuk PMIK) --}}
+    @unless ($hanyaAssesmen)
     <div id="cetak-ic-area" class="ic-cetak-only">
         <div class="icp-header">
             <img src="{{ asset('images/logo.png') }}" class="icp-logo" alt="Logo Klinik">
@@ -979,6 +999,7 @@
             </table>
         </div>
     </div>
+    @endunless
 
     {{-- TAB ASSESSMENT --}}
     <div id="tab-assessment" class="ob-tab-content active">
@@ -1056,11 +1077,11 @@
                                 >{{ old($soapKolom[$name][$i] ?? '', $soapKolom[$name][$i] ? ($assesmen->{$soapKolom[$name][$i]} ?? '') : '') }}</textarea>
                             </div>
 
-                            {{-- Tombol Cetak resep tepat di bawah kolom Resep Obat --}}
+                            {{-- Tombol Cetak (kiri) dan Simpan (kanan) tepat di bawah kolom Resep Obat --}}
                             @if ($kode === 'P' && $label === 'Resep Obat')
                                 <div class="ob-sf">
                                     <label>&nbsp;</label>
-                                    <div>
+                                    <div class="ob-plan-aksi">
                                         <button
                                             type="button"
                                             class="ob-btn ob-btn-reset ob-btn-rujuk"
@@ -1068,6 +1089,16 @@
                                         >
                                             <i class="fa-solid fa-print"></i> Cetak
                                         </button>
+
+                                        @if ($bolehSimpan)
+                                            <button
+                                                type="button"
+                                                class="ob-btn ob-btn-simpan"
+                                                onclick="simpanKunjunganBaru()"
+                                            >
+                                                <i class="fa-solid fa-floppy-disk"></i> Simpan
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             @endif
@@ -1166,6 +1197,13 @@
             @endif
         </div>
     </div>
+
+{{-- =====================================================================
+     SEMUA FORMULIR DI BAWAH INI TIDAK DIRENDER UNTUK PMIK
+     (Radiologi, Informed Consent, General Consent, Resume Medis, Rujukan, modal)
+     Tabnya tetap tampil di atas, tetapi disamarkan dan tidak bisa diklik.
+     ===================================================================== --}}
+@unless ($hanyaAssesmen)
 
     {{-- TAB RADIOLOGI: READ ONLY --}}
     <div id="tab-radiologi" class="ob-tab-content">
@@ -1848,6 +1886,8 @@
         window.GC_ID_PENDAFTARAN = "{{ $id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? '') }}";
     </script>
 
+@endunless
+
 @endsection
 
 @section('extra-js')
@@ -1879,6 +1919,10 @@
     const BOLEH_RESUME = @json($bolehResume);
     const BOLEH_SIMPAN = @json($bolehSimpan);
     const URL_KIRIM_RUJUKAN = @json(route('poli.obgyn.rujukan'));
+
+    // true bila user hanya boleh membuka tab Assessment (PMIK).
+    // Formulir lain tidak dirender server, jadi kode harus aman tanpa elemennya.
+    const HANYA_ASSESMEN = @json($hanyaAssesmen);
 
     // Simpan informed consent dan data yang sudah tersimpan
     const URL_SIMPAN_INFORMED = @json(route('poli.obgyn.informed.simpan'));
@@ -1957,6 +2001,9 @@
     // TAB
     // ===========================================================
     function gantiTab(tab, event) {
+        // PMIK hanya boleh berada di tab Assessment (tab lain tampil tetapi tidak bisa diklik)
+        if (HANYA_ASSESMEN && tab !== 'assessment') return;
+
         // Tab Informed Consent terkunci bila tidak ada tindakan KB IUD
         if (tab === 'informed' && !tabInformedTerbuka()) {
             alert('Informed Consent hanya tersedia untuk tindakan KB IUD (kode 69.7). Pilih tindakan tersebut terlebih dahulu.');
@@ -2001,8 +2048,11 @@
         const tab = document.getElementById('ob-tab-btn-informed');
 
         if (tab) {
-            tab.classList.toggle('ob-tab-terkunci', !buka);
-            tab.title = buka ? '' : 'Hanya tersedia untuk tindakan KB IUD (69.7)';
+            // PMIK: tab selalu samar. Role lain: samar bila tidak ada tindakan IUD.
+            tab.classList.toggle('ob-tab-terkunci', HANYA_ASSESMEN || !buka);
+            tab.title = HANYA_ASSESMEN
+                ? 'Tidak dapat diakses oleh PMIK'
+                : (buka ? '' : 'Hanya tersedia untuk tindakan KB IUD (69.7)');
         }
 
         // Jika tindakan IUD dihapus saat tab sedang terbuka, kembali ke Assessment
@@ -2323,6 +2373,9 @@
 
         const tgl = document.getElementById('rjTanggal');
 
+        // Form rujukan tidak dirender untuk PMIK
+        if (!tgl) return;
+
         if (!tgl.value) {
             const d = new Date();
 
@@ -2527,13 +2580,17 @@
             return;
         }
 
-        const tombolSimpan = document.getElementById('btnSimpanKunjungan');
+        // Semua tombol Simpan yang memanggil fungsi ini (di bawah SOAP,
+        // di bawah Diagnosa, dan di tab Resume Medis) ikut dinonaktifkan.
+        const tombolSimpan = document.querySelectorAll(
+            '[onclick="simpanKunjunganBaru()"]'
+        );
 
-        if (tombolSimpan) {
-            tombolSimpan.disabled = true;
-            tombolSimpan.innerHTML =
+        tombolSimpan.forEach(function (tombol) {
+            tombol.disabled = true;
+            tombol.innerHTML =
                 '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
-        }
+        });
 
         try {
             const ambilNilai = nama => {
@@ -2691,16 +2748,17 @@
             alert('Data belum berhasil disimpan: ' + error.message);
 
         } finally {
-            if (tombolSimpan) {
-                tombolSimpan.disabled = false;
-                tombolSimpan.innerHTML =
+            tombolSimpan.forEach(function (tombol) {
+                tombol.disabled = false;
+                tombol.innerHTML =
                     '<i class="fa-solid fa-floppy-disk"></i> Simpan';
-            }
+            });
         }
     }
 
     // ===========================================================
     // INFORMED CONSENT - TAMPILAN FRONT-END
+    // (elemennya tidak ada untuk PMIK; semua kode di sini aman terhadap null)
     // ===========================================================
     (function () {
         const d = new Date();
@@ -2794,7 +2852,7 @@
 
     // Mengisi ulang form dari data informed consent yang sudah tersimpan
     function isiDataInformed() {
-        if (!DATA_INFORMED) return;
+        if (!DATA_INFORMED || HANYA_ASSESMEN) return;
 
         const set = (id, nilai) => {
             const el = document.getElementById(id);
@@ -2836,6 +2894,8 @@
             if (!item[1]) return;
 
             const canvas = document.getElementById(item[0]);
+            if (!canvas) return;
+
             const img = new Image();
 
             img.onload = function () {
@@ -3581,6 +3641,9 @@
             document.head.appendChild(css);
         }
 
+        // PMIK: formulir lain tidak dirender, tidak ada yang perlu dibatasi lagi
+        if (HANYA_ASSESMEN) return;
+
         // Informed consent: selain dokter / admin hanya melihat
         if (!BOLEH_CONSENT) {
             document.querySelectorAll('#tab-informed input').forEach(el => { el.disabled = true; });
@@ -3592,7 +3655,6 @@
         }
 
         // Resume medis: hanya dokter / admin yang mengedit.
-        // PMIK tetap bisa mengelola kode SNOMED (tombol Tambah Kode).
         if (!BOLEH_RESUME) {
             document.querySelectorAll('#tab-resume input, #tab-resume textarea, #tab-resume select')
                 .forEach(el => { el.disabled = true; });
