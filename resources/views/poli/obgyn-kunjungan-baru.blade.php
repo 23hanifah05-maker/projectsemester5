@@ -1,13 +1,12 @@
 @extends('layouts.app')
 
 @section('title', 'Kunjungan Baru - Poli Obgyn')
-@section('header-icon')
+@section('header-icon', '')
 @section('header-title', 'Poli Obgyn')
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
-HEAD
     <link rel="stylesheet" href="{{ asset('css/general-consent.css') }}">
     <link rel="stylesheet" href="{{ asset('css/obgyn.css') }}?v={{ @filemtime(public_path('css/obgyn.css')) }}">
 
@@ -138,8 +137,9 @@ HEAD
             text-decoration: underline;
         }
 
+        /* =========================================================
            RESUME MEDIS (tampilan mengikuti Poli Syaraf)
-           */
+           ========================================================= */
         .rm-wrap {
             display: flex;
             flex-direction: column;
@@ -388,8 +388,9 @@ HEAD
             }
         }
 
+        /* =========================================================
            FORMULIR CETAK INFORMED CONSENT (A4, 1 lembar)
-           */
+           ========================================================= */
         @page ic {
             size: A4;
             margin: 0;
@@ -1851,9 +1852,9 @@ HEAD
 
 @section('extra-js')
 <script>
-    // 
+    // ===========================================================
     // KONFIGURASI
-    // 
+    // ===========================================================
     const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
     const ID_PENDAFTARAN = @json($id_pendaftaran ?? null);
 
@@ -1885,7 +1886,7 @@ HEAD
 
     // Status consent yang sudah tersimpan dan disetujui.
     let informedConsentTersimpan = Boolean(
-        DATA_INFORMED && DATA_INFORMED.keputusan  'setuju'
+        DATA_INFORMED && DATA_INFORMED.keputusan === 'setuju'
     );
 
     // Bernilai true jika tombol Simpan menunggu consent
@@ -1895,10 +1896,10 @@ HEAD
     // true hanya sesaat sebelum pindah halaman setelah Simpan / Rujuk berhasil.
     let izinkanKeluar = false;
 
-    
+    // ===========================================================
     // GENERAL CONSENT
     // Resume Medis terkunci sampai General Consent kunjungan ini tersimpan.
-    
+    // ===========================================================
     let SUDAH_CONSENT = @json($sudahConsent);
     const DATA_PASIEN_GC = @json($gcData);
 
@@ -1952,8 +1953,9 @@ HEAD
         }
     }
 
+    // ===========================================================
     // TAB
-
+    // ===========================================================
     function gantiTab(tab, event) {
         // Tab Informed Consent terkunci bila tidak ada tindakan KB IUD
         if (tab === 'informed' && !tabInformedTerbuka()) {
@@ -2011,10 +2013,11 @@ HEAD
         }
     }
 
-   
+    // ===========================================================
+    // SOAP BERKOLOM
     // Format: "Label: isi" per baris. Isi yang lebih dari satu baris
     // (mis. Resep Obat) disimpan sebagai baris lanjutan di bawahnya.
-   
+    // ===========================================================
 
     function gabungSoap(group) {
         const target = document.querySelector('[name="' + group.dataset.target + '"]');
@@ -2080,9 +2083,9 @@ HEAD
 
     isiSoapDariTersimpan();
 
-    
+    // ===========================================================
     // RESUME MEDIS (tampilan dulu, belum tersambung database)
-    
+    // ===========================================================
 
     // Kolom yang diisi otomatis dari SOAP / diagnosa / tindakan.
     // Selama belum diketik manual, isinya ikut diperbarui setiap
@@ -2242,12 +2245,13 @@ HEAD
         const jam = document.getElementById('rmJamTtd');
         if (jam && !jam.value) jam.value = dua(d.getHours()) + ':' + dua(d.getMinutes());
     })();
- 
+
+    // ===========================================================
     // CETAK (resep & informed consent)
     // Area cetak dipindah ke <body> sementara agar hanya area itu
     // yang tampil di kertas, lalu dikembalikan setelah dialog print
     // ditutup (afterprint).
-   
+    // ===========================================================
     let areaCetakAktif = null;
 
     function siapkanCetak(idArea, kelasMode) {
@@ -2308,9 +2312,9 @@ HEAD
         window.print();
     }
 
-    
+    // ===========================================================
     // RUJUKAN
-   
+    // ===========================================================
     function rujukPasien() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -2492,9 +2496,9 @@ HEAD
         }
     }
 
-   
+    // ===========================================================
     // SIMPAN TTV, SOAP, DAN RESUME MEDIS KE DATABASE
-    
+    // ===========================================================
     async function simpanKunjunganBaru() {
         if (!NO_RM_PASIEN) {
             alert('Data pasien tidak ditemukan.');
@@ -2647,31 +2651,31 @@ HEAD
 
             // 3. Ubah status kunjungan menjadi selesai (hanya dokter / admin).
             if (BOLEH_ASS_PLAN) {
-            const urlStatus = URL_UPDATE_STATUS.replace(
-                '__ID__',
-                encodeURIComponent(ID_PENDAFTARAN)
-            );
-
-            const hasilStatus = await fetch(urlStatus, {
-                method: 'PATCH',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': CSRF_TOKEN
-                }
-            });
-
-            const dataStatus = await bacaJson(
-                hasilStatus,
-                'memperbarui status'
-            );
-
-            if (!hasilStatus.ok || !dataStatus.success) {
-                throw new Error(
-                    dataStatus.message ||
-                    'Gagal memperbarui status pemeriksaan.'
+                const urlStatus = URL_UPDATE_STATUS.replace(
+                    '__ID__',
+                    encodeURIComponent(ID_PENDAFTARAN)
                 );
-            }
+
+                const hasilStatus = await fetch(urlStatus, {
+                    method: 'PATCH',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': CSRF_TOKEN
+                    }
+                });
+
+                const dataStatus = await bacaJson(
+                    hasilStatus,
+                    'memperbarui status'
+                );
+
+                if (!hasilStatus.ok || !dataStatus.success) {
+                    throw new Error(
+                        dataStatus.message ||
+                        'Gagal memperbarui status pemeriksaan.'
+                    );
+                }
             }
 
             lanjutSimpanSetelahConsent = false;
@@ -2695,8 +2699,9 @@ HEAD
         }
     }
 
+    // ===========================================================
     // INFORMED CONSENT - TAMPILAN FRONT-END
-    
+    // ===========================================================
     (function () {
         const d = new Date();
         const tgl = document.getElementById('icTanggal');
@@ -2972,12 +2977,12 @@ HEAD
         }
     }
 
-    
+    // ===========================================================
     // INFORMED CONSENT - CETAK FORMULIR
     // Mengisi area cetak dari isian form, lalu membuka dialog print.
     // Di dialog print pilih "Save as PDF" atau printer (mis. Epson).
     // Cetak boleh dengan tanda tangan kosong (untuk ditandatangani manual).
-    
+    // ===========================================================
     function buatKotak(terisi, ikutiTeks) {
         const kotak = document.createElement('span');
 
@@ -3032,11 +3037,11 @@ HEAD
         wadahKeputusan.innerHTML = '';
 
         [['setuju', 'Setuju'], ['menolak', 'Menolak']].forEach(function (opsi) {
-            const pilihan = document.createElement('span');
-            pilihan.className = 'icp-pilihan';
-            pilihan.appendChild(buatKotak(keputusan === opsi[0]));
-            pilihan.appendChild(document.createTextNode(opsi[1]));
-            wadahKeputusan.appendChild(pilihan);
+            const pilihanEl = document.createElement('span');
+            pilihanEl.className = 'icp-pilihan';
+            pilihanEl.appendChild(buatKotak(keputusan === opsi[0]));
+            pilihanEl.appendChild(document.createTextNode(opsi[1]));
+            wadahKeputusan.appendChild(pilihanEl);
         });
 
         // 3. Tanggal & pukul
@@ -3086,11 +3091,11 @@ HEAD
         window.print();
     }
 
-    
+    // ===========================================================
     // TTV KE OBJECTIVE
     // Data TTV ditarik ke kolom "Pemeriksaan Tanda Vital" (kolom O pertama).
     // Centang berubah (class "aktif") hanya setelah di-klik.
-    
+    // ===========================================================
     function isiObjektifDariVital() {
         const bagian = [];
 
@@ -3140,9 +3145,9 @@ HEAD
         kolomTtv.focus();
     }
 
-   
+    // ===========================================================
     // PENCARIAN ICD DARI DATABASE
-    
+    // ===========================================================
     const konfig = {
         penyakit: {
             input: 'cariPenyakit',
@@ -3444,7 +3449,7 @@ HEAD
     updateCentang('penyakit');
     updateCentang('tindakan');
 
-   
+    /* ===========================================================
        CEGAH KELUAR HALAMAN SEBELUM ASESMEN DISIMPAN
        Berlaku bila:
        - pasien baru (kunjungan ini belum punya data asesmen), atau
@@ -3455,7 +3460,7 @@ HEAD
        - Klik menu / link lain: dibatalkan, muncul peringatan.
        - Refresh / tutup tab: browser menampilkan konfirmasi.
        Setelah Simpan atau Rujuk berhasil, semua pembatasan dilepas.
-     
+       =========================================================== */
     const PESAN_BELUM_SIMPAN =
         'Data pasien belum disimpan.\n' +
         'Klik tombol Simpan terlebih dahulu sebelum meninggalkan halaman ini.';
@@ -3565,9 +3570,9 @@ HEAD
         }
     });
 
-   
+    // ===========================================================
     // PEMBATASAN TAMPILAN PER ROLE
-   
+    // ===========================================================
     (function () {
         // Diagnosa & tindakan: hanya pmik / admin yang boleh menghapus
         if (!BOLEH_DIAGNOSA) {

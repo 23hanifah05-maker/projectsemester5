@@ -267,6 +267,7 @@
 @php
     // Role user yang sedang login (admin, dokter, perawat, pmik, radiologi)
     $role = auth()->user()->role;
+
 @endphp
 
 <div class="sidebar" id="mySidebar">
@@ -317,7 +318,7 @@
                 <ul class="submenu {{ $poliOpen ? 'show' : '' }}" id="menuPoli">
                     <li>
                         <a href="{{ route('poli.syaraf') }}" class="{{ $isSyaraf ? 'active' : '' }}">
-                            <i class="fa-solid fa-brain"></i> Poli Saraf
+                            <i class="fa-solid fa-brain"></i> Poli Syaraf
                         </a>
                     </li>
 

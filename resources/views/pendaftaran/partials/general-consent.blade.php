@@ -846,9 +846,11 @@
 
                     <div class="gc-nama-terang">
                         (
+                        {{-- DIUBAH: di halaman Pendaftaran, nama terang terisi otomatis dari akun yang login --}}
                         <input type="text"
                                id="gc-nama-pemberi"
-                               placeholder="Nama terang">
+                               placeholder="Nama terang"
+                               @unless ($inline) value="{{ auth()->user()->username }}" readonly @endunless>
                         )
                     </div>
 
@@ -992,6 +994,9 @@
     const GC_INLINE = @json($inline);
 
     const GC_MAKS_KELUARGA = 4;
+
+    // DIUBAH: nama terang Pemberi Informasi = akun yang login (hanya di halaman Pendaftaran)
+    const GC_NAMA_PEMBERI = @json($inline ? '' : (auth()->user()->username ?? ''));
 
     let gcDataPasien = {};
     let gcTargetTtd = null;
@@ -1227,7 +1232,8 @@
 
         }
 
-        document.getElementById('gc-nama-pemberi').value = '';
+        // DIUBAH: nama terang Pemberi Informasi kembali ke akun yang login
+        document.getElementById('gc-nama-pemberi').value = GC_NAMA_PEMBERI;
         document.getElementById('gc-nama-pasien').value = '';
 
         gcHapusTtd('gcTtdPemberi');
