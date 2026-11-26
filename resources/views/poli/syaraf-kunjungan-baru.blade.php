@@ -321,6 +321,14 @@
             margin-top: 8px;
         }
 
+        /* Cetak di kiri, Simpan di kanan, satu baris */
+        .kb-soap-box .kb-plan-aksi {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
         @media (max-width: 900px) {
             .kb-soap-box .kb-sub-item {
                 grid-template-columns: 1fr;
@@ -707,10 +715,16 @@
                         @if ($nama === 'plan')
                             <div class="kb-sub-item">
                                 <label>&nbsp;</label>
-                                <div>
+                                <div class="kb-plan-aksi">
                                     <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
                                         <i class="fa-solid fa-print"></i> Cetak
                                     </button>
+
+                                    @if ($bolehSimpan)
+                                        <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+                                            <i class="fa-solid fa-floppy-disk"></i> Simpan
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         @endif
