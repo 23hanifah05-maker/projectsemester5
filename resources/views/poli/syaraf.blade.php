@@ -56,7 +56,7 @@
 
 @section('content')
 
-    {{-- DATA DUMMY PASIEN POLI SYARAF --}}
+    {{-- DATA DUMMY PASIEN POLI SYARAF (hanya dipakai bila controller tidak mengirim $pasien) --}}
     @php
         $pasien = $pasien ?? [
             (object) [
@@ -220,6 +220,17 @@
                 'pj_no_hp' => '081298112233',
             ],
         ];
+
+        // ---------- PERIODE ----------
+        // Bawaan: hari ini. Controller memakai nilai yang sama (dari & sampai).
+        $hariIni = now()->toDateString();
+        $dari    = request('dari') ?: $hariIni;
+        $sampai  = request('sampai') ?: $dari;
+
+        // Bila terbalik, tukar agar rentang selalu valid
+        if ($sampai < $dari) {
+            [$dari, $sampai] = [$sampai, $dari];
+        }
     @endphp
 
     <div class="panel">
@@ -227,66 +238,73 @@
             <a href="#" class="master-data-title">Daftar Pasien</a>
         </div>
 
-<form method="GET" action="{{ route('poli.syaraf') }}" class="filter-row">
-    <div class="filter-item">
-        <label>Periode</label>
+        {{-- Filter dikirim ke server (GET) supaya data periode lama diambil dari database --}}
+        <form method="GET" action="{{ route('poli.syaraf') }}" class="filter-row" id="formFilterSyaraf">
+            <div class="filter-item">
+                <label>Periode</label>
 
-        <input
-            type="date"
-            name="dari"
-            id="tanggalDari"
-            value="{{ request('dari') }}"
-        >
+                <input
+                    type="date"
+                    name="dari"
+                    id="tanggalDari"
+                    value="{{ $dari }}"
+                >
 
-        <span>s.d</span>
+                <span>s.d</span>
 
-        <input
-            type="date"
-            name="sampai"
-            id="tanggalSampai"
-            value="{{ request('sampai') }}"
-        >
-    </div>
+                <input
+                    type="date"
+                    name="sampai"
+                    id="tanggalSampai"
+                    value="{{ $sampai }}"
+                    min="{{ $dari }}"
+                >
+            </div>
 
-    <div class="filter-item filter-keyword">
-        <label>Keyword</label>
-        <input
-            type="text"
-            id="inputKeyword"
-            name="keyword"
-            value="{{ request('keyword') }}"
-            placeholder="Cari nama, NIK, atau No. RM"
-        >
-    </div>
-</form>
+            <div class="filter-item filter-keyword">
+                <label for="inputKeyword">Keyword</label>
+                <input
+                    type="text"
+                    id="inputKeyword"
+                    name="keyword"
+                    value="{{ request('keyword') }}"
+                    placeholder="Cari nama, NIK, atau No. RM"
+                >
+            </div>
+        </form>
 
-<script>
-    const tanggalDari = document.getElementById('tanggalDari');
-    const tanggalSampai = document.getElementById('tanggalSampai');
+        <script>
+            (function () {
+                const form = document.getElementById('formFilterSyaraf');
+                const dari = document.getElementById('tanggalDari');
+                const sampai = document.getElementById('tanggalSampai');
 
-    function aturBatasTanggal() {
-        if (tanggalDari.value) {
-            // Tanggal akhir boleh sama dengan tanggal awal
-            tanggalSampai.min = tanggalDari.value;
+                // Tanggal awal berubah: sesuaikan batas, lalu muat ulang data
+                dari.addEventListener('change', function () {
+                    if (!dari.value) return;
 
-            // Jika tanggal akhir lebih awal, sesuaikan otomatis
-            if (
-                tanggalSampai.value &&
-                tanggalSampai.value < tanggalDari.value
-            ) {
-                tanggalSampai.value = tanggalDari.value;
-            }
-        } else {
-            tanggalSampai.removeAttribute('min');
-        }
-    }
+                    sampai.min = dari.value;
 
-    // Jalankan saat halaman dibuka
-    aturBatasTanggal();
+                    // Tanggal akhir tidak boleh lebih awal dari tanggal awal
+                    if (!sampai.value || sampai.value < dari.value) {
+                        sampai.value = dari.value;
+                    }
 
-    // Perbarui batas saat tanggal awal diubah
-    tanggalDari.addEventListener('change', aturBatasTanggal);
-</script>
+                    form.submit();
+                });
+
+                // Tanggal akhir berubah: muat ulang data
+                sampai.addEventListener('change', function () {
+                    if (!sampai.value) return;
+
+                    if (dari.value && sampai.value < dari.value) {
+                        dari.value = sampai.value;
+                    }
+
+                    form.submit();
+                });
+            })();
+        </script>
 
         <table class="table-pendaftaran">
             <thead>
@@ -844,6 +862,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 window.addEventListener('pageshow', terapkanStatusPeriksa);
 
+// Keyword: menyaring baris yang sedang tampil (hasil periode dari server) secara langsung.
+// Menekan Enter juga mengirim form, sehingga pencarian ikut berjalan di server.
 document.getElementById('inputKeyword')?.addEventListener('input', function () {
     const keyword = this.value.trim().toLowerCase();
 
@@ -859,8 +879,7 @@ document.getElementById('inputKeyword')?.addEventListener('input', function () {
     });
 });
 
-document.querySelector('.filter-row')?.addEventListener('submit', function (e) {
-    e.preventDefault();
-});
+// CATATAN: listener submit yang memanggil preventDefault() sudah DIHAPUS.
+// Itulah penyebab filter Periode tidak pernah memuat data dari database.
 </script>
 @endsection

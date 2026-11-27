@@ -64,77 +64,94 @@
                     disimpan (data $item->status_periksa = 'selesai')
     ===================================================== --}}
 
+    @php
+        // ---------- PERIODE ----------
+        // Bawaan: hari ini. Controller memakai nilai yang sama (dari & sampai).
+        $hariIni = now()->toDateString();
+        $dari    = request('dari') ?: $hariIni;
+        $sampai  = request('sampai') ?: $dari;
+
+        // Bila terbalik, tukar agar rentang selalu valid
+        if ($sampai < $dari) {
+            [$dari, $sampai] = [$sampai, $dari];
+        }
+    @endphp
+
     <div class="panel">
 
         <div class="panel-head">
             <a href="#" class="master-data-title">Daftar Pasien</a>
         </div>
 
+        {{-- Filter dikirim ke server (GET) supaya data periode lama diambil dari database --}}
+        <form method="GET" action="{{ route('poli.obgyn') }}" class="filter-row" id="formFilterObgyn">
+            {{-- Filter Periode --}}
+            <div class="filter-item">
+                <label>Periode</label>
 
-<form method="GET" action="{{ route('poli.obgyn') }}" class="filter-row">
-    {{-- Filter Periode --}}
-    <div class="filter-item">
-        <label>Periode</label>
+                <input
+                    type="date"
+                    name="dari"
+                    id="tanggalDariObgyn"
+                    value="{{ $dari }}"
+                >
 
-        <input
-            type="date"
-            name="dari"
-            id="tanggalDariObgyn"
-            value="{{ request('dari') }}"
-        >
+                <span>s.d</span>
 
-        <span>s.d</span>
+                <input
+                    type="date"
+                    name="sampai"
+                    id="tanggalSampaiObgyn"
+                    value="{{ $sampai }}"
+                    min="{{ $dari }}"
+                >
+            </div>
 
-        <input
-            type="date"
-            name="sampai"
-            id="tanggalSampaiObgyn"
-            value="{{ request('sampai') }}"
-        >
-    </div>
+            {{-- Filter Keyword --}}
+            <div class="filter-item filter-keyword">
+                <label for="inputKeyword">Keyword</label>
+                <input
+                    type="text"
+                    id="inputKeyword"
+                    name="keyword"
+                    value="{{ request('keyword') }}"
+                    placeholder="Cari nama, NIK, atau No. RM"
+                >
+            </div>
+        </form>
 
-    {{-- Filter Keyword: cukup satu kali --}}
-    <div class="filter-item filter-keyword">
-        <label for="inputKeyword">Keyword</label>
-        <input
-            type="text"
-            id="inputKeyword"
-            name="keyword"
-            value="{{ request('keyword') }}"
-            placeholder="Cari nama, NIK, atau No. RM"
-        >
-    </div>
-</form>
+        <script>
+            (function () {
+                const form = document.getElementById('formFilterObgyn');
+                const dari = document.getElementById('tanggalDariObgyn');
+                const sampai = document.getElementById('tanggalSampaiObgyn');
 
-<script>
-    (function () {
-        const tanggalDari = document.getElementById('tanggalDariObgyn');
-        const tanggalSampai = document.getElementById('tanggalSampaiObgyn');
+                // Tanggal awal berubah: sesuaikan batas, lalu muat ulang data
+                dari.addEventListener('change', function () {
+                    if (!dari.value) return;
 
-        function aturBatasTanggalObgyn() {
-            if (tanggalDari.value) {
-                // Tanggal akhir boleh sama dengan tanggal awal
-                tanggalSampai.min = tanggalDari.value;
+                    sampai.min = dari.value;
 
-                // Sesuaikan jika tanggal akhir lebih awal
-                if (
-                    tanggalSampai.value &&
-                    tanggalSampai.value < tanggalDari.value
-                ) {
-                    tanggalSampai.value = tanggalDari.value;
-                }
-            } else {
-                tanggalSampai.removeAttribute('min');
-            }
-        }
+                    // Tanggal akhir tidak boleh lebih awal dari tanggal awal
+                    if (!sampai.value || sampai.value < dari.value) {
+                        sampai.value = dari.value;
+                    }
 
-        // Jalankan saat halaman dibuka
-        aturBatasTanggalObgyn();
+                    form.submit();
+                });
 
-        // Perbarui batas saat tanggal awal berubah
-        tanggalDari.addEventListener('change', aturBatasTanggalObgyn);
-    })();
-</script>
+                // Tanggal akhir berubah: muat ulang data
+                sampai.addEventListener('change', function () {
+                    if (!sampai.value) return;
+
+                    if (dari.value && sampai.value < dari.value) {
+                        dari.value = sampai.value;
+                    }
+
+                    form.submit();
+                });
+            })();
+        </script>
 
         <table class="table-pendaftaran">
             <thead>
@@ -656,10 +673,10 @@ document.addEventListener('DOMContentLoaded', function () {
     terapkanStatusPeriksa();
 
     document.querySelectorAll('.row-pasien').forEach(function (row) {
-    row.addEventListener('click', function (event) {
-        // Klik tombol mata (Lihat Detail) tetap membuka modal, bukan pindah halaman
-        if (event.target.closest('button')) return;
-        window.location.href = this.dataset.url;
+        row.addEventListener('click', function (event) {
+            // Klik tombol mata (Lihat Detail) tetap membuka modal, bukan pindah halaman
+            if (event.target.closest('button')) return;
+            window.location.href = this.dataset.url;
         });
     });
 
@@ -687,16 +704,23 @@ document.addEventListener('DOMContentLoaded', function () {
 // Kalau halaman dibuka lewat tombol Back (dari cache), status tetap diperbarui
 window.addEventListener('pageshow', terapkanStatusPeriksa);
 
+// Keyword: menyaring baris yang sedang tampil (hasil periode dari server) secara langsung.
+// Menekan Enter juga mengirim form, sehingga pencarian ikut berjalan di server.
 document.getElementById('inputKeyword')?.addEventListener('input', function () {
     const keyword = this.value.trim().toLowerCase();
     document.querySelectorAll('.row-pasien').forEach(function (row) {
         const data = JSON.parse(row.getAttribute('data-pasien'));
-        const gabungan = (data.nama_pasien + ' ' + data.nik + ' ' + data.no_rm).toLowerCase();
+        const gabungan = (
+            (data.nama_pasien || '') + ' ' +
+            (data.nik || '') + ' ' +
+            (data.no_rm || '')
+        ).toLowerCase();
         row.style.display = gabungan.includes(keyword) ? '' : 'none';
     });
 });
 
-document.querySelector('.filter-row')?.addEventListener('submit', e => e.preventDefault());
+// CATATAN: listener submit yang memanggil preventDefault() sudah DIHAPUS.
+// Itulah penyebab filter Periode tidak pernah memuat data dari database.
 
 </script>
 @endsection

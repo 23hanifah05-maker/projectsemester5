@@ -15,6 +15,43 @@
 
 
     <style>
+        /* ===== Tombol tanda dagger (†) dan asterisk (*) pada kode ICD penyakit ===== */
+        .ob-tanda-grup {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .ob-tanda-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: #fff;
+            color: #c1121f;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .ob-tanda-btn:hover {
+            border-color: #b81d24;
+        }
+
+        .ob-tanda-btn.aktif {
+            background: #b81d24;
+            border-color: #b81d24;
+            color: #fff;
+        }
+
+        .ob-tanda-item {
+            margin-left: 2px;
+            color: #c1121f;
+            font-weight: 700;
+        }
+
         /* ===== Tab General Consent / Resume Medis ===== */
         .ob-tab.belum-consent { color: #c8102e; }
 
@@ -774,11 +811,13 @@
             default => '-',
         };
 
+        // 'tanda' = '†', '*', atau null (dikirim controller dari kolom pivot "tanda")
         $diagnosisJson = $diagnosisTersimpan->map(function ($item) {
             return [
                 'id' => $item->id_kode10,
                 'kode' => $item->kode,
                 'nama' => $item->nama,
+                'tanda' => $item->tanda ?? null,
             ];
         })->values()->all();
 
@@ -1156,6 +1195,27 @@
 
                                 <div class="ob-dropdown" id="dropdown{{ $label }}"></div>
                             </div>
+
+                            {{-- Tombol tanda dagger (†) dan asterisk (*), hanya untuk Penyakit --}}
+                            @if ($jenis === 'penyakit')
+                                <div class="ob-tanda-grup">
+                                    <button
+                                        type="button"
+                                        class="ob-tanda-btn"
+                                        id="btnDagger"
+                                        title="Tandai sebagai kode etiologi (†)"
+                                        onclick="toggleTanda('†')"
+                                    >†</button>
+
+                                    <button
+                                        type="button"
+                                        class="ob-tanda-btn"
+                                        id="btnAsterisk"
+                                        title="Tandai sebagai kode manifestasi (*)"
+                                        onclick="toggleTanda('*')"
+                                    >✱</button>
+                                </div>
+                            @endif
 
                             <div class="ob-check-box">
                                 <span
@@ -2138,7 +2198,8 @@
             document.querySelector('[name="' + nama + '"]')?.value ?? ''
         ).trim();
 
-        const teksKode = item => (item.kode ?? '') + ' — ' + (item.nama ?? '');
+        // Kode penyakit disertai tanda † / * bila ada, mis. "A18.0† — Tuberkulosis ..."
+        const teksKode = item => (item.kode ?? '') + (item.tanda ?? '') + ' — ' + (item.nama ?? '');
 
         const isi = (id, nilai) => {
             const el = document.getElementById(id);
@@ -2368,7 +2429,7 @@
 
         // 1) daftar penyakit yang sudah ditambahkan (✓)
         const daftarDx = diagnosaTerpilih.penyakit
-            .map(item => item.kode + ' — ' + item.nama);
+            .map(item => item.kode + (item.tanda ?? '') + ' — ' + item.nama);
 
         // 2) penyakit yang sudah dipilih dari pencarian tapi belum di-✓
         if (pilihan.penyakit) {
@@ -2596,6 +2657,13 @@
                 item => Number(item.id)
             );
 
+            // Peta id penyakit -> tanda ('†' atau '*'), hanya untuk yang bertanda.
+            const penyakitTanda = {};
+
+            diagnosaTerpilih.penyakit.forEach(function (item) {
+                if (item.tanda) penyakitTanda[Number(item.id)] = item.tanda;
+            });
+
             // Kirim setiap komponen SOAP ke kolom database masing-masing.
             // TTV tetap disimpan melalui endpoint TTV, bukan kolom SOAP.
             const nilaiSoap = id => {
@@ -2628,6 +2696,7 @@
                 } : {}),
                 ...(BOLEH_DIAGNOSA ? {
                     penyakit_id: penyakitIds,
+                    penyakit_tanda: penyakitTanda,
                     tindakan_id: tindakanIds
                 } : {})
             };
@@ -3215,6 +3284,23 @@
         tindakan: @json($tindakanJson)
     };
 
+    // Tanda ICD untuk penyakit yang akan ditambahkan: '†', '*', atau null.
+    // Klik tombol yang sama sekali lagi untuk membatalkan.
+    let tandaAktif = null;
+
+    function setTombolTanda() {
+        document.getElementById('btnDagger')
+            ?.classList.toggle('aktif', tandaAktif === '†');
+
+        document.getElementById('btnAsterisk')
+            ?.classList.toggle('aktif', tandaAktif === '*');
+    }
+
+    function toggleTanda(simbol) {
+        tandaAktif = (tandaAktif === simbol) ? null : simbol;
+        setTombolTanda();
+    }
+
     const timerCari = {};
     const urutanCari = {
         penyakit: 0,
@@ -3380,11 +3466,18 @@
             diagnosaTerpilih[jenis].push({
                 id: item.id,
                 kode: item.kode,
-                nama: item.nama
+                nama: item.nama,
+                tanda: jenis === 'penyakit' ? tandaAktif : null
             });
         }
 
         pilihan[jenis] = null;
+
+        // Setelah ditambahkan, tombol † / * kembali netral
+        if (jenis === 'penyakit') {
+            tandaAktif = null;
+            setTombolTanda();
+        }
 
         document.getElementById(k.input).value = '';
         document.getElementById(k.dropdown).style.display = 'none';
@@ -3411,6 +3504,15 @@
             kode.textContent = item.kode ?? '';
 
             teks.appendChild(kode);
+
+            // Tanda † / * tepat di belakang kode
+            if (item.tanda) {
+                const tanda = document.createElement('span');
+                tanda.className = 'ob-tanda-item';
+                tanda.textContent = item.tanda;
+                teks.appendChild(tanda);
+            }
+
             teks.appendChild(
                 document.createTextNode(' — ' + (item.nama ?? ''))
             );
@@ -3516,8 +3618,9 @@
             soap: [
                 'subjective', 'objective', 'assessment', 'plan'
             ].map(nilai),
+            // id + tanda, supaya perubahan † / * juga terdeteksi
             penyakit: diagnosaTerpilih.penyakit
-                .map(d => String(d.id)).sort(),
+                .map(d => String(d.id) + (d.tanda ?? '')).sort(),
             tindakan: diagnosaTerpilih.tindakan
                 .map(d => String(d.id)).sort(),
             resume: [

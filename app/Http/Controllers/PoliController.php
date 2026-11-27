@@ -38,13 +38,60 @@ class PoliController extends Controller
         return $petaJenisKelamin[(int) $kode] ?? '-';
     }
 
+    /**
+     * BARU: membaca periode (dari, sampai) dan keyword dari request.
+     *
+     * - Bawaan: hari ini.
+     * - Bila hanya "dari" diisi, "sampai" ikut sama (satu hari).
+     * - Bila terbalik, otomatis ditukar.
+     * - Tanggal tidak valid dianggap kosong (jatuh ke hari ini).
+     *
+     * Mengembalikan [awal rentang (00:00:00), akhir rentang (23:59:59), keyword].
+     */
+    private function ambilPeriode(Request $request): array
+    {
+        $baca = function ($nilai) {
+            if (!$nilai) {
+                return null;
+            }
+
+            try {
+                return Carbon::createFromFormat('Y-m-d', $nilai)->startOfDay();
+            } catch (\Throwable $e) {
+                return null;
+            }
+        };
+
+        $dari = $baca($request->input('dari')) ?? today();
+        $sampai = $baca($request->input('sampai')) ?? $dari->copy();
+
+        if ($sampai->lt($dari)) {
+            [$dari, $sampai] = [$sampai, $dari];
+        }
+
+        $keyword = trim((string) $request->input('keyword', ''));
+
+        return [$dari->copy()->startOfDay(), $sampai->copy()->endOfDay(), $keyword];
+    }
+
+    /**
+     * DIUBAH: satu baris per pasien PER HARI KUNJUNGAN.
+     *
+     * Sebelumnya satu baris per pasien saja dan status "menunggu" hanya berlaku
+     * untuk kunjungan hari ini, sehingga data periode lama selalu tampil
+     * seolah-olah sudah selesai. Sekarang status memakai status asli kunjungan.
+     *
+     * Untuk daftar hari ini hasilnya sama seperti sebelumnya.
+     */
     private function satuBarisPerPasien($pendaftaran)
     {
         return $pendaftaran
             ->filter(function ($item) {
                 return $item->pasien !== null;
             })
-            ->groupBy('no_rm')
+            ->groupBy(function ($item) {
+                return $item->no_rm . '|' . Carbon::parse($item->tgl_registrasi)->toDateString();
+            })
             ->map(function ($kunjungan) {
                 $urut = $kunjungan->sortBy([
                     ['tgl_registrasi', 'desc'],
@@ -53,9 +100,9 @@ class PoliController extends Controller
 
                 $terbaru = $urut->first();
 
+                // Ada kunjungan di hari itu yang belum selesai diperiksa?
                 $menunggu = $urut->first(function ($k) {
-                    return Carbon::parse($k->tgl_registrasi)->isToday()
-                        && ($k->status_periksa ?? 'periksa') !== 'selesai';
+                    return ($k->status_periksa ?? 'periksa') !== 'selesai';
                 });
 
                 $dipakai = clone ($menunggu ?? $terbaru);
@@ -68,6 +115,7 @@ class PoliController extends Controller
                 return $dipakai;
             })
             ->sort(function ($a, $b) {
+                // 1) yang belum selesai di atas
                 $statusA = $a->status_periksa === 'selesai' ? 1 : 0;
                 $statusB = $b->status_periksa === 'selesai' ? 1 : 0;
 
@@ -75,6 +123,15 @@ class PoliController extends Controller
                     return $statusA <=> $statusB;
                 }
 
+                // 2) tanggal terbaru di atas (untuk periode lebih dari satu hari)
+                $tglA = Carbon::parse($a->tgl_registrasi)->toDateString();
+                $tglB = Carbon::parse($b->tgl_registrasi)->toDateString();
+
+                if ($tglA !== $tglB) {
+                    return $tglB <=> $tglA;
+                }
+
+                // 3) dalam hari yang sama: urutan antrean (yang datang lebih dulu di atas)
                 $waktuA = Carbon::parse($a->tgl_registrasi)->timestamp;
                 $waktuB = Carbon::parse($b->tgl_registrasi)->timestamp;
 
@@ -109,15 +166,16 @@ class PoliController extends Controller
     {
         $poli = Poli::where('slug', 'saraf')->firstOrFail();
 
-        // Daftar pasien Poli hanya menampilkan kunjungan HARI INI.
-        // Riwayat hari-hari sebelumnya tetap ada di halaman riwayat kunjungan.
+        // DIUBAH: daftar pasien mengikuti periode (dari - sampai) yang dipilih.
+        // Bawaan tetap hari ini. Tanpa perlu klik tombol lain: view mengirim
+        // ulang filter otomatis begitu tanggal dipilih.
+        [$dari, $sampai, $keyword] = $this->ambilPeriode($request);
+
         $query = Pendaftaran::with(['pasien', 'poli'])
             ->where('id_poli', $poli->id_poli)
-            ->whereDate('tgl_registrasi', today());
+            ->whereBetween('tgl_registrasi', [$dari, $sampai]);
 
-        if ($request->filled('keyword')) {
-            $keyword = trim($request->input('keyword'));
-
+        if ($keyword !== '') {
             $query->whereHas('pasien', function ($q) use ($keyword) {
                 $q->where('nama_pasien', 'like', "%{$keyword}%")
                     ->orWhere('nik', 'like', "%{$keyword}%")
@@ -320,14 +378,16 @@ class PoliController extends Controller
     {
         $poli = Poli::where('slug', 'obgyn')->firstOrFail();
 
-        // Daftar pasien Poli hanya menampilkan kunjungan HARI INI.
-        // Riwayat hari-hari sebelumnya tetap ada di halaman riwayat kunjungan.
+        // DIUBAH: daftar pasien mengikuti periode (dari - sampai) yang dipilih.
+        // Bawaan tetap hari ini. Tanpa perlu klik tombol lain: view mengirim
+        // ulang filter otomatis begitu tanggal dipilih.
+        [$dari, $sampai, $keyword] = $this->ambilPeriode($request);
+
         $query = Pendaftaran::with(['pasien', 'poli'])
             ->where('id_poli', $poli->id_poli)
-            ->whereDate('tgl_registrasi', today());
+            ->whereBetween('tgl_registrasi', [$dari, $sampai]);
 
-        if ($request->filled('keyword')) {
-            $keyword = trim($request->input('keyword'));
+        if ($keyword !== '') {
             $query->whereHas('pasien', function ($q) use ($keyword) {
                 $q->where('nama_pasien', 'like', "%{$keyword}%")
                     ->orWhere('nik', 'like', "%{$keyword}%")
