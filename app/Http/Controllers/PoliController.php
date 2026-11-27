@@ -516,292 +516,65 @@ class PoliController extends Controller
         return view('poli.jantung', compact('poli', 'pasien'));
     }
 
-    // DIUBAH: SEMENTARA memakai data dummy dari blade jantung-riwayat.blade.php,
+    // SEMENTARA memakai data dummy dari blade jantung-riwayat.blade.php,
     // jadi tidak ada query ke database. $pasien dan $riwayat sengaja tidak dikirim
     // supaya blade memakai blok dummy-nya (dicari lewat $no_rm).
-    // Untuk kembali ke database, pakai versi lama yang memanggil
-    // Pasien::where('no_rm', $no_rm)->firstOrFail() dan query Pendaftaran.
     public function riwayatJantung($no_rm)
     {
         return view('poli.jantung-riwayat', compact('no_rm'));
     }
 
-    // Dipakai untuk /poli/jantung/kunjungan/{no_rm} (kunjungan terbaru)
-    // dan /poli/jantung/kunjungan/{no_rm}/{id_pendaftaran} (kunjungan tertentu dari riwayat)
+    // DIUBAH: SEMENTARA memakai data dummy dari blade jantung-kunjungan-baru.blade.php
+    // (sama seperti riwayatJantung), jadi tidak ada query ke database.
+    // Dipakai untuk /poli/jantung/kunjungan/{no_rm} dan
+    // /poli/jantung/kunjungan/{no_rm}/{id_pendaftaran}.
+    // Untuk kembali ke database, ambil Pendaftaran + Pasien + Ttv + Assesmen
+    // seperti tampilkanKunjunganSaraf() lalu kirim sebagai $pasien dst.
+    // (catatan: blade membaca $pasien->nama, jadi petakan nama_pasien => nama).
     public function kunjunganJantung($no_rm, $id_pendaftaran = null)
     {
-        $poli = Poli::where('slug', 'jantung')->firstOrFail();
-
-        $query = Pendaftaran::where('no_rm', $no_rm)
-            ->where('id_poli', $poli->id_poli);
-
-        if ($id_pendaftaran !== null) {
-            $query->where('id_pendaftaran', $id_pendaftaran);
-        }
-
-        $pendaftaran = $query
-            ->orderByDesc('tgl_registrasi')
-            ->orderByDesc('id_pendaftaran')
-            ->firstOrFail();
-
-        return $this->tampilkanKunjunganJantung($pendaftaran, $poli);
-    }
-
-    private function tampilkanKunjunganJantung(Pendaftaran $pendaftaran, Poli $poli)
-    {
-        $pasien = Pasien::where('no_rm', $pendaftaran->no_rm)->firstOrFail();
-        $ttv = Ttv::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
-        $assesmen = Assesmen::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
-
-        // Bentuk data sama dengan Poli Saraf: [id, kode, nama],
-        // karena JavaScript di blade membutuhkan field "id" untuk cek duplikat/hapus.
-        $diagnosisTersimpan = [];
-        $tindakanTersimpan = [];
-
-        if ($assesmen) {
-            $diagnosisTersimpan = DB::table('detail_diagnosis')
-                ->join('kode_diagnosis', 'detail_diagnosis.id_kode10', '=', 'kode_diagnosis.id_icd10')
-                ->where('detail_diagnosis.id_assesmen', $assesmen->id_assesmen)
-                ->select([
-                    'kode_diagnosis.id_icd10 as id',
-                    'kode_diagnosis.icd_10 as kode',
-                    'kode_diagnosis.diagnosa as nama',
-                ])
-                ->get()
-                ->map(fn ($item) => ['id' => $item->id, 'kode' => $item->kode, 'nama' => $item->nama])
-                ->values()
-                ->all();
-
-            $tindakanTersimpan = DB::table('detail_tindakan')
-                ->join('kode_tindakan', 'detail_tindakan.id_kode9', '=', 'kode_tindakan.id_icd9')
-                ->where('detail_tindakan.id_assesmen', $assesmen->id_assesmen)
-                ->select([
-                    'kode_tindakan.id_icd9 as id',
-                    'kode_tindakan.icd_9 as kode',
-                    'kode_tindakan.tindakan as nama',
-                ])
-                ->get()
-                ->map(fn ($item) => ['id' => $item->id, 'kode' => $item->kode, 'nama' => $item->nama])
-                ->values()
-                ->all();
-        }
-
-        $jenisKelamin = $this->formatJenisKelamin($pasien->jenis_kelamin);
-
-        // Blade membaca $pasien->umur dan $pasien->jenis_kelamin langsung dari objek pasien
-        $pasien->umur = $pasien->tgl_lahir ? Carbon::parse($pasien->tgl_lahir)->age . ' Tahun' : '-';
-        $pasien->jenis_kelamin = $jenisKelamin;
-
-        return view('poli.jantung-kunjungan-baru', [
-            'poli' => $poli,
-            'no_rm' => $pasien->no_rm,
-            'pasien' => $pasien,
-            'pendaftaran' => $pendaftaran,
-            'id_pendaftaran' => $pendaftaran->id_pendaftaran,
-            'ttv' => $ttv,
-            'assesmen' => $assesmen,
-            'diagnosisTersimpan' => $diagnosisTersimpan,
-            'tindakanTersimpan' => $tindakanTersimpan,
-            'radiologi' => null,
-            'jenisKelamin' => $jenisKelamin,
-        ]);
+        return view('poli.jantung-kunjungan-baru', compact('no_rm', 'id_pendaftaran'));
     }
 
     // ===================== POLI JIWA =====================
 
-    public function jiwa(Request $request)
+    public function jiwa()
     {
         $poli = Poli::where('slug', 'jiwa')->firstOrFail();
-
-        // Daftar pasien Poli hanya menampilkan kunjungan HARI INI.
-        $query = Pendaftaran::with(['pasien', 'poli'])
-            ->where('id_poli', $poli->id_poli)
-            ->whereDate('tgl_registrasi', today());
-
-        if ($request->filled('keyword')) {
-            $keyword = trim($request->input('keyword'));
-
-            $query->whereHas('pasien', function ($q) use ($keyword) {
-                $q->where('nama_pasien', 'like', "%{$keyword}%")
-                    ->orWhere('nik', 'like', "%{$keyword}%")
-                    ->orWhere('no_rm', 'like', "%{$keyword}%");
-            });
-        }
-
-        $pendaftaran = $query
-            ->orderBy('tgl_registrasi', 'asc')
-            ->orderBy('id_pendaftaran', 'asc')
-            ->get();
-
-        $petaAgama = [
-            1 => 'Islam', 2 => 'Kristen', 3 => 'Katolik',
-            4 => 'Hindu', 5 => 'Buddha', 6 => 'Konghucu',
-        ];
-
-        $petaPendidikan = [
-            0 => 'Tidak diketahui', 1 => 'Tidak sekolah', 2 => 'SD', 3 => 'SMP',
-            4 => 'SMA', 5 => 'D1/D2', 6 => 'D3', 7 => 'S1', 8 => 'S2/S3',
-        ];
-
-        $petaPekerjaan = [
-            0 => 'Tidak diketahui', 1 => 'Tidak bekerja', 2 => 'PNS',
-            3 => 'TNI/Polri', 4 => 'Swasta', 5 => 'Lainnya',
-        ];
-
-        $pasien = $this->satuBarisPerPasien($pendaftaran)
-            ->map(function ($item) use ($petaAgama, $petaPendidikan, $petaPekerjaan) {
-                $p = $item->pasien;
-
-                return (object) [
-                    'id_pendaftaran' => $item->id_pendaftaran,
-                    'tgl_registrasi' => $item->tgl_registrasi,
-                    'no_rm' => $p->no_rm,
-                    'nama_pasien' => $p->nama_pasien,
-                    // NIK disamarkan di daftar Poli (hanya tampilan)
-                    'nik' => Mask::nik($p->nik),
-                    'tgl_lahir' => $p->tgl_lahir,
-                    'tempat_lahir' => $p->tempat_lahir,
-                    'jenis_kelamin' => $this->formatJenisKelamin($p->jenis_kelamin),
-                    'alamat' => $p->alamat,
-                    'no_hp' => $p->no_hp,
-                    'suku' => $p->suku,
-                    'bangsa' => $p->bangsa,
-                    'bahasa' => $p->bahasa,
-                    'umur' => $p->tgl_lahir ? Carbon::parse($p->tgl_lahir)->age . ' Tahun' : '-',
-                    'kelurahan' => $p->kelurahan,
-                    'agama' => $petaAgama[(int) $p->agama] ?? '-',
-                    'kecamatan' => $p->kecamatan,
-                    'pendidikan' => $petaPendidikan[(int) $p->pendidikan] ?? '-',
-                    'kabupaten' => $p->kabupaten,
-                    'pekerjaan' => $petaPekerjaan[(int) $p->pekerjaan] ?? '-',
-                    'provinsi' => $p->provinsi,
-                    'kode_pos' => $p->kode_pos,
-                    'pembayaran' => $item->jenis_pembayaran,
-                    'poli' => $item->poli->nama_poli ?? 'Poli Jiwa',
-                    'dokter' => $item->dpjp ?? '',
-                    'pj_nama' => $p->pj_nama,
-                    'pj_hubungan' => $p->pj_hubungan,
-                    'pj_jenis_kelamin' => $this->formatJenisKelamin($p->pj_jenis_kelamin),
-                    'pj_no_hp' => $p->pj_no_hp,
-                    'status_periksa' => $item->status_periksa,
-                ];
-            })
-            ->values();
-
-        return view('poli.jiwa', compact('poli', 'pasien'));
+        return view('poli.jiwa', compact('poli'));
     }
 
-
-    // Riwayat menggunakan tampilan dummy sesuai Blade saat ini.
+    // SEMENTARA memakai data dummy dari blade jiwa-riwayat.blade.php,
+    // jadi tidak ada query ke database (sama seperti riwayatJantung).
     public function riwayatJiwa($no_rm)
     {
         return view('poli.jiwa-riwayat', compact('no_rm'));
     }
 
-    // Dipakai untuk /poli/jiwa/kunjungan/{no_rm} (kunjungan terbaru)
-    // dan /poli/jiwa/kunjungan/{no_rm}/{id_pendaftaran} (kunjungan tertentu dari riwayat)
+    // BARU: SEMENTARA memakai data dummy dari blade jiwa-kunjungan-baru.blade.php.
+    // Dipakai untuk /poli/jiwa/kunjungan/{no_rm} dan
+    // /poli/jiwa/kunjungan/{no_rm}/{id_pendaftaran}.
     public function kunjunganJiwa($no_rm, $id_pendaftaran = null)
     {
-        $poli = Poli::where('slug', 'jiwa')->firstOrFail();
-
-        $query = Pendaftaran::where('no_rm', $no_rm)
-            ->where('id_poli', $poli->id_poli);
-
-        if ($id_pendaftaran !== null) {
-            $query->where('id_pendaftaran', $id_pendaftaran);
-        }
-
-        $pendaftaran = $query
-            ->orderByDesc('tgl_registrasi')
-            ->orderByDesc('id_pendaftaran')
-            ->firstOrFail();
-
-        return $this->tampilkanKunjunganJiwa($pendaftaran, $poli);
+        return view('poli.jiwa-kunjungan-baru', compact('no_rm', 'id_pendaftaran'));
     }
 
-    private function tampilkanKunjunganJiwa(Pendaftaran $pendaftaran, Poli $poli)
-    {
-        $pasien = Pasien::where('no_rm', $pendaftaran->no_rm)->firstOrFail();
-        $ttv = Ttv::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
-        $assesmen = Assesmen::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
-
-        // Bentuk data sama dengan Poli Saraf: [id, kode, nama],
-        // karena JavaScript di blade membutuhkan field "id" untuk cek duplikat/hapus.
-        $diagnosisTersimpan = [];
-        $tindakanTersimpan = [];
-
-        if ($assesmen) {
-            $diagnosisTersimpan = DB::table('detail_diagnosis')
-                ->join('kode_diagnosis', 'detail_diagnosis.id_kode10', '=', 'kode_diagnosis.id_icd10')
-                ->where('detail_diagnosis.id_assesmen', $assesmen->id_assesmen)
-                ->select([
-                    'kode_diagnosis.id_icd10 as id',
-                    'kode_diagnosis.icd_10 as kode',
-                    'kode_diagnosis.diagnosa as nama',
-                ])
-                ->get()
-                ->map(fn ($item) => ['id' => $item->id, 'kode' => $item->kode, 'nama' => $item->nama])
-                ->values()
-                ->all();
-
-            $tindakanTersimpan = DB::table('detail_tindakan')
-                ->join('kode_tindakan', 'detail_tindakan.id_kode9', '=', 'kode_tindakan.id_icd9')
-                ->where('detail_tindakan.id_assesmen', $assesmen->id_assesmen)
-                ->select([
-                    'kode_tindakan.id_icd9 as id',
-                    'kode_tindakan.icd_9 as kode',
-                    'kode_tindakan.tindakan as nama',
-                ])
-                ->get()
-                ->map(fn ($item) => ['id' => $item->id, 'kode' => $item->kode, 'nama' => $item->nama])
-                ->values()
-                ->all();
-        }
-
-        $jenisKelamin = $this->formatJenisKelamin($pasien->jenis_kelamin);
-
-        // Blade membaca $pasien->umur dan $pasien->jenis_kelamin langsung dari objek pasien
-        $pasien->umur = $pasien->tgl_lahir ? Carbon::parse($pasien->tgl_lahir)->age . ' Tahun' : '-';
-        $pasien->jenis_kelamin = $jenisKelamin;
-
-        return view('poli.jiwa-kunjungan-baru', [
-            'poli' => $poli,
-            'no_rm' => $pasien->no_rm,
-            'pasien' => $pasien,
-            'pendaftaran' => $pendaftaran,
-            'id_pendaftaran' => $pendaftaran->id_pendaftaran,
-            'ttv' => $ttv,
-            'assesmen' => $assesmen,
-            'diagnosisTersimpan' => $diagnosisTersimpan,
-            'tindakanTersimpan' => $tindakanTersimpan,
-            'radiologi' => null,
-            'jenisKelamin' => $jenisKelamin,
-        ]);
-    }
-
-
-    // ------------------------------------------------------------------
-    // SIMPAN ASSESMEN KUNJUNGAN (Jantung & Jiwa)
-    // Sementara membatasi field berdasarkan role; belum menyimpan ke DB.
-    // ------------------------------------------------------------------
+    // BARU: simpan assesmen Jantung & Jiwa - SEMENTARA DUMMY, belum ke database.
+    // Field dibatasi per role sesuai hak akses; sisanya dibuang.
     public function simpanAssesmenKunjungan(Request $request)
     {
         $role = strtolower(auth()->user()->role ?? 'admin');
 
-        $hakAkses = [
+        $boleh = [
             'admin'   => ['ttv_', 's_', 'o_', 'a_', 'p_', 'icd_'],
             'dokter'  => ['s_', 'o_', 'a_', 'p_'],
             'perawat' => ['ttv_', 's_', 'o_'],
             'pmik'    => ['icd_'],
-        ];
+        ][$role] ?? [];
 
-        $awalanDiizinkan = $hakAkses[$role] ?? [];
-
-        $data = collect($request->except([
-            '_token', '_method', 'no_rm', 'id_pendaftaran',
-        ]))
-            ->filter(function ($nilai, $nama) use ($awalanDiizinkan) {
-                foreach ($awalanDiizinkan as $awalan) {
+        $data = collect($request->except(['_token', 'no_rm', 'id_pendaftaran']))
+            ->filter(function ($nilai, $nama) use ($boleh) {
+                foreach ($boleh as $awalan) {
                     if (str_starts_with($nama, $awalan)) {
                         return true;
                     }
@@ -810,20 +583,16 @@ class PoliController extends Controller
             })
             ->all();
 
-        // TODO: Simpan $data ke tabel TTV/Assesmen setelah pemetaan kolom final tersedia.
-        return back()->with('sukses', 'Asesmen berhasil disimpan.');
+        // TODO (setelah database siap): simpan $data bersama no_rm & id_pendaftaran.
+
+        return back()->with('sukses', 'Assesmen berhasil disimpan.');
     }
 
-    // ------------------------------------------------------------------
-    // KIRIM RUJUKAN KUNJUNGAN (Jantung & Jiwa) - sementara dummy
-    // ------------------------------------------------------------------
+    // BARU: kirim rujukan dari halaman kunjungan Jantung & Jiwa - SEMENTARA DUMMY.
     public function kirimRujukanKunjungan(Request $request)
     {
-        $request->validate([
-            'no_rm' => 'required|string|exists:pasien,no_rm',
-        ]);
-
-        // TODO: Simpan data rujukan setelah tabel rujukan tersedia.
+        // TODO (setelah database siap): daftarkan pasien ke poli tujuan
+        // seperti kirimRujukan() di Poli Syaraf.
         return back()->with('sukses', 'Rujukan berhasil dikirim.');
     }
 

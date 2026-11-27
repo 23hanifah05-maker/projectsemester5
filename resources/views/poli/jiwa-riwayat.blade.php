@@ -9,6 +9,12 @@
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
     <link rel="stylesheet" href="{{ asset('css/jiwa-riwayat.css') }}?v={{ @filemtime(public_path('css/jiwa-riwayat.css')) }}">
+    <style>
+        /* Baris riwayat yang bisa diklik */
+        .jr-tabel tbody tr.jr-klik { cursor: pointer; }
+        .jr-tabel tbody tr.jr-klik:hover { background: #fdecec; }
+        .jr-tabel tbody tr.jr-klik a { color: inherit; text-decoration: none; }
+    </style>
 @endsection
 
 @section('content')
@@ -110,10 +116,30 @@
                     </thead>
                     <tbody>
                         @forelse ($riwayat as $i => $r)
-                            <tr>
+                            @php
+                                // Hanya kunjungan Poli Jiwa yang membuka halaman kunjungan baru Jiwa.
+                                $namaPoli = is_object($r->poli) ? ($r->poli->nama_poli ?? '') : (string) $r->poli;
+                                $bisaDibuka = stripos($namaPoli, 'jiwa') !== false;
+                                $urlKunjungan = $bisaDibuka
+                                    ? route('poli.jiwa.kunjungan.detail', [$pasien->no_rm, $r->id_pendaftaran ?? ($i + 1)])
+                                    : null;
+                            @endphp
+                            <tr @if ($bisaDibuka) class="jr-klik" data-url="{{ $urlKunjungan }}" tabindex="0" @endif>
                                 <td class="jr-no">{{ $i + 1 }}</td>
-                                <td class="jr-tgl">{{ $r->tanggal }}</td>
-                                <td class="jr-poli">{{ $r->poli }}</td>
+                                <td class="jr-tgl">
+                                    @if ($bisaDibuka)
+                                        <a href="{{ $urlKunjungan }}">{{ $r->tanggal }}</a>
+                                    @else
+                                        {{ $r->tanggal }}
+                                    @endif
+                                </td>
+                                <td class="jr-poli">
+                                    @if ($bisaDibuka)
+                                        <a href="{{ $urlKunjungan }}">{{ $namaPoli }}</a>
+                                    @else
+                                        {{ $namaPoli }}
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -126,5 +152,17 @@
         </div>
 
     </div>
+
+    <script>
+        // Klik di mana saja pada baris -> buka halaman kunjungan Poli Jiwa
+        document.querySelectorAll('tr.jr-klik').forEach(function (tr) {
+            tr.addEventListener('click', function () {
+                window.location.href = tr.dataset.url;
+            });
+            tr.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') window.location.href = tr.dataset.url;
+            });
+        });
+    </script>
 
 @endsection
