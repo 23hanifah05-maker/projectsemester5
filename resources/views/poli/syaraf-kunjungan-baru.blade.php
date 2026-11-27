@@ -396,7 +396,7 @@
             outline-offset: 2px;
         }
 
-        /* Centang kecil TTV -> Objective (sejajar baris RR) */
+        /* Centang kecil TTV -> Objective */
         .kb-vital-chk {
             flex: 0 0 auto;
             width: 15px;
@@ -467,10 +467,34 @@
         .kj-judul { margin:0 0 6px; font-size:12px; font-weight:700; color:#222; }
         .kj-sub { margin:0 0 8px; font-size:10px; color:#999; }
 
-        .kj-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px 18px; margin-bottom:10px; }
-        .kj-vital { display:flex; align-items:center; gap:6px; }
-        .kj-vital label { font-weight:600; min-width:28px; }
-        .kj-vital input { flex:1; min-width:0; }
+        /* Kotak tanda vital (tampilan sama untuk TTV dan antropometri) */
+        #tab-kajian .kj-ttv { margin:0 0 16px; padding:18px 20px; border:1px solid #dcdcdc; border-radius:12px; background:#fff; }
+        #tab-kajian .kj-ttv .kb-vitals { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px 22px; margin:0; padding:0; }
+        #tab-kajian .kj-ttv .kb-vital-row,
+        #tab-kajian .kj-ttv .kj-vital-antro { display:grid; grid-template-columns:38px minmax(0, 1fr) 52px; align-items:center; column-gap:8px; margin:0; }
+        #tab-kajian .kj-ttv label { margin:0; font-size:13px; font-weight:600; color:#222; }
+        #tab-kajian .kj-ttv .kb-vitals input { width:100%; height:40px; margin:0; padding:0 12px; box-sizing:border-box; border:1px solid #ccc; border-radius:8px; background:#fff; font:inherit; font-size:13px; }
+        #tab-kajian .kj-ttv .kb-vitals input:focus { outline:none; border-color:#c8102e; }
+        #tab-kajian .kj-ttv .kb-vitals input[readonly] { background:#f4f4f4; }
+        #tab-kajian .kj-ttv .kb-vital-unit { font-size:12px; color:#8a8f98; white-space:nowrap; }
+        #tab-kajian .kj-ttv .kj-ttv-kirim { display:flex; align-items:center; gap:8px; margin-top:14px; font-size:12px; font-weight:500; cursor:pointer; }
+        #tab-kajian .kj-ttv .kj-ttv-kirim .kb-vital-chk { margin:0; }
+        @media (max-width: 1200px) { #tab-kajian .kj-ttv .kb-vitals { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px)  { #tab-kajian .kj-ttv .kb-vitals { grid-template-columns:1fr; } }
+
+        /* Kotak GCS, Kesadaran, dan Rehabilitasi (gaya sama dengan kotak tanda vital) */
+        #tab-kajian .kj-kotak { margin:0 0 16px; padding:18px 20px; border:1px solid #dcdcdc; border-radius:12px; background:#fff; }
+        #tab-kajian .kj-kotak:last-child { margin-bottom:0; }
+        #tab-kajian .kj-kotak label { margin:0; font-size:13px; }
+        #tab-kajian .kj-gcs { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px 30px; }
+        #tab-kajian .kj-gcs > div { display:grid; grid-template-columns:64px minmax(0, 1fr); align-items:center; column-gap:8px; }
+        #tab-kajian .kj-gcs label { font-weight:600; }
+        #tab-kajian .kj-gcs select { width:100%; height:40px; margin:0; padding:0 12px; box-sizing:border-box; border:1px solid #ccc; border-radius:8px; background-color:#fff; font:inherit; font-size:13px; }
+        #tab-kajian .kj-radio-row.kj-kotak { gap:12px 40px; }
+        #tab-kajian .kj-rehab { display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
+        #tab-kajian .kj-rehab .kj-lain-teks { width:220px; max-width:100%; height:40px; padding:0 12px; box-sizing:border-box; border:1px solid #ccc; border-radius:8px; font:inherit; font-size:13px; }
+        #tab-kajian .kj-gcs select:focus, #tab-kajian .kj-rehab .kj-lain-teks:focus { outline:none; border-color:#c8102e; }
+        @media (max-width: 900px) { #tab-kajian .kj-gcs { grid-template-columns:1fr; } }
         .kj-unit { font-size:10px; color:#999; white-space:nowrap; }
 
         .kj-card input[type=text], .kj-card input[type=number], .kj-card select, .kj-card textarea {
@@ -514,8 +538,59 @@
         .kj-anatomi { display:flex; align-items:center; justify-content:center; border-left:1px solid #ddd; padding:10px; }
         .kj-anatomi img { max-width:100%; height:auto; }
 
+
+        /* ----- Status Neurologis ----- */
+        .kj-neuro-baris { display:grid; grid-template-columns:170px 1fr; gap:8px; align-items:center; margin-bottom:8px; }
+        .kj-neuro-baris > label { font-size:11px; font-weight:500; }
+        .kj-neuro-baris > label.tebal { font-weight:700; }
+        .kj-neuro-baris input[type=text] { width:100%; }
+        .kj-pupil { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; font-size:11px; }
+        .kj-pupil input[type=number] { width:56px; }
+        .kj-ekstremitas { display:grid; grid-template-columns:130px 1fr 130px 1fr; gap:8px 12px; align-items:center; }
+        .kj-ekstremitas > label { font-size:11px; font-weight:500; }
+        .kj-ekstremitas input[type=text] { width:100%; }
+        .kj-ekstremitas .kj-lebar { grid-column:2 / -1; }
+
+        /* ----- Peta tulang belakang 3D ----- */
+        .kj-spine { display:grid; grid-template-columns:160px minmax(240px, 320px) 1px minmax(0, 1fr); gap:18px; align-items:start; margin-bottom:14px; }
+        .kj-legend { list-style:none; margin:0; padding:0; font-size:11px; }
+        .kj-legend li { margin-bottom:6px; }
+        .kj-legend button { display:flex; align-items:center; gap:8px; width:100%; padding:6px 8px; border:1.5px solid transparent; border-radius:8px; background:none; font:inherit; text-align:left; cursor:pointer; }
+        .kj-legend button:hover { background:#f6f6f6; }
+        .kj-legend button.aktif { border-color:var(--warna); background:#fafafa; font-weight:700; }
+        .kj-dot { flex:0 0 auto; width:12px; height:12px; border-radius:50%; background:var(--warna); }
+        .kj-spine-box { position:relative; height:600px; border:1px solid #e5e5e5; border-radius:8px; background:#fff; overflow:hidden; }
+        .kj-spine-box canvas { display:block; width:100%; height:100%; touch-action:none; cursor:grab; }
+        .kj-spine-box canvas:active { cursor:grabbing; }
+        .kj-spine-label { position:absolute; z-index:2; pointer-events:none; padding:3px 7px; border-radius:4px; background:#222; color:#fff; font-size:10px; white-space:nowrap; }
+        .kj-spine-label[hidden] { display:none; }
+        .kj-spine-reset { position:absolute; top:8px; right:8px; z-index:2; padding:4px 10px; border:1px solid #ccc; border-radius:6px; background:#fff; font:inherit; font-size:10px; cursor:pointer; }
+        .kj-spine-reset:hover { background:#f3f3f3; }
+        .kj-spine-gagal { position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; padding:16px; text-align:center; font-size:11px; color:#666; }
+        .kj-spine-gagal[hidden] { display:none; }
+        .kj-spine-kredit { margin-top:2px; font-size:9px; color:#999; }
+        .kj-garis { align-self:stretch; background:#bdbdbd; }
+
+        .kj-dx-kosong { padding:16px; border:1px dashed #ccc; border-radius:8px; font-size:12px; color:#777; text-align:center; }
+        .kj-dx-kosong[hidden], .kj-dx[hidden], .kj-dx-ringkasan[hidden] { display:none; }
+        .kj-dx { padding:12px 14px; border-left:4px solid var(--warna); border-radius:8px; background:#f1f1f1; }
+        .kj-dx-judul { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13px; font-weight:700; }
+        .kj-dx-isi { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:6px 16px; }
+        .kj-dx-kepala { margin-bottom:8px; font-size:11px; font-weight:700; color:#555; }
+        .kj-dx-opsi { display:flex; align-items:flex-start; gap:8px; margin:0 0 10px; font-size:12px; line-height:1.45; cursor:pointer; }
+        .kj-dx-ringkasan { margin-top:12px; padding-top:10px; border-top:1px solid #ddd; font-size:11px; line-height:1.6; }
+        .kj-cek { -webkit-appearance:none; appearance:none; position:relative; flex:0 0 auto; width:22px; height:22px; margin:0; border:1.5px solid #222; border-radius:5px; background:#fff; cursor:pointer; }
+        .kj-cek:checked::after { content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#111; }
+
         @media (max-width: 900px) {
-            .kj-grid { grid-template-columns:repeat(2, 1fr); }
+            .kj-neuro-baris { grid-template-columns:1fr; }
+            .kj-ekstremitas { grid-template-columns:1fr; }
+            .kj-ekstremitas .kj-lebar { grid-column:auto; }
+            .kj-spine { grid-template-columns:1fr; }
+            .kj-garis { display:none; }
+        }
+
+        @media (max-width: 900px) {
             .kj-fisik { grid-template-columns:1fr; }
             .kj-anatomi { border-left:0; border-top:1px solid #ddd; }
             .kj-nyeri-baris { grid-template-columns:1fr; }
@@ -605,12 +680,14 @@
 
     {{-- Semua tab selalu tampil. Untuk PMIK, tab selain Assessment disamarkan dan tidak bisa diklik. --}}
     <div class="kb-tabs">
-        <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assessment</div>
-
-        {{-- BARU: Kajian Awal --}}
-        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('kajian', event)"
+        {{-- Kajian Awal: tab pertama (PMIK langsung ke Assessment) --}}
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : 'active' }}" onclick="gantiTab('kajian', event)"
              @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
             <i class="fa-solid fa-notes-medical"></i> Kajian Awal
+        </div>
+
+        <div class="kb-tab {{ $hanyaAssesmen ? 'active' : '' }}" onclick="gantiTab('assesment', event)">
+            <i class="fa-solid fa-clipboard-list"></i> Assessment
         </div>
 
         <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('radiologi', event)"
@@ -738,48 +815,9 @@
     </div>
     @endunless
 
-    <div id="tab-assesment" class="kb-tab-content active">
+    <div id="tab-assesment" class="kb-tab-content {{ $hanyaAssesmen ? 'active' : '' }}">
         <input type="hidden" id="id_pendaftaran" value="{{ $id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? '') }}">
         <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
-
-        {{-- ===== Kotak Vital Signs ===== --}}
-        <div class="kb-vitals-box">
-            <div class="kb-vitals">
-                <div class="kb-vital-row">
-                    <label>TD</label>
-                    <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
-                    <span class="kb-vital-unit">mmHg</span>
-                </div>
-                <div class="kb-vital-row">
-                    <label>HR</label>
-                    <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 88" min="0" max="300" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
-                    <span class="kb-vital-unit">x/menit</span>
-                </div>
-                <div class="kb-vital-row">
-                    <label>SpO2</label>
-                    <input type="number" id="spo2" name="spo2" data-field="spo2" value="{{ old('spo2', $ttv->spo2 ?? '') }}" placeholder="mis. 98" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
-                    <span class="kb-vital-unit">%</span>
-                </div>
-                <div class="kb-vital-row">
-                    <label>Suhu</label>
-                    <input type="number" id="suhu" name="suhu" data-field="suhu" value="{{ old('suhu', $ttv->suhu ?? '') }}" placeholder="mis. 36.5" min="20" max="50" step="0.1" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
-                    <span class="kb-vital-unit">°C</span>
-                </div>
-                <div class="kb-vital-row">
-                    <label>RR</label>
-                    <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
-                    <span class="kb-vital-unit">x/menit</span>
-                    @if ($bolehTtv)
-                        <input type="checkbox" id="chkVital" class="kb-vital-chk"
-                               title="Masukkan TTV ke O (Objective) - Pemeriksaan Tanda Vital"
-                               aria-label="Masukkan TTV ke Objective"
-                               onchange="toggleVitalKeObjektif(this)">
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <hr class="kb-divider">
 
         {{-- ===== Kotak SOAP: setiap isian disimpan pada kolom database masing-masing ===== --}}
         @php
@@ -851,7 +889,7 @@
                         @if ($nama === 'objective')
                             <div class="kb-sub-item">
                                 <label>Pemeriksaan Tanda Vital</label>
-                                <textarea rows="1" data-label="Pemeriksaan Tanda Vital" data-soap-ttv placeholder="Klik centang ✓ di atas untuk menarik data TTV" {{ $soapReadonly($nama) }}></textarea>
+                                <textarea rows="1" data-label="Pemeriksaan Tanda Vital" data-soap-ttv placeholder="Centang di tab Kajian Awal untuk menarik data TTV" {{ $soapReadonly($nama) }}></textarea>
                             </div>
                         @endif
                         @foreach ($daftarKolom as $kolom => $label)
@@ -968,36 +1006,68 @@
         ];
     @endphp
 
-    <div id="tab-kajian" class="kb-tab-content">
+    <div id="tab-kajian" class="kb-tab-content active">
 
-        {{-- ========== HALAMAN 1 ========== --}}
+        {{-- ========== HALAMAN 1: KAJIAN AWAL + PEMERIKSAAN FISIK ========== --}}
         <div class="kj-hal aktif" data-hal="1">
 
             <div class="kj-card">
                 <div class="kj-judul">Tanda Vital dan Antropometri</div>
 
-                <div class="kj-grid">
-                    <div class="kj-vital"><label for="kj_td">TD</label>
-                        <input type="text" id="kj_td" data-kj="td" autocomplete="off"><span class="kj-unit">mmHg</span></div>
-                    <div class="kj-vital"><label for="kj_hr">HR</label>
-                        <input type="number" id="kj_hr" data-kj="hr" min="0" max="300"><span class="kj-unit">x/menit</span></div>
-                    <div class="kj-vital"><label for="kj_rr">RR</label>
-                        <input type="number" id="kj_rr" data-kj="rr" min="0" max="100"><span class="kj-unit">x/menit</span></div>
-                    <div class="kj-vital"><label for="kj_spo2">SpO2</label>
-                        <input type="number" id="kj_spo2" data-kj="spo2" min="0" max="100"><span class="kj-unit">%</span></div>
+                <div class="kb-vitals-box kj-ttv">
+                    <div class="kb-vitals">
+                        <div class="kb-vital-row">
+                            <label for="tekanan_darah">TD</label>
+                            <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" data-kj="td" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" maxlength="7" oninput="kjSaringTD(this)" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                            <span class="kb-vital-unit">mmHg</span>
+                        </div>
+                        <div class="kb-vital-row">
+                            <label for="heart_rate">HR</label>
+                            <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" data-kj="hr" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 88" min="0" max="300" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                            <span class="kb-vital-unit">x/menit</span>
+                        </div>
+                        <div class="kb-vital-row">
+                            <label for="spo2">SpO2</label>
+                            <input type="number" id="spo2" name="spo2" data-field="spo2" data-kj="spo2" value="{{ old('spo2', $ttv->spo2 ?? '') }}" placeholder="mis. 98" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                            <span class="kb-vital-unit">%</span>
+                        </div>
+                        <div class="kb-vital-row">
+                            <label for="suhu">Suhu</label>
+                            <input type="number" id="suhu" name="suhu" data-field="suhu" data-kj="suhu" value="{{ old('suhu', $ttv->suhu ?? '') }}" placeholder="mis. 36.5" min="20" max="50" step="0.1" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                            <span class="kb-vital-unit">°C</span>
+                        </div>
+                        <div class="kb-vital-row">
+                            <label for="respiratory_rate">RR</label>
+                            <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" data-kj="rr" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                            <span class="kb-vital-unit">x/menit</span>
+                        </div>
+                        <div class="kj-vital-antro">
+                            <label for="kj_bb">BB</label>
+                            <input id="kj_bb" data-kj="bb" type="number" min="0" step="0.1" placeholder="mis. 60">
+                            <span class="kb-vital-unit">kg</span>
+                        </div>
+                        <div class="kj-vital-antro">
+                            <label for="kj_tb">TB</label>
+                            <input id="kj_tb" data-kj="tb" type="number" min="0" step="0.1" placeholder="mis. 165">
+                            <span class="kb-vital-unit">cm</span>
+                        </div>
+                        <div class="kj-vital-antro">
+                            <label for="kj_imt">IMT</label>
+                            <input id="kj_imt" data-kj="imt" type="text" placeholder="otomatis" readonly>
+                            <span class="kb-vital-unit">kg/m²</span>
+                        </div>
+                    </div>
 
-                    <div class="kj-vital"><label for="kj_suhu">Suhu</label>
-                        <input type="number" id="kj_suhu" data-kj="suhu" min="20" max="50" step="0.1"><span class="kj-unit">°C</span></div>
-                    <div class="kj-vital"><label for="kj_bb">BB</label>
-                        <input type="number" id="kj_bb" data-kj="bb" min="0" step="0.1"><span class="kj-unit">kg</span></div>
-                    <div class="kj-vital"><label for="kj_tb">TB</label>
-                        <input type="number" id="kj_tb" data-kj="tb" min="0" step="0.1"><span class="kj-unit">cm</span></div>
-                    <div class="kj-vital"><label for="kj_imt">IMT</label>
-                        <input type="text" id="kj_imt" data-kj="imt" readonly><span class="kj-unit">kg/m²</span></div>
+                    @if ($bolehTtv)
+                        <label class="kj-ttv-kirim">
+                            <input type="checkbox" id="chkVital" class="kb-vital-chk" onchange="toggleVitalKeObjektif(this)">
+                            Simpan TTV dan masukkan ke Assessment bagian O (Objective)
+                        </label>
+                    @endif
                 </div>
 
                 <div class="kj-judul">Glasgow Coma Scale (GCS)</div>
-                <div class="kj-gcs">
+                <div class="kj-kotak kj-gcs">
                     <div><label for="kj_eye">Eye</label>
                         <select id="kj_eye" data-kj="gcs_eye">
                             <option value="">Pilih</option>
@@ -1028,14 +1098,14 @@
                 </div>
 
                 <div class="kj-judul">Kesadaran</div>
-                <div class="kj-radio-row">
+                <div class="kj-kotak kj-radio-row">
                     @foreach (['Compos Mentis', 'Apatis', 'Somnolen', 'Soporokoma', 'Coma'] as $k)
                         <label class="kj-opt"><input type="radio" name="kj_kesadaran" value="{{ $k }}"> {{ $k }}</label>
                     @endforeach
                 </div>
 
                 <div class="kj-judul">Rehabilitasi dan Lain-lain</div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
+                <div class="kj-kotak kj-rehab">
                     <label class="kj-opt"><input type="radio" name="kj_rehab" value="Rehabilitasi"> Rehabilitasi</label>
                     <label class="kj-opt"><input type="radio" name="kj_rehab" value="Lainnya"> Lainnya
                         <input type="text" class="kj-lain-teks" data-kj="rehab_lainnya" autocomplete="off"></label>
@@ -1100,13 +1170,6 @@
                 </div>
             </div>
 
-            <div class="kj-aksi">
-                <button type="button" class="kj-btn" onclick="kjHalaman(2)">Lanjut &rarr;</button>
-            </div>
-        </div>
-
-        {{-- ========== HALAMAN 2: PEMERIKSAAN FISIK ========== --}}
-        <div class="kj-hal" data-hal="2">
             <div class="kj-judul-merah">Pemeriksaan Fisik</div>
             <div class="kj-card" style="padding:12px;">
                 <div class="kj-fisik">
@@ -1128,6 +1191,199 @@
                     <div class="kj-anatomi">
                         <img src="{{ asset('images/anatomi-tubuh.png') }}" alt="Gambar anatomi tubuh (tampak depan dan belakang)">
                     </div>
+                </div>
+            </div>
+
+            <div class="kj-aksi">
+                <button type="button" class="kj-btn" onclick="kjHalaman(2)">Lanjut &rarr;</button>
+            </div>
+        </div>
+
+        {{-- ========== HALAMAN 2: STATUS NEUROLOGIS + PEMERIKSAAN TULANG BELAKANG ========== --}}
+        @php
+            $kjKepala = [
+                'refleks_cahaya'   => 'Refleks Cahaya',
+                'refleks_kornea'   => 'Refleks Kornea',
+                'nervus_cranialis' => 'Nervus Cranialis (I–XII)',
+            ];
+            $kjLeher = [
+                'kaku_kuduk'     => 'Kaku Kuduk',
+                'meningeal_sign' => 'Meningeal Sign',
+                'babinski'       => 'Babinski I - IV',
+                'kernig_sign'    => 'Kernig Sign',
+                'dolls_eye'      => 'Doll’s Eye Phenomena',
+            ];
+            // Pilihan kode ICD dan keterangan klinis tiap wilayah (ubah di sini bila perlu)
+            $kjWilayah = [
+                'cervical' => [
+                    'nama'  => 'Cervical (Leher)',
+                    'warna' => '#60a5fa',
+                    'kode'  => [
+                        'M50' => 'Cervical disc disorders',
+                        'M47' => 'Spondylosis',
+                        'M54' => 'Dorsalgia / Cervicalgia',
+                    ],
+                    'keterangan' => ['Mencakup HNP Leher', 'Pengapuran Leher, atau Nyeri'],
+                ],
+                'torakalis' => [
+                    'nama'  => 'Torakalis (Punggung)',
+                    'warna' => '#facc15',
+                    'kode'  => [
+                        'M51' => 'Other intervertebral disc disorders',
+                        'M47' => 'Spondylosis',
+                        'M48' => 'Spinal stenosis',
+                    ],
+                    'keterangan' => ['HNP Punggung, Pengapuran, atau Penyempitan Jalur Saraf'],
+                ],
+                'lumbalis' => [
+                    'nama'  => 'Lumbalis (Pinggang)',
+                    'warna' => '#4ade80',
+                    'kode'  => [
+                        'M51' => 'Other intervertebral disc disorders',
+                        'M54' => 'Dorsalgia / Low Back Pain',
+                        'M47' => 'Spondylosis',
+                    ],
+                    'keterangan' => ['HNP Pinggang (Paling Sering), LBP, Ischialgia'],
+                ],
+                'sakrum' => [
+                    'nama'  => 'Sakrum & Koksigis',
+                    'warna' => '#a855f7',
+                    'kode'  => [
+                        'M53' => 'Other dermatomal/spinal symptoms',
+                        'M54' => 'Dorsalgia / Coccygodynia',
+                    ],
+                    'keterangan' => ['Nyeri Tulang Ekor / Area Sakrum'],
+                ],
+            ];
+        @endphp
+
+        <div class="kj-hal" data-hal="2">
+            <div class="kj-judul-merah">Status Neurologis</div>
+
+            <div class="kj-card">
+                <div class="kj-judul">Kepala</div>
+
+                <div class="kj-neuro-baris">
+                    <label>Pupil</label>
+                    <div class="kj-pupil">
+                        <span>Diameter (</span>
+                        <input type="number" min="0" step="0.5" data-kj="pupil_kanan" aria-label="Diameter pupil kanan">
+                        <span>/</span>
+                        <input type="number" min="0" step="0.5" data-kj="pupil_kiri" aria-label="Diameter pupil kiri">
+                        <span>)</span><span class="kj-unit">mm</span>
+                        <label class="kj-opt"><input type="radio" name="kj_pupil" value="Isokor"> Isokor</label>
+                        <label class="kj-opt"><input type="radio" name="kj_pupil" value="Anisokor"> Anisokor</label>
+                    </div>
+                </div>
+
+                @foreach ($kjKepala as $kunci => $label)
+                    <div class="kj-neuro-baris">
+                        <label for="kj_{{ $kunci }}">{{ $label }}</label>
+                        <input type="text" id="kj_{{ $kunci }}" data-kj="{{ $kunci }}" autocomplete="off">
+                    </div>
+                @endforeach
+
+                <div class="kj-judul" style="margin-top:14px;">Leher</div>
+
+                @foreach ($kjLeher as $kunci => $label)
+                    <div class="kj-neuro-baris">
+                        <label for="kj_{{ $kunci }}">{{ $label }}</label>
+                        <input type="text" id="kj_{{ $kunci }}" data-kj="{{ $kunci }}" autocomplete="off">
+                    </div>
+                @endforeach
+
+                <div class="kj-neuro-baris">
+                    <label for="kj_vertebra" class="tebal">Vertebra</label>
+                    <input type="text" id="kj_vertebra" data-kj="vertebra" autocomplete="off">
+                </div>
+
+                {{-- ----- Pemeriksaan tulang belakang (3D, bisa diklik per ruas) ----- --}}
+                <div class="kj-judul-merah" style="margin-top:18px;">Pemeriksaan Tulang Belakang</div>
+                <div class="kj-judul">Pemetaan Ruas Tulang Belakang</div>
+
+                <div class="kj-spine">
+                    <ul class="kj-legend">
+                        @foreach ($kjWilayah as $kunciWilayah => $wilayah)
+                            <li style="--warna: {{ $wilayah['warna'] }}">
+                                <button type="button" data-wilayah="{{ $kunciWilayah }}" aria-pressed="false"
+                                        onclick="kjPilihWilayah('{{ $kunciWilayah }}')">
+                                    <span class="kj-dot"></span> {{ $wilayah['nama'] }}
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div>
+                        <div class="kj-spine-box" id="kjSpineBox">
+                            <canvas id="kjSpineCanvas" aria-label="Model 3D tulang belakang, tampak belakang. Klik tulang untuk mewarnai wilayahnya."></canvas>
+                            <div class="kj-spine-label" id="kjSpineLabel" hidden></div>
+                            <button type="button" class="kj-spine-reset" onclick="kjResetPandangan()">Reset tampilan</button>
+                            <div class="kj-spine-gagal" id="kjSpineMuat" hidden>Memuat model 3D…</div>
+                            <div class="kj-spine-gagal" id="kjSpineGagal" hidden>
+                                Model 3D tidak bisa dimuat (periksa koneksi internet atau dukungan WebGL di browser).
+                            </div>
+                        </div>
+                        <div class="kj-sub" id="kjSpineInfo" style="margin-top:6px;">
+                            Geser untuk memutar, scroll untuk zoom, klik tulang untuk menampilkan pilihan kode ICD.
+                        </div>
+                        <div class="kj-spine-kredit">Model: BodyParts3D &copy; Database Center for Life Science, CC BY-SA 2.1 Japan</div>
+                    </div>
+
+                    <div class="kj-garis"></div>
+
+                    <div aria-live="polite">
+                        <div class="kj-dx-kosong" id="kjDxKosong">
+                            Klik salah satu bagian tulang untuk menampilkan pilihan kode ICD dan keterangan klinis.
+                        </div>
+
+                        @foreach ($kjWilayah as $kunciWilayah => $wilayah)
+                            <div class="kj-dx" data-dx="{{ $kunciWilayah }}" data-nama="{{ $wilayah['nama'] }}"
+                                 style="--warna: {{ $wilayah['warna'] }}" hidden>
+                                <div class="kj-dx-judul"><span class="kj-dot"></span> {{ $wilayah['nama'] }}</div>
+
+                                <div class="kj-dx-isi">
+                                    <div>
+                                        <div class="kj-dx-kepala">Pilihan Kode ICD 3-Digit</div>
+                                        @foreach ($wilayah['kode'] as $kode => $namaIcd)
+                                            <label class="kj-dx-opsi">
+                                                <input type="checkbox" class="kj-cek" data-jenis="kode" value="{{ $kode }}"
+                                                       onchange="kjRenderRingkasan()">
+                                                <span><b>{{ $kode }}</b> ({{ $namaIcd }})</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    <div>
+                                        <div class="kj-dx-kepala">Keterangan Klinis</div>
+                                        @foreach ($wilayah['keterangan'] as $keterangan)
+                                            <label class="kj-dx-opsi">
+                                                <input type="checkbox" class="kj-cek" data-jenis="keterangan" value="{{ $keterangan }}"
+                                                       onchange="kjRenderRingkasan()">
+                                                <span>{{ $keterangan }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+
+                        <div class="kj-dx-ringkasan" id="kjDxRingkasan" hidden></div>
+                    </div>
+                </div>
+
+                <div class="kj-judul" style="margin-top:6px;">Ekstremitas</div>
+                <div class="kj-ekstremitas">
+                    <label for="kj_gerak">Gerak</label>
+                    <input type="text" id="kj_gerak" data-kj="gerak" autocomplete="off">
+                    <label for="kj_kekuatan">Kekuatan</label>
+                    <input type="text" id="kj_kekuatan" data-kj="kekuatan" autocomplete="off">
+
+                    <label for="kj_refleks_fisiologis">Refleks Fisiologis</label>
+                    <input type="text" id="kj_refleks_fisiologis" data-kj="refleks_fisiologis" autocomplete="off">
+                    <label for="kj_refleks_patologis">Refleks Patologis</label>
+                    <input type="text" id="kj_refleks_patologis" data-kj="refleks_patologis" autocomplete="off">
+
+                    <label for="kj_clonus">Clonus</label>
+                    <input type="text" id="kj_clonus" class="kj-lebar" data-kj="clonus" autocomplete="off">
                 </div>
             </div>
 
@@ -1745,6 +2001,9 @@
 @endsection
 
 @section('extra-js')
+@unless ($hanyaAssesmen)
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+@endunless
 <script>
     // ===== Konfigurasi =====
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
@@ -2532,7 +2791,7 @@
             // 3. Aktifkan tab Assessment
             document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelector('.kb-tab')?.classList.add('active');
+            document.querySelector('.kb-tab[onclick*="assesment"]')?.classList.add('active');
             document.getElementById('tab-assesment')?.classList.add('active');
 
             // 4. Scroll ke paling atas
@@ -3035,13 +3294,38 @@
     const KJ_SIMPAN_KE_DB = false;
     const KJ_URL_SIMPAN   = "/poli/syaraf/kajian-awal"; // sesuaikan dengan route kamu
 
-    // Pindah antara halaman 1 (kajian) dan halaman 2 (pemeriksaan fisik)
+    // Pindah antara halaman 1 (kajian + pemeriksaan fisik) dan 2 (status neurologis + tulang belakang)
     function kjHalaman(n) {
         document.querySelectorAll('#tab-kajian .kj-hal').forEach(function (el) {
             el.classList.toggle('aktif', el.dataset.hal === String(n));
         });
+
+        // Model 3D baru dibuat saat halaman 2 pertama kali dibuka (kanvas harus sudah tampil)
+        if (n === 2) kjInitSpine();
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    // Tekanan darah: hanya angka, dengan satu garis miring (contoh 120/80)
+    function kjSaringTD(el) {
+        const bersih = el.value.replace(/[^0-9\/]/g, '');
+        const sebelum = el.dataset.sebelum ?? '';
+        const sah = /^(\d{0,3}|\d{1,3}\/\d{0,3})$/.test(bersih);
+        const hasil = sah ? bersih : sebelum;
+
+        if (el.value !== hasil) {
+            // jaga posisi kursor saat karakter yang ditolak dibuang
+            const posisi = Math.max(0, el.selectionStart - (el.value.length - hasil.length));
+            el.value = hasil;
+            el.setSelectionRange(posisi, posisi);
+        }
+        el.dataset.sebelum = hasil;
+    }
+
+    // Nilai TD yang sudah ada saat kolom mulai diisi
+    document.addEventListener('focusin', function (e) {
+        if (e.target.id === 'tekanan_darah') e.target.dataset.sebelum = e.target.value;
+    });
 
     // IMT = BB / (TB dalam meter)^2
     function kjHitungIMT() {
@@ -3086,10 +3370,13 @@
     function kumpulkanDataKajian() {
         const data = {};
 
-        // Semua input / select / textarea yang punya data-kj
+        // Semua input / select / textarea yang punya data-kj (kotak centang -> true / false)
         document.querySelectorAll('#tab-kajian [data-kj]').forEach(function (el) {
-            data[el.dataset.kj] = el.value.trim();
+            data[el.dataset.kj] = (el.type === 'checkbox') ? el.checked : el.value.trim();
         });
+
+        // Kode ICD dan keterangan klinis yang dicentang, dikelompokkan per wilayah tulang belakang
+        data.tulang_belakang = kjDataDiagnosis();
 
         // Radio: ambil yang tercentang saja
         document.querySelectorAll('#tab-kajian input[type=radio]:checked').forEach(function (r) {
@@ -3140,6 +3427,393 @@
 
         teks.textContent = 'Tersimpan';
         setTimeout(function () { teks.textContent = 'Simpan'; }, 1500);
+    }
+
+    /* =========================================================
+       TULANG BELAKANG 3D (Status Neurologis > Kajian Awal)
+       - Model anatomi: BodyParts3D (public/js/syaraf-spine-data.js), dirender dengan three.js.
+       - Awalnya semua tulang krem alami. Klik tulang / legenda -> hanya wilayah itu yang berwarna.
+       - Wilayah yang dipilih menampilkan pilihan kode ICD dan keterangan klinisnya.
+       - Centang tiap wilayah tetap tersimpan walau berpindah wilayah.
+       ========================================================= */
+    const KJ_URL_MODEL = "{{ asset('js/syaraf-spine-data.js') }}?v={{ @filemtime(public_path('js/syaraf-spine-data.js')) }}";
+
+    const KJ_RUAS = [];
+
+    (function () {
+        for (let i = 1; i <= 7; i++)  KJ_RUAS.push({ id: 'C' + i, nama: 'Cervical ' + i, wilayah: 'cervical' });
+        for (let i = 1; i <= 12; i++) KJ_RUAS.push({ id: 'T' + i, nama: 'Torakalis ' + i, wilayah: 'torakalis' });
+        for (let i = 1; i <= 5; i++)  KJ_RUAS.push({ id: 'L' + i, nama: 'Lumbalis ' + i, wilayah: 'lumbalis' });
+        KJ_RUAS.push({ id: 'S',  nama: 'Sakrum',   wilayah: 'sakrum' });
+        KJ_RUAS.push({ id: 'Cx', nama: 'Koksigis', wilayah: 'sakrum' });
+    })();
+
+    // Warna dasar tulang, dan warna tiap wilayah saat dipilih (harus sama dengan legenda di Blade)
+    const KJ_WARNA_TULANG  = 0xe9dab8;
+    const KJ_WARNA_DISKUS  = 0xd6d3c8;
+    const KJ_WARNA_WILAYAH = { cervical: 0x60a5fa, torakalis: 0xfacc15, lumbalis: 0x4ade80, sakrum: 0xa855f7 };
+
+    let kjWilayahAktif = null;   // wilayah yang sedang diwarnai (null = semua krem)
+    let kjSpine = null;          // objek 3D (dibuat saat halaman 2 pertama kali dibuka)
+    let kjSedangMemuat = false;
+
+    // Warnai satu wilayah saja; null mengembalikan semua tulang ke warna alami
+    function kjSetWilayah(wilayah) {
+        kjWilayahAktif = wilayah;
+
+        document.querySelectorAll('.kj-legend button').forEach(function (b) {
+            const aktif = b.dataset.wilayah === wilayah;
+            b.classList.toggle('aktif', aktif);
+            b.setAttribute('aria-pressed', aktif);
+        });
+
+        // Tampilkan hanya pilihan diagnosis milik wilayah terpilih
+        document.querySelectorAll('.kj-dx').forEach(function (panel) {
+            panel.hidden = panel.dataset.dx !== wilayah;
+        });
+        const kosong = document.getElementById('kjDxKosong');
+        if (kosong) kosong.hidden = wilayah !== null;
+
+        kjSpine?.warnai();
+    }
+
+    // Klik legenda: pilih wilayah, klik lagi untuk membatalkan
+    function kjPilihWilayah(wilayah) {
+        kjSetWilayah(kjWilayahAktif === wilayah ? null : wilayah);
+    }
+
+    // Semua centang diagnosis: { wilayah: { kode: [...], keterangan: [...] } }
+    function kjDataDiagnosis() {
+        const hasil = {};
+
+        document.querySelectorAll('.kj-dx').forEach(function (panel) {
+            const ambil = function (jenis) {
+                return Array.from(panel.querySelectorAll('input[data-jenis="' + jenis + '"]:checked'))
+                    .map(function (cb) { return cb.value; });
+            };
+            const kode = ambil('kode');
+            const keterangan = ambil('keterangan');
+
+            if (kode.length || keterangan.length) {
+                hasil[panel.dataset.dx] = { kode: kode, keterangan: keterangan };
+            }
+        });
+
+        return hasil;
+    }
+
+    // Ringkasan pilihan dari semua wilayah
+    function kjRenderRingkasan() {
+        const wadah = document.getElementById('kjDxRingkasan');
+        if (!wadah) return;
+
+        const data = kjDataDiagnosis();
+        wadah.innerHTML = '';
+        wadah.hidden = Object.keys(data).length === 0;
+
+        const judul = document.createElement('b');
+        judul.textContent = 'Ringkasan pilihan';
+        wadah.appendChild(judul);
+
+        Object.keys(data).forEach(function (wilayah) {
+            const panel = document.querySelector('.kj-dx[data-dx="' + wilayah + '"]');
+            const baris = document.createElement('div');
+            baris.textContent = panel.dataset.nama + ': '
+                + [data[wilayah].kode.join(', '), data[wilayah].keterangan.join('; ')].filter(Boolean).join(' - ');
+            wadah.appendChild(baris);
+        });
+    }
+
+    // Tulang diklik di model 3D
+    function kjKlikRuas(id) {
+        kjPilihWilayah(KJ_RUAS.find(function (d) { return d.id === id; }).wilayah);
+    }
+
+    // Kembali ke tampak belakang dan warna alami (centang diagnosis tidak dihapus)
+    function kjResetPandangan() {
+        kjSetWilayah(null);
+        kjSpine?.reset();
+    }
+
+    // Buat model 3D (hanya sekali, saat halaman 3 pertama kali dibuka)
+    function kjInitSpine() {
+        if (kjSpine) { kjSpine.ukuran(); return; }
+
+        const box    = document.getElementById('kjSpineBox');
+        const canvas = document.getElementById('kjSpineCanvas');
+        const gagal  = document.getElementById('kjSpineGagal');
+        const muat   = document.getElementById('kjSpineMuat');
+        if (!box || !canvas) return;
+
+        function tampilkanGagal() {
+            if (muat) muat.hidden = true;
+            if (gagal) gagal.hidden = false;
+        }
+
+        if (typeof THREE === 'undefined') { tampilkanGagal(); return; }
+
+        // Data bentuk tulang cukup besar, jadi baru diunduh saat dibutuhkan
+        if (!window.KJ_MODEL_TULANG) {
+            if (kjSedangMemuat) return;
+            kjSedangMemuat = true;
+            if (muat) muat.hidden = false;
+            if (gagal) gagal.hidden = true;
+
+            const skrip = document.createElement('script');
+            skrip.src = KJ_URL_MODEL;
+            skrip.onload = function () { kjSedangMemuat = false; kjInitSpine(); };
+            skrip.onerror = function () { kjSedangMemuat = false; skrip.remove(); tampilkanGagal(); };
+            document.head.appendChild(skrip);
+            return;
+        }
+
+        let renderer;
+        try {
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        } catch (e) {
+            console.error('WebGL tidak tersedia:', e);
+            tampilkanGagal();
+            return;
+        }
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene  = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(22, 1, 0.1, 200);
+
+        // ----- Pencahayaan -----
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x8a7d6d, 0.74));
+
+        const lampuUtama = new THREE.DirectionalLight(0xfff4e4, 0.45);
+        lampuUtama.position.set(-8, 7, 9);
+        lampuUtama.castShadow = true;
+        lampuUtama.shadow.mapSize.set(2048, 2048);
+        Object.assign(lampuUtama.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 30 });
+        lampuUtama.shadow.bias = -0.0005;
+        lampuUtama.shadow.normalBias = 0.025;
+        scene.add(lampuUtama);
+
+        const lampuIsi = new THREE.DirectionalLight(0xe8eeff, 0.24);
+        lampuIsi.position.set(10, -2, 4);
+        scene.add(lampuIsi);
+
+        const akar = new THREE.Group();   // ikut berputar saat digeser
+        scene.add(akar);
+
+        // ----- Membuat mesh dari data -----
+        function dekode(teks) {
+            return Uint8Array.from(atob(teks), function (c) { return c.charCodeAt(0); }).buffer;
+        }
+
+        // Noise halus untuk tekstur pori dan bercak alami tulang
+        function acak(x, y, z) {
+            const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
+            return s - Math.floor(s);
+        }
+
+        function noise(x, y, z) {
+            const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+            const halus = function (t) { return t * t * (3 - 2 * t); };
+            const L = function (a, b, t) { return a + (b - a) * t; };
+            const xf = halus(x - xi), yf = halus(y - yi), zf = halus(z - zi);
+            const baris = function (j, k) { return L(acak(xi, yi + j, zi + k), acak(xi + 1, yi + j, zi + k), xf); };
+            return L(L(baris(0, 0), baris(1, 0), yf), L(baris(0, 1), baris(1, 1), yf), zf);
+        }
+
+        function buatGeometri(data) {
+            const mentah = new Int16Array(dekode(data.p));
+            const ao     = new Uint8Array(dekode(data.a));    // bayangan di celah tulang
+            const posisi = new Float32Array(mentah.length);
+            for (let i = 0; i < mentah.length; i++) posisi[i] = mentah[i] * 0.0002;   // 1 satuan = 10 cm
+
+            const warna = new Float32Array(mentah.length);
+            for (let v = 0; v < ao.length; v++) {
+                const x = posisi[v * 3], y = posisi[v * 3 + 1], z = posisi[v * 3 + 2];
+                const bercak = noise(x * 9, y * 9, z * 9);
+                const terang = (ao[v] / 255) * (0.9 + 0.12 * bercak + 0.08 * noise(x * 38, y * 38, z * 38));
+                warna[v * 3]     = terang;
+                warna[v * 3 + 1] = terang * (0.975 + 0.025 * bercak);
+                warna[v * 3 + 2] = terang * (0.94 + 0.06 * bercak);
+            }
+
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(posisi, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(warna, 3));
+            geo.setIndex(new THREE.BufferAttribute(new Uint16Array(dekode(data.i)), 1));
+            geo.computeVertexNormals();
+            return geo;
+        }
+
+        function buatBahan(warna) {
+            return new THREE.MeshStandardMaterial({ color: warna, vertexColors: true, roughness: 0.68, metalness: 0 });
+        }
+
+        // Satu bahan per wilayah, sehingga warna hanya berubah pada wilayah yang dipilih
+        const bahan = { disc: buatBahan(KJ_WARNA_DISKUS) };
+        Object.keys(KJ_WARNA_WILAYAH).forEach(function (w) { bahan[w] = buatBahan(KJ_WARNA_TULANG); });
+
+        const bisaKlik = [];    // semua mesh (diskus ikut agar menghalangi klik di belakangnya)
+
+        window.KJ_MODEL_TULANG.forEach(function (data) {
+            const mesh = new THREE.Mesh(buatGeometri(data), bahan[data.g]);
+            mesh.castShadow = mesh.receiveShadow = true;
+            mesh.userData.vid = data.id;      // diskus tidak punya id
+            akar.add(mesh);
+            bisaKlik.push(mesh);
+
+        });
+
+        if (muat) muat.hidden = true;
+
+        function gambar() { renderer.render(scene, camera); }
+
+        // Hanya wilayah terpilih yang berubah warna; lainnya tetap krem
+        function warnai() {
+            Object.keys(KJ_WARNA_WILAYAH).forEach(function (w) {
+                bahan[w].color.setHex(w === kjWilayahAktif ? KJ_WARNA_WILAYAH[w] : KJ_WARNA_TULANG);
+            });
+            gambar();
+        }
+
+        // ----- Ukuran, putar, zoom -----
+        const kotak  = new THREE.Box3().setFromObject(akar);
+        const ukur   = kotak.getSize(new THREE.Vector3());
+        let zoom = 1;
+
+        function aturKamera() {
+            const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+            const jarak = Math.max(ukur.y / (2 * tan), ukur.x / (2 * tan * camera.aspect)) * 1.06 + ukur.z / 2;
+            camera.position.set(0, 0, jarak * zoom);   // +z = sisi punggung (tampak belakang)
+        }
+
+        function ukuran() {
+            const lebar = box.clientWidth;
+            const tinggi = box.clientHeight;
+            if (!lebar || !tinggi) return;
+
+            renderer.setSize(lebar, tinggi, false);
+            camera.aspect = lebar / tinggi;
+            camera.updateProjectionMatrix();
+            aturKamera();
+            gambar();
+        }
+
+        function reset() {
+            akar.rotation.set(0, 0, 0);
+            zoom = 1;
+            aturKamera();
+            gambar();
+        }
+
+        if (window.ResizeObserver) new ResizeObserver(ukuran).observe(box);
+        window.addEventListener('resize', ukuran);
+
+        // ----- Klik dan hover -----
+        const raycaster = new THREE.Raycaster();
+        const kursor = new THREE.Vector2();
+        const label = document.getElementById('kjSpineLabel');
+
+        // Hasil: id ruas, '' bila kena diskus, null bila kena area kosong
+        function ambilRuas(e) {
+            const rect = canvas.getBoundingClientRect();
+            kursor.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            kursor.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(kursor, camera);
+
+            const kena = raycaster.intersectObjects(bisaKlik, false)[0];
+            return kena ? (kena.object.userData.vid || '') : null;
+        }
+
+        function aturHover(id, e) {
+            canvas.style.cursor = id ? 'pointer' : '';
+
+            if (!label) return;
+
+            if (!id) {
+                label.hidden = true;
+                return;
+            }
+
+            const def = KJ_RUAS.find(function (d) { return d.id === id; });
+            const rect = box.getBoundingClientRect();
+
+            label.textContent = id + ' - ' + def.nama;
+            label.style.left = (e.clientX - rect.left + 12) + 'px';
+            label.style.top = (e.clientY - rect.top + 12) + 'px';
+            label.hidden = false;
+        }
+
+        let sedangTarik = false;
+        let adaGeser = false;
+        let awalX = 0, awalY = 0, terakhirX = 0, terakhirY = 0;
+        let antreHover = null;
+
+        canvas.addEventListener('pointerdown', function (e) {
+            if (!e.isPrimary || e.button !== 0) return;
+            sedangTarik = true;
+            adaGeser = false;
+            awalX = terakhirX = e.clientX;
+            awalY = terakhirY = e.clientY;
+            canvas.setPointerCapture(e.pointerId);
+        });
+
+        canvas.addEventListener('pointermove', function (e) {
+            if (sedangTarik) {
+                if (Math.abs(e.clientX - awalX) + Math.abs(e.clientY - awalY) > 5) adaGeser = true;
+
+                if (adaGeser) {
+                    akar.rotation.y += (e.clientX - terakhirX) * 0.01;
+                    akar.rotation.x = Math.max(-0.6, Math.min(0.6, akar.rotation.x + (e.clientY - terakhirY) * 0.006));
+                    if (label) label.hidden = true;
+                    gambar();
+                }
+
+                terakhirX = e.clientX;
+                terakhirY = e.clientY;
+                return;
+            }
+
+            // Pencarian ruas di bawah kursor cukup sekali per frame (model detail)
+            const sudahAntre = antreHover !== null;
+            antreHover = e;
+            if (sudahAntre) return;
+
+            requestAnimationFrame(function () {
+                const ev = antreHover;
+                antreHover = null;
+                if (ev && !sedangTarik) aturHover(ambilRuas(ev), ev);
+            });
+        });
+
+        canvas.addEventListener('pointerup', function (e) {
+            if (sedangTarik && !adaGeser) {
+                const id = ambilRuas(e);
+                if (id) kjKlikRuas(id);
+                else if (id === null) kjSetWilayah(null);   // klik area kosong = warna alami
+            }
+            sedangTarik = false;
+        });
+
+        canvas.addEventListener('pointercancel', function () { sedangTarik = false; });
+
+        canvas.addEventListener('pointerleave', function (e) {
+            antreHover = null;
+            if (!sedangTarik) aturHover(null, e);
+        });
+
+        canvas.addEventListener('wheel', function (e) {
+            e.preventDefault();
+            zoom = Math.max(0.35, Math.min(1.5, zoom * Math.exp(e.deltaY * 0.001)));
+            aturKamera();
+            gambar();
+        }, { passive: false });
+
+        kjSpine = { warnai: warnai, ukuran: ukuran, reset: reset };
+
+        // Terapkan warna wilayah yang sudah dipilih (bila ada) lalu gambar
+        ukuran();
+        warnai();
     }
 
     /* =========================================================
