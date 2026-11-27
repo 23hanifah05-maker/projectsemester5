@@ -195,11 +195,11 @@ class PendaftaranController extends Controller
                 Rule::in(['umum', 'asuransi', 'bpjs']),
             ],
             'nomor_bpjs' => [
-                'nullable',
-                'required_if:pembayaran,bpjs',
-                'string',
-                'digits_between:1,13',
-            ],
+    'nullable',
+    'required_if:pembayaran,bpjs',
+    'string',
+    'digits_between:1,13',
+],
 
             'general_consent' => 'required|in:1',
 

@@ -1491,34 +1491,22 @@
         </div>
     </div>
 
-    {{-- TAB GENERAL CONSENT --}}
+    {{-- TAB GENERAL CONSENT: formulir inline, disamakan dengan Poli Saraf --}}
     <div id="tab-consent" class="ob-tab-content">
-        <div class="ob-card" style="padding:20px;">
-            <div class="ob-section-title">General Consent</div>
-
-            <p id="gcStatusTeks" style="margin:10px 0 14px;">
-                @if ($sudahConsent)
-                    <span style="color:#198754;font-weight:600;">✔ Sudah diisi</span>
-                    pada {{ $generalConsent->tanggal }} pukul {{ $generalConsent->jam }}
-                    oleh {{ $generalConsent->nama_penandatangan }}.
-                @else
-                    General Consent wajib diisi sebelum membuka Resume Medis.
-                @endif
-            </p>
-
-            <button
-                type="button"
-                id="btnConsent"
-                class="ob-btn ob-btn-simpan {{ $sudahConsent ? 'sudah' : '' }}"
-                onclick="bukaGeneralConsent()"
-            >
-                <i class="fa-solid fa-file-signature"></i>
-                {{ $sudahConsent ? '✔ General Consent (isi ulang)' : 'Isi General Consent' }}
-            </button>
-        </div>
+        @include('pendaftaran.partials.general-consent', ['inline' => true])
     </div>
 
-    {{-- TAB RESUME MEDIS (tampilan mengikuti Poli Syaraf) --}}
+    <script>
+        // Konfigurasi General Consent untuk kunjungan Poli Obgyn.
+        // Data tersimpan dikirim ke partial agar seluruh isian lama dapat dipulihkan.
+        window.GC_URL_SIMPAN = @json(route('poli.obgyn.general-consent.simpan'));
+        window.GC_CSRF = @json(csrf_token());
+        window.GC_ID_PENDAFTARAN = @json($id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? null));
+        window.GC_DATA_PASIEN = @json($gcData);
+        window.GC_SUDAH_ADA = @json($sudahConsent);
+    </script>
+
+        {{-- TAB RESUME MEDIS (tampilan mengikuti Poli Syaraf) --}}
     @php
         // Kotak kode SNOMED CT hanya untuk admin dan pmik.
         $bolehSnomed = in_array(auth()->user()->role ?? null, ['admin', 'pmik']);
@@ -1877,15 +1865,6 @@
         </div>
     </div>
 
-    {{-- MODAL GENERAL CONSENT (file modal yang sama dengan Poli Saraf) --}}
-    @include('poli.partials.general-consent-modal')
-
-    <script>
-        window.GC_URL_SIMPAN     = "{{ route('poli.obgyn.general-consent.simpan') }}";
-        window.GC_CSRF           = "{{ csrf_token() }}";
-        window.GC_ID_PENDAFTARAN = "{{ $id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? '') }}";
-    </script>
-
 @endunless
 
 @endsection
@@ -1949,20 +1928,19 @@
 
     function bukaGeneralConsent() {
         if (typeof window.bukaConsent !== 'function') {
-            alert('Modal General Consent belum dimuat. Periksa file modal yang di-include di halaman ini.');
+            alert('Formulir General Consent belum dimuat. Periksa partial General Consent.');
             return;
         }
 
-        if (SUDAH_CONSENT && !confirm('General Consent kunjungan ini sudah pernah diisi. Isi ulang dan timpa data lama?')) {
-            return;
-        }
-
+        // Formulir sekarang tampil langsung di tab, jadi tidak perlu konfirmasi
+        // menimpa data hanya untuk melihat isian yang sudah tersimpan.
         window.bukaConsent(DATA_PASIEN_GC);
     }
 
     // Dipanggil modal setelah consent berhasil tersimpan di server
     window.gcSetelahSimpan = function () {
         SUDAH_CONSENT = true;
+        window.GC_SUDAH_ADA = true;
 
         document.getElementById('ob-tab-btn-resume')?.classList.remove('ob-tab-terkunci');
         document.getElementById('ob-tab-btn-consent')?.classList.remove('belum-consent');

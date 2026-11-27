@@ -11,6 +11,7 @@ use App\Models\Ttv;
 use App\Models\Assesmen;
 use App\Models\InformedConsent;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -255,6 +256,10 @@ class PoliController extends Controller
         $pasien = Pasien::where('no_rm', $pendaftaran->no_rm)->firstOrFail();
         $ttv = Ttv::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
         $assesmen = Assesmen::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
+        $generalConsent = DB::table('general_consent')
+            ->where('id_pendaftaran', $pendaftaran->id_pendaftaran)
+            ->first();
+        $generalConsent = $this->siapkanGeneralConsentUntukTampilan($generalConsent);
 
         $diagnosisTersimpan = [];
         $tindakanTersimpan = [];
@@ -305,6 +310,7 @@ class PoliController extends Controller
             'assesmen' => $assesmen,
             'diagnosisTersimpan' => $diagnosisTersimpan,
             'tindakanTersimpan' => $tindakanTersimpan,
+            'generalConsent' => $generalConsent,
             'jenisKelamin' => $jenisKelamin,
             'pjJenisKelamin' => $pjJenisKelamin,
         ]);
@@ -423,6 +429,7 @@ class PoliController extends Controller
         $generalConsent = DB::table('general_consent')
             ->where('id_pendaftaran', $id_pendaftaran)
             ->first();
+        $generalConsent = $this->siapkanGeneralConsentUntukTampilan($generalConsent);
 
         return view('poli.obgyn-kunjungan-baru', compact(
             'poli', 'pasien', 'pendaftaran', 'no_rm', 'id_pendaftaran',
@@ -558,6 +565,10 @@ class PoliController extends Controller
         $pasien = Pasien::where('no_rm', $pendaftaran->no_rm)->firstOrFail();
         $ttv = Ttv::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
         $assesmen = Assesmen::where('id_pendaftaran', $pendaftaran->id_pendaftaran)->first();
+        $generalConsent = DB::table('general_consent')
+            ->where('id_pendaftaran', $pendaftaran->id_pendaftaran)
+            ->first();
+        $generalConsent = $this->siapkanGeneralConsentUntukTampilan($generalConsent);
 
         // Bentuk data sama dengan Poli Saraf: [id, kode, nama],
         // karena JavaScript di blade membutuhkan field "id" untuk cek duplikat/hapus.
@@ -609,6 +620,7 @@ class PoliController extends Controller
             'diagnosisTersimpan' => $diagnosisTersimpan,
             'tindakanTersimpan' => $tindakanTersimpan,
             'radiologi' => null,
+            'generalConsent' => $generalConsent,
             'jenisKelamin' => $jenisKelamin,
         ]);
     }
@@ -759,15 +771,23 @@ class PoliController extends Controller
     public function simpanGeneralConsent(Request $request)
     {
         $data = $request->validate([
-            'no_rm'                 => 'required|string|exists:pasien,no_rm',
-            'id_pendaftaran'        => 'required|integer|exists:pendaftaran,id_pendaftaran',
-            'gc_ttd_pemberi'        => 'required|string',
-            'gc_nama_pemberi'       => 'required|string|max:100',
-            'gc_ttd_pasien'         => 'required|string',
-            'gc_nama_penandatangan' => 'required|string|max:100',
-            'gc_anggota_keluarga'   => 'nullable|string',
-            'gc_tanggal'            => 'required|string|max:20',
-            'gc_jam'                => 'required|string|max:10',
+            'no_rm'                    => 'required|string|exists:pasien,no_rm',
+            'id_pendaftaran'           => 'required|integer|exists:pendaftaran,id_pendaftaran',
+            'gc_hak_kewajiban'         => 'required|in:setuju,tidak_setuju',
+            'gc_persetujuan_pelayanan' => 'required|in:setuju,tidak_setuju',
+            'gc_pelepasan_informasi'   => 'required|in:setuju,tidak_setuju',
+            'gc_pengajuan_keluhan'     => 'required|in:setuju,tidak_setuju',
+            'gc_informasi_rawat_jalan' => 'required|in:setuju,tidak_setuju',
+            'gc_kewajiban_pembayaran'  => 'required|in:setuju,tidak_setuju',
+            'gc_pernyataan_persetujuan'=> 'required|in:setuju,tidak_setuju',
+            'gc_konfirmasi'            => 'required|in:1',
+            'gc_anggota_keluarga'      => 'nullable|json',
+            'gc_ttd_pemberi'           => 'required|string',
+            'gc_nama_pemberi'          => 'required|string|max:100',
+            'gc_ttd_pasien'            => 'required|string',
+            'gc_nama_penandatangan'    => 'required|string|max:100',
+            'gc_tanggal'               => 'required|string|max:20',
+            'gc_jam'                   => 'required|string|max:10',
         ]);
 
         $pendaftaran = Pendaftaran::where('id_pendaftaran', $data['id_pendaftaran'])
@@ -781,39 +801,54 @@ class PoliController extends Controller
             ], 422);
         }
 
-        // Modal mengirim tanggal "13/11/2026" dan jam "09.05"
         try {
-            $tanggal = Carbon::createFromFormat('d/m/Y', $data['gc_tanggal'])->format('Y-m-d');
+            $tanggal = Carbon::createFromFormat('d/m/Y', $data['gc_tanggal'])->format('d/m/Y');
         } catch (\Throwable $e) {
-            $tanggal = now()->format('Y-m-d');
+            $tanggal = $data['gc_tanggal'];
         }
 
-        $jam = str_replace('.', ':', $data['gc_jam']) . ':00';
+        $jam = str_replace(':', '.', $data['gc_jam']);
+        $jam = substr($jam, 0, 5);
+
+        $folder = 'general_consent/' . $data['no_rm'];
+        $pathTtdPemberi = $folder . '/ttd_pemberi_' . $data['id_pendaftaran'] . '.png';
+        $pathTtdPasien = $folder . '/ttd_pasien_' . $data['id_pendaftaran'] . '.png';
 
         try {
+            $this->simpanTandaTanganGeneralConsent($data['gc_ttd_pemberi'], $pathTtdPemberi);
+            $this->simpanTandaTanganGeneralConsent($data['gc_ttd_pasien'], $pathTtdPasien);
+
+            $anggota = json_decode($data['gc_anggota_keluarga'] ?? '[]', true);
+            $anggota = is_array($anggota)
+                ? array_values(array_filter(array_map(
+                    fn ($nama) => is_string($nama) ? trim($nama) : '',
+                    $anggota
+                )))
+                : [];
+
             DB::table('general_consent')->updateOrInsert(
                 ['id_pendaftaran' => $data['id_pendaftaran']],
                 [
-                    // Modal hanya bisa disimpan bila semua butir sudah dicentang
-                    'hak_kewajiban'          => 1,
-                    'persetujuan_pelayanan'  => 1,
-                    'pelepasan_informasi'    => 1,
-                    'pengajuan_keluhan'      => 1,
-                    'informasi_rawat_jalan'  => 1,
-                    'kewajiban_pembayaran'   => 1,
-                    'pernyataan_persetujuan' => 1,
+                    // Simpan nilai radio sesuai pilihan, bukan mengubah semuanya menjadi 1.
+                    'hak_kewajiban'          => $data['gc_hak_kewajiban'],
+                    'persetujuan_pelayanan'  => $data['gc_persetujuan_pelayanan'],
+                    'pelepasan_informasi'    => $data['gc_pelepasan_informasi'],
+                    'pengajuan_keluhan'      => $data['gc_pengajuan_keluhan'],
+                    'informasi_rawat_jalan'  => $data['gc_informasi_rawat_jalan'],
+                    'kewajiban_pembayaran'   => $data['gc_kewajiban_pembayaran'],
+                    'pernyataan_persetujuan' => $data['gc_pernyataan_persetujuan'],
                     'konfirmasi'             => 1,
-                    'anggota_keluarga'       => $data['gc_anggota_keluarga'] ?? null,
-                    'ttd_pemberi'            => $data['gc_ttd_pemberi'],
+                    'anggota_keluarga'       => json_encode($anggota, JSON_UNESCAPED_UNICODE),
+                    'ttd_pemberi'            => $pathTtdPemberi,
                     'nama_pemberi'           => $data['gc_nama_pemberi'],
-                    'ttd_pasien'             => $data['gc_ttd_pasien'],
+                    'ttd_pasien'             => $pathTtdPasien,
                     'nama_penandatangan'     => $data['gc_nama_penandatangan'],
                     'tanggal'                => $tanggal,
                     'jam'                    => $jam,
                 ]
             );
 
-            Audit::catat('Menyimpan General Consent', 'Poli Obgyn', $data['no_rm']);
+            Audit::catat('Menyimpan General Consent', 'Poli', $data['no_rm']);
 
             return response()->json([
                 'success' => true,
@@ -827,6 +862,40 @@ class PoliController extends Controller
                 'message' => 'General Consent gagal disimpan.',
             ], 500);
         }
+    }
+
+    /** Mengubah path tanda tangan dari storage menjadi data URL untuk ditampilkan di canvas. */
+    private function siapkanGeneralConsentUntukTampilan($generalConsent)
+    {
+        if (!$generalConsent) {
+            return null;
+        }
+
+        foreach (['ttd_pemberi', 'ttd_pasien'] as $kolom) {
+            $path = $generalConsent->{$kolom} ?? null;
+            if ($path && Storage::disk('public')->exists($path)) {
+                $isi = Storage::disk('public')->get($path);
+                $generalConsent->{$kolom} = 'data:image/png;base64,' . base64_encode($isi);
+            }
+        }
+
+        return $generalConsent;
+    }
+
+    /** Menyimpan tanda tangan canvas ke storage dengan format yang sama seperti pendaftaran awal. */
+    private function simpanTandaTanganGeneralConsent(string $dataUrl, string $path): void
+    {
+        $prefix = 'data:image/png;base64,';
+        if (!str_starts_with($dataUrl, $prefix)) {
+            throw new \InvalidArgumentException('Format tanda tangan tidak valid.');
+        }
+
+        $binary = base64_decode(substr($dataUrl, strlen($prefix)), true);
+        if ($binary === false) {
+            throw new \InvalidArgumentException('Data tanda tangan tidak valid.');
+        }
+
+        Storage::disk('public')->put($path, $binary);
     }
 
     public function kirimRujukan(Request $request)
