@@ -8,6 +8,7 @@
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/jiwa-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/jiwa-kunjungan-baru.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/resume-medis.css') }}?v={{ @filemtime(public_path('css/resume-medis.css')) }}">
 @endsection
 
 @section('content')
@@ -25,7 +26,7 @@
                 'E000045' => ['Nur Aini',       'Perempuan', '2001-05-14', '081345670005'],
                 'E000046' => ['Fajar Nugroho',  'Laki-laki', '1988-12-02', '081345670006'],
             ];
-            $d = $dummy[$no_rm] ?? null;
+            $d = $dummy[$no_rm] ?? $dummy['E' . $no_rm] ?? null;
 
             $pasien = (object) [
                 'no_rm'         => $no_rm,
@@ -34,6 +35,7 @@
                 'tempat_lahir'  => 'Ngawi',
                 'tgl_lahir'     => $d[2] ?? null,
                 'no_hp'         => $d[3] ?? '-',
+                'alamat'        => 'Jl. Contoh No. 1, Ngawi',
             ];
         }
 
@@ -51,6 +53,11 @@
         $bisaAP  = in_array($role, ['admin', 'dokter']);
         $bisaIcd = in_array($role, ['admin', 'pmik']);
         $bisaRujuk = in_array($role, ['admin', 'dokter']);
+
+        // Resume Medis (sama seperti Poli Obgyn)
+        $bolehResume       = in_array($role, ['admin', 'dokter']);          // edit resume
+        $bolehSimpanResume = in_array($role, ['admin', 'dokter', 'pmik']);
+        $bolehSnomed       = in_array($role, ['admin', 'pmik']);            // kotak kode SNOMED CT
 
         $ro = fn ($boleh) => $boleh ? '' : 'readonly';
 
@@ -83,6 +90,53 @@
             'p_konseling_edukasi' => 'Konseling edukasi',
             'p_rencana_lanjut'    => 'Rencana tindak lanjut',
             'p_diet'              => 'Diet',
+        ];
+
+        // ===== RESUME MEDIS (sama dengan Poli Obgyn) =====
+        $snomed = fn ($kunci) => !$bolehSnomed ? '' : (
+            '<div class="rm-snomed" data-kunci="' . $kunci . '">' .
+                '<div class="rm-snomed-isi">' .
+                    '<div class="rm-snomed-judul"><i class="fa-solid fa-tag"></i> Kode SNOMED CT</div>' .
+                    '<div class="rm-snomed-daftar"><span class="rm-snomed-kosong">Belum ada kode SNOMED CT</span></div>' .
+                '</div>' .
+                '<button type="button" class="rm-snomed-btn" onclick="tambahKodeSnomed(this)">Tambah Kode +</button>' .
+            '</div>'
+        );
+
+        // [id, label, placeholder, kunci snomed]
+        $rmKiri = [
+            ['rmKeluhan', 'Keluhan Saat Masuk', 'Tuliskan keluhan saat masuk...', 'keluhan'],
+            ['rmKesadaran', 'Tingkat Kesadaran Pasien Masuk', '', 'kesadaran'],
+            ['rmFisik', 'Pemeriksaan Fisik (Objektif)', '', 'fisik'],
+            ['rmPenunjang', 'Pemeriksaan Penunjang (Radiologi/Lab)', '', 'penunjang'],
+            ['rmDxUtama', 'Diagnosa Utama / Akhir', '', 'dx_utama'],
+            ['rmDxSekunder', 'Diagnosa Sekunder', '', 'dx_sekunder'],
+        ];
+
+        $rmKanan = [
+            ['rmTindakan', 'Tindakan Sesuai ICD-9-CM', '', 'tindakan'],
+            ['rmTerapi', 'Terapi Obat yang Diberikan', '', 'terapi'],
+            ['rmInstruksi', 'Instruksi atau Rencana Tindak Lanjut', '', 'instruksi'],
+        ];
+
+        $rmEdukasi = [
+            'Proses Penyakit, Diagnosis, Rencana Asuhan',
+            'Obat',
+            'Rehabilitasi Medis',
+            'Manajemen Nyeri',
+            'Gizi',
+            'Cuci Tangan',
+            'Penggunaan Alat Medis',
+        ];
+
+        // [id, label, placeholder, pilihan]
+        $rmSelect = [
+            ['rmPrognosis', 'Prognosis', 'Pilih prognosis',
+                ['Ad bonam', 'Dubia ad bonam', 'Dubia ad malam', 'Ad malam']],
+            ['rmKondisiKeluar', 'Kondisi Saat Meninggalkan Klinik', 'Pilih kondisi',
+                ['Sembuh', 'Membaik', 'Belum sembuh', 'Meninggal']],
+            ['rmCaraKeluar', 'Cara Keluar', 'Pilih cara keluar',
+                ['Atas persetujuan dokter', 'Dirujuk', 'Atas permintaan sendiri', 'Pulang paksa', 'Meninggal']],
         ];
     @endphp
 
@@ -145,7 +199,7 @@
 
                 {{-- S, O, A --}}
                 @foreach ($soap as $huruf => $items)
-                    <div class="kb-soap">
+                    <div class="kb-soap" data-soap="{{ $huruf }}">
                         <div class="kb-badge">{{ $huruf }}</div>
                         <div class="kb-soap-card">
                             @foreach ($items as $nama => $label)
@@ -159,7 +213,7 @@
                 @endforeach
 
                 {{-- P --}}
-                <div class="kb-soap">
+                <div class="kb-soap" data-soap="P">
                     <div class="kb-badge">P</div>
                     <div class="kb-soap-card">
                         <div class="kb-row">
@@ -220,15 +274,176 @@
             <div class="kb-pane" id="tab-radiologi">
                 <div class="kb-kosong">Belum ada hasil radiologi untuk kunjungan ini.</div>
             </div>
-
-            {{-- ===== TAB RESUME MEDIS ===== --}}
-            <div class="kb-pane" id="tab-resume">
-                <div class="kb-kosong">Resume medis tersedia setelah assesmen disimpan.</div>
-            </div>
         </form>
+
+        {{-- ===== TAB RESUME MEDIS (sama dengan Poli Obgyn, sementara tanpa database) =====
+             Ditaruh di luar <form> asesmen supaya isiannya tidak ikut terkirim saat Simpan asesmen. --}}
+        <div class="kb-pane" id="tab-resume">
+            <div class="rm-wrap">
+
+                {{-- ALAMAT, KUNJUNGAN, PENANGGUNG JAWAB --}}
+                <div class="rm-top">
+                    <div class="rm-top-col">
+                        <div class="rm-line rm-start">
+                            <label for="rmAlamat">Alamat</label>
+                            <textarea id="rmAlamat" class="rm-input" rows="2">{{ $pasien->alamat ?? '' }}</textarea>
+                        </div>
+
+                        <div class="rm-line">
+                            <span></span>
+                            <div class="rm-split">
+                                <input type="text" id="rmKelurahan" class="rm-input" placeholder="Kelurahan / Desa">
+                                <input type="text" id="rmKecamatan" class="rm-input" placeholder="Kecamatan">
+                            </div>
+                        </div>
+
+                        <div class="rm-line">
+                            <span></span>
+                            <div class="rm-split">
+                                <input type="text" id="rmKota" class="rm-input" placeholder="Kota / Kabupaten">
+                                <input type="text" id="rmProvinsi" class="rm-input" placeholder="Provinsi">
+                            </div>
+                        </div>
+
+                        <div class="rm-line">
+                            <label for="rmKodePos">Kode Pos</label>
+                            <input type="text" id="rmKodePos" class="rm-input" inputmode="numeric" maxlength="5">
+                        </div>
+
+                        <div class="rm-line">
+                            <label for="rmPembayaran">Pembayaran</label>
+                            <input type="text" id="rmPembayaran" class="rm-input" placeholder="mis. BPJS / Umum">
+                        </div>
+                    </div>
+
+                    <div class="rm-top-col">
+                        <div class="rm-line">
+                            <label for="rmTglKunjungan">Tgl. Kunjungan</label>
+                            <input type="date" id="rmTglKunjungan" class="rm-input">
+                        </div>
+
+                        <div class="rm-line">
+                            <label for="rmTglKeluar">Tgl. Keluar</label>
+                            <input type="date" id="rmTglKeluar" class="rm-input">
+                        </div>
+
+                        <div class="rm-pj">
+                            <div class="rm-pj-judul">Penanggung Jawab</div>
+
+                            <div class="rm-pj-grid">
+                                <label for="rmPjNama">Nama</label>
+                                <input type="text" id="rmPjNama" class="rm-input">
+
+                                <label for="rmPjHubungan">Hubungan</label>
+                                <input type="text" id="rmPjHubungan" class="rm-input">
+
+                                <label for="rmPjJk">Jenis Kelamin</label>
+                                <select id="rmPjJk" class="rm-input">
+                                    <option value=""></option>
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+
+                                <label for="rmPjHp">No. HP</label>
+                                <input type="text" id="rmPjHp" class="rm-input" inputmode="tel">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- RINGKASAN KLINIS & PENATALAKSANAAN --}}
+                <div class="rm-bar">Ringkasan Klinis &amp; Penatalaksanaan</div>
+
+                <div class="rm-cols">
+                    {{-- KOLOM KIRI --}}
+                    <div class="rm-col">
+                        @foreach ($rmKiri as [$id, $label, $placeholder, $kunci])
+                            <div class="rm-blok rm-grow">
+                                <label class="rm-lbl" for="{{ $id }}">{{ $label }}</label>
+                                <textarea id="{{ $id }}" class="rm-input" rows="2" placeholder="{{ $placeholder }}"></textarea>
+                                {!! $snomed($kunci) !!}
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- KOLOM KANAN --}}
+                    <div class="rm-col">
+                        @foreach ($rmKanan as [$id, $label, $placeholder, $kunci])
+                            <div class="rm-blok rm-grow">
+                                <label class="rm-lbl" for="{{ $id }}">{{ $label }}</label>
+                                <textarea id="{{ $id }}" class="rm-input" rows="2" placeholder="{{ $placeholder }}"></textarea>
+                                {!! $snomed($kunci) !!}
+                            </div>
+                        @endforeach
+
+                        <div class="rm-blok">
+                            <div class="rm-lbl">Edukasi</div>
+
+                            <div class="rm-cek">
+                                @foreach ($rmEdukasi as $opt)
+                                    <label>
+                                        <input type="checkbox" name="rm_edukasi[]" value="{{ $opt }}">
+                                        {{ $opt }}
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            {!! $snomed('edukasi') !!}
+                        </div>
+
+                        @foreach ($rmSelect as [$id, $label, $placeholder, $opsi])
+                            <div class="rm-blok">
+                                <label class="rm-lbl" for="{{ $id }}">{{ $label }}</label>
+                                <select id="{{ $id }}" class="rm-input">
+                                    <option value="">{{ $placeholder }}</option>
+                                    @foreach ($opsi as $opt)
+                                        <option value="{{ $opt }}">{{ $opt }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- TANDA TANGAN DPJP, TANGGAL, JAM, TOMBOL --}}
+                <div class="rm-footer">
+                    <div>
+                        <div class="rm-ttd-label">Tanda tangan DPJP</div>
+                        <canvas id="ttdDpjp" class="rm-ttd-canvas" width="320" height="140"></canvas>
+                        <a href="#" class="ob-ttd-hapus" onclick="hapusTtd('ttdDpjp'); return false;">Hapus</a>
+                    </div>
+
+                    <div class="rm-waktu">
+                        <label for="rmTglTtd">Tanggal</label>
+                        <input type="date" id="rmTglTtd" class="rm-input">
+                    </div>
+
+                    <div class="rm-waktu">
+                        <label for="rmJamTtd">Jam</label>
+                        <input type="time" id="rmJamTtd" class="rm-input">
+                    </div>
+
+                    <div class="rm-btns">
+                        @if ($bolehSimpanResume)
+                            <button type="button" class="kb-btn simpan" onclick="simpanResume()">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan
+                            </button>
+                        @endif
+
+                        <button type="button" class="kb-btn simpan" onclick="cetakResumeMedis()">
+                            <i class="fa-solid fa-print"></i> Cetak
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        const NO_RM_PASIEN = @json($pasien->no_rm ?? null);
+        const ID_PENDAFTARAN = @json($id_pendaftaran);
+        const BOLEH_RESUME = @json($bolehResume);
+
         // ----- Pindah tab -----
         document.querySelectorAll('.kb-tab').forEach(function (tab) {
             tab.addEventListener('click', function () {
@@ -236,6 +451,9 @@
                 document.querySelectorAll('.kb-pane').forEach(function (p) { p.classList.remove('aktif'); });
                 tab.classList.add('aktif');
                 document.getElementById('tab-' + tab.dataset.tab).classList.add('aktif');
+
+                // Segarkan isi resume dari SOAP / kode ICD setiap kali tabnya dibuka
+                if (tab.dataset.tab === 'resume') isiResumeOtomatis();
             });
         });
 
@@ -282,6 +500,241 @@
             w.document.close();
             w.focus();
             w.print();
+        }
+
+        // ===========================================================
+        // RESUME MEDIS (sama dengan Poli Obgyn, sementara tanpa database)
+        // ===========================================================
+
+        // Kolom yang diisi otomatis dari SOAP / kode ICD.
+        // Selama belum diketik manual, isinya ikut diperbarui setiap tab
+        // Resume Medis dibuka; setelah diketik, tidak ditimpa lagi.
+        const FIELD_RESUME_OTOMATIS = [
+            'rmKeluhan', 'rmFisik', 'rmTerapi',
+            'rmDxUtama', 'rmDxSekunder', 'rmTindakan'
+        ];
+
+        FIELD_RESUME_OTOMATIS.forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function () {
+                    this.dataset.otomatis = '';
+                });
+            }
+        });
+
+        // Gabungkan isian satu blok SOAP (S / O / A / P) menjadi "Label: isi" per baris
+        function gabungSoapHuruf(huruf) {
+            return Array.from(document.querySelectorAll('[data-soap="' + huruf + '"] .kb-row'))
+                .map(function (row) {
+                    const label = (row.querySelector('label')?.textContent || '')
+                        .replace(/^\s*\d+\.\s*/, '').trim();
+                    const isi = (row.querySelector('textarea')?.value || '').trim();
+                    return isi ? label + ': ' + isi : '';
+                })
+                .filter(Boolean)
+                .join('\n');
+        }
+
+        function isiResumeOtomatis() {
+            const nilai = id => (document.getElementById(id)?.value ?? '').trim();
+
+            const isi = function (id, teks) {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                if (el.value.trim() === '' || el.dataset.otomatis === '1') {
+                    el.value = teks;
+                    el.dataset.otomatis = teks ? '1' : '';
+                }
+            };
+
+            isi('rmKeluhan', gabungSoapHuruf('S'));
+            isi('rmFisik', gabungSoapHuruf('O'));
+            isi('rmTerapi', gabungSoapHuruf('P'));
+            isi('rmDxUtama', nilai('icd_penyakit') || nilai('a_dx_utama'));
+            isi('rmDxSekunder', nilai('a_dx_sekunder'));
+            isi('rmTindakan', nilai('icd_tindakan'));
+        }
+
+        // Disiapkan untuk nanti saat disambungkan ke database.
+        function kumpulkanResume() {
+            isiResumeOtomatis();
+
+            const n = id => (document.getElementById(id)?.value ?? '').trim();
+
+            const snomed = {};
+            document.querySelectorAll('#tab-resume .rm-snomed').forEach(function (kotak) {
+                snomed[kotak.dataset.kunci] = Array.from(
+                    kotak.querySelectorAll('.rm-snomed-chip')
+                ).map(chip => chip.dataset.kode);
+            });
+
+            const edukasi = Array.from(
+                document.querySelectorAll('#tab-resume input[name="rm_edukasi[]"]:checked')
+            ).map(c => c.value);
+
+            return {
+                id_pendaftaran: ID_PENDAFTARAN,
+                no_rm: NO_RM_PASIEN,
+                alamat: n('rmAlamat'),
+                kelurahan: n('rmKelurahan'),
+                kecamatan: n('rmKecamatan'),
+                kota: n('rmKota'),
+                provinsi: n('rmProvinsi'),
+                kode_pos: n('rmKodePos'),
+                pembayaran: n('rmPembayaran'),
+                tanggal_kunjungan: n('rmTglKunjungan') || null,
+                tanggal_keluar: n('rmTglKeluar') || null,
+                pj_nama: n('rmPjNama'),
+                pj_hubungan: n('rmPjHubungan'),
+                pj_jenis_kelamin: n('rmPjJk'),
+                pj_no_hp: n('rmPjHp'),
+                keluhan: n('rmKeluhan'),
+                kesadaran: n('rmKesadaran'),
+                pemeriksaan_fisik: n('rmFisik'),
+                penunjang: n('rmPenunjang'),
+                diagnosa_utama: n('rmDxUtama'),
+                diagnosa_sekunder: n('rmDxSekunder'),
+                tindakan: n('rmTindakan'),
+                terapi: n('rmTerapi'),
+                instruksi: n('rmInstruksi'),
+                edukasi: edukasi,
+                prognosis: n('rmPrognosis'),
+                kondisi_keluar: n('rmKondisiKeluar'),
+                cara_keluar: n('rmCaraKeluar'),
+                snomed: snomed,
+                tanggal_ttd: n('rmTglTtd') || null,
+                jam_ttd: n('rmJamTtd') || null,
+                ttd_dpjp: ttdTerisi['ttdDpjp']
+                    ? document.getElementById('ttdDpjp').toDataURL('image/png')
+                    : null
+            };
+        }
+
+        // Simpan resume: SEMENTARA hanya menampilkan data (belum ke database)
+        function simpanResume() {
+            const data = kumpulkanResume();
+            console.log('Resume Medis (dummy, belum disimpan ke database):', data);
+            alert('Resume Medis siap disimpan.\nSementara masih tampilan saja, belum tersambung ke database.');
+        }
+
+        // Tombol "Tambah Kode +" (sementara pakai kotak isian sederhana)
+        function tambahKodeSnomed(tombol) {
+            const kotak = tombol.closest('.rm-snomed');
+            const daftar = kotak.querySelector('.rm-snomed-daftar');
+
+            const kode = (prompt('Masukkan kode SNOMED CT:') || '').trim();
+            if (!kode) return;
+
+            const kosong = daftar.querySelector('.rm-snomed-kosong');
+            if (kosong) kosong.remove();
+
+            const chip = document.createElement('span');
+            chip.className = 'rm-snomed-chip';
+            chip.dataset.kode = kode;
+            chip.appendChild(document.createTextNode(kode));
+
+            const hapus = document.createElement('button');
+            hapus.type = 'button';
+            hapus.textContent = '×';
+            hapus.setAttribute('aria-label', 'Hapus kode');
+
+            hapus.addEventListener('click', function () {
+                chip.remove();
+
+                if (!daftar.querySelector('.rm-snomed-chip')) {
+                    const teks = document.createElement('span');
+                    teks.className = 'rm-snomed-kosong';
+                    teks.textContent = 'Belum ada kode SNOMED CT';
+                    daftar.appendChild(teks);
+                }
+            });
+
+            chip.appendChild(hapus);
+            daftar.appendChild(chip);
+        }
+
+        function cetakResumeMedis() {
+            alert('Cetak Resume Medis belum dihubungkan. Tampilan dulu, cetak menyusul.');
+        }
+
+        // Tanggal kunjungan/keluar/tanda tangan dan jam terisi hari ini
+        (function () {
+            const d = new Date();
+            const dua = n => String(n).padStart(2, '0');
+            const hariIni = d.getFullYear() + '-' + dua(d.getMonth() + 1) + '-' + dua(d.getDate());
+
+            ['rmTglKunjungan', 'rmTglKeluar', 'rmTglTtd'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el && !el.value) el.value = hariIni;
+            });
+
+            const jam = document.getElementById('rmJamTtd');
+            if (jam && !jam.value) jam.value = dua(d.getHours()) + ':' + dua(d.getMinutes());
+        })();
+
+        // ----- Tanda tangan DPJP (kanvas) -----
+        const ttdTerisi = { ttdDpjp: false };
+
+        (function () {
+            const canvas = document.getElementById('ttdDpjp');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            let gambar = false;
+
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#000';
+
+            function posisi(e) {
+                const r = canvas.getBoundingClientRect();
+                return {
+                    x: (e.clientX - r.left) * (canvas.width / r.width),
+                    y: (e.clientY - r.top) * (canvas.height / r.height)
+                };
+            }
+
+            canvas.addEventListener('pointerdown', function (e) {
+                gambar = true;
+                ttdTerisi.ttdDpjp = true;
+                canvas.setPointerCapture(e.pointerId);
+
+                const p = posisi(e);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + 0.1, p.y + 0.1);
+                ctx.stroke();
+            });
+
+            canvas.addEventListener('pointermove', function (e) {
+                if (!gambar) return;
+                const p = posisi(e);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+            });
+
+            ['pointerup', 'pointercancel'].forEach(function (ev) {
+                canvas.addEventListener(ev, function () { gambar = false; });
+            });
+        })();
+
+        function hapusTtd(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            ttdTerisi[id] = false;
+        }
+
+        // Resume medis: hanya dokter / admin yang mengedit
+        if (!BOLEH_RESUME) {
+            document.querySelectorAll('#tab-resume input, #tab-resume textarea, #tab-resume select')
+                .forEach(function (el) { el.disabled = true; });
+            document.querySelectorAll('#tab-resume canvas').forEach(function (el) { el.style.pointerEvents = 'none'; });
+            document.querySelectorAll('#tab-resume .ob-ttd-hapus').forEach(function (el) { el.style.display = 'none'; });
         }
     </script>
 
