@@ -1,0 +1,3731 @@
+@extends('layouts.app')
+
+@section('title', 'Kunjungan Baru - Poli Saraf')
+@section('header-icon', '')
+@section('header-title', 'Poli Saraf')
+
+@section('extra-css')
+    <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/general-consent.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/syaraf-kunjungan-baru.css') }}?v={{ @filemtime(public_path('css/syaraf-kunjungan-baru.css')) }}">
+
+    <style>
+        /* ===== Tab terkunci (Resume Medis sebelum General Consent diisi, Clinical Pathway bila Dx Utama bukan HNP,
+                  dan semua tab selain Assessment untuk PMIK) ===== */
+        .kb-tab.terkunci { opacity: .5; cursor: not-allowed; }
+
+        /* ===== Resume Medis: kolom simetris seperti Obgyn ===== */
+        #tab-resume .rm-ringkasan-body { align-items: stretch; }
+
+        #tab-resume .rm-kolom {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Blok berisi textarea ikut memanjang mengisi sisa tinggi kolom */
+        #tab-resume .rm-blok.rm-grow {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #tab-resume .rm-blok.rm-grow textarea {
+            flex: 1;
+            min-height: 56px;
+        }
+
+        /* ===== Tanda tangan DPJP: ukuran mengikuti General Consent ===== */
+        .rm-ttd {
+            display: flex;
+            flex: 0 0 auto;
+            flex-direction: column;
+            align-items: center;
+            width: 220px;
+            max-width: 100%;
+            min-width: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .rm-ttd-label {
+            display: block;
+            margin: 0 0 6px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .rm-ttd-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            max-width: 100%;
+            height: 110px;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            border: 1px solid #d6d6d6;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .rm-ttd-preview {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #fff;
+            pointer-events: none;
+        }
+
+        .rm-ttd-preview[hidden] {
+            display: none !important;
+        }
+
+        .rm-ttd-placeholder {
+            display: block;
+            padding: 8px;
+            color: #777;
+            font-size: 11px;
+            line-height: 1.4;
+            font-weight: 400;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .rm-ttd-placeholder[hidden] {
+            display: none !important;
+        }
+
+        .rm-ttd-hapus {
+            display: inline-block;
+            margin: 4px 0 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #c8102e;
+            font-family: inherit;
+            font-size: 11px;
+            line-height: 1.3;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .rm-ttd-area:focus-visible,
+        .rm-ttd-hapus:focus-visible {
+            outline: 2px solid #c8102e;
+            outline-offset: 2px;
+        }
+
+        /* ===== Popup tanda tangan: ukuran mengikuti General Consent ===== */
+        .rm-ttd-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .45);
+            backdrop-filter: blur(3px);
+        }
+
+        .rm-ttd-modal-overlay.aktif {
+            display: flex;
+        }
+
+        .rm-ttd-modal {
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+        }
+
+        .rm-ttd-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 17px 22px;
+            color: #fff;
+            background: #c8102e;
+        }
+
+        .rm-ttd-modal-head span {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .rm-ttd-modal-close {
+            padding: 0;
+            border: 0;
+            color: #fff;
+            background: transparent;
+            font-size: 26px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .rm-ttd-modal-body {
+            padding: 22px;
+        }
+
+        .rm-ttd-modal-body p {
+            margin: 0 0 12px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .rm-ttd-canvas-wrap {
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+            border: 1px solid #d6d6d6;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .rm-ttd-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            border-radius: 0;
+            background: #fff;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .rm-ttd-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .rm-ttd-modal-actions button {
+            min-width: 0;
+            padding: 10px 22px;
+            border: 0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .rm-ttd-btn-hapus {
+            color: #c8102e;
+            background: #fbe9e9;
+        }
+
+        .rm-ttd-btn-batal {
+            color: #444;
+            background: #e9e9e9;
+        }
+
+        .rm-ttd-btn-simpan {
+            color: #fff;
+            background: #c8102e;
+        }
+
+        .rm-ttd-btn-simpan:hover {
+            background: #a50d26;
+        }
+
+        @media (max-width: 600px) {
+            .rm-ttd-modal { max-width: 100%; }
+            .rm-ttd-modal-body { padding: 15px; }
+            .rm-ttd-canvas-wrap { height: 220px; }
+            .rm-ttd-modal-actions { flex-wrap: wrap; gap: 8px; }
+            .rm-ttd-modal-actions button { padding: 10px 16px; }
+        }
+
+        .rm-pj-item select {
+            padding: 4px 6px;
+        }
+
+        /* =====================================================
+           SOAP: tampilan mengikuti Poli Obgyn
+           (label di kiri, isian memanjang di kanan)
+           ===================================================== */
+        .kb-soap-box .kb-soap-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .kb-soap-box .kb-sub,
+        .kb-soap-box .kb-plan-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .kb-soap-box .kb-sub {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .kb-soap-box .kb-sub-judul {
+            margin: 0 0 2px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #b81d24;
+        }
+
+        .kb-soap-box .kb-sub-item {
+            display: grid;
+            grid-template-columns: 170px 1fr;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+
+        .kb-soap-box .kb-sub-item label {
+            margin: 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .kb-soap-box .kb-sub-item textarea {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 0;
+            height: auto;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font: inherit;
+            font-size: 11px;
+            resize: vertical;
+        }
+
+        .kb-soap-box .kb-plan-wrap .kb-cetak-plan {
+            margin-top: 8px;
+        }
+
+        /* Cetak di kiri, Simpan di kanan, satu baris */
+        .kb-soap-box .kb-plan-aksi {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .kb-soap-box .kb-sub-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+        }
+
+        /* =====================================================
+           Kode ICD: checklist simbol Dagger (†) / Asterisk (*)
+           ===================================================== */
+        .kb-simbol {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 8px;
+            margin: 0 10px;
+        }
+
+        /* Kartu simbol: ukuran sama tinggi dengan kolom input */
+        .kb-simbol-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 40px;
+            padding: 0;
+            border: 1.5px solid #d6d6d6;
+            border-radius: 8px;
+            background: #fff;
+            color: #b81d24;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+            transition: background .15s, border-color .15s, color .15s, box-shadow .15s, transform .05s;
+        }
+
+        /* Tanda * tampak kecil dan naik ke atas: dibesarkan dan diturunkan */
+        .kb-simbol-btn[data-simbol="*"] {
+            font-size: 32px;
+            padding-top: 10px;
+        }
+
+        .kb-simbol-btn:hover {
+            border-color: #c8102e;
+            background: #fdf1f2;
+        }
+
+        .kb-simbol-btn:active {
+            transform: scale(.95);
+        }
+
+        .kb-simbol-btn.aktif {
+            border-color: #c8102e;
+            background: #c8102e;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(200, 16, 46, .35);
+        }
+
+        .kb-simbol-btn:focus-visible {
+            outline: 2px solid #c8102e;
+            outline-offset: 2px;
+        }
+
+        /* Centang kecil TTV -> Objective (sejajar baris RR) */
+        .kb-vital-chk {
+            flex: 0 0 auto;
+            width: 15px;
+            height: 15px;
+            margin: 0 0 0 8px;
+            accent-color: #c8102e;
+            cursor: pointer;
+        }
+
+        /* =====================================================
+           Dropdown hasil pencarian Kode ICD
+           Memakai position: fixed (posisi dihitung lewat JS) agar
+           tidak terpotong oleh kotak induk yang overflow-nya hidden.
+           ===================================================== */
+        .kb-diagnosa-row,
+        .kb-search-field,
+        .kb-search-inline {
+            overflow: visible;
+        }
+
+        .kb-search-box {
+            position: relative;
+            overflow: visible;
+        }
+
+        .kb-search-box .kb-dropdown {
+            position: fixed;
+            z-index: 5000;
+            display: none;
+            max-height: 260px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #d6d6d6;
+            border-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+        }
+
+        .kb-search-box .kb-dropdown-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            line-height: 1.4;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .kb-search-box .kb-dropdown-item:last-child {
+            border-bottom: 0;
+        }
+
+        .kb-search-box .kb-dropdown-item:hover {
+            background: #fdf1f2;
+        }
+
+        .kb-search-box .kb-dropdown-item.kb-dropdown-empty {
+            color: #777;
+            cursor: default;
+        }
+
+        .kb-search-box .kb-dropdown-item.kb-dropdown-empty:hover {
+            background: #fff;
+        }
+
+        /* =====================================================
+           KAJIAN AWAL
+           ===================================================== */
+        .kj-card { background:#fff; border-radius:10px; padding:14px 18px; margin-bottom:14px; font-size:12px; }
+        .kj-judul-merah { margin:0 0 6px; font-size:12px; font-weight:700; color:#c8102e; }
+        .kj-judul { margin:0 0 6px; font-size:12px; font-weight:700; color:#222; }
+        .kj-sub { margin:0 0 8px; font-size:10px; color:#999; }
+
+        .kj-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px 18px; margin-bottom:10px; }
+        .kj-vital { display:flex; align-items:center; gap:6px; }
+        .kj-vital label { font-weight:600; min-width:28px; }
+        .kj-vital input { flex:1; min-width:0; }
+        .kj-unit { font-size:10px; color:#999; white-space:nowrap; }
+
+        .kj-card input[type=text], .kj-card input[type=number], .kj-card select, .kj-card textarea {
+            box-sizing:border-box; padding:5px 10px; border:1px solid #ccc; border-radius:6px;
+            font:inherit; font-size:11px; background:#fff;
+        }
+        .kj-card textarea { width:100%; min-height:80px; resize:vertical; }
+        .kj-card input[readonly] { background:#f4f4f4; }
+
+        .kj-gcs { display:flex; flex-wrap:wrap; gap:14px 30px; align-items:center; margin-bottom:10px; }
+        .kj-gcs label { font-weight:600; margin-right:6px; }
+
+        .kj-radio-row { display:flex; flex-wrap:wrap; gap:8px 40px; margin-bottom:10px; }
+        .kj-opt { display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+        .kj-opt input[type=radio] { accent-color:#c8102e; width:15px; height:15px; margin:0; }
+        .kj-opt .kj-lain-teks { width:150px; }
+
+        .kj-slider { width:100%; accent-color:#c8102e; margin:6px 0 0; }
+        .kj-ticks { display:flex; justify-content:space-between; font-size:10px; padding:0 2px; margin-bottom:10px; }
+
+        .kj-nyeri-baris { display:grid; grid-template-columns:130px 1fr; gap:8px; align-items:center; margin-bottom:8px; }
+        .kj-nyeri-baris > label { font-size:11px; }
+        .kj-nyeri-baris input[type=text] { width:100%; max-width:320px; }
+
+        .kj-hal { display:none; }
+        .kj-hal.aktif { display:block; }
+
+        .kj-aksi { display:flex; justify-content:flex-end; gap:10px; margin-top:4px; }
+        .kj-btn { padding:8px 22px; border:0; border-radius:6px; background:#e11d2e; color:#fff; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+        .kj-btn:hover { background:#c8102e; }
+        .kj-btn.abu { background:#e9e9e9; color:#444; }
+        .kj-btn:disabled { opacity:.6; cursor:not-allowed; }
+
+        /* Pemeriksaan fisik */
+        .kj-fisik { display:grid; grid-template-columns:1fr 340px; border:1px solid #ddd; border-radius:8px; overflow:hidden; }
+        .kj-fisik table { width:100%; border-collapse:collapse; }
+        .kj-fisik td { padding:9px 10px; border-bottom:1px solid #ddd; vertical-align:middle; }
+        .kj-fisik tr:last-child td { border-bottom:0; }
+        .kj-fisik .kj-fisik-ket { width:100%; }
+        .kj-fisik .kj-fisik-ket:disabled { background:#f4f4f4; }
+        .kj-anatomi { display:flex; align-items:center; justify-content:center; border-left:1px solid #ddd; padding:10px; }
+        .kj-anatomi img { max-width:100%; height:auto; }
+
+        @media (max-width: 900px) {
+            .kj-grid { grid-template-columns:repeat(2, 1fr); }
+            .kj-fisik { grid-template-columns:1fr; }
+            .kj-anatomi { border-left:0; border-top:1px solid #ddd; }
+            .kj-nyeri-baris { grid-template-columns:1fr; }
+        }
+    </style>
+@endsection
+
+@section('content')
+
+    @php
+        $semuaPasien = $semuaPasien ?? [
+            (object)['no_rm'=>'RM-0001','nama_pasien'=>'Budi Santoso','jenis_kelamin'=>'Laki-laki','tempat_lahir'=>'Sidoarjo','tgl_lahir'=>'1980-01-01','umur'=>'46 Tahun','no_hp'=>'081234567890'],
+            (object)['no_rm'=>'RM-0003','nama_pasien'=>'Andi Pratama','jenis_kelamin'=>'Laki-laki','tempat_lahir'=>'Malang','tgl_lahir'=>'1990-03-15','umur'=>'36 Tahun','no_hp'=>'082112223333'],
+            (object)['no_rm'=>'RM-0005','nama_pasien'=>'Rudi Hartono','jenis_kelamin'=>'Laki-laki','tempat_lahir'=>'Mojokerto','tgl_lahir'=>'1975-06-12','umur'=>'51 Tahun','no_hp'=>'081377889900'],
+            (object)['no_rm'=>'RM-0007','nama_pasien'=>'Fajar Ramadhan','jenis_kelamin'=>'Laki-laki','tempat_lahir'=>'Sidoarjo','tgl_lahir'=>'1998-01-18','umur'=>'28 Tahun','no_hp'=>'083811223344'],
+            (object)['no_rm'=>'RM-0009','nama_pasien'=>'Agus Setiawan','jenis_kelamin'=>'Laki-laki','tempat_lahir'=>'Surabaya','tgl_lahir'=>'1970-06-22','umur'=>'56 Tahun','no_hp'=>'081245678901'],
+        ];
+
+        $pasien = collect($semuaPasien)->firstWhere('no_rm', $no_rm ?? request('no_rm'));
+
+        $tglKunjungan = request()->route('tanggal');
+
+        // Status General Consent kunjungan ini (Resume Medis terkunci sampai terisi)
+        $generalConsent = $generalConsent ?? \App\Models\GeneralConsent::where(
+            'id_pendaftaran',
+            $id_pendaftaran ?? request()->route('id_pendaftaran')
+        )->first();
+
+        // ---------- HAK AKSES PER ROLE ----------
+        $role = auth()->user()->role ?? null;
+        $bolehTtv          = in_array($role, ['admin', 'perawat']);
+        $bolehSubjOb       = in_array($role, ['admin', 'dokter', 'perawat']);          // S dan O
+        $bolehAssPlan      = in_array($role, ['admin', 'dokter']);                     // A dan P
+        $bolehIcd          = in_array($role, ['admin', 'pmik']);                       // kode ICD
+        $bolehRujuk        = in_array($role, ['admin', 'dokter']);
+        $bolehCp           = in_array($role, ['admin', 'dokter', 'perawat']);          // clinical pathway
+        $bolehResume       = in_array($role, ['admin', 'dokter']);                     // edit resume
+        $bolehSimpan       = in_array($role, ['admin', 'dokter', 'perawat', 'pmik']);
+        $bolehSimpanResume = in_array($role, ['admin', 'dokter', 'pmik']);
+
+        // PMIK hanya boleh membuka tab Assessment.
+        // Tab lain tetap tampil (disamarkan, tidak bisa diklik), tetapi isi formulirnya tidak dirender.
+        $hanyaAssesmen = ($role === 'pmik');
+
+        // Kotak kode SNOMED CT (hanya ada di Resume Medis)
+        $bolehSnomed = in_array($role, ['admin', 'pmik']);
+
+        $soapReadonly = fn ($n) => in_array($n, ['subjective', 'objective'])
+            ? ($bolehSubjOb ? '' : 'readonly')
+            : ($bolehAssPlan ? '' : 'readonly');
+    @endphp
+
+    <div class="kb-card" id="kartu-pasien-utama">
+        <div class="kb-section-title">Data Pasien</div>
+
+        @if ($pasien)
+            <div class="kb-fields">
+                <div class="kb-field">
+                    <span class="kb-label">No RM</span>
+                    <span class="kb-value">{{ $pasien->no_rm }}</span>
+                </div>
+                <div class="kb-field">
+                    <span class="kb-label">Tempat, Tgl Lahir</span>
+                    <span class="kb-value">{{ $pasien->tempat_lahir }}, {{ \Carbon\Carbon::parse($pasien->tgl_lahir)->format('Y-m-d') }}</span>
+                </div>
+                <div class="kb-field">
+                    <span class="kb-label">Nama</span>
+                    <span class="kb-value">{{ $pasien->nama_pasien }}</span>
+                </div>
+                <div class="kb-field">
+                    <span class="kb-label">Umur</span>
+                    <span class="kb-value">{{ $pasien->umur }}</span>
+                </div>
+                <div class="kb-field">
+                    <span class="kb-label">Jenis Kelamin</span>
+                    <span class="kb-value">{{ $pasien->jenis_kelamin }}</span>
+                </div>
+                <div class="kb-field">
+                    <span class="kb-label">No Hp</span>
+                    <span class="kb-value">{{ $pasien->no_hp }}</span>
+                </div>
+            </div>
+        @else
+            <p class="kb-kosong">Data pasien tidak ditemukan.</p>
+        @endif
+    </div>
+
+    {{-- Semua tab selalu tampil. Untuk PMIK, tab selain Assessment disamarkan dan tidak bisa diklik. --}}
+    <div class="kb-tabs">
+        <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assessment</div>
+
+        {{-- BARU: Kajian Awal --}}
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('kajian', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-notes-medical"></i> Kajian Awal
+        </div>
+
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('radiologi', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-x-ray"></i> Radiologi
+        </div>
+
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('pathway', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-diagram-project"></i> Clinical Pathway
+        </div>
+
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" id="tabConsentBtn" onclick="gantiTab('consent', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-file-signature"></i> General Consent
+        </div>
+
+        <div class="kb-tab {{ ($hanyaAssesmen || empty($generalConsent)) ? 'terkunci' : '' }}" id="tabResumeBtn" onclick="gantiTab('resume', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-file-medical"></i> Resume Medis
+        </div>
+    </div>
+
+    {{-- ===== AREA CETAK RESEP (tersembunyi, hanya muncul saat print) ===== --}}
+    <div id="cetak-resep-area" class="cetak-resep-only">
+        <div class="cetak-header">
+            <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
+            <div class="cetak-header-text">
+                <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
+                <p>Jl. Ronggo Warsito No. 98 A, Ngawi</p>
+                <p>Telp: (0351) 745596</p>
+            </div>
+        </div>
+
+        <table class="cetak-info-table">
+            <tr>
+                <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>No. R.M.</td><td>:</td><td>{{ $pasien->no_rm ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Umur / JK</td><td>:</td><td>{{ $pasien->umur ?? '-' }} / {{ $pasien->jenis_kelamin ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Pemberi Resep</td><td>:</td><td>Dokter Poli Syaraf</td>
+            </tr>
+        </table>
+
+        <div class="cetak-divider"></div>
+
+        <div class="cetak-title">RESEP</div>
+
+        <div class="cetak-body">
+            <div class="resep-rp">R/</div>
+            <div class="resep-isi" id="resep-isi-plan"></div>
+        </div>
+
+        <div class="cetak-footer">
+            <p>Ngawi, <span id="resep-tanggal"></span></p>
+            <div class="cetak-signature">
+                <p>dr. Poli Syaraf</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== AREA CETAK CLINICAL PATHWAY (tersembunyi, hanya muncul saat print) ===== --}}
+    @unless ($hanyaAssesmen)
+    <div id="cetak-cp-area" class="cetak-resep-only">
+        <div class="cetak-header">
+            <img src="{{ asset('images/logo.png') }}" class="cetak-logo" alt="Logo Klinik">
+            <div class="cetak-header-text">
+                <h2>KLINIK RAWAT INAP MERAH PUTIH</h2>
+                <p>Jl. Ronggo Warsito No. 98 A, Ngawi</p>
+                <p>Telp: (0351) 745596</p>
+            </div>
+        </div>
+
+        <table class="cetak-info-table">
+            <tr>
+                <td width="15%">Nama Pasien</td><td width="2%">:</td><td width="83%">{{ $pasien->nama_pasien ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>No. R.M.</td><td>:</td><td>{{ $pasien->no_rm ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Umur / JK</td><td>:</td><td>{{ $pasien->umur ?? '-' }} / {{ $pasien->jenis_kelamin ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Tgl. Kunjungan</td><td>:</td><td>{{ $tglKunjungan ? \Carbon\Carbon::parse($tglKunjungan)->format('d-m-Y') : '-' }}</td>
+            </tr>
+            <tr>
+                <td>Poli</td><td>:</td><td>Poli Syaraf</td>
+            </tr>
+        </table>
+
+        <div class="cetak-divider"></div>
+
+        <div class="cetak-title">CLINICAL PATHWAY</div>
+
+        <table class="cp-print-table">
+            <thead>
+                <tr>
+                    <th>Aktivitas Pelayanan</th>
+                    <th>Keterangan</th>
+                    <th>Waktu</th>
+                    <th>Tarif</th>
+                </tr>
+            </thead>
+            <tbody id="cp-cetak-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td class="cp-print-aktivitas cp-print-total-label" colspan="3">Total</td>
+                    <td class="cp-print-tarif" id="cp-cetak-total"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="cetak-footer">
+            <p>Ngawi, <span id="cp-tanggal"></span></p>
+            <div class="cetak-signature">
+                <p>dr. Poli Syaraf</p>
+            </div>
+        </div>
+    </div>
+    @endunless
+
+    <div id="tab-assesment" class="kb-tab-content active">
+        <input type="hidden" id="id_pendaftaran" value="{{ $id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? '') }}">
+        <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+
+        {{-- ===== Kotak Vital Signs ===== --}}
+        <div class="kb-vitals-box">
+            <div class="kb-vitals">
+                <div class="kb-vital-row">
+                    <label>TD</label>
+                    <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                    <span class="kb-vital-unit">mmHg</span>
+                </div>
+                <div class="kb-vital-row">
+                    <label>HR</label>
+                    <input type="number" id="heart_rate" name="heart_rate" data-field="heart_rate" value="{{ old('heart_rate', $ttv->heart_rate ?? '') }}" placeholder="mis. 88" min="0" max="300" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                    <span class="kb-vital-unit">x/menit</span>
+                </div>
+                <div class="kb-vital-row">
+                    <label>SpO2</label>
+                    <input type="number" id="spo2" name="spo2" data-field="spo2" value="{{ old('spo2', $ttv->spo2 ?? '') }}" placeholder="mis. 98" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                    <span class="kb-vital-unit">%</span>
+                </div>
+                <div class="kb-vital-row">
+                    <label>Suhu</label>
+                    <input type="number" id="suhu" name="suhu" data-field="suhu" value="{{ old('suhu', $ttv->suhu ?? '') }}" placeholder="mis. 36.5" min="20" max="50" step="0.1" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                    <span class="kb-vital-unit">°C</span>
+                </div>
+                <div class="kb-vital-row">
+                    <label>RR</label>
+                    <input type="number" id="respiratory_rate" name="respiratory_rate" data-field="respiratory_rate" value="{{ old('respiratory_rate', $ttv->respiratory_rate ?? '') }}" placeholder="mis. 20" min="0" max="100" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                    <span class="kb-vital-unit">x/menit</span>
+                    @if ($bolehTtv)
+                        <input type="checkbox" id="chkVital" class="kb-vital-chk"
+                               title="Masukkan TTV ke O (Objective) - Pemeriksaan Tanda Vital"
+                               aria-label="Masukkan TTV ke Objective"
+                               onchange="toggleVitalKeObjektif(this)">
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <hr class="kb-divider">
+
+        {{-- ===== Kotak SOAP: setiap isian disimpan pada kolom database masing-masing ===== --}}
+        @php
+            $soapBagian = [
+                'subjective' => ['S', [
+                    'keluhan_utama' => 'Keluhan Utama',
+                    'riwayat_penyakit_sekarang' => 'Riwayat Penyakit Sekarang',
+                    'riwayat_penyakit_dahulu' => 'Riwayat Penyakit Dahulu',
+                    'riwayat_penyakit_keluarga' => 'Riwayat Penyakit Keluarga',
+                    'riwayat_pengobatan' => 'Riwayat Pengobatan',
+                    'riwayat_sosial' => 'Riwayat Sosial',
+                    'riwayat_operasi' => 'Riwayat Operasi',
+                    'riwayat_alergi' => 'Riwayat Alergi',
+                    'riwayat_imunisasi' => 'Riwayat Imunisasi',
+                ]],
+                'objective' => ['O', [
+                    'pemeriksaan_fisik_lainnya' => 'Pemeriksaan Fisik Lainnya',
+                ]],
+                'assessment' => ['A', [
+                    'dx_utama' => 'Dx Utama',
+                    'dx_sekunder' => 'Dx Sekunder',
+                ]],
+                'plan' => ['P', [
+                    'tindakan_medis' => 'Tindakan Medis',
+                    'konseling_edukasi' => 'Konseling Edukasi',
+                    'rencana_tindak_lanjut' => 'Rencana Tindak Lanjut',
+                    'diet' => 'Diet',
+                    'resep_obat' => 'Resep Obat',
+                ]],
+            ];
+
+            $soapPlaceholder = [
+                'keluhan_utama' => 'Keluhan utama...',
+                'riwayat_penyakit_sekarang' => 'Riwayat penyakit sekarang...',
+                'riwayat_penyakit_dahulu' => 'Riwayat penyakit dahulu...',
+                'riwayat_penyakit_keluarga' => 'Riwayat penyakit keluarga...',
+                'riwayat_pengobatan' => 'Riwayat pengobatan...',
+                'riwayat_sosial' => 'Riwayat sosial...',
+                'riwayat_operasi' => 'Riwayat operasi...',
+                'riwayat_alergi' => 'Riwayat alergi...',
+                'riwayat_imunisasi' => 'Riwayat imunisasi...',
+                'pemeriksaan_fisik_lainnya' => 'Pemeriksaan fisik selain TTV...',
+                'dx_utama' => 'Diagnosa utama...',
+                'dx_sekunder' => 'Diagnosa sekunder...',
+                'tindakan_medis' => 'Tindakan medis...',
+                'konseling_edukasi' => 'Konseling edukasi...',
+                'rencana_tindak_lanjut' => 'Rencana tindak lanjut...',
+                'diet' => 'Diet...',
+                'resep_obat' => 'Resep obat...',
+            ];
+
+            // Penampung gabungan hanya untuk fungsi lama di sisi browser (resume/cetak/guard).
+            // Kolom ini tidak lagi dikirim ke endpoint penyimpanan SOAP.
+            $soapNilai = [
+                'subjective' => $assesmen->subjek ?? '',
+                'objective' => $assesmen->objek ?? '',
+                'assessment' => $assesmen->assesmen ?? '',
+                'plan' => $assesmen->plan ?? '',
+            ];
+
+        @endphp
+
+        <div class="kb-soap-title">SOAP</div>
+        <div class="kb-soap-box">
+            @foreach ($soapBagian as $nama => [$huruf, $daftarKolom])
+                <div class="kb-soap-row">
+                    <div class="kb-soap-badge">{{ $huruf }}</div>
+                    <div class="kb-sub" data-target="{{ $nama }}">
+                        @if ($nama === 'objective')
+                            <div class="kb-sub-item">
+                                <label>Pemeriksaan Tanda Vital</label>
+                                <textarea rows="1" data-label="Pemeriksaan Tanda Vital" data-soap-ttv placeholder="Klik centang ✓ di atas untuk menarik data TTV" {{ $soapReadonly($nama) }}></textarea>
+                            </div>
+                        @endif
+                        @foreach ($daftarKolom as $kolom => $label)
+                            <div class="kb-sub-item">
+                                <label>{{ $label }}</label>
+                                <textarea name="{{ $kolom }}" data-soap-field="{{ $kolom }}" rows="{{ $kolom === 'resep_obat' ? 3 : 1 }}" data-label="{{ $label }}" placeholder="{{ $soapPlaceholder[$kolom] ?? '' }}" {{ $soapReadonly($nama) }}>{{ old($kolom, $assesmen->$kolom ?? '') }}</textarea>
+                            </div>
+                        @endforeach
+                        @if ($nama === 'plan')
+                            <div class="kb-sub-item">
+                                <label>&nbsp;</label>
+                                <div class="kb-plan-aksi">
+                                    <button type="button" class="kb-cetak-btn kb-cetak-plan" onclick="cetakResep()">
+                                        <i class="fa-solid fa-print"></i> Cetak
+                                    </button>
+
+                                    @if ($bolehSimpan)
+                                        <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+                                            <i class="fa-solid fa-floppy-disk"></i> Simpan
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <textarea name="{{ $nama }}" hidden {{ $soapReadonly($nama) }}>{{ old($nama, $soapNilai[$nama]) }}</textarea>
+                </div>
+            @endforeach
+        </div>
+
+        <hr class="kb-divider">
+
+        {{-- ===== Diagnosa ===== --}}
+        <div class="kb-diagnosa-title">Kode ICD</div>
+        <div class="kb-diagnosa-row">
+            <div class="kb-search-field">
+                <label>Penyakit</label>
+                <div class="kb-search-inline" {!! $bolehIcd ? '' : 'style="display:none"' !!}>
+                    <div class="kb-search-box">
+                        <input type="text" id="cariPenyakit" placeholder="Cari kode / nama penyakit..." autocomplete="off"
+                               oninput="cariItem('penyakit')"
+                               onfocus="cariItem('penyakit')"
+                               onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('penyakit'); }">
+                        <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <div class="kb-dropdown" id="dropdownPenyakit"></div>
+                    </div>
+                    {{-- Checklist simbol: Dagger (†) / Asterisk (*) di antara input dan tombol ✓ --}}
+                    <div class="kb-simbol" role="group" aria-label="Simbol ICD">
+                        <button type="button" class="kb-simbol-btn" id="simbolDagger" data-simbol="†"
+                                title="Dagger (†)" aria-label="Dagger" aria-pressed="false"
+                                onclick="ubahSimbol(this)">†</button>
+                        <button type="button" class="kb-simbol-btn" id="simbolAsterisk" data-simbol="*"
+                                title="Asterisk (*)" aria-label="Asterisk" aria-pressed="false"
+                                onclick="ubahSimbol(this)">*</button>
+                    </div>
+
+                    <div class="kb-check-box">
+                        <span class="kb-check-icon" id="checkPenyakit" role="button"
+                              title="Tambahkan penyakit ke daftar"
+                              onclick="tambahDiagnosa('penyakit')">✓</span>
+                    </div>
+                </div>
+
+                <div class="kb-diagnosa-list" id="listPenyakit"></div>
+            </div>
+            <div class="kb-search-field">
+                <label>Tindakan</label>
+                <div class="kb-search-inline" {!! $bolehIcd ? '' : 'style="display:none"' !!}>
+                    <div class="kb-search-box">
+                        <input type="text" id="cariTindakan" placeholder="Cari kode / nama tindakan..." autocomplete="off"
+                               oninput="cariItem('tindakan')"
+                               onfocus="cariItem('tindakan')"
+                               onkeydown="if (event.key === 'Enter') { event.preventDefault(); tambahDiagnosa('tindakan'); }">
+                        <span class="kb-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <div class="kb-dropdown" id="dropdownTindakan"></div>
+                    </div>
+                    <div class="kb-check-box">
+                        <span class="kb-check-icon" id="checkTindakan" role="button"
+                              title="Tambahkan tindakan ke daftar"
+                              onclick="tambahDiagnosa('tindakan')">✓</span>
+                    </div>
+                </div>
+                <div class="kb-diagnosa-list" id="listTindakan"></div>
+            </div>
+        </div>
+
+        <div class="kb-actions">
+            @if ($bolehRujuk)
+                <button type="button" class="kb-btn kb-btn-rujuk" onclick="rujukPasien()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Rujuk
+                </button>
+            @endif
+            @if ($bolehSimpan)
+                <button type="button" class="kb-btn kb-btn-simpan" onclick="simpanKunjunganBaru()">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan
+                </button>
+            @endif
+        </div>
+    </div>
+
+{{-- =====================================================================
+     SEMUA FORMULIR DI BAWAH INI TIDAK DIRENDER UNTUK PMIK
+     (Kajian Awal, Radiologi, Clinical Pathway, General Consent, Resume Medis, popup, Rujukan)
+     Tabnya tetap tampil di atas, tetapi disamarkan dan tidak bisa diklik.
+     ===================================================================== --}}
+@unless ($hanyaAssesmen)
+
+    {{-- ===== TAB KAJIAN AWAL ===== --}}
+    @php
+        $kjFisik = [
+            'kepala' => 'Kepala', 'mata' => 'Mata', 'mulut' => 'Mulut', 'leher' => 'Leher',
+            'dada' => 'Dada', 'perut' => 'Perut', 'muskuloskeletal' => 'Muskuloskeletal',
+            'anus_genetalia' => 'Anus-Genetalia',
+        ];
+    @endphp
+
+    <div id="tab-kajian" class="kb-tab-content">
+
+        {{-- ========== HALAMAN 1 ========== --}}
+        <div class="kj-hal aktif" data-hal="1">
+
+            <div class="kj-card">
+                <div class="kj-judul">Tanda Vital dan Antropometri</div>
+
+                <div class="kj-grid">
+                    <div class="kj-vital"><label for="kj_td">TD</label>
+                        <input type="text" id="kj_td" data-kj="td" autocomplete="off"><span class="kj-unit">mmHg</span></div>
+                    <div class="kj-vital"><label for="kj_hr">HR</label>
+                        <input type="number" id="kj_hr" data-kj="hr" min="0" max="300"><span class="kj-unit">x/menit</span></div>
+                    <div class="kj-vital"><label for="kj_rr">RR</label>
+                        <input type="number" id="kj_rr" data-kj="rr" min="0" max="100"><span class="kj-unit">x/menit</span></div>
+                    <div class="kj-vital"><label for="kj_spo2">SpO2</label>
+                        <input type="number" id="kj_spo2" data-kj="spo2" min="0" max="100"><span class="kj-unit">%</span></div>
+
+                    <div class="kj-vital"><label for="kj_suhu">Suhu</label>
+                        <input type="number" id="kj_suhu" data-kj="suhu" min="20" max="50" step="0.1"><span class="kj-unit">°C</span></div>
+                    <div class="kj-vital"><label for="kj_bb">BB</label>
+                        <input type="number" id="kj_bb" data-kj="bb" min="0" step="0.1"><span class="kj-unit">kg</span></div>
+                    <div class="kj-vital"><label for="kj_tb">TB</label>
+                        <input type="number" id="kj_tb" data-kj="tb" min="0" step="0.1"><span class="kj-unit">cm</span></div>
+                    <div class="kj-vital"><label for="kj_imt">IMT</label>
+                        <input type="text" id="kj_imt" data-kj="imt" readonly><span class="kj-unit">kg/m²</span></div>
+                </div>
+
+                <div class="kj-judul">Glasgow Coma Scale (GCS)</div>
+                <div class="kj-gcs">
+                    <div><label for="kj_eye">Eye</label>
+                        <select id="kj_eye" data-kj="gcs_eye">
+                            <option value="">Pilih</option>
+                            <option value="4">4 - Spontan</option>
+                            <option value="3">3 - Terhadap suara</option>
+                            <option value="2">2 - Terhadap nyeri</option>
+                            <option value="1">1 - Tidak ada respons</option>
+                        </select></div>
+                    <div><label for="kj_verbal">Verbal</label>
+                        <select id="kj_verbal" data-kj="gcs_verbal">
+                            <option value="">Pilih</option>
+                            <option value="5">5 - Orientasi baik</option>
+                            <option value="4">4 - Bingung</option>
+                            <option value="3">3 - Kata tidak tepat</option>
+                            <option value="2">2 - Suara tidak jelas</option>
+                            <option value="1">1 - Tidak ada respons</option>
+                        </select></div>
+                    <div><label for="kj_motorik">Motorik</label>
+                        <select id="kj_motorik" data-kj="gcs_motorik">
+                            <option value="">Pilih</option>
+                            <option value="6">6 - Mengikuti perintah</option>
+                            <option value="5">5 - Melokalisir nyeri</option>
+                            <option value="4">4 - Menarik dari nyeri</option>
+                            <option value="3">3 - Fleksi abnormal</option>
+                            <option value="2">2 - Ekstensi abnormal</option>
+                            <option value="1">1 - Tidak ada respons</option>
+                        </select></div>
+                </div>
+
+                <div class="kj-judul">Kesadaran</div>
+                <div class="kj-radio-row">
+                    @foreach (['Compos Mentis', 'Apatis', 'Somnolen', 'Soporokoma', 'Coma'] as $k)
+                        <label class="kj-opt"><input type="radio" name="kj_kesadaran" value="{{ $k }}"> {{ $k }}</label>
+                    @endforeach
+                </div>
+
+                <div class="kj-judul">Rehabilitasi dan Lain-lain</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label class="kj-opt"><input type="radio" name="kj_rehab" value="Rehabilitasi"> Rehabilitasi</label>
+                    <label class="kj-opt"><input type="radio" name="kj_rehab" value="Lainnya"> Lainnya
+                        <input type="text" class="kj-lain-teks" data-kj="rehab_lainnya" autocomplete="off"></label>
+                </div>
+            </div>
+
+            <div class="kj-judul-merah">Pengkajian Medis</div>
+            <div class="kj-card">
+                <div class="kj-judul">Keluhan Utama</div>
+                <textarea id="kj_keluhan_utama" data-kj="keluhan_utama"></textarea>
+                <div class="kj-judul" style="margin-top:10px;">Anamnesa</div>
+                <textarea id="kj_anamnesa" data-kj="anamnesa"></textarea>
+            </div>
+
+            <div class="kj-judul-merah">Skala Nyeri</div>
+            <div class="kj-card">
+                <div class="kj-judul">Skala Intensitas Nyeri <span id="kj_nyeri_nilai" style="color:#c8102e;">(1)</span></div>
+                <div class="kj-sub">Pilih skala nyeri yang dirasakan pasien (0-10)</div>
+                <input type="range" id="kj_skala_nyeri" class="kj-slider" data-kj="skala_nyeri" min="1" max="10" step="1" value="1"
+                       oninput="document.getElementById('kj_nyeri_nilai').textContent = '(' + this.value + ')'">
+                <div class="kj-ticks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+
+                <div class="kj-judul">Deskripsi Nyeri</div>
+
+                <div class="kj-nyeri-baris">
+                    <label for="kj_pencetus">Faktor Pencetus</label>
+                    <input type="text" id="kj_pencetus" data-kj="faktor_pencetus" autocomplete="off">
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label>Qualitas</label>
+                    <div class="kj-radio-row" style="margin:0;">
+                        @foreach (['Tumpul', 'Tajam', 'Panas'] as $q)
+                            <label class="kj-opt"><input type="radio" name="kj_kualitas" value="{{ $q }}"> {{ $q }}</label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label for="kj_lokasi">Lokasi</label>
+                    <input type="text" id="kj_lokasi" data-kj="lokasi_nyeri" autocomplete="off">
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label>Frekuensi</label>
+                    <div class="kj-radio-row" style="margin:0;">
+                        @foreach (['Jarang', 'Hilang-timbul', 'Terus-menerus'] as $f)
+                            <label class="kj-opt"><input type="radio" name="kj_frekuensi" value="{{ $f }}"> {{ $f }}</label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label for="kj_lama">Lama Nyeri</label>
+                    <input type="text" id="kj_lama" data-kj="lama_nyeri" autocomplete="off">
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label>Nyeri Hilang / Berkurang Apabila</label>
+                    <div class="kj-radio-row" style="margin:0;">
+                        @foreach (['Minum obat', 'Mendengar musik', 'Istirahat', 'Berubah posisi tidur'] as $h)
+                            <label class="kj-opt"><input type="radio" name="kj_nyeri_hilang" value="{{ $h }}"> {{ $h }}</label>
+                        @endforeach
+                        <label class="kj-opt"><input type="radio" name="kj_nyeri_hilang" value="Lain-lain"> Lain-lain
+                            <input type="text" class="kj-lain-teks" data-kj="nyeri_hilang_lainnya" autocomplete="off"></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kj-aksi">
+                <button type="button" class="kj-btn" onclick="kjHalaman(2)">Lanjut &rarr;</button>
+            </div>
+        </div>
+
+        {{-- ========== HALAMAN 2: PEMERIKSAAN FISIK ========== --}}
+        <div class="kj-hal" data-hal="2">
+            <div class="kj-judul-merah">Pemeriksaan Fisik</div>
+            <div class="kj-card" style="padding:12px;">
+                <div class="kj-fisik">
+                    <table>
+                        @foreach ($kjFisik as $kunci => $label)
+                            <tr>
+                                <td style="width:130px; font-size:12px;">{{ $label }}</td>
+                                <td style="width:90px;">
+                                    <label class="kj-opt"><input type="radio" name="kj_fisik_{{ $kunci }}" value="Normal"> Normal</label>
+                                </td>
+                                <td style="width:130px;">
+                                    <label class="kj-opt"><input type="radio" name="kj_fisik_{{ $kunci }}" value="Tidak Normal"> Tidak Normal</label>
+                                </td>
+                                <td><input type="text" class="kj-fisik-ket" data-kj="fisik_{{ $kunci }}_ket" autocomplete="off" disabled></td>
+                            </tr>
+                        @endforeach
+                    </table>
+
+                    <div class="kj-anatomi">
+                        <img src="{{ asset('images/anatomi-tubuh.png') }}" alt="Gambar anatomi tubuh (tampak depan dan belakang)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="kj-aksi">
+                <button type="button" class="kj-btn abu" onclick="kjHalaman(1)">&larr; Kembali</button>
+                <button type="button" class="kj-btn" id="btnSimpanKajian" onclick="simpanKajian()">
+                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== TAB RADIOLOGI (hanya untuk dilihat, tidak bisa diisi) ===== --}}
+    @php
+        $radiologi = $radiologi ?? null;
+        $radiologiOptions = ['Foto Thoraks', 'MRI', 'USG Abdomen', 'Rontgen', 'CT Scan'];
+
+        // Data hasil radiologi (dikirim dari controller sebagai $radiologi):
+        //   pemeriksaan (array nama pemeriksaan), lainnya (teks), file_scan (URL file), hasil (teks)
+        $radPemeriksaan = (array) data_get($radiologi, 'pemeriksaan', []);
+        $radLainnya     = trim((string) data_get($radiologi, 'lainnya', ''));
+        $radFile        = data_get($radiologi, 'file_scan');
+        $radHasil       = (string) data_get($radiologi, 'hasil', '');
+    @endphp
+    <div id="tab-radiologi" class="kb-tab-content">
+        <div class="rd-card rd-readonly">
+            <div class="rd-title">Form Pemeriksaan</div>
+            <div class="rd-note">Halaman ini hanya untuk melihat hasil radiologi.</div>
+            <div class="rd-sub rd-sub-first">Ceklist Periksa Radiologi</div>
+
+            <div class="rd-grid">
+                @foreach ($radiologiOptions as $opt)
+                    <label class="rd-item">
+                        <input type="checkbox" disabled {{ in_array($opt, $radPemeriksaan) ? 'checked' : '' }}> {{ $opt }}
+                    </label>
+                @endforeach
+                <label class="rd-item rd-lainnya">
+                    <input type="checkbox" disabled {{ $radLainnya !== '' ? 'checked' : '' }}> Lainnya
+                    <input type="text" value="{{ $radLainnya }}" placeholder="-" readonly disabled>
+                </label>
+            </div>
+
+            <div class="rd-sub">Scan Hasil</div>
+            <div class="rd-upload">
+                @if ($radFile)
+                    @if (preg_match('/\.(jpe?g|png)$/i', $radFile))
+                        <a href="{{ $radFile }}" target="_blank" rel="noopener">
+                            <img src="{{ $radFile }}" alt="Scan hasil radiologi" class="rd-scan-img">
+                        </a>
+                    @endif
+                    <a href="{{ $radFile }}" target="_blank" rel="noopener" class="rd-scan-link">
+                        <i class="fa-solid fa-up-right-from-square"></i> Buka scan hasil
+                    </a>
+                @else
+                    Belum ada scan hasil.
+                @endif
+            </div>
+
+            <div class="rd-sub">Hasil Pemeriksaan Radiologi</div>
+            <textarea class="rd-hasil" rows="5" readonly placeholder="Belum ada hasil pemeriksaan radiologi.">{{ $radHasil }}</textarea>
+        </div>
+    </div>
+
+    {{-- ===== TAB CLINICAL PATHWAY ===== --}}
+    <div id="tab-pathway" class="kb-tab-content">
+        <div class="cp-wrap">
+            <div class="cp-scroll">
+                <table class="cp-table">
+                    <thead>
+                        <tr>
+                            <th class="cp-w-25">Aktivitas Pelayanan</th>
+                            <th class="cp-w-40">Keterangan</th>
+                            <th class="cp-w-20">Waktu</th>
+                            <th class="cp-w-15">Tarif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="cp-dx-head">
+                            <td class="cp-aktivitas">Diagnosa</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr class="cp-dx-row cp-dx-mid">
+                            <td class="cp-aktivitas cp-dx-label">Dx Utama</td>
+                            <td><input type="text" class="cp-dx-input cp-dx-auto" data-label="Dx Utama" value="" readonly></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+                        <tr class="cp-dx-row cp-dx-mid">
+                            <td class="cp-aktivitas cp-dx-label">Dx Sekunder</td>
+                            <td><input type="text" class="cp-dx-input" data-label="Dx Sekunder"></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+                        <tr class="cp-dx-row">
+                            <td class="cp-aktivitas cp-dx-label">Dx Banding</td>
+                            <td><input type="text" class="cp-dx-input" data-label="Dx Banding"></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Asesmen Klinis">Asesmen Klinis</td>
+                            <td><textarea rows="2"></textarea></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Pemeriksaan Fisik">Pemeriksaan Fisik</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Pemeriksaan tanda vital</label>
+                                <label class="cp-check"><input type="checkbox"> Inspeksi postur tulang belakang dan gerakan aktif volumna vertebralis</label>
+                                <label class="cp-check"><input type="checkbox"> Pemeriksaan motorik, reflek, dan sensorik dermatom</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
+                            </td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
+                        </tr>
+
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Pemeriksaan Penunjang">Pemeriksaan Penunjang</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Magnetic Resonance Imaging (MRI)</label>
+                                <label class="cp-check"><input type="checkbox"> Computerized Tomography (CT Scan)</label>
+                                <label class="cp-check"><input type="checkbox"> Foto polos lumbosakral (rontgen / X-ray)</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
+                            </td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
+                        </tr>
+
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Farmakologis">Farmakologis</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Antipiretik</label>
+                                <label class="cp-check"><input type="checkbox"> Analgesik Adjuvan</label>
+                                <label class="cp-check"><input type="checkbox"> NSAID oral</label>
+                                <label class="cp-check"><input type="checkbox"> Muscle Relaxant</label>
+                                <label class="cp-check"><input type="checkbox"> Cairan IV kristaloid</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
+                            </td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
+                        </tr>
+
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Fisioterapi">Fisioterapi</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Terapi lampu hangat (Infra Red)</label>
+                                <label class="cp-check"><input type="checkbox"> Stimulasi Listrik (TENS)</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
+                            </td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td><div class="cp-rp">Rp <input type="text" class="cp-tarif" inputmode="numeric"></div></td>
+                        </tr>
+
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Edukasi">Edukasi</td>
+                            <td>
+                                <label class="cp-check"><input type="checkbox"> Edukasi menjaga postur tubuh yang benar saat duduk dan berdiri</label>
+                                <label class="cp-check"><input type="checkbox"> Edukasi olahraga yang menguatkan tulang belakang</label>
+                                <label class="cp-check"><input type="checkbox"> Edukasi angkat beban berat</label>
+                                <label class="cp-check"><input type="checkbox"> Edukasi menjaga berat badan ideal</label>
+                                <label class="cp-check"><input type="checkbox"> <input type="text" class="cp-lain-teks"></label>
+                            </td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+
+                        <tr class="cp-row">
+                            <td class="cp-aktivitas" data-nama="Variasi Pelayanan">Variasi Pelayanan</td>
+                            <td><textarea rows="2"></textarea></td>
+                            <td><input type="text" class="cp-waktu" readonly></td>
+                            <td></td>
+                        </tr>
+
+                        <tr>
+                            <td class="cp-aktivitas">Total</td>
+                            <td></td>
+                            <td></td>
+                            <td><div class="cp-rp">Rp <input type="text" id="cpTotal" class="cp-total-input" readonly></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cp-footer">
+                @if ($bolehCp)
+                    <button type="button" class="cp-simpan" id="btnSimpanCP" onclick="simpanCP()">
+                        <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
+                    </button>
+                @endif
+                <button type="button" class="cp-cetak" onclick="cetakCP()">
+                    <i class="fa-solid fa-print"></i> Cetak
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== TAB GENERAL CONSENT (formulir langsung tampil, tanpa tombol "Isi General Consent") ===== --}}
+    @php
+        $gcTtl = ($pasien->tempat_lahir ?? '-') . ', ' .
+            (!empty($pasien->tgl_lahir) ? \Carbon\Carbon::parse($pasien->tgl_lahir)->format('d-m-Y') : '-');
+
+        $gcData = [
+            'norm' => $pasien->no_rm ?? '',
+            'nama' => $pasien->nama_pasien ?? '',
+            'ttl'  => $gcTtl,
+            'umur' => $pasien->umur ?? '-',
+            'jk'   => $pasien->jenis_kelamin ?? '-',
+            'hp'   => $pasien->no_hp ?? '-',
+        ];
+    @endphp
+
+    <div id="tab-consent" class="kb-tab-content">
+        <script>
+            window.GC_URL_SIMPAN     = @json(route('poli.syaraf.general-consent.simpan'));
+            window.GC_CSRF           = @json(csrf_token());
+            window.GC_ID_PENDAFTARAN = @json($id_pendaftaran ?? ($pendaftaran->id_pendaftaran ?? request()->route('id_pendaftaran')));
+            window.GC_DATA_PASIEN    = @json($gcData);
+            window.GC_SUDAH_ADA      = @json(!empty($generalConsent));
+        </script>
+
+        <p id="gcStatusTeks" style="margin:0 0 10px;font-size:12px;">
+            @if (!empty($generalConsent))
+                <span style="color:#198754;font-weight:600;">✔ Sudah diisi</span>
+                pada {{ $generalConsent->tanggal }} pukul {{ $generalConsent->jam }}
+                oleh {{ $generalConsent->nama_penandatangan }}.
+            @endif
+        </p>
+
+        @include('pendaftaran.partials.general-consent', ['inline' => true])
+    </div>
+
+    {{-- =========================================================
+         TAB RESUME MEDIS (disesuaikan dengan Poli Obgyn)
+         ========================================================= --}}
+    @php
+        // Kolom kiri: 6 blok
+        $rmBlokKiri = [
+            ['keluhan',     'Keluhan Saat Masuk',                    'Tuliskan keluhan saat masuk...'],
+            ['kesadaran',   'Tingkat Kesadaran Pasien Masuk',        ''],
+            ['fisik',       'Pemeriksaan Fisik (Objektif)',          ''],
+            ['penunjang',   'Pemeriksaan Penunjang (Radiologi/Lab)', ''],
+            ['dx_utama',    'Diagnosa Utama / Akhir',                ''],
+            ['dx_sekunder', 'Diagnosa Sekunder',                     ''],
+        ];
+
+        // Kolom kanan (atas): Tindakan, Terapi, Instruksi
+        $rmBlokKananAtas = [
+            ['tindakan',  'Tindakan Sesuai ICD-9-CM',             ''],
+            ['terapi',    'Terapi Obat yang Diberikan',           ''],
+            ['instruksi', 'Instruksi atau Rencana Tindak Lanjut', ''],
+        ];
+
+        $rmEdukasi = [
+            'Proses Penyakit, Diagnosis, Rencana Asuhan',
+            'Obat',
+            'Rehabilitasi Medis',
+            'Manajemen Nyeri',
+            'Gizi',
+            'Cuci Tangan',
+            'Penggunaan Alat Medis',
+        ];
+
+        // [id, data-rm, label, placeholder, pilihan]
+        $rmSelect = [
+            ['rm_prognosis', 'prognosis', 'Prognosis', 'Pilih prognosis',
+                ['Ad bonam', 'Dubia ad bonam', 'Dubia ad malam', 'Ad malam']],
+            ['rm_kondisi', 'kondisi_keluar', 'Kondisi Saat Meninggalkan Klinik', 'Pilih kondisi',
+                ['Sembuh', 'Membaik', 'Belum sembuh', 'Meninggal']],
+            ['rm_cara_keluar', 'cara_keluar', 'Cara Keluar', 'Pilih cara keluar',
+                ['Atas persetujuan dokter', 'Dirujuk', 'Atas permintaan sendiri', 'Pulang paksa', 'Meninggal']],
+        ];
+
+        // Ringkasan radiologi -> isi awal kolom Pemeriksaan Penunjang
+        $radRingkas = collect($radPemeriksaan)
+            ->when($radLainnya !== '', fn ($c) => $c->push($radLainnya))
+            ->implode(', ');
+
+        $penunjangDefault = trim(
+            ($radRingkas !== '' ? 'Radiologi: ' . $radRingkas : '') .
+            ($radHasil !== '' ? "\nHasil: " . $radHasil : '')
+        );
+
+        // Data opsional dari controller (boleh null). Sesuaikan nama variabelnya.
+        $rm = $resumeMedis ?? null;
+        $pj = $penanggungJawab ?? null;
+    @endphp
+
+    <div id="tab-resume" class="kb-tab-content">
+
+        {{-- ===== Bagian atas ===== --}}
+        <div class="rm-top">
+            <div class="rm-top-col">
+                <div class="rm-row rm-top-align">
+                    <label for="rm_alamat">Alamat</label>
+                    <textarea id="rm_alamat" data-rm="alamat" rows="3">{{ data_get($rm, 'alamat', $pasien->alamat ?? '') }}</textarea>
+                </div>
+
+                <div class="rm-offset">
+                    <div class="rm-two">
+                        <input type="text" data-rm="kelurahan" placeholder="Kelurahan / Desa" value="{{ data_get($rm, 'kelurahan', '') }}">
+                        <input type="text" data-rm="kecamatan" placeholder="Kecamatan" value="{{ data_get($rm, 'kecamatan', '') }}">
+                    </div>
+                    <div class="rm-two">
+                        <input type="text" data-rm="kota" placeholder="Kota / Kabupaten" value="{{ data_get($rm, 'kota', '') }}">
+                        <input type="text" data-rm="provinsi" placeholder="Provinsi" value="{{ data_get($rm, 'provinsi', '') }}">
+                    </div>
+                </div>
+
+                <div class="rm-row">
+                    <label for="rm_kodepos">Kode Pos</label>
+                    <input type="text" id="rm_kodepos" data-rm="kode_pos" inputmode="numeric" maxlength="5" value="{{ data_get($rm, 'kode_pos', '') }}">
+                </div>
+                <div class="rm-row">
+                    <label for="rm_bayar">Pembayaran</label>
+                    <input type="text" id="rm_bayar" data-rm="pembayaran" placeholder="mis. BPJS / Umum" value="{{ data_get($rm, 'pembayaran', '') }}">
+                </div>
+            </div>
+
+            <div class="rm-top-col">
+                <div class="rm-row">
+                    <label for="rm_tgl_kunjungan">Tgl. Kunjungan</label>
+                    <input type="date" id="rm_tgl_kunjungan" data-rm="tgl_kunjungan"
+                           value="{{ data_get($rm, 'tgl_kunjungan', $tglKunjungan ? \Carbon\Carbon::parse($tglKunjungan)->format('Y-m-d') : '') }}">
+                </div>
+                <div class="rm-row">
+                    <label for="rm_tgl_keluar">Tgl. Keluar</label>
+                    <input type="date" id="rm_tgl_keluar" data-rm="tgl_keluar" value="{{ data_get($rm, 'tgl_keluar', '') }}">
+                </div>
+
+                <div class="rm-pj">
+                    <div class="rm-pj-title">Penanggung Jawab</div>
+                    <div class="rm-pj-body">
+                        <div class="rm-pj-item"><span class="rm-pj-label">Nama</span>:
+                            <input type="text" data-rm="pj_nama" value="{{ data_get($pj, 'nama', '') }}"></div>
+                        <div class="rm-pj-item"><span class="rm-pj-label">Hubungan</span>:
+                            <input type="text" data-rm="pj_hubungan" value="{{ data_get($pj, 'hubungan', '') }}"></div>
+                        <div class="rm-pj-item"><span class="rm-pj-label">Jenis Kelamin</span>:
+                            <select data-rm="pj_jk">
+                                <option value=""></option>
+                                <option value="Laki-laki" {{ data_get($pj, 'jenis_kelamin') === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="Perempuan" {{ data_get($pj, 'jenis_kelamin') === 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                            </select></div>
+                        <div class="rm-pj-item"><span class="rm-pj-label">No. HP</span>:
+                            <input type="text" data-rm="pj_hp" inputmode="tel" value="{{ data_get($pj, 'no_hp', '') }}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ===== Ringkasan Klinis & Penatalaksanaan ===== --}}
+        <div class="rm-ringkasan">
+            <div class="rm-ringkasan-head">Ringkasan Klinis &amp; Penatalaksanaan</div>
+
+            <div class="rm-ringkasan-body">
+                {{-- Kolom kiri --}}
+                <div class="rm-kolom">
+                    @foreach ($rmBlokKiri as [$kunci, $judul, $ph])
+                        <div class="rm-blok rm-grow">
+                            <label class="rm-judul" for="rm_{{ $kunci }}">{{ $judul }}</label>
+                            <textarea id="rm_{{ $kunci }}" data-rm="{{ $kunci }}" placeholder="{{ $ph }}">{{ data_get($rm, $kunci, $kunci === 'penunjang' ? $penunjangDefault : '') }}</textarea>
+
+                            @if ($bolehSnomed)
+                                <div class="rm-snomed" data-snomed="{{ $kunci }}">
+                                    <div class="rm-snomed-head">
+                                        <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
+                                        <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
+                                    </div>
+                                    <div class="rm-snomed-list"></div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Kolom kanan --}}
+                <div class="rm-kolom">
+                    @foreach ($rmBlokKananAtas as [$kunci, $judul, $ph])
+                        <div class="rm-blok rm-grow">
+                            <label class="rm-judul" for="rm_{{ $kunci }}">{{ $judul }}</label>
+                            <textarea id="rm_{{ $kunci }}" data-rm="{{ $kunci }}" placeholder="{{ $ph }}">{{ data_get($rm, $kunci, '') }}</textarea>
+
+                            @if ($bolehSnomed)
+                                <div class="rm-snomed" data-snomed="{{ $kunci }}">
+                                    <div class="rm-snomed-head">
+                                        <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
+                                        <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('{{ $kunci }}')">Tambah Kode <b>+</b></button>
+                                    </div>
+                                    <div class="rm-snomed-list"></div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+
+                    {{-- Edukasi --}}
+                    <div class="rm-blok">
+                        <label class="rm-judul">Edukasi</label>
+                        <div class="rm-edukasi">
+                            @foreach ($rmEdukasi as $item)
+                                <label><input type="checkbox" name="rm_edukasi[]" value="{{ $item }}"> {{ $item }}</label>
+                            @endforeach
+                        </div>
+
+                        @if ($bolehSnomed)
+                            <div class="rm-snomed" data-snomed="edukasi">
+                                <div class="rm-snomed-head">
+                                    <span class="rm-snomed-label"><i class="fa-solid fa-notes-medical"></i> Kode SNOMED CT</span>
+                                    <button type="button" class="rm-btn-tambah" onclick="rmBukaModal('edukasi')">Tambah Kode <b>+</b></button>
+                                </div>
+                                <div class="rm-snomed-list"></div>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Prognosis, Kondisi, Cara Keluar --}}
+                    @foreach ($rmSelect as [$id, $dataRm, $judul, $ph, $opsi])
+                        <div class="rm-blok">
+                            <label class="rm-judul" for="{{ $id }}">{{ $judul }}</label>
+                            <select id="{{ $id }}" data-rm="{{ $dataRm }}">
+                                <option value="">{{ $ph }}</option>
+                                @foreach ($opsi as $opt)
+                                    <option value="{{ $opt }}" {{ data_get($rm, $dataRm) === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- ===== Footer ===== --}}
+        <div class="rm-footer">
+            <div class="rm-ttd">
+                <div class="rm-ttd-label">Tanda tangan DPJP</div>
+                <div class="rm-ttd-area" role="button" tabindex="0"
+                     onclick="bukaModalTtdDpjp()"
+                     onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); bukaModalTtdDpjp(); }"
+                     aria-label="Klik untuk membubuhkan tanda tangan DPJP">
+                    <img id="ttdDpjpPreview" class="rm-ttd-preview" alt="Pratinjau tanda tangan DPJP" hidden>
+                </div>
+                <button type="button" class="rm-ttd-hapus" onclick="hapusTtdDpjpTersimpan()">Hapus tanda tangan</button>
+            </div>
+            <div class="rm-waktu">
+                <div>
+                    <label for="rm_tanggal">Tanggal</label>
+                    <input type="date" id="rm_tanggal" data-rm="tanggal_ttd">
+                </div>
+                <div>
+                    <label for="rm_jam">Jam</label>
+                    <input type="time" id="rm_jam" data-rm="jam_ttd">
+                </div>
+            </div>
+            <div class="rm-aksi">
+                @if ($bolehSimpanResume)
+                    <button type="button" class="rm-btn" id="btnSimpanRM" onclick="simpanRM()">
+                        <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
+                    </button>
+                @endif
+                <button type="button" class="rm-btn" onclick="cetakRM()">Cetak</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== POPUP TANDA TANGAN DPJP ===== --}}
+    <div class="rm-ttd-modal-overlay" id="rmTtdModal" role="dialog" aria-modal="true" aria-labelledby="rmTtdModalJudul">
+        <div class="rm-ttd-modal">
+            <div class="rm-ttd-modal-head">
+                <span id="rmTtdModalJudul">Tanda Tangan DPJP</span>
+                <button type="button" class="rm-ttd-modal-close" onclick="tutupModalTtdDpjp()" aria-label="Tutup">&times;</button>
+            </div>
+            <div class="rm-ttd-modal-body">
+                <p>Silakan bubuhkan tanda tangan pada area di bawah ini.</p>
+                <div class="rm-ttd-canvas-wrap">
+                    <canvas id="ttdDpjp" class="rm-ttd-canvas" width="560" height="260"></canvas>
+                </div>
+                <div class="rm-ttd-modal-actions">
+                    <button type="button" class="rm-ttd-btn-hapus" onclick="hapusTtdDpjp()">Hapus</button>
+                    <button type="button" class="rm-ttd-btn-batal" onclick="tutupModalTtdDpjp()">Batal</button>
+                    <button type="button" class="rm-ttd-btn-simpan" onclick="simpanTtdDpjp()">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== POPUP PENCARIAN & PENGKODEAN SNOMED CT ===== --}}
+    @if ($bolehSnomed)
+        <div class="rm-modal-overlay" id="rmModal" role="dialog" aria-modal="true" aria-labelledby="rmModalJudul">
+            <div class="rm-modal">
+                <div class="rm-modal-head">
+                    <span id="rmModalJudul">Pencarian &amp; Pengkodean SNOMED CT</span>
+                    <button type="button" class="rm-modal-tutup" onclick="rmTutupModal()" aria-label="Tutup">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="rm-modal-body">
+                    <div class="rm-keyword">
+                        <label for="rmKeyword">Keyword</label>
+                        <input type="text" id="rmKeyword" autocomplete="off" oninput="rmCariKode()">
+                    </div>
+
+                    <div class="rm-hasil" id="rmHasil"></div>
+
+                    <div class="rm-manual">
+                        <div class="rm-manual-title">Input Kode SNOMED CT Manual</div>
+                        <div class="rm-manual-body">
+                            <div class="rm-manual-grid">
+                                <label for="rmManualKode">Kode</label>
+                                <input type="text" id="rmManualKode" inputmode="numeric" autocomplete="off">
+                                <label for="rmManualDesk">Deskripsi</label>
+                                <input type="text" id="rmManualDesk" autocomplete="off"
+                                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); rmTambahManual(); }">
+                            </div>
+                            <div class="rm-manual-aksi">
+                                <button type="button" class="rm-btn-batal" onclick="rmTutupModal()">Batal</button>
+                                <button type="button" class="rm-btn" onclick="rmTambahManual()">Tambah Kode +</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== FORM RUJUKAN (muncul saat tombol Rujuk diklik) ===== --}}
+    <div id="view-rujukan">
+
+        <div class="rj-box">
+            <div class="rj-back">
+                <button type="button" onclick="tutupRujukan()" aria-label="Kembali"><i class="fa-solid fa-arrow-left"></i></button>
+            </div>
+            <div class="rj-body">
+                <div class="rj-grid">
+                    <div class="rj-field">
+                        <label>Poli Asal</label>
+                        <input type="text" id="rjPoliAsal" value="Poli Syaraf" readonly>
+                    </div>
+                    <div class="rj-field">
+                        <label>Tujuan</label>
+                        <select id="rjTujuan">
+                            <option value="">-- Pilih Poli --</option>
+                            <option value="obgyn">Poli Obgyn</option>
+                            <option value="jantung">Poli Jantung</option>
+                            <option value="jiwa">Poli Jiwa</option>
+                            <option value="radiologi">Radiologi</option>
+                        </select>
+                    </div>
+                    <div class="rj-field">
+                        <label>Dokter Pengirim</label>
+                        <input type="text" id="rjDokter" value="dr. Ratna Wijayanti, Sp.S" readonly>
+                    </div>
+                    <div class="rj-field">
+                        <label>Tanggal Rujuk</label>
+                        <input type="date" id="rjTanggal">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rj-box">
+            <div class="rj-title">Data Pasien</div>
+            <div class="rj-body">
+                @if ($pasien)
+                    <div class="rj-grid">
+                        <div class="rj-field"><label>No RM</label><input type="text" value="{{ $pasien->no_rm }}" readonly></div>
+                        <div class="rj-field"><label>Tempat, Tgl Lahir</label><input type="text" value="{{ $pasien->tempat_lahir }}, {{ \Carbon\Carbon::parse($pasien->tgl_lahir)->format('Y-m-d') }}" readonly></div>
+                        <div class="rj-field"><label>Nama</label><input type="text" value="{{ $pasien->nama_pasien }}" readonly></div>
+                        <div class="rj-field"><label>Umur</label><input type="text" value="{{ $pasien->umur }}" readonly></div>
+                        <div class="rj-field"><label>Jenis Kelamin</label><input type="text" value="{{ $pasien->jenis_kelamin }}" readonly></div>
+                        <div class="rj-field"><label>No Hp</label><input type="text" value="{{ $pasien->no_hp }}" readonly></div>
+                    </div>
+                @else
+                    <p class="kb-kosong">Data pasien tidak ditemukan.</p>
+                @endif
+
+                <div class="rj-grid rj-grid-mt">
+                    <div>
+                        <div class="rj-field rj-mb">
+                            <label>Diagnosa</label>
+                            <input type="text" id="rjDiagnosa" autocomplete="off" readonly>
+                        </div>
+                        <div class="rj-field rj-top">
+                            <label>Alasan Rujuk</label>
+                            <textarea id="rjAlasan"></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="rj-cek-title">Checklist Periksa Radiologi</div>
+                        @foreach (['Foto Thoraks', 'USG Abdomen', 'CT Scan', 'MRI', 'Rontgen'] as $opt)
+                            <label class="rj-cek-item">
+                                <input type="checkbox" name="rujuk_radiologi[]" value="{{ $opt }}"> {{ $opt }}
+                            </label>
+                        @endforeach
+                        <label class="rj-cek-item">
+                            <input type="checkbox" id="rjCekLainnya" name="rujuk_radiologi[]" value="Lainnya"> Lainnya
+                            <input type="text" id="rjLainnya" placeholder="(tuliskan)" autocomplete="off">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rj-actions">
+            <button type="button" class="rj-kirim" onclick="kirimRujukan()">KIRIM RUJUKAN</button>
+        </div>
+    </div>
+
+@endunless
+
+@endsection
+
+@section('extra-js')
+<script>
+    // ===== Konfigurasi =====
+    // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
+    const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
+
+    // Hak akses (dari server). Server tetap memeriksa ulang di route & controller.
+    const ROLE_USER      = @json($role);
+    const BOLEH_TTV      = @json($bolehTtv);
+    const BOLEH_SO       = @json($bolehSubjOb);
+    const BOLEH_ASS_PLAN = @json($bolehAssPlan);
+    const BOLEH_ICD      = @json($bolehIcd);
+    const BOLEH_CP       = @json($bolehCp);
+    const BOLEH_RESUME   = @json($bolehResume);
+    const BOLEH_SIMPAN   = @json($bolehSimpan);
+
+    // true bila user hanya boleh membuka tab Assessment (PMIK).
+    // Tab lain tetap tampil tetapi disamarkan; formulirnya tidak dirender oleh server,
+    // jadi kode di bawah harus aman tanpa elemennya.
+    const HANYA_ASSESMEN = @json($hanyaAssesmen);
+
+    // Status General Consent kunjungan ini. Resume Medis terkunci sampai true.
+    let SUDAH_CONSENT = @json(!empty($generalConsent));
+
+    // Dipanggil formulir General Consent setelah berhasil tersimpan di server
+    window.gcSetelahSimpan = function () {
+        SUDAH_CONSENT = true;
+
+        document.getElementById('tabResumeBtn')?.classList.remove('terkunci');
+
+        const status = document.getElementById('gcStatusTeks');
+        if (status) status.innerHTML = '<span style="color:#198754;font-weight:600;">✔ Sudah diisi</span> pada kunjungan ini.';
+
+        // Consent tersimpan: Resume Medis langsung terbuka
+        gantiTab('resume');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Penyimpanan Clinical Pathway ke database.
+    const CP_SIMPAN_KE_DB = true;
+
+    // Kata kunci Diagnosa Utama (SOAP bagian A) yang membuka Clinical Pathway:
+    // HNP, Hernia Nukleus Pulposus (termasuk salah eja "nuleus"), saraf kejepit, saraf terjepit.
+    // Tidak peka huruf besar/kecil. Harus sama dengan POLA_DX_HNP di ClinicalPathwayController.
+    const POLA_DX_HNP = /\bhnp\b|hernia\s+nuk?leus\s+pulposus|saraf\s+(?:kejepit|terjepit)/i;
+
+    const PESAN_CP_SYARAT =
+        'Clinical Pathway hanya tersedia bila Diagnosa Utama (SOAP bagian A) berisi ' +
+        'HNP, Hernia Nukleus Pulposus, saraf kejepit, atau saraf terjepit.';
+
+    // true hanya sesaat sebelum pindah halaman setelah Simpan berhasil.
+    // Selama false, halaman ini tidak bisa ditinggalkan bila ada data belum disimpan.
+    let izinkanKeluar = false;
+
+    // ===== Helper umum =====
+    function tanggalIndonesia() {
+        return new Date().toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+    }
+
+    function sembunyiDropdown() {
+        ['dropdownPenyakit', 'dropdownTindakan'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+    }
+
+    // Dropdown memakai position: fixed, jadi posisinya dihitung dari kolom input
+    // agar tidak terpotong oleh kotak induk yang overflow-nya hidden.
+    function posisiDropdown(dropdown) {
+        const input = dropdown.closest('.kb-search-box')?.querySelector('input');
+        if (!input) return;
+
+        const r = input.getBoundingClientRect();
+        dropdown.style.left  = r.left + 'px';
+        dropdown.style.top   = (r.bottom + 2) + 'px';
+        dropdown.style.width = r.width + 'px';
+    }
+
+    // Posisi fixed tidak ikut bergeser saat halaman di-scroll / ukuran jendela berubah, jadi ditutup saja.
+    window.addEventListener('scroll', function (e) {
+        if (e.target.closest && e.target.closest('.kb-dropdown')) return; // scroll di dalam dropdown
+        sembunyiDropdown();
+    }, true);
+    window.addEventListener('resize', sembunyiDropdown);
+
+    // Kirim JSON ke server dan pastikan respons berupa JSON dengan success = true.
+    async function kirimJson(url, method, body, pesanGagal) {
+        const csrfToken = document.getElementById('csrf_token')?.value;
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(body)
+        });
+
+        const teksRespons = await response.text();
+        let hasil;
+
+        try {
+            hasil = JSON.parse(teksRespons);
+        } catch (e) {
+            console.error('Respons bukan JSON:', response.status, teksRespons);
+            throw new Error('Server tidak mengirim respons JSON. Periksa route dan log Laravel.');
+        }
+
+        if (!response.ok || hasil.success !== true) {
+            let pesan = hasil.message || pesanGagal;
+            if (hasil.errors) {
+                const daftarError = Object.values(hasil.errors).flat();
+                if (daftarError.length) pesan = daftarError.join('\n');
+            }
+            throw new Error(pesan);
+        }
+
+        return hasil;
+    }
+
+    // ===== SOAP bertingkat: gabung kolom kecil ke textarea tersembunyi =====
+    function gabungSOAP(target) {
+        const wadah = document.querySelector('.kb-sub[data-target="' + target + '"]');
+        const hidden = document.querySelector('textarea[name="' + target + '"]');
+        if (!wadah || !hidden) return;
+
+        const bagian = [];
+        wadah.querySelectorAll('textarea[data-label]').forEach(function (t) {
+            const v = t.value.trim();
+            if (v !== '') bagian.push(t.dataset.label + ': ' + v);
+        });
+
+        hidden.value = bagian.join('\n');
+    }
+
+    // Pecah teks tersimpan kembali ke kolom-kolomnya.
+    // Teks lama tanpa label masuk ke kolom pertama.
+    function muatSOAP(target) {
+        const wadah = document.querySelector('.kb-sub[data-target="' + target + '"]');
+        const hidden = document.querySelector('textarea[name="' + target + '"]');
+        if (!wadah || !hidden || hidden.value.trim() === '') return;
+
+        // Data lama format "Tindak Lanjut :" / "Resep Obat :" diubah ke format baru
+        if (target === 'plan') {
+            const lama = hidden.value.trim().match(/^Tindak Lanjut\s*:\s*\n?([\s\S]*?)\n*\s*Resep Obat\s*:\s*\n?([\s\S]*)$/);
+
+            if (lama) {
+                hidden.value = 'Rencana Tindak Lanjut: ' + lama[1].trim().replace(/\s*\n\s*/g, ' ') +
+                               '\nResep Obat: ' + lama[2].trim();
+            }
+        }
+
+        const kolom = Array.from(wadah.querySelectorAll('textarea[data-label]'));
+        const labels = kolom.map(k => k.dataset.label);
+        const peta = {};
+        let kunci = null;
+
+        hidden.value.split('\n').forEach(function (baris) {
+            const cocok = labels.find(l => baris.startsWith(l + ': ') || baris === l + ':');
+
+            if (cocok) {
+                kunci = cocok;
+                peta[kunci] = baris.slice(cocok.length + 1).trimStart();
+            } else {
+                if (kunci === null) kunci = labels[0];
+                peta[kunci] = (peta[kunci] !== undefined ? peta[kunci] + '\n' : '') + baris;
+            }
+        });
+
+        kolom.forEach(function (k) {
+            if (peta[k.dataset.label] !== undefined && k.value.trim() === '') k.value = peta[k.dataset.label];
+        });
+    }
+
+    ['subjective', 'objective', 'assessment', 'plan'].forEach(muatSOAP);
+
+    // Sinkronkan textarea tersembunyi dari kolom SOAP individual saat halaman dibuka.
+    // Ini diperlukan agar resume, cetak, dan snapshot membaca data kolom baru.
+    ['subjective', 'objective', 'assessment', 'plan'].forEach(gabungSOAP);
+
+    document.addEventListener('input', function (e) {
+        const wadah = e.target.closest ? e.target.closest('.kb-sub[data-target]') : null;
+        if (wadah) gabungSOAP(wadah.dataset.target);
+    });
+
+    // ===== Tab =====
+
+    // Teks satu diagnosa lengkap dengan simbol dagger/asterisk bila ada.
+    // Contoh: "A18.0† — Tuberculosis of bones"
+    function kodeDenganSimbol(item) {
+        return (item.kode ?? '') + (item.simbol ?? '');
+    }
+
+    // Isi kolom Diagnosa Utama (Dx Utama) di SOAP bagian A
+    function teksDxUtamaSOAP() {
+        return (document.querySelector('textarea[data-soap-field="dx_utama"]')?.value ?? '').trim();
+    }
+
+    // Clinical Pathway hanya boleh dibuka bila Dx Utama di SOAP A berisi
+    // HNP / Hernia Nukleus Pulposus / saraf kejepit / saraf terjepit
+    function cpBolehDiisi() {
+        return POLA_DX_HNP.test(teksDxUtamaSOAP());
+    }
+
+    function cpTerisi() {
+        const adaCentang = Array.from(
+            document.querySelectorAll('#tab-pathway input[type=checkbox]')
+        ).some(cb => cb.checked);
+
+        const adaTeks = Array.from(document.querySelectorAll(
+            '#tab-pathway input[type=text]:not(.cp-waktu):not(.cp-dx-auto):not(#cpTotal), #tab-pathway textarea'
+        )).some(f => f.value.trim() !== '');
+
+        return adaCentang || adaTeks;
+    }
+
+    function gantiTab(tab, event) {
+        // PMIK hanya boleh berada di tab Assessment (tab lain tampil tetapi tidak bisa diklik)
+        if (HANYA_ASSESMEN && tab !== 'assesment') return;
+
+        const panel = document.getElementById('tab-' + tab);
+        if (!panel) return;
+
+        if (tab === 'pathway' && !cpBolehDiisi()) {
+            alert(PESAN_CP_SYARAT);
+            return;
+        }
+
+        // Resume Medis baru terbuka setelah General Consent kunjungan ini tersimpan
+        if (tab === 'resume' && !SUDAH_CONSENT) {
+            alert('Isi General Consent terlebih dahulu sebelum membuka Resume Medis.');
+            return;
+        }
+
+        // Segarkan isi resume setiap kali tabnya dibuka
+        if (tab === 'resume') isiResumeOtomatis();
+
+        const tombol = event
+            ? event.currentTarget
+            : document.querySelector('.kb-tab[onclick*="\'' + tab + '\'"]');
+
+        document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
+        if (tombol) tombol.classList.add('active');
+        panel.classList.add('active');
+    }
+
+    // Sinkronkan tab Clinical Pathway dengan Diagnosa Utama (SOAP A) yang diisi.
+    function perbaruiStatusCP() {
+        const boleh = cpBolehDiisi();
+        const tabCP = document.querySelector('.kb-tab[onclick*="pathway"]');
+
+        if (tabCP) {
+            // PMIK: tab selalu samar. Role lain: samar bila Dx Utama bukan HNP.
+            tabCP.classList.toggle('terkunci', HANYA_ASSESMEN || !boleh);
+            tabCP.title = HANYA_ASSESMEN
+                ? 'Tidak dapat diakses oleh PMIK'
+                : (boleh ? '' : 'Hanya tersedia bila Diagnosa Utama (SOAP A) berisi HNP / Hernia Nukleus Pulposus / saraf kejepit / saraf terjepit');
+        }
+
+        const dxUtama = document.querySelector('#tab-pathway .cp-dx-auto');
+        if (dxUtama) {
+            dxUtama.value = boleh ? teksDxUtamaSOAP() : '';
+            perbaruiWaktuBaris(dxUtama.closest('tr'));
+        }
+
+        // Bila sedang di tab CP lalu Dx Utama bukan HNP lagi, kembali ke Assessment
+        const panelCP = document.getElementById('tab-pathway');
+        if (!boleh && panelCP && panelCP.classList.contains('active')) {
+            gantiTab('assesment');
+        }
+    }
+
+    // ===== Cetak resep =====
+    // Yang dicetak hanya isi kolom "Resep Obat" di bagian P (sama seperti Obgyn).
+    function cetakResep() {
+        const resepEl = document.querySelector('.kb-sub[data-target="plan"] textarea[data-label="Resep Obat"]');
+        const resepObat = resepEl ? resepEl.value.trim() : '';
+
+        if (resepObat === '') {
+            alert('Isi kolom Resep Obat dulu sebelum mencetak resep.');
+            return;
+        }
+
+        const isiPlan = document.getElementById('resep-isi-plan');
+        isiPlan.style.whiteSpace = 'pre-wrap';
+        isiPlan.innerText = resepObat;
+        document.getElementById('resep-tanggal').innerText = tanggalIndonesia();
+
+        document.body.appendChild(document.getElementById('cetak-resep-area'));
+        document.body.classList.add('cetak-resep-mode');
+
+        window.print();
+    }
+
+    // ===== Clinical Pathway: total tarif otomatis =====
+    function hitungTotalCP() {
+        let total = 0;
+        document.querySelectorAll('#tab-pathway .cp-tarif').forEach(function (input) {
+            const angka = parseInt(input.value.replace(/\D/g, ''), 10);
+            if (!isNaN(angka)) total += angka;
+        });
+        const el = document.getElementById('cpTotal');
+        if (el) el.value = total ? total.toLocaleString('id-ID') : '';
+    }
+
+    // ===== Clinical Pathway: kolom Waktu terisi otomatis saat baris diisi =====
+    function jamSekarang() {
+        const d = new Date();
+        const dua = n => String(n).padStart(2, '0');
+        return dua(d.getDate()) + '-' + dua(d.getMonth() + 1) + '-' + d.getFullYear() +
+               ' ' + dua(d.getHours()) + ':' + dua(d.getMinutes());
+    }
+
+    function perbaruiWaktuBaris(tr) {
+        if (!tr) return;
+        const waktu = tr.querySelector('.cp-waktu');
+        if (!waktu) return;
+
+        const adaCentang = Array.from(tr.querySelectorAll('input[type=checkbox]'))
+            .some(cb => cb.checked);
+        const adaTeks = Array.from(tr.querySelectorAll('input[type=text]:not(.cp-waktu), textarea'))
+            .some(f => f.value.trim() !== '');
+
+        if (adaCentang || adaTeks) {
+            if (waktu.value === '') waktu.value = jamSekarang();
+        } else {
+            waktu.value = '';
+        }
+    }
+
+    document.addEventListener('input', function (e) {
+        const el = e.target;
+
+        if (el.classList && el.classList.contains('cp-lain-teks')) {
+            const label = el.closest('label');
+            const cb = label.querySelector('input[type=checkbox]');
+            if (cb) cb.checked = el.value.trim() !== '';
+
+            // Tambah baris "lainnya" baru bila baris terakhir sudah diisi.
+            const semua = label.parentElement.querySelectorAll('.cp-lain-teks');
+            if (el === semua[semua.length - 1] && el.value.trim() !== '') {
+                const baru = label.cloneNode(true);
+                baru.querySelector('input[type=checkbox]').checked = false;
+                baru.querySelector('.cp-lain-teks').value = '';
+                label.after(baru);
+            }
+        }
+
+        if (el.classList && el.classList.contains('cp-tarif')) {
+            el.value = el.value.replace(/\D/g, '');
+            hitungTotalCP();
+        }
+
+        const tr = el.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
+        if (tr) perbaruiWaktuBaris(tr);
+    });
+
+    document.addEventListener('change', function (e) {
+        const tr = e.target.closest('#tab-pathway tr.cp-row, #tab-pathway tr.cp-dx-row');
+        if (tr) perbaruiWaktuBaris(tr);
+    });
+
+    // Hapus baris "lainnya" yang dikosongkan (kecuali baris terakhir).
+    document.addEventListener('focusout', function (e) {
+        if (!e.target.classList || !e.target.classList.contains('cp-lain-teks')) return;
+
+        const label = e.target.closest('label');
+        const tr = label.closest('tr');
+        const semua = label.parentElement.querySelectorAll('.cp-lain-teks');
+
+        if (e.target.value.trim() === '' && semua.length > 1 && e.target !== semua[semua.length - 1]) {
+            label.remove();
+            if (tr) perbaruiWaktuBaris(tr);
+        }
+    });
+
+    // ===== Clinical Pathway: ambil isi satu baris aktivitas =====
+    // Mengembalikan daftar keterangan (centang + isian teks) untuk sel Keterangan.
+    function ambilKeterangan(sel) {
+        const ket = [];
+
+        sel.querySelectorAll('label.cp-check').forEach(function (label) {
+            const cb = label.querySelector('input[type=checkbox]');
+            const lain = label.querySelector('.cp-lain-teks');
+            const teks = lain ? lain.value.trim() : label.textContent.trim();
+            if (cb && cb.checked && teks !== '') ket.push(teks);
+        });
+
+        sel.querySelectorAll('input[type=text]:not(.cp-lain-teks), textarea').forEach(function (f) {
+            const v = f.value.trim();
+            if (v !== '') ket.push(v);
+        });
+
+        return ket;
+    }
+
+    // ===== Clinical Pathway: cetak hasil isian =====
+    function cetakCP() {
+        const tbody = document.getElementById('cp-cetak-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        let adaIsi = false;
+
+        function tambahBaris(aktivitas, ketList, waktu, tarif) {
+            const baris = document.createElement('tr');
+            const kolom = [
+                ['cp-print-aktivitas', aktivitas],
+                ['cp-print-ket', ketList.length ? ketList.join('\n') : '-'],
+                ['cp-print-waktu', waktu !== '' ? waktu : '-'],
+                ['cp-print-tarif', tarif !== '' ? 'Rp ' + tarif : '-']
+            ];
+
+            kolom.forEach(function (item) {
+                const td = document.createElement('td');
+                td.className = item[0];
+                td.textContent = item[1];
+                baris.appendChild(td);
+            });
+
+            tbody.appendChild(baris);
+        }
+
+        // Baris Diagnosa (Dx Utama, Sekunder, Banding)
+        const dx = [];
+        const dxWaktu = [];
+        document.querySelectorAll('#tab-pathway tr.cp-dx-row').forEach(function (tr) {
+            const f = tr.querySelector('.cp-dx-input');
+            const w = tr.querySelector('.cp-waktu');
+            const v = f ? f.value.trim() : '';
+            if (v === '') return;
+
+            if (!f.classList.contains('cp-dx-auto')) adaIsi = true;
+            dx.push(f.dataset.label + ': ' + v);
+            dxWaktu.push(w && w.value.trim() !== '' ? w.value.trim() : '-');
+        });
+        tambahBaris('Diagnosa', dx, dxWaktu.join('\n'), '');
+
+        // Baris aktivitas pelayanan
+        document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
+            const sel = tr.querySelectorAll(':scope > td');
+            const aktivitas = sel[0].dataset.nama || sel[0].textContent.trim();
+            const ket = ambilKeterangan(sel[1]).map(teks => '- ' + teks);
+
+            const waktuEl = sel[2].querySelector('input');
+            const tarifEl = sel[3].querySelector('input');
+            const waktu = waktuEl ? waktuEl.value.trim() : '';
+            const tarif = tarifEl ? tarifEl.value.trim() : '';
+
+            if (ket.length || waktu || tarif) adaIsi = true;
+
+            tambahBaris(aktivitas, ket, waktu, tarif);
+        });
+
+        if (!adaIsi) {
+            alert('Isi Clinical Pathway dulu sebelum mencetak.');
+            return;
+        }
+
+        const total = document.getElementById('cpTotal').value.trim();
+        document.getElementById('cp-cetak-total').textContent = total !== '' ? 'Rp ' + total : '-';
+        document.getElementById('cp-tanggal').innerText = tanggalIndonesia();
+
+        document.body.appendChild(document.getElementById('cetak-cp-area'));
+        document.body.classList.add('cetak-cp-mode');
+
+        window.print();
+    }
+
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('cetak-resep-mode', 'cetak-cp-mode');
+    });
+
+    // ===== Clinical Pathway: kumpulkan isian form =====
+    function kumpulkanDataCP() {
+        const petaDx = {
+            'Dx Utama': 'dx_utama',
+            'Dx Sekunder': 'dx_sekunder',
+            'Dx Banding': 'dx_banding'
+        };
+
+        const hasil = { dx_utama: '', dx_sekunder: '', dx_banding: '', baris: {} };
+
+        document.querySelectorAll('#tab-pathway tr.cp-dx-row').forEach(function (tr) {
+            const f = tr.querySelector('.cp-dx-input');
+            const w = tr.querySelector('.cp-waktu');
+            const kunci = f ? petaDx[f.dataset.label] : null;
+
+            if (kunci) {
+                hasil[kunci] = f.value.trim();
+                hasil['waktu_' + kunci] = w ? w.value.trim() : '';
+            }
+        });
+
+        document.querySelectorAll('#tab-pathway tr.cp-row').forEach(function (tr) {
+            const sel = tr.querySelectorAll(':scope > td');
+            const nama = sel[0].dataset.nama || sel[0].textContent.trim();
+            const waktuEl = sel[2].querySelector('input');
+            const tarifEl = sel[3].querySelector('input');
+
+            hasil.baris[nama] = {
+                keterangan: ambilKeterangan(sel[1]),
+                waktu: waktuEl ? waktuEl.value.trim() : '',
+                tarif: tarifEl ? tarifEl.value.replace(/\D/g, '') : ''
+            };
+        });
+
+        hasil.total = (document.getElementById('cpTotal')?.value ?? '').replace(/\D/g, '');
+
+        return hasil;
+    }
+
+    // ===== Clinical Pathway: simpan ke database =====
+    // Server memeriksa ulang bahwa Dx Utama (SOAP A) berisi HNP / saraf terjepit.
+    async function simpanCPKeDatabase() {
+        const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
+
+        try {
+            await kirimJson(
+                "{{ route('poli.syaraf.clinical-pathway.store') }}",
+                'POST',
+                {
+                    id_pendaftaran: Number(idPendaftaran),
+                    dx_utama_soap: teksDxUtamaSOAP(),
+                    data: kumpulkanDataCP()
+                },
+                'Clinical Pathway gagal disimpan.'
+            );
+            return true;
+        } catch (error) {
+            console.error('Gagal menyimpan Clinical Pathway:', error);
+            alert(error.message || 'Clinical Pathway gagal disimpan ke database.');
+            return false;
+        }
+    }
+
+    // ===== Clinical Pathway: tombol Simpan di tab Clinical Pathway =====
+    let timerSimpanCP = null;
+
+    async function simpanCP() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        if (CP_SIMPAN_KE_DB && !document.getElementById('id_pendaftaran')?.value) {
+            alert('ID pendaftaran tidak ditemukan. Buka pasien dari kunjungan Poli Saraf.');
+            return;
+        }
+
+        if (!cpBolehDiisi()) {
+            alert('Clinical Pathway hanya dapat disimpan bila Diagnosa Utama (SOAP bagian A) berisi ' +
+                  'HNP, Hernia Nukleus Pulposus, saraf kejepit, atau saraf terjepit.');
+            return;
+        }
+
+        if (!cpTerisi()) {
+            alert('Isi Clinical Pathway dulu sebelum menyimpan.');
+            return;
+        }
+
+        const tombol = document.getElementById('btnSimpanCP');
+        const teks = tombol.querySelector('span');
+
+        if (CP_SIMPAN_KE_DB) {
+            tombol.disabled = true;
+            teks.textContent = 'Menyimpan...';
+
+            const berhasil = await simpanCPKeDatabase();
+
+            tombol.disabled = false;
+            teks.textContent = 'Simpan';
+
+            if (!berhasil) return;
+        } else {
+            console.log('Data Clinical Pathway:', kumpulkanDataCP());
+        }
+
+        // Notifikasi sukses (sama seperti notifikasi simpan lainnya)
+        alert(
+            CP_SIMPAN_KE_DB
+                ? 'Data Clinical Pathway berhasil disimpan.'
+                : 'Data Clinical Pathway berhasil divalidasi. Belum tersimpan ke database.'
+        );
+
+        // Tanda visual sementara pada tombol
+        clearTimeout(timerSimpanCP);
+        tombol.classList.add('tersimpan');
+        teks.textContent = 'Tersimpan';
+
+        timerSimpanCP = setTimeout(function () {
+            tombol.classList.remove('tersimpan');
+            teks.textContent = 'Simpan';
+        }, 1500);
+    }
+
+    // ===== Simpan utama: TTV, SOAP, ICD, (CP), lalu status kunjungan =====
+    // Setiap role hanya menyimpan bagian yang boleh diedit olehnya:
+    //   perawat : TTV, S, O, clinical pathway
+    //   dokter  : S, O, A, P, clinical pathway, lalu status kunjungan
+    //   pmik    : kode ICD (penyakit dan tindakan)
+    async function simpanKunjunganBaru() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        if (BOLEH_CP && !HANYA_ASSESMEN && cpBolehDiisi() && !cpTerisi()) {
+            alert('Diagnosa utama pasien adalah HNP / saraf terjepit. Clinical Pathway wajib diisi sebelum menyimpan.');
+            gantiTab('pathway');
+            return;
+        }
+
+        const tombolSimpan = document.querySelectorAll('[onclick*="simpanKunjunganBaru"]');
+        tombolSimpan.forEach(tombol => { tombol.disabled = true; });
+
+        try {
+            // 1. TTV (hanya perawat / admin)
+            if (BOLEH_TTV) {
+                if (!await simpanTTVKeDatabase()) return;
+            }
+
+            // 2. SOAP dan ICD (field disesuaikan dengan role)
+            if (!await simpanSOAPdanICDKeDatabase()) return;
+
+            // 2b. Clinical Pathway (hanya bila boleh, Dx Utama HNP, dan saklar DB aktif)
+            if (CP_SIMPAN_KE_DB && BOLEH_CP && !HANYA_ASSESMEN && cpBolehDiisi()) {
+                if (!await simpanCPKeDatabase()) return;
+            }
+
+            // 3. Pastikan ID pendaftaran tersedia
+            const idPendaftaran = document.getElementById('id_pendaftaran').value;
+            if (!idPendaftaran) {
+                throw new Error('ID pendaftaran tidak ditemukan.');
+            }
+
+            // 4. Perbarui status kunjungan (hanya dokter / admin)
+            if (BOLEH_ASS_PLAN) {
+                await kirimJson(
+                    `/poli/syaraf/status-periksa/${idPendaftaran}`,
+                    'PATCH',
+                    { status_periksa: 'selesai' },
+                    'Status pemeriksaan gagal diperbarui.'
+                );
+            }
+
+            // 5. Semua data sudah tersimpan: halaman boleh ditinggalkan
+            izinkanKeluar = true;
+
+            alert(
+                BOLEH_ASS_PLAN
+                    ? 'Data berhasil disimpan. Status pasien berubah menjadi Selesai.'
+                    : 'Data berhasil disimpan.'
+            );
+
+            // 6. Kembali ke daftar Poli Saraf
+            window.location.href = "{{ route('poli.syaraf') }}";
+
+        } catch (error) {
+            console.error('Detail error simpan kunjungan:', error);
+            alert('Data kunjungan gagal disimpan:\n' + (error.message || String(error)));
+
+        } finally {
+            tombolSimpan.forEach(tombol => { tombol.disabled = false; });
+        }
+    }
+
+    // ===== Rujukan: buka / tutup form =====
+    function rujukPasien() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        const tgl = document.getElementById('rjTanggal');
+        if (!tgl) return;
+
+        if (!tgl.value) {
+            const d = new Date();
+            tgl.value = d.getFullYear() + '-' +
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(d.getDate()).padStart(2, '0');
+        }
+
+        // Diagnosa rujukan otomatis dari diagnosa penyakit di form Assessment
+        document.getElementById('rjDiagnosa').value = diagnosaTerpilih.penyakit
+            .map(item => kodeDenganSimbol(item) + ' — ' + item.nama)
+            .join('; ');
+
+        document.body.classList.add('mode-rujukan');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function tutupRujukan() {
+        document.body.classList.remove('mode-rujukan');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ===== Rujukan: kolom "Lainnya" bisa langsung diketik =====
+    const rjCekLainnya = document.getElementById('rjCekLainnya');
+    const rjLainnya = document.getElementById('rjLainnya');
+
+    if (rjCekLainnya && rjLainnya) {
+        // centang "Lainnya" -> kursor langsung ke kolom; hapus centang -> kolom dikosongkan
+        rjCekLainnya.addEventListener('change', function () {
+            if (this.checked) {
+                rjLainnya.focus();
+            } else {
+                rjLainnya.value = '';
+            }
+        });
+
+        // mengetik di kolom -> kotak "Lainnya" otomatis tercentang
+        rjLainnya.addEventListener('input', function () {
+            rjCekLainnya.checked = this.value.trim() !== '';
+        });
+    }
+
+    // ===== Rujukan: kirim =====
+    async function kirimRujukan() {
+        const tujuan = document.getElementById('rjTujuan')?.value;
+        const alasan = document.getElementById('rjAlasan')?.value.trim();
+        const diagnosa = document.getElementById('rjDiagnosa')?.value.trim();
+        const dokter = document.getElementById('rjDokter')?.value.trim();
+        const tanggal = document.getElementById('rjTanggal')?.value;
+        const csrfToken = document.getElementById('csrf_token')?.value;
+
+        if (!NO_RM_PASIEN) return alert('Data pasien tidak ditemukan.');
+        if (!tujuan) return alert('Pilih poli tujuan rujukan terlebih dahulu.');
+        if (!diagnosa) return alert('Isi diagnosis pasien terlebih dahulu.');
+        if (!alasan) return alert('Isi alasan rujuk terlebih dahulu.');
+        if (!tanggal) return alert('Isi tanggal rujukan terlebih dahulu.');
+        if (!csrfToken) return alert('Token keamanan tidak ditemukan. Muat ulang halaman.');
+
+        const tombol = document.querySelector('.rj-kirim');
+
+        if (tombol) {
+            tombol.disabled = true;
+            tombol.dataset.teksAsli = tombol.textContent;
+            tombol.textContent = 'Mengirim rujukan...';
+        }
+
+        try {
+            const radiologi = Array.from(
+                document.querySelectorAll('#view-rujukan input[name="rujuk_radiologi[]"]:checked')
+            )
+            .filter(cb => cb.id !== 'rjCekLainnya')
+            .map(cb => cb.value);
+
+            const lainnya = rjCekLainnya?.checked ? (rjLainnya?.value || '').trim() : '';
+
+            const hasil = await kirimJson(
+                "{{ route('poli.syaraf.rujukan') }}",
+                'POST',
+                {
+                    no_rm: NO_RM_PASIEN,
+                    tujuan: tujuan,
+                    alasan: alasan,
+                    diagnosa: diagnosa,
+                    dokter_pengirim: dokter,
+                    tanggal_rujuk: tanggal,
+                    pemeriksaan_radiologi: radiologi,
+                    radiologi_lainnya: lainnya
+                },
+                'Rujukan gagal dikirim.'
+            );
+
+            // Rujukan berhasil: kembali ke halaman awal assesmen
+            // (sengaja TIDAK pindah halaman lewat hasil.redirect)
+            alert(hasil.message || 'Rujukan berhasil dikirim.');
+
+            // 1. Reset form rujukan
+            document.getElementById('rjTujuan').value = '';
+            document.getElementById('rjAlasan').value = '';
+            document.querySelectorAll('#view-rujukan input[name="rujuk_radiologi[]"]')
+                .forEach(cb => cb.checked = false);
+            if (rjLainnya) rjLainnya.value = '';
+
+            // 2. Tutup form rujukan
+            document.body.classList.remove('mode-rujukan');
+
+            // 3. Aktifkan tab Assessment
+            document.querySelectorAll('.kb-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.kb-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector('.kb-tab')?.classList.add('active');
+            document.getElementById('tab-assesment')?.classList.add('active');
+
+            // 4. Scroll ke paling atas
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            document.querySelectorAll('.main-content, .content, main')
+                .forEach(el => el.scrollTop = 0);
+
+        } catch (error) {
+            console.error('Gagal mengirim rujukan:', error);
+            alert(error.message || 'Terjadi kesalahan saat mengirim rujukan.');
+
+        } finally {
+            if (tombol) {
+                tombol.disabled = false;
+                tombol.textContent = tombol.dataset.teksAsli || 'KIRIM RUJUKAN';
+            }
+        }
+    }
+
+    // ===== Tanda vital -> Objective (lewat checkbox) =====
+    // Teks tanda vital yang terakhir dimasukkan otomatis ke kolom Pemeriksaan Tanda Vital
+    let vitalTerakhir = '';
+
+    function bangunTeksVital() {
+        const bagian = [];
+
+        document.querySelectorAll('.kb-vitals .kb-vital-row').forEach(function (row) {
+            const labelEl = row.querySelector('label');
+            const input = row.querySelector('input:not([type="checkbox"])');
+            const unitEl = row.querySelector('.kb-vital-unit');
+
+            if (!labelEl || !input) return;
+
+            const nilai = input.value.trim();
+            const unit = unitEl ? unitEl.textContent.trim() : '';
+
+            if (nilai !== '') {
+                bagian.push(labelEl.textContent.trim() + ': ' + nilai + (unit ? ' ' + unit : ''));
+            }
+        });
+
+        return bagian.join(', ');
+    }
+
+    function kolomTtvObjektif() {
+        return document.querySelector('.kb-sub[data-target="objective"] textarea[data-soap-ttv]');
+    }
+
+    function hapusVitalDariObjektif() {
+        const objektif = kolomTtvObjektif();
+        if (!objektif) return;
+
+        if (vitalTerakhir && objektif.value.startsWith(vitalTerakhir)) {
+            objektif.value = objektif.value.slice(vitalTerakhir.length).replace(/^\n/, '');
+        }
+
+        vitalTerakhir = '';
+        objektif.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function terapkanVitalKeObjektif(teks) {
+        const objektif = kolomTtvObjektif();
+        if (!objektif) return;
+
+        let sisa = objektif.value;
+
+        if (vitalTerakhir && sisa.startsWith(vitalTerakhir)) {
+            sisa = sisa.slice(vitalTerakhir.length).replace(/^\n/, '');
+        }
+
+        objektif.value = sisa ? teks + '\n' + sisa : teks;
+        vitalTerakhir = teks;
+        objektif.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    async function toggleVitalKeObjektif(cb) {
+        if (!cb.checked) {
+            hapusVitalDariObjektif();
+            return;
+        }
+
+        const teks = bangunTeksVital();
+
+        if (teks === '') {
+            alert('Isi minimal satu tanda vital terlebih dahulu.');
+            cb.checked = false;
+            return;
+        }
+
+        // Simpan TTV terlebih dahulu ke database.
+        if (!await simpanTTVKeDatabase()) {
+            cb.checked = false;
+            return;
+        }
+
+        // Masukkan TTV ke kolom Pemeriksaan Tanda Vital setelah penyimpanan berhasil.
+        terapkanVitalKeObjektif(teks);
+        kolomTtvObjektif()?.focus();
+
+        alert('Data TTV berhasil disimpan dan dimasukkan ke Objective.');
+    }
+
+    // Perbarui teks TTV di Objective ketika nilai TTV berubah
+    // dan checkbox masih tercentang.
+    document.addEventListener('input', function (e) {
+        if (!e.target.matches('.kb-vitals input:not([type="checkbox"])')) return;
+
+        const chk = document.getElementById('chkVital');
+        if (!chk || !chk.checked) return;
+
+        const teks = bangunTeksVital();
+
+        if (teks === '') {
+            hapusVitalDariObjektif();
+        } else {
+            terapkanVitalKeObjektif(teks);
+        }
+    });
+
+    // ===== Simpan SOAP dan ICD ke database =====
+    // Hanya field yang boleh diedit oleh role ini yang dikirim.
+    async function simpanSOAPdanICDKeDatabase() {
+        const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
+
+        if (!idPendaftaran) {
+            alert('ID pendaftaran tidak ditemukan. Buka pasien dari kunjungan Poli Saraf.');
+            return false;
+        }
+
+        const payload = { id_pendaftaran: Number(idPendaftaran) };
+        const fieldSOAP = [
+            'keluhan_utama', 'riwayat_penyakit_sekarang', 'riwayat_penyakit_dahulu',
+            'riwayat_penyakit_keluarga', 'riwayat_pengobatan', 'riwayat_sosial',
+            'riwayat_operasi', 'riwayat_alergi', 'riwayat_imunisasi',
+            'pemeriksaan_fisik_lainnya', 'dx_utama', 'dx_sekunder',
+            'tindakan_medis', 'konseling_edukasi', 'rencana_tindak_lanjut',
+            'diet', 'resep_obat'
+        ];
+
+        fieldSOAP.forEach(function (nama) {
+            const el = document.querySelector('textarea[data-soap-field="' + nama + '"]');
+            if (!el) return;
+            const bagian = el.closest('.kb-soap-row');
+            const grup = bagian?.querySelector('.kb-sub')?.dataset.target;
+            const bolehEdit = (grup === 'subjective' || grup === 'objective') ? BOLEH_SO : BOLEH_ASS_PLAN;
+            if (bolehEdit) payload[nama] = el.value.trim();
+        });
+
+        if (BOLEH_ICD) {
+            payload.penyakit_id = diagnosaTerpilih.penyakit.map(item => Number(item.id));
+            payload.tindakan_id = diagnosaTerpilih.tindakan.map(item => Number(item.id));
+
+            // Simbol dagger (†) / asterisk (*) per penyakit: { id_penyakit: simbol }
+            // Nilai yang sah hanya '', '†', atau '*'.
+            payload.penyakit_simbol = {};
+            diagnosaTerpilih.penyakit.forEach(function (item) {
+                payload.penyakit_simbol[item.id] = item.simbol || '';
+            });
+        }
+
+        try {
+            await kirimJson(
+                "{{ route('poli.syaraf.assesmen.store') }}",
+                'POST',
+                payload,
+                'SOAP dan ICD gagal disimpan.'
+            );
+            return true;
+        } catch (error) {
+            console.error('Gagal menyimpan SOAP dan ICD:', error);
+            alert(error.message || 'SOAP dan ICD gagal disimpan ke database.');
+            return false;
+        }
+    }
+
+    // ===== Simpan TTV ke database =====
+    async function simpanTTVKeDatabase() {
+        const idPendaftaran = document.getElementById('id_pendaftaran')?.value;
+
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan. TTV tidak dapat disimpan.');
+            return false;
+        }
+
+        if (!idPendaftaran) {
+            alert('ID pendaftaran tidak ditemukan. Buka pasien dari kunjungan Poli Saraf.');
+            return false;
+        }
+
+        const ambilNilai = function (id) {
+            const nilai = document.getElementById(id)?.value.trim() ?? '';
+            return nilai === '' ? null : nilai;
+        };
+
+        try {
+            await kirimJson(
+                "{{ route('poli.syaraf.ttv.store') }}",
+                'POST',
+                {
+                    id_pendaftaran: Number(idPendaftaran),
+                    tekanan_darah: ambilNilai('tekanan_darah'),
+                    suhu: ambilNilai('suhu'),
+                    heart_rate: ambilNilai('heart_rate'),
+                    respiratory_rate: ambilNilai('respiratory_rate'),
+                    spo2: ambilNilai('spo2'),
+                },
+                'Gagal menyimpan TTV.'
+            );
+            return true;
+        } catch (error) {
+            console.error('Gagal menyimpan TTV:', error);
+            alert(error.message || 'TTV gagal disimpan ke database.');
+            return false;
+        }
+    }
+
+    // ===== Pencarian ICD dari database (kode_diagnosis & kode_tindakan) =====
+    const URL_CARI = "{{ url('/cari-kode') }}";
+
+    const konfig = {
+        penyakit: { input: 'cariPenyakit', dropdown: 'dropdownPenyakit', icon: 'checkPenyakit', list: 'listPenyakit', name: 'penyakit_id[]' },
+        tindakan: { input: 'cariTindakan', dropdown: 'dropdownTindakan', icon: 'checkTindakan', list: 'listTindakan', name: 'tindakan_id[]' },
+    };
+
+    const pilihan = { penyakit: null, tindakan: null };
+
+    // Tiap item penyakit: { id, kode, nama, simbol }
+    // 'simbol' berisi '', '†', atau '*' (boleh tidak ada pada data lama).
+    const diagnosaTerpilih = {
+        penyakit: @json($diagnosisTersimpan ?? []),
+        tindakan: @json($tindakanTersimpan ?? [])
+    };
+
+    const timerCari = {};
+    const urutanCari = { penyakit: 0, tindakan: 0 };
+
+    // ===== Simbol Dagger (†) / Asterisk (*) =====
+    // Simbol yang sedang aktif ('' bila tidak ada).
+    function simbolTerpilih() {
+        return document.querySelector('.kb-simbol-btn.aktif')?.dataset.simbol || '';
+    }
+
+    // Teks yang tampil di kolom input penyakit: "kode+simbol — nama"
+    function teksInputPenyakit(item) {
+        return item.kode + simbolTerpilih() + ' — ' + item.nama;
+    }
+
+    function resetSimbol() {
+        document.querySelectorAll('.kb-simbol-btn').forEach(function (btn) {
+            btn.classList.remove('aktif');
+            btn.setAttribute('aria-pressed', 'false');
+        });
+    }
+
+    // Klik kartu simbol: aktif / nonaktif. Hanya satu simbol yang boleh aktif.
+    function ubahSimbol(btn) {
+        const aktifkan = !btn.classList.contains('aktif');
+
+        resetSimbol();
+
+        if (aktifkan) {
+            btn.classList.add('aktif');
+            btn.setAttribute('aria-pressed', 'true');
+        }
+
+        // Bila kode sudah dipilih dari dropdown, simbol langsung masuk ke kolom input.
+        if (pilihan.penyakit) {
+            document.getElementById('cariPenyakit').value = teksInputPenyakit(pilihan.penyakit);
+        }
+
+        document.getElementById('cariPenyakit')?.focus();
+    }
+
+    function updateCentang(jenis) {
+        document.getElementById(konfig[jenis].icon)?.classList.toggle('aktif', pilihan[jenis] !== null);
+    }
+
+    // Teks yang sedang tampil di kolom input untuk item yang sudah dipilih
+    function teksTerpilih(jenis) {
+        const item = pilihan[jenis];
+        if (!item) return null;
+        return jenis === 'penyakit'
+            ? teksInputPenyakit(item)
+            : item.kode + ' — ' + item.nama;
+    }
+
+    function cariItem(jenis) {
+        const k = konfig[jenis];
+        const input = document.getElementById(k.input);
+        const dropdown = document.getElementById(k.dropdown);
+        if (!input || !dropdown) return;
+
+        const keyword = input.value.trim();
+
+        // Item sudah dipilih dan teks di kolom belum diubah: jangan cari ulang
+        // (penting karena pencarian juga dipicu saat kolom difokuskan).
+        if (pilihan[jenis] && input.value === teksTerpilih(jenis)) return;
+
+        pilihan[jenis] = null;
+        updateCentang(jenis);
+
+        clearTimeout(timerCari[jenis]);
+
+        if (keyword.length < 2) {
+            tampilPesan(dropdown, keyword === '' ? null : 'Ketik minimal 2 karakter');
+            return;
+        }
+
+        timerCari[jenis] = setTimeout(async function () {
+            const nomor = ++urutanCari[jenis];
+            try {
+                const res = await fetch(URL_CARI + '/' + jenis + '?q=' + encodeURIComponent(keyword), {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                const data = await res.json();
+                if (nomor !== urutanCari[jenis]) return; // abaikan hasil pencarian lama
+                renderDropdown(jenis, data);
+            } catch (e) {
+                console.error('Pencarian kode ICD gagal:', e);
+                if (nomor !== urutanCari[jenis]) return;
+                tampilPesan(dropdown, 'Gagal memuat data (' + (e.message || 'error') + ')');
+            }
+        }, 250);
+    }
+
+    function tampilPesan(dropdown, teks) {
+        dropdown.innerHTML = '';
+        if (teks === null) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        const div = document.createElement('div');
+        div.className = 'kb-dropdown-item kb-dropdown-empty';
+        div.textContent = teks;
+        dropdown.appendChild(div);
+        dropdown.style.display = 'block';
+        posisiDropdown(dropdown);
+    }
+
+    function renderDropdown(jenis, data) {
+        const dropdown = document.getElementById(konfig[jenis].dropdown);
+        if (!Array.isArray(data) || !data.length) {
+            tampilPesan(dropdown, 'Tidak ditemukan');
+            return;
+        }
+
+        dropdown.innerHTML = '';
+        data.forEach(function (item) {
+            const div = document.createElement('div');
+            div.className = 'kb-dropdown-item';
+
+            const kode = document.createElement('b');
+            kode.textContent = item.kode ?? '';
+            div.appendChild(kode);
+            div.appendChild(document.createTextNode(' — ' + (item.nama ?? '')));
+
+            // mousedown agar pilihan tetap terbaca sebelum kolom kehilangan fokus
+            div.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                pilihItem(jenis, item);
+            });
+            dropdown.appendChild(div);
+        });
+        dropdown.style.display = 'block';
+        posisiDropdown(dropdown);
+    }
+
+    function pilihItem(jenis, item) {
+        const k = konfig[jenis];
+        pilihan[jenis] = item;
+
+        // Khusus penyakit: simbol yang dicentang langsung ikut ditampilkan setelah kode
+        document.getElementById(k.input).value = (jenis === 'penyakit')
+            ? teksInputPenyakit(item)
+            : item.kode + ' — ' + item.nama;
+
+        document.getElementById(k.dropdown).style.display = 'none';
+        updateCentang(jenis);
+    }
+
+    function tambahDiagnosa(jenis) {
+        const k = konfig[jenis];
+        const item = pilihan[jenis];
+
+        if (!item) {
+            alert('Pilih ' + jenis + ' dari daftar yang muncul terlebih dahulu.');
+            return;
+        }
+
+        if (diagnosaTerpilih[jenis].some(d => String(d.id) === String(item.id))) {
+            alert('Item ini sudah ada di daftar.');
+        } else {
+            // Simbol ikut disimpan bersama item (khusus penyakit)
+            const baru = (jenis === 'penyakit')
+                ? Object.assign({}, item, { simbol: simbolTerpilih() })
+                : item;
+            diagnosaTerpilih[jenis].push(baru);
+        }
+
+        pilihan[jenis] = null;
+        document.getElementById(k.input).value = '';
+        document.getElementById(k.dropdown).style.display = 'none';
+        if (jenis === 'penyakit') resetSimbol();
+        updateCentang(jenis);
+        renderDiagnosa(jenis);
+    }
+
+    function hapusDiagnosa(jenis, id) {
+        diagnosaTerpilih[jenis] = diagnosaTerpilih[jenis].filter(d => String(d.id) !== String(id));
+        renderDiagnosa(jenis);
+    }
+
+    function renderDiagnosa(jenis) {
+        const k = konfig[jenis];
+        const list = document.getElementById(k.list);
+        if (!list) return;
+        list.innerHTML = '';
+
+        diagnosaTerpilih[jenis].forEach(function (item, index) {
+            const baris = document.createElement('div');
+            baris.className = 'kb-diagnosa-item';
+
+            const teks = document.createElement('span');
+            teks.className = 'kb-diagnosa-text';
+
+            const kode = document.createElement('b');
+            kode.textContent = item.kode + (item.simbol || '');
+            teks.appendChild(kode);
+            teks.appendChild(document.createTextNode(' — ' + item.nama));
+
+            // Diagnosa pertama otomatis menjadi Utama
+            // Diagnosa kedua dan seterusnya menjadi Sekunder
+            if (jenis === 'penyakit') {
+                const badge = document.createElement('span');
+                badge.className = 'kb-badge-utama';
+                badge.textContent = index === 0
+                    ? 'Diagnosa Utama'
+                    : 'Diagnosa Sekunder';
+
+                teks.appendChild(badge);
+            }
+
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = k.name;
+            hidden.value = item.id;
+
+            const aksi = document.createElement('span');
+            aksi.className = 'kb-diagnosa-aksi';
+
+            const btnHapus = document.createElement('button');
+            btnHapus.type = 'button';
+            btnHapus.className = 'kb-aksi-hapus';
+            btnHapus.title = 'Hapus';
+            btnHapus.setAttribute('aria-label', 'Hapus');
+            btnHapus.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            btnHapus.onclick = function () {
+                hapusDiagnosa(jenis, item.id);
+            };
+
+            aksi.appendChild(btnHapus);
+            baris.appendChild(teks);
+            baris.appendChild(hidden);
+            baris.appendChild(aksi);
+            list.appendChild(baris);
+        });
+    }
+
+    renderDiagnosa('penyakit');
+    renderDiagnosa('tindakan');
+
+    // Tab Clinical Pathway terbuka / terkunci otomatis saat Dx Utama (SOAP A) diketik
+    document.addEventListener('input', function (e) {
+        if (e.target.matches && e.target.matches('textarea[data-soap-field="dx_utama"]')) {
+            perbaruiStatusCP();
+        }
+    });
+
+    // Status awal saat halaman dibuka (Dx Utama yang sudah tersimpan)
+    perbaruiStatusCP();
+
+    // Tutup dropdown pencarian saat klik di luar kotak pencarian.
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.kb-search-box')) sembunyiDropdown();
+    });
+
+    /* =========================================================
+       KAJIAN AWAL
+       (elemennya tidak ada untuk PMIK; semua pemanggilan aman terhadap null)
+       ========================================================= */
+
+    // Ubah ke true kalau route penyimpanan Kajian Awal sudah siap.
+    const KJ_SIMPAN_KE_DB = false;
+    const KJ_URL_SIMPAN   = "/poli/syaraf/kajian-awal"; // sesuaikan dengan route kamu
+
+    // Pindah antara halaman 1 (kajian) dan halaman 2 (pemeriksaan fisik)
+    function kjHalaman(n) {
+        document.querySelectorAll('#tab-kajian .kj-hal').forEach(function (el) {
+            el.classList.toggle('aktif', el.dataset.hal === String(n));
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // IMT = BB / (TB dalam meter)^2
+    function kjHitungIMT() {
+        const bb  = parseFloat(document.getElementById('kj_bb')?.value);
+        const tb  = parseFloat(document.getElementById('kj_tb')?.value);
+        const imt = document.getElementById('kj_imt');
+        if (!imt) return;
+
+        imt.value = (bb > 0 && tb > 0) ? (bb / Math.pow(tb / 100, 2)).toFixed(1) : '';
+    }
+
+    document.addEventListener('input', function (e) {
+        if (e.target.matches('#kj_bb, #kj_tb')) kjHitungIMT();
+
+        // Ngetik di kolom "Lainnya" / "Lain-lain" -> radio-nya otomatis kepilih
+        if (e.target.matches('#tab-kajian .kj-lain-teks')) {
+            const radio = e.target.closest('label')?.querySelector('input[type=radio]');
+            if (radio) radio.checked = e.target.value.trim() !== '';
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        if (!e.target.matches('#tab-kajian input[type=radio]')) return;
+
+        // Pilih opsi lain -> isian "Lainnya" dikosongkan
+        document.querySelectorAll('#tab-kajian input[type=radio][name="' + e.target.name + '"]').forEach(function (r) {
+            if (r === e.target) return;
+            const teks = r.closest('label')?.querySelector('.kj-lain-teks');
+            if (teks) teks.value = '';
+        });
+
+        // Pemeriksaan fisik: kolom keterangan hanya aktif kalau "Tidak Normal"
+        if (e.target.name.startsWith('kj_fisik_')) {
+            const ket = e.target.closest('tr')?.querySelector('.kj-fisik-ket');
+            if (!ket) return;
+            ket.disabled = e.target.value !== 'Tidak Normal';
+            if (ket.disabled) ket.value = '';
+            else ket.focus();
+        }
+    });
+
+    function kumpulkanDataKajian() {
+        const data = {};
+
+        // Semua input / select / textarea yang punya data-kj
+        document.querySelectorAll('#tab-kajian [data-kj]').forEach(function (el) {
+            data[el.dataset.kj] = el.value.trim();
+        });
+
+        // Radio: ambil yang tercentang saja
+        document.querySelectorAll('#tab-kajian input[type=radio]:checked').forEach(function (r) {
+            data[r.name.replace(/^kj_/, '')] = r.value;
+        });
+
+        return data;
+    }
+
+    async function simpanKajian() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        const data   = kumpulkanDataKajian();
+        const tombol = document.getElementById('btnSimpanKajian');
+        const teks   = tombol.querySelector('span');
+
+        if (KJ_SIMPAN_KE_DB) {
+            tombol.disabled = true;
+            teks.textContent = 'Menyimpan...';
+
+            try {
+                await kirimJson(
+                    KJ_URL_SIMPAN,
+                    'POST',
+                    {
+                        id_pendaftaran: Number(document.getElementById('id_pendaftaran')?.value),
+                        data: data
+                    },
+                    'Kajian Awal gagal disimpan.'
+                );
+            } catch (error) {
+                console.error('Gagal menyimpan Kajian Awal:', error);
+                alert(error.message || 'Kajian Awal gagal disimpan.');
+                tombol.disabled = false;
+                teks.textContent = 'Simpan';
+                return;
+            }
+
+            tombol.disabled = false;
+            alert('Kajian Awal berhasil disimpan.');
+        } else {
+            console.log('Data Kajian Awal:', data);
+            alert('Kajian Awal berhasil divalidasi. Belum tersimpan ke database.');
+        }
+
+        teks.textContent = 'Tersimpan';
+        setTimeout(function () { teks.textContent = 'Simpan'; }, 1500);
+    }
+
+    /* =========================================================
+       RESUME MEDIS + POPUP SNOMED CT
+       (elemennya tidak ada untuk PMIK; semua pemanggilan aman terhadap null)
+       ========================================================= */
+
+    // Ubah ke true bila route penyimpanan Resume Medis sudah siap.
+    const RM_SIMPAN_KE_DB = false;
+    const RM_URL_SIMPAN   = "/poli/syaraf/resume-medis"; // sesuaikan dengan route kamu
+
+    // Contoh data SNOMED CT (lokal). Ganti dengan fetch ke API/endpoint pencarian kamu
+    // di dalam rmCariKode() bila sudah ada.
+    const RM_DAFTAR_SNOMED = [
+        { kode: '386661006', nama: 'Fever (finding)' },
+        { kode: '3006004',   nama: 'Disturbance of consciousness (finding)' },
+        { kode: '160357008', nama: 'Family history: Hypertension (situation)' },
+        { kode: '25064002',  nama: 'Headache (finding)' },
+        { kode: '279039007', nama: 'Low back pain (finding)' },
+        { kode: '22253000',  nama: 'Pain (finding)' },
+        { kode: '44077006',  nama: 'Numbness (finding)' },
+        { kode: '13791008',  nama: 'Asthenia (finding)' },
+        { kode: '404640003', nama: 'Dizziness (finding)' },
+        { kode: '38341003',  nama: 'Hypertensive disorder, systemic arterial (disorder)' }
+    ];
+
+    // Kode SNOMED yang sudah dipilih, per kolom isian.
+    const rmKode = {};
+    let rmKolomAktif = null;
+
+    // Pindahkan popup ke <body> supaya tidak terpotong container halaman.
+    (function () {
+        const modal = document.getElementById('rmModal');
+        if (modal) document.body.appendChild(modal);
+    })();
+
+    // ----- Daftar kode terpilih di tiap kotak -----
+    function rmRenderKode(kolom) {
+        const box = document.querySelector('.rm-snomed[data-snomed="' + kolom + '"] .rm-snomed-list');
+        if (!box) return;
+        box.innerHTML = '';
+
+        const daftar = rmKode[kolom] || [];
+
+        if (!daftar.length) {
+            const kosong = document.createElement('div');
+            kosong.className = 'rm-snomed-kosong';
+            kosong.textContent = 'Belum ada kode SNOMED CT.';
+            box.appendChild(kosong);
+            return;
+        }
+
+        daftar.forEach(function (item) {
+            const baris = document.createElement('div');
+            baris.className = 'rm-snomed-item';
+
+            const kode = document.createElement('span');
+            kode.className = 'rm-kode';
+            kode.textContent = item.kode;
+
+            const desk = document.createElement('span');
+            desk.className = 'rm-desk';
+            desk.textContent = item.nama;
+
+            const hapus = document.createElement('button');
+            hapus.type = 'button';
+            hapus.title = 'Hapus kode';
+            hapus.setAttribute('aria-label', 'Hapus kode');
+            hapus.innerHTML = '&times;';
+            hapus.onclick = function () {
+                rmKode[kolom] = rmKode[kolom].filter(d => d.kode !== item.kode);
+                rmRenderKode(kolom);
+            };
+
+            baris.append(kode, desk, hapus);
+            box.appendChild(baris);
+        });
+    }
+
+    function rmTambahKeKolom(item) {
+        if (!rmKolomAktif) return false;
+        rmKode[rmKolomAktif] = rmKode[rmKolomAktif] || [];
+
+        if (rmKode[rmKolomAktif].some(d => d.kode === item.kode)) {
+            alert('Kode ini sudah ada di daftar.');
+            return false;
+        }
+
+        rmKode[rmKolomAktif].push(item);
+        rmRenderKode(rmKolomAktif);
+        return true;
+    }
+
+    // ----- Popup -----
+    function rmBukaModal(kolom) {
+        if (!document.getElementById('rmModal')) return;
+        rmKolomAktif = kolom;
+        document.getElementById('rmKeyword').value = '';
+        document.getElementById('rmManualKode').value = '';
+        document.getElementById('rmManualDesk').value = '';
+        rmCariKode();
+        document.getElementById('rmModal').classList.add('tampil');
+        document.getElementById('rmKeyword').focus();
+    }
+
+    function rmTutupModal() {
+        document.getElementById('rmModal')?.classList.remove('tampil');
+        rmKolomAktif = null;
+    }
+
+    function rmCariKode() {
+        const hasil = document.getElementById('rmHasil');
+        if (!hasil) return;
+
+        const kw = document.getElementById('rmKeyword').value.trim().toLowerCase();
+        hasil.innerHTML = '';
+
+        const sudah = (rmKode[rmKolomAktif] || []).map(d => d.kode);
+        const cocok = RM_DAFTAR_SNOMED.filter(d =>
+            kw === '' || d.kode.includes(kw) || d.nama.toLowerCase().includes(kw)
+        );
+
+        if (!cocok.length) {
+            const kosong = document.createElement('div');
+            kosong.className = 'rm-hasil-kosong';
+            kosong.textContent = 'Tidak ditemukan. Gunakan input manual di bawah.';
+            hasil.appendChild(kosong);
+            return;
+        }
+
+        cocok.forEach(function (item) {
+            const baris = document.createElement('div');
+            baris.className = 'rm-hasil-item' + (sudah.includes(item.kode) ? ' sudah' : '');
+
+            const kode = document.createElement('span');
+            kode.className = 'rm-kode';
+            kode.textContent = item.kode;
+
+            const desk = document.createElement('span');
+            desk.className = 'rm-desk';
+            desk.textContent = item.nama;
+
+            const plus = document.createElement('span');
+            plus.className = 'rm-plus';
+            plus.textContent = sudah.includes(item.kode) ? '✓' : '+';
+
+            baris.append(kode, desk, plus);
+
+            if (!sudah.includes(item.kode)) {
+                baris.onclick = function () {
+                    if (rmTambahKeKolom(item)) rmTutupModal();
+                };
+            }
+
+            hasil.appendChild(baris);
+        });
+    }
+
+    function rmTambahManual() {
+        const kode = document.getElementById('rmManualKode').value.trim();
+        const nama = document.getElementById('rmManualDesk').value.trim();
+
+        if (!/^\d{5,18}$/.test(kode)) {
+            alert('Kode SNOMED CT harus berupa angka (5–18 digit).');
+            return;
+        }
+        if (nama === '') {
+            alert('Isi deskripsi kode terlebih dahulu.');
+            return;
+        }
+
+        if (rmTambahKeKolom({ kode: kode, nama: nama })) rmTutupModal();
+    }
+
+    // Tutup popup: tombol Esc atau klik area gelap.
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') rmTutupModal();
+    });
+    document.getElementById('rmModal')?.addEventListener('click', function (e) {
+        if (e.target === this) rmTutupModal();
+    });
+
+    // ----- Isi otomatis dari SOAP / diagnosa / tindakan (seperti Obgyn) -----
+    // Selama belum diketik manual, isinya ikut diperbarui tiap tab Resume dibuka.
+    // Setelah diketik manual, tidak ditimpa lagi.
+    const FIELD_RESUME_OTOMATIS = [
+        'rm_keluhan', 'rm_fisik', 'rm_terapi',
+        'rm_dx_utama', 'rm_dx_sekunder', 'rm_tindakan'
+    ];
+
+    FIELD_RESUME_OTOMATIS.forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function () {
+                this.dataset.otomatis = '';
+            });
+        }
+    });
+
+    function isiResumeOtomatis() {
+        const dariSoap = nama => (
+            document.querySelector('textarea[name="' + nama + '"]')?.value ?? ''
+        ).trim();
+
+        // Kode + simbol dagger/asterisk (bila ada) + nama
+        const teksKode = item => kodeDenganSimbol(item) + ' — ' + (item.nama ?? '');
+
+        const isi = (id, nilai) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            if (el.value.trim() === '' || el.dataset.otomatis === '1') {
+                el.value = nilai;
+                el.dataset.otomatis = nilai ? '1' : '';
+            }
+        };
+
+        const penyakit = diagnosaTerpilih.penyakit;
+        const tindakan = diagnosaTerpilih.tindakan;
+
+        isi('rm_keluhan', dariSoap('subjective'));
+        isi('rm_fisik', dariSoap('objective'));
+        isi('rm_terapi', dariSoap('plan'));
+        isi('rm_dx_utama', penyakit.length ? teksKode(penyakit[0]) : '');
+        isi('rm_dx_sekunder', penyakit.slice(1).map(teksKode).join('\n'));
+        isi('rm_tindakan', tindakan.map(teksKode).join('\n'));
+    }
+
+    // ----- Tanda tangan DPJP: popup canvas -----
+    let ttdDpjpTerisi = false;
+    let ttdDpjpData = null;
+    let ttdDpjpGambar = false;
+    let ttdDpjpDihapus = false;
+
+    (function () {
+        const canvas = document.getElementById('ttdDpjp');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let menggambar = false;
+
+        function aturKanvas() {
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#000';
+        }
+
+        function posisi(e) {
+            const r = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - r.left) * (canvas.width / r.width),
+                y: (e.clientY - r.top) * (canvas.height / r.height)
+            };
+        }
+
+        aturKanvas();
+
+        canvas.addEventListener('pointerdown', function (e) {
+            menggambar = true;
+            ttdDpjpGambar = true;
+            canvas.setPointerCapture(e.pointerId);
+
+            const p = posisi(e);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + 0.1, p.y + 0.1);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('pointermove', function (e) {
+            if (!menggambar) return;
+            const p = posisi(e);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+        });
+
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+            canvas.addEventListener(ev, function () { menggambar = false; });
+        });
+    })();
+
+    function bukaModalTtdDpjp() {
+        const modal = document.getElementById('rmTtdModal');
+        const canvas = document.getElementById('ttdDpjp');
+        if (!modal || !canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Muat tanda tangan terakhir ke kanvas agar dapat dilanjutkan atau diperbaiki.
+        if (ttdDpjpData) {
+            const gambar = new Image();
+            gambar.onload = function () {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(gambar, 0, 0, canvas.width, canvas.height);
+            };
+            gambar.src = ttdDpjpData;
+        }
+
+        ttdDpjpGambar = false;
+        ttdDpjpDihapus = false;
+        modal.classList.add('aktif');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function tutupModalTtdDpjp() {
+        const modal = document.getElementById('rmTtdModal');
+        if (!modal) return;
+        modal.classList.remove('aktif');
+        document.body.style.overflow = '';
+    }
+
+    function simpanTtdDpjp() {
+        const canvas = document.getElementById('ttdDpjp');
+        if (!canvas) return;
+
+        if (!ttdDpjpGambar && !ttdDpjpData && !ttdDpjpDihapus) {
+            alert('Silakan bubuhkan tanda tangan terlebih dahulu.');
+            return;
+        }
+
+        if (ttdDpjpDihapus) {
+            ttdDpjpData = null;
+        } else if (ttdDpjpGambar) {
+            ttdDpjpData = canvas.toDataURL('image/png');
+        }
+
+        ttdDpjpTerisi = !!ttdDpjpData;
+        perbaruiPratinjauTtdDpjp();
+        tutupModalTtdDpjp();
+    }
+
+    function perbaruiPratinjauTtdDpjp() {
+        const preview = document.getElementById('ttdDpjpPreview');
+        const placeholder = document.getElementById('ttdDpjpPlaceholder');
+
+        if (preview) {
+            if (ttdDpjpData) {
+                preview.src = ttdDpjpData;
+                preview.hidden = false;
+            } else {
+                preview.removeAttribute('src');
+                preview.hidden = true;
+            }
+        }
+
+        if (placeholder) placeholder.hidden = !!ttdDpjpData;
+    }
+
+    function hapusTtdDpjpTersimpan() {
+        ttdDpjpData = null;
+        ttdDpjpTerisi = false;
+        ttdDpjpGambar = false;
+        ttdDpjpDihapus = true;
+
+        const canvas = document.getElementById('ttdDpjp');
+        if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        perbaruiPratinjauTtdDpjp();
+    }
+
+    function hapusTtdDpjp() {
+        const canvas = document.getElementById('ttdDpjp');
+        if (!canvas) return;
+
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        ttdDpjpGambar = false;
+        ttdDpjpDihapus = true;
+    }
+
+    // Tutup popup bila area gelap di luar kotak diklik.
+    document.getElementById('rmTtdModal')?.addEventListener('click', function (e) {
+        if (e.target === this) tutupModalTtdDpjp();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') tutupModalTtdDpjp();
+    });
+
+    // ----- Data form Resume Medis -----
+    function kumpulkanDataRM() {
+        isiResumeOtomatis();
+
+        const data = { snomed: rmKode, edukasi: [] };
+
+        document.querySelectorAll('#tab-resume [data-rm]').forEach(function (el) {
+            data[el.dataset.rm] = el.value.trim();
+        });
+
+        document.querySelectorAll('#tab-resume input[name="rm_edukasi[]"]:checked').forEach(function (cb) {
+            data.edukasi.push(cb.value);
+        });
+
+        // Tanda tangan DPJP
+        data.ttd_dpjp = ttdDpjpTerisi ? ttdDpjpData : null;
+
+        return data;
+    }
+
+    let timerSimpanRM = null;
+
+    async function simpanRM() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        const data = kumpulkanDataRM();
+        const tombol = document.getElementById('btnSimpanRM');
+        const teks = tombol.querySelector('span');
+
+        if (RM_SIMPAN_KE_DB) {
+            tombol.disabled = true;
+            teks.textContent = 'Menyimpan...';
+            try {
+                await kirimJson(
+                    RM_URL_SIMPAN,
+                    'POST',
+                    {
+                        id_pendaftaran: Number(document.getElementById('id_pendaftaran')?.value),
+                        data: data
+                    },
+                    'Resume Medis gagal disimpan.'
+                );
+            } catch (error) {
+                console.error('Gagal menyimpan Resume Medis:', error);
+                alert(error.message || 'Resume Medis gagal disimpan.');
+                tombol.disabled = false;
+                teks.textContent = 'Simpan';
+                return;
+            }
+            tombol.disabled = false;
+            alert('Resume Medis berhasil disimpan.');
+        } else {
+            console.log('Data Resume Medis:', data);
+            alert('Resume Medis berhasil divalidasi. Belum tersimpan ke database.');
+        }
+
+        clearTimeout(timerSimpanRM);
+        teks.textContent = 'Tersimpan';
+        timerSimpanRM = setTimeout(function () { teks.textContent = 'Simpan'; }, 1500);
+    }
+
+    function cetakRM() {
+        document.body.classList.add('cetak-rm-mode');
+        window.print();
+    }
+
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('cetak-rm-mode');
+    });
+
+    // Nilai awal Resume Medis: tanggal keluar, tanggal & jam tanda tangan, kotak SNOMED kosong.
+    (function () {
+        const d = new Date();
+        const dua = n => String(n).padStart(2, '0');
+        const hariIni = d.getFullYear() + '-' + dua(d.getMonth() + 1) + '-' + dua(d.getDate());
+
+        ['rm_tgl_keluar', 'rm_tanggal'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el && !el.value) el.value = hariIni;
+        });
+
+        const jam = document.getElementById('rm_jam');
+        if (jam && !jam.value) jam.value = dua(d.getHours()) + ':' + dua(d.getMinutes());
+
+        document.querySelectorAll('.rm-snomed[data-snomed]').forEach(function (el) {
+            rmRenderKode(el.dataset.snomed);
+        });
+    })();
+
+    /* =========================================================
+       CEGAH KELUAR HALAMAN SEBELUM DATA DISIMPAN
+       Mencakup: TTV, SOAP, diagnosa (penyakit + simbol), dan tindakan.
+       - Tombol Back browser: ditahan, muncul peringatan.
+       - Klik menu / link lain: dibatalkan, muncul peringatan.
+       - Refresh / tutup tab: browser menampilkan konfirmasi.
+       Setelah klik Simpan berhasil, semua pembatasan dilepas.
+       Role yang tidak bisa menyimpan (BOLEH_SIMPAN = false) tidak dihalangi.
+       ========================================================= */
+    const PESAN_BELUM_SIMPAN =
+        'Data pasien belum disimpan.\n' +
+        'Klik tombol Simpan terlebih dahulu sebelum meninggalkan halaman ini.';
+
+    function ambilSnapshotForm() {
+        const nilai = id => (document.getElementById(id)?.value ?? '').trim();
+        const teks = nama =>
+            (document.querySelector('textarea[name="' + nama + '"]')?.value ?? '').trim();
+
+        return JSON.stringify({
+            ttv: ['tekanan_darah', 'heart_rate', 'spo2', 'suhu', 'respiratory_rate'].map(nilai),
+            soap: ['subjective', 'objective', 'assessment', 'plan'].map(teks),
+            // Simbol ikut dihitung agar perubahan dagger/asterisk terdeteksi sebagai belum disimpan
+            penyakit: diagnosaTerpilih.penyakit.map(d => String(d.id) + (d.simbol || '')).sort(),
+            tindakan: diagnosaTerpilih.tindakan.map(d => String(d.id)).sort()
+        });
+    }
+
+    // Kondisi form saat halaman dibuka = dianggap sudah tersimpan.
+    const snapshotAwal = ambilSnapshotForm();
+    let guardHistoryAktif = false;
+
+    function adaDataBelumDisimpan() {
+        if (!BOLEH_SIMPAN) return false;
+        return !izinkanKeluar && ambilSnapshotForm() !== snapshotAwal;
+    }
+
+    // Tambah satu entri riwayat agar tombol Back bisa ditahan.
+    function pasangGuardHistory() {
+        if (guardHistoryAktif) return;
+        history.pushState({ guardSimpan: true }, '', location.href);
+        guardHistoryAktif = true;
+    }
+
+    function periksaGuard() {
+        if (adaDataBelumDisimpan()) pasangGuardHistory();
+    }
+
+    document.addEventListener('input', periksaGuard);
+    document.addEventListener('change', periksaGuard);
+    document.addEventListener('click', function () {
+        // Menangkap tambah/hapus diagnosa dan tindakan yang bukan input biasa.
+        setTimeout(periksaGuard, 0);
+    });
+
+    // Tombol Back / Forward browser.
+    window.addEventListener('popstate', function () {
+        if (adaDataBelumDisimpan()) {
+            alert(PESAN_BELUM_SIMPAN);
+            history.pushState({ guardSimpan: true }, '', location.href);
+        } else if (guardHistoryAktif) {
+            guardHistoryAktif = false;
+            history.back();
+        }
+    });
+
+    // Klik link / menu sidebar ke halaman lain.
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+
+        const href = (link.getAttribute('href') || '').trim().toLowerCase();
+
+        if (href === '' || href.startsWith('#') || href.startsWith('javascript:') || link.target === '_blank') {
+            return;
+        }
+
+        if (adaDataBelumDisimpan()) {
+            e.preventDefault();
+            e.stopPropagation();
+            alert(PESAN_BELUM_SIMPAN);
+        }
+    }, true);
+
+    // Refresh, tutup tab, atau mengetik alamat lain.
+    window.addEventListener('beforeunload', function (e) {
+        if (adaDataBelumDisimpan()) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // =========================================================
+    // PEMBATASAN TAMPILAN PER ROLE
+    // =========================================================
+    (function () {
+        // Kode ICD: hanya pmik / admin yang boleh menghapus
+        if (!BOLEH_ICD) {
+            const css = document.createElement('style');
+            css.textContent = '.kb-aksi-hapus{display:none !important;}';
+            document.head.appendChild(css);
+        }
+
+        // Clinical pathway: hanya dokter, perawat, admin yang boleh mengisi
+        if (!BOLEH_CP) {
+            document.querySelectorAll('#tab-pathway input, #tab-pathway textarea')
+                .forEach(el => { el.disabled = true; });
+        }
+
+        // Resume medis: hanya dokter / admin yang mengedit.
+        if (!BOLEH_RESUME) {
+            document.querySelectorAll('#tab-resume input, #tab-resume textarea, #tab-resume select')
+                .forEach(el => { el.disabled = true; });
+            document.querySelectorAll('#tab-resume .rm-ttd-area').forEach(el => { el.style.pointerEvents = 'none'; });
+            document.querySelectorAll('#tab-resume .rm-ttd-hapus').forEach(el => { el.style.display = 'none'; });
+        }
+    })();
+</script>
+@endsection
