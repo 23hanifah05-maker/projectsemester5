@@ -1,20 +1,18 @@
 /* =========================================================
    Halaman Kunjungan Poli Jantung (assesmen)
-   Layout: Data Pasien + Tab tetap di atas, isi tab di-scroll.
-   Ubah --kb-offset bila tinggi header layout berbeda.
+   Susunan tetap: Data Pasien, Tab, lalu isi tab.
+   Ukuran huruf, kotak, dan lebar kolom disamakan dengan
+   Poli Obgyn (obgyn.css / obgyn-kunjungan-baru.css).
+   Scroll mengikuti halaman (seluruh halaman digulir), sama seperti Obgyn.
    ========================================================= */
 
 .kb-wrap {
-    --kb-merah: #c4161c;
-    --kb-merah-tua: #b71c1c;
-    --kb-garis: #d9d9d9;
-    --kb-offset: 120px;
+    --kb-merah: #b81d24;
+    --kb-merah-tua: #9c161c;
+    --kb-garis-halus: #d9dce1;
 
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    height: calc(100vh - var(--kb-offset));
-    min-height: 520px;
+    display: block;
+    width: 100%;
     box-sizing: border-box;
 }
 
@@ -24,126 +22,143 @@
 
 /* ---------- Alert ---------- */
 .kb-alert {
+    flex-shrink: 0;
+    margin-bottom: 12px;
     padding: 8px 14px;
     border-radius: 6px;
     font-size: 13px;
     background: #e8f5e9;
     border: 1px solid #a5d6a7;
     color: #1b5e20;
-    flex-shrink: 0;
 }
 
-/* ---------- Kartu Data Pasien ---------- */
+/* ---------- Kartu Data Pasien (sama dengan .ob-card) ---------- */
 .kb-card {
+    width: 100%;
+    margin-bottom: 18px;
+    padding: 18px 20px 20px;
     background: #fff;
-    border: 1px solid var(--kb-garis);
+    border: 1px solid #d9d9d9;
     border-radius: 8px;
-    padding: 8px 16px 12px;
-    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .kb-card-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 0 0 8px;
-    color: #d0141b;
-    font-weight: 700;
+    margin: 0 -18px 14px;
+    padding: 0 18px 12px;
+    color: var(--kb-merah);
     font-size: 15px;
+    font-weight: 700;
+    border-bottom: 1px solid #999;
 }
 
 .kb-kembali {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: #555;
     text-decoration: none;
 }
 .kb-kembali:hover { color: var(--kb-merah); }
 
+/* 2 kolom sama lebar, label 150px, kotak isian tinggi 42px */
 .kb-pasien-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px 48px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 40px;
 }
+
+.kb-pasien-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.kb-pasien-grid .kb-field { margin-top: 0 !important; }
 
 .kb-field {
     display: grid;
-    grid-template-columns: 130px 1fr;
+    grid-template-columns: 150px minmax(0, 1fr);
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    margin: 0;
+}
+
+.kb-field label {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
 }
 
 .kb-field input {
+    display: block;
     width: 100%;
-    height: 28px;
-    padding: 0 12px;
-    border: 1px solid #cfcfcf;
-    border-radius: 8px;
+    height: 42px;
+    margin: 0;
+    padding: 0 14px;
+    border: 1px solid var(--kb-garis-halus);
+    border-radius: 6px;
     background: #fff;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #222;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    color: #333;
+    text-transform: none;
     outline: none;
 }
 
-/* ---------- Tab ---------- */
+/* ---------- Tab (sama dengan .ob-tab) ---------- */
 .kb-tabs {
     display: flex;
     gap: 6px;
     flex-shrink: 0;
-    margin-bottom: -12px; /* nempel ke badan tab */
-    position: relative;
-    z-index: 1;
+    width: 100%;
+    margin-bottom: 0;
 }
 
 .kb-tab {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
-    border: 0;
+    padding: 10px 22px;
+    border: 1px solid #d9d9d9;
+    border-bottom: none;
     border-radius: 8px 8px 0 0;
-    background: #d6d6d6;
-    color: #777;
+    background: #f1f1f1;
+    color: #555;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
 }
 
+.kb-tab i { margin-right: 6px; }
+
 .kb-tab.aktif {
     background: var(--kb-merah);
+    border-color: var(--kb-merah);
     color: #fff;
 }
 
-/* ---------- Form & isi tab (area scroll) ---------- */
+/* ---------- Form & isi tab ---------- */
 .kb-form {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
     margin: 0;
 }
 
 .kb-pane {
     display: none;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    width: 100%;
+    padding: 20px;
     background: #fff;
-    border: 1px solid var(--kb-garis);
+    border: 1px solid #d9d9d9;
     border-radius: 0 8px 8px 8px;
-    padding: 14px 16px 18px;
-    scroll-behavior: smooth;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .kb-pane.aktif { display: block; }
-
-.kb-pane::-webkit-scrollbar { width: 8px; }
-.kb-pane::-webkit-scrollbar-thumb { background: #c9c9c9; border-radius: 8px; }
 
 .kb-kosong {
     padding: 40px 0;
@@ -152,94 +167,132 @@
     font-size: 13px;
 }
 
-/* ---------- TTV ---------- */
+/* ---------- TTV (sama dengan .ob-vitals-box) ---------- */
 .kb-ttv {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 36px;
-    gap: 6px 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 36px;
+    gap: 10px 24px;
     align-items: center;
-    padding: 8px 12px;
-    border: 1px solid var(--kb-garis);
-    border-radius: 8px;
-    margin-bottom: 14px;
+    padding: 12px 14px 12px 18px;
+    border: 1px solid var(--kb-garis-halus);
+    border-radius: 10px;
+    background: #fff;
 }
 
 .kb-ttv-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
+    min-width: 0;
 }
 
-.kb-ttv-item label { width: 46px; flex-shrink: 0; }
+.kb-ttv-item label {
+    flex: 0 0 58px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
 
 .kb-ttv-item input[type="text"] {
-    width: 100px;
-    height: 22px;
-    padding: 0 8px;
-    border: 1px solid #cfcfcf;
-    border-radius: 8px;
-    font-size: 12px;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 14px;
     outline: none;
 }
 
-.kb-ttv-item small { color: #aaa; font-weight: 400; font-size: 11px; }
+.kb-ttv-item small {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 400;
+    color: #8a8f98;
+    white-space: nowrap;
+}
 
 .kb-ttv-cek { grid-row: 1 / span 2; grid-column: 4; justify-self: end; }
-.kb-ttv-cek input { width: 16px; height: 16px; }
+.kb-ttv-cek input { width: 18px; height: 18px; accent-color: #1e9e4a; cursor: pointer; }
 
-/* ---------- SOAP ---------- */
+/* ---------- SOAP (sama dengan .ob-soap-*) ---------- */
 .kb-judul-soap {
-    margin: 0 0 8px;
-    color: #d0141b;
+    margin: 0 0 10px;
+    color: var(--kb-merah);
     font-size: 14px;
     font-weight: 700;
+}
+
+/* garis pemisah di atas judul SOAP (seperti <hr class="ob-divider">) */
+.kb-ttv + .kb-judul-soap {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid #ddd;
 }
 
 .kb-soap {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 18px 20px;
+    border: 1px solid #999;
+    border-radius: 6px;
 }
 
 .kb-badge {
-    flex: 0 0 54px;
-    height: 46px;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    margin-top: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--kb-merah-tua);
+    background: var(--kb-merah);
     color: #fff;
-    font-size: 26px;
+    font-size: 15px;
     font-weight: 700;
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
 .kb-soap-card {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
-    border: 1px solid #bdbdbd;
-    border-radius: 8px;
-    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--kb-garis-halus);
+    border-radius: 6px;
 }
 
 .kb-row {
     display: grid;
-    grid-template-columns: 190px 1fr;
-    align-items: center;
+    grid-template-columns: 210px minmax(0, 1fr);
+    align-items: start;
     gap: 12px;
-    padding: 3px 0;
-    font-size: 12px;
+    padding: 0;
+}
+
+.kb-row label {
+    padding-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
 }
 
 .kb-row.sub { padding-left: 14px; }
 .kb-row.sub label::before { content: "\2022"; margin-right: 6px; }
 
 .kb-grup-label {
-    padding: 8px 0 2px;
-    font-size: 12px;
+    padding: 4px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
 }
 
 .kb-input-wrap { position: relative; }
@@ -247,14 +300,14 @@
 .kb-input {
     display: block;
     width: 100%;
-    min-height: 34px;
+    min-height: 36px;
     max-height: 200px;
-    padding: 8px 12px;
-    border: 1px solid #bdbdbd;
-    border-radius: 8px;
+    padding: 7px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     background: #fff;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.4;
     resize: none;
     overflow-y: hidden;
@@ -265,7 +318,7 @@
 .kb-ttv-item input:focus,
 .kb-icd-input:focus {
     border-color: var(--kb-merah);
-    box-shadow: 0 0 0 2px rgba(196, 22, 28, .12);
+    box-shadow: 0 0 0 3px rgba(184, 29, 36, 0.12);
 }
 
 .kb-input[readonly],
@@ -276,6 +329,7 @@
     cursor: not-allowed;
 }
 
+/* Tombol Cetak (gaya .ob-cetak-btn) */
 .kb-btn-cetak {
     position: absolute;
     top: 50%;
@@ -284,98 +338,108 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 3px 10px;
-    border: 1px solid #bdbdbd;
-    border-radius: 6px;
-    background: #f5f5f5;
+    padding: 4px 12px;
+    border: 1px solid var(--kb-merah);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--kb-merah);
     font-family: inherit;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
 }
+.kb-btn-cetak:hover { background: var(--kb-merah); color: #fff; }
 
-/* ---------- Kode ICD ---------- */
+/* ---------- Kode ICD (sama dengan .ob-diagnosa-box) ---------- */
 .kb-icd {
-    border: 1px solid var(--kb-garis);
-    border-radius: 8px;
-    padding: 8px 14px 16px;
     margin-top: 6px;
+    padding: 14px 18px 18px;
+    border: 1px solid #999;
+    border-radius: 6px;
 }
 
 .kb-icd-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px 40px;
+    gap: 16px 20px;
 }
 
-.kb-icd-label { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.kb-icd-label {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+}
 
-.kb-icd-baris { display: flex; align-items: center; gap: 8px; }
+.kb-icd-baris { display: flex; align-items: center; gap: 10px; }
 
 .kb-icd-input {
-    flex: 1;
-    height: 30px;
-    padding: 0 10px;
-    border: 1px solid #8d8d8d;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 38px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 12px;
+    font-family: inherit;
+    font-size: 13px;
     outline: none;
 }
 
 .kb-simbol {
     display: inline-flex;
-    border: 1px solid #8d8d8d;
+    border: 1px solid #ccc;
     border-radius: 4px;
     overflow: hidden;
 }
 
 .kb-simbol button {
-    width: 30px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     border: 0;
     background: #fff;
-    font-size: 14px;
+    font-size: 15px;
     cursor: pointer;
 }
 
-.kb-simbol button + button { border-left: 1px solid #8d8d8d; }
+.kb-simbol button + button { border-left: 1px solid #ccc; }
 .kb-simbol button.aktif { background: var(--kb-merah); color: #fff; }
 
-.kb-centang { color: #2ecc40; font-size: 22px; visibility: hidden; }
+.kb-centang { color: #1e9e4a; font-size: 22px; visibility: hidden; }
 .kb-centang.tampil { visibility: visible; }
 
-/* ---------- Tombol aksi ---------- */
+/* ---------- Tombol aksi (sama dengan .ob-btn) ---------- */
 .kb-aksi {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 14px;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .kb-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 16px;
+    padding: 9px 22px;
+    border: 1px solid var(--kb-merah);
     border-radius: 6px;
-    border: 1px solid #bdbdbd;
     background: #fff;
+    color: var(--kb-merah);
     font-family: inherit;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
 }
+.kb-btn:hover { background: var(--kb-merah); color: #fff; }
 
 .kb-btn.simpan { background: var(--kb-merah); border-color: var(--kb-merah); color: #fff; }
-.kb-btn:hover { filter: brightness(.95); }
+.kb-btn.simpan:hover { background: var(--kb-merah-tua); border-color: var(--kb-merah-tua); }
 
 /* ---------- Responsif ---------- */
 @media (max-width: 900px) {
-    .kb-wrap { height: auto; min-height: 0; }
-    .kb-pane { max-height: 70vh; }
     .kb-pasien-grid,
     .kb-icd-grid { grid-template-columns: 1fr; }
     .kb-ttv { grid-template-columns: 1fr 1fr; }
     .kb-ttv-cek { grid-column: 2; grid-row: auto; }
     .kb-row { grid-template-columns: 1fr; gap: 4px; }
+    .kb-row label { padding-top: 0; }
 }
