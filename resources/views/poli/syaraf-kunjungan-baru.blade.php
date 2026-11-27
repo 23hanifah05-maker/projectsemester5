@@ -458,6 +458,68 @@
         .kb-search-box .kb-dropdown-item.kb-dropdown-empty:hover {
             background: #fff;
         }
+
+        /* =====================================================
+           KAJIAN AWAL
+           ===================================================== */
+        .kj-card { background:#fff; border-radius:10px; padding:14px 18px; margin-bottom:14px; font-size:12px; }
+        .kj-judul-merah { margin:0 0 6px; font-size:12px; font-weight:700; color:#c8102e; }
+        .kj-judul { margin:0 0 6px; font-size:12px; font-weight:700; color:#222; }
+        .kj-sub { margin:0 0 8px; font-size:10px; color:#999; }
+
+        .kj-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px 18px; margin-bottom:10px; }
+        .kj-vital { display:flex; align-items:center; gap:6px; }
+        .kj-vital label { font-weight:600; min-width:28px; }
+        .kj-vital input { flex:1; min-width:0; }
+        .kj-unit { font-size:10px; color:#999; white-space:nowrap; }
+
+        .kj-card input[type=text], .kj-card input[type=number], .kj-card select, .kj-card textarea {
+            box-sizing:border-box; padding:5px 10px; border:1px solid #ccc; border-radius:6px;
+            font:inherit; font-size:11px; background:#fff;
+        }
+        .kj-card textarea { width:100%; min-height:80px; resize:vertical; }
+        .kj-card input[readonly] { background:#f4f4f4; }
+
+        .kj-gcs { display:flex; flex-wrap:wrap; gap:14px 30px; align-items:center; margin-bottom:10px; }
+        .kj-gcs label { font-weight:600; margin-right:6px; }
+
+        .kj-radio-row { display:flex; flex-wrap:wrap; gap:8px 40px; margin-bottom:10px; }
+        .kj-opt { display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+        .kj-opt input[type=radio] { accent-color:#c8102e; width:15px; height:15px; margin:0; }
+        .kj-opt .kj-lain-teks { width:150px; }
+
+        .kj-slider { width:100%; accent-color:#c8102e; margin:6px 0 0; }
+        .kj-ticks { display:flex; justify-content:space-between; font-size:10px; padding:0 2px; margin-bottom:10px; }
+
+        .kj-nyeri-baris { display:grid; grid-template-columns:130px 1fr; gap:8px; align-items:center; margin-bottom:8px; }
+        .kj-nyeri-baris > label { font-size:11px; }
+        .kj-nyeri-baris input[type=text] { width:100%; max-width:320px; }
+
+        .kj-hal { display:none; }
+        .kj-hal.aktif { display:block; }
+
+        .kj-aksi { display:flex; justify-content:flex-end; gap:10px; margin-top:4px; }
+        .kj-btn { padding:8px 22px; border:0; border-radius:6px; background:#e11d2e; color:#fff; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+        .kj-btn:hover { background:#c8102e; }
+        .kj-btn.abu { background:#e9e9e9; color:#444; }
+        .kj-btn:disabled { opacity:.6; cursor:not-allowed; }
+
+        /* Pemeriksaan fisik */
+        .kj-fisik { display:grid; grid-template-columns:1fr 340px; border:1px solid #ddd; border-radius:8px; overflow:hidden; }
+        .kj-fisik table { width:100%; border-collapse:collapse; }
+        .kj-fisik td { padding:9px 10px; border-bottom:1px solid #ddd; vertical-align:middle; }
+        .kj-fisik tr:last-child td { border-bottom:0; }
+        .kj-fisik .kj-fisik-ket { width:100%; }
+        .kj-fisik .kj-fisik-ket:disabled { background:#f4f4f4; }
+        .kj-anatomi { display:flex; align-items:center; justify-content:center; border-left:1px solid #ddd; padding:10px; }
+        .kj-anatomi img { max-width:100%; height:auto; }
+
+        @media (max-width: 900px) {
+            .kj-grid { grid-template-columns:repeat(2, 1fr); }
+            .kj-fisik { grid-template-columns:1fr; }
+            .kj-anatomi { border-left:0; border-top:1px solid #ddd; }
+            .kj-nyeri-baris { grid-template-columns:1fr; }
+        }
     </style>
 @endsection
 
@@ -544,6 +606,12 @@
     {{-- Semua tab selalu tampil. Untuk PMIK, tab selain Assessment disamarkan dan tidak bisa diklik. --}}
     <div class="kb-tabs">
         <div class="kb-tab active" onclick="gantiTab('assesment', event)"><i class="fa-solid fa-clipboard-list"></i> Assessment</div>
+
+        {{-- BARU: Kajian Awal --}}
+        <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('kajian', event)"
+             @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
+            <i class="fa-solid fa-notes-medical"></i> Kajian Awal
+        </div>
 
         <div class="kb-tab {{ $hanyaAssesmen ? 'terkunci' : '' }}" onclick="gantiTab('radiologi', event)"
              @if ($hanyaAssesmen) aria-disabled="true" title="Tidak dapat diakses oleh PMIK" @endif>
@@ -886,10 +954,191 @@
 
 {{-- =====================================================================
      SEMUA FORMULIR DI BAWAH INI TIDAK DIRENDER UNTUK PMIK
-     (Radiologi, Clinical Pathway, General Consent, Resume Medis, popup, Rujukan)
+     (Kajian Awal, Radiologi, Clinical Pathway, General Consent, Resume Medis, popup, Rujukan)
      Tabnya tetap tampil di atas, tetapi disamarkan dan tidak bisa diklik.
      ===================================================================== --}}
 @unless ($hanyaAssesmen)
+
+    {{-- ===== TAB KAJIAN AWAL ===== --}}
+    @php
+        $kjFisik = [
+            'kepala' => 'Kepala', 'mata' => 'Mata', 'mulut' => 'Mulut', 'leher' => 'Leher',
+            'dada' => 'Dada', 'perut' => 'Perut', 'muskuloskeletal' => 'Muskuloskeletal',
+            'anus_genetalia' => 'Anus-Genetalia',
+        ];
+    @endphp
+
+    <div id="tab-kajian" class="kb-tab-content">
+
+        {{-- ========== HALAMAN 1 ========== --}}
+        <div class="kj-hal aktif" data-hal="1">
+
+            <div class="kj-card">
+                <div class="kj-judul">Tanda Vital dan Antropometri</div>
+
+                <div class="kj-grid">
+                    <div class="kj-vital"><label for="kj_td">TD</label>
+                        <input type="text" id="kj_td" data-kj="td" autocomplete="off"><span class="kj-unit">mmHg</span></div>
+                    <div class="kj-vital"><label for="kj_hr">HR</label>
+                        <input type="number" id="kj_hr" data-kj="hr" min="0" max="300"><span class="kj-unit">x/menit</span></div>
+                    <div class="kj-vital"><label for="kj_rr">RR</label>
+                        <input type="number" id="kj_rr" data-kj="rr" min="0" max="100"><span class="kj-unit">x/menit</span></div>
+                    <div class="kj-vital"><label for="kj_spo2">SpO2</label>
+                        <input type="number" id="kj_spo2" data-kj="spo2" min="0" max="100"><span class="kj-unit">%</span></div>
+
+                    <div class="kj-vital"><label for="kj_suhu">Suhu</label>
+                        <input type="number" id="kj_suhu" data-kj="suhu" min="20" max="50" step="0.1"><span class="kj-unit">°C</span></div>
+                    <div class="kj-vital"><label for="kj_bb">BB</label>
+                        <input type="number" id="kj_bb" data-kj="bb" min="0" step="0.1"><span class="kj-unit">kg</span></div>
+                    <div class="kj-vital"><label for="kj_tb">TB</label>
+                        <input type="number" id="kj_tb" data-kj="tb" min="0" step="0.1"><span class="kj-unit">cm</span></div>
+                    <div class="kj-vital"><label for="kj_imt">IMT</label>
+                        <input type="text" id="kj_imt" data-kj="imt" readonly><span class="kj-unit">kg/m²</span></div>
+                </div>
+
+                <div class="kj-judul">Glasgow Coma Scale (GCS)</div>
+                <div class="kj-gcs">
+                    <div><label for="kj_eye">Eye</label>
+                        <select id="kj_eye" data-kj="gcs_eye">
+                            <option value="">Pilih</option>
+                            <option value="4">4 - Spontan</option>
+                            <option value="3">3 - Terhadap suara</option>
+                            <option value="2">2 - Terhadap nyeri</option>
+                            <option value="1">1 - Tidak ada respons</option>
+                        </select></div>
+                    <div><label for="kj_verbal">Verbal</label>
+                        <select id="kj_verbal" data-kj="gcs_verbal">
+                            <option value="">Pilih</option>
+                            <option value="5">5 - Orientasi baik</option>
+                            <option value="4">4 - Bingung</option>
+                            <option value="3">3 - Kata tidak tepat</option>
+                            <option value="2">2 - Suara tidak jelas</option>
+                            <option value="1">1 - Tidak ada respons</option>
+                        </select></div>
+                    <div><label for="kj_motorik">Motorik</label>
+                        <select id="kj_motorik" data-kj="gcs_motorik">
+                            <option value="">Pilih</option>
+                            <option value="6">6 - Mengikuti perintah</option>
+                            <option value="5">5 - Melokalisir nyeri</option>
+                            <option value="4">4 - Menarik dari nyeri</option>
+                            <option value="3">3 - Fleksi abnormal</option>
+                            <option value="2">2 - Ekstensi abnormal</option>
+                            <option value="1">1 - Tidak ada respons</option>
+                        </select></div>
+                </div>
+
+                <div class="kj-judul">Kesadaran</div>
+                <div class="kj-radio-row">
+                    @foreach (['Compos Mentis', 'Apatis', 'Somnolen', 'Soporokoma', 'Coma'] as $k)
+                        <label class="kj-opt"><input type="radio" name="kj_kesadaran" value="{{ $k }}"> {{ $k }}</label>
+                    @endforeach
+                </div>
+
+                <div class="kj-judul">Rehabilitasi dan Lain-lain</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label class="kj-opt"><input type="radio" name="kj_rehab" value="Rehabilitasi"> Rehabilitasi</label>
+                    <label class="kj-opt"><input type="radio" name="kj_rehab" value="Lainnya"> Lainnya
+                        <input type="text" class="kj-lain-teks" data-kj="rehab_lainnya" autocomplete="off"></label>
+                </div>
+            </div>
+
+            <div class="kj-judul-merah">Pengkajian Medis</div>
+            <div class="kj-card">
+                <div class="kj-judul">Keluhan Utama</div>
+                <textarea id="kj_keluhan_utama" data-kj="keluhan_utama"></textarea>
+                <div class="kj-judul" style="margin-top:10px;">Anamnesa</div>
+                <textarea id="kj_anamnesa" data-kj="anamnesa"></textarea>
+            </div>
+
+            <div class="kj-judul-merah">Skala Nyeri</div>
+            <div class="kj-card">
+                <div class="kj-judul">Skala Intensitas Nyeri <span id="kj_nyeri_nilai" style="color:#c8102e;">(1)</span></div>
+                <div class="kj-sub">Pilih skala nyeri yang dirasakan pasien (0-10)</div>
+                <input type="range" id="kj_skala_nyeri" class="kj-slider" data-kj="skala_nyeri" min="1" max="10" step="1" value="1"
+                       oninput="document.getElementById('kj_nyeri_nilai').textContent = '(' + this.value + ')'">
+                <div class="kj-ticks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+
+                <div class="kj-judul">Deskripsi Nyeri</div>
+
+                <div class="kj-nyeri-baris">
+                    <label for="kj_pencetus">Faktor Pencetus</label>
+                    <input type="text" id="kj_pencetus" data-kj="faktor_pencetus" autocomplete="off">
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label>Qualitas</label>
+                    <div class="kj-radio-row" style="margin:0;">
+                        @foreach (['Tumpul', 'Tajam', 'Panas'] as $q)
+                            <label class="kj-opt"><input type="radio" name="kj_kualitas" value="{{ $q }}"> {{ $q }}</label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label for="kj_lokasi">Lokasi</label>
+                    <input type="text" id="kj_lokasi" data-kj="lokasi_nyeri" autocomplete="off">
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label>Frekuensi</label>
+                    <div class="kj-radio-row" style="margin:0;">
+                        @foreach (['Jarang', 'Hilang-timbul', 'Terus-menerus'] as $f)
+                            <label class="kj-opt"><input type="radio" name="kj_frekuensi" value="{{ $f }}"> {{ $f }}</label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label for="kj_lama">Lama Nyeri</label>
+                    <input type="text" id="kj_lama" data-kj="lama_nyeri" autocomplete="off">
+                </div>
+                <div class="kj-nyeri-baris">
+                    <label>Nyeri Hilang / Berkurang Apabila</label>
+                    <div class="kj-radio-row" style="margin:0;">
+                        @foreach (['Minum obat', 'Mendengar musik', 'Istirahat', 'Berubah posisi tidur'] as $h)
+                            <label class="kj-opt"><input type="radio" name="kj_nyeri_hilang" value="{{ $h }}"> {{ $h }}</label>
+                        @endforeach
+                        <label class="kj-opt"><input type="radio" name="kj_nyeri_hilang" value="Lain-lain"> Lain-lain
+                            <input type="text" class="kj-lain-teks" data-kj="nyeri_hilang_lainnya" autocomplete="off"></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kj-aksi">
+                <button type="button" class="kj-btn" onclick="kjHalaman(2)">Lanjut &rarr;</button>
+            </div>
+        </div>
+
+        {{-- ========== HALAMAN 2: PEMERIKSAAN FISIK ========== --}}
+        <div class="kj-hal" data-hal="2">
+            <div class="kj-judul-merah">Pemeriksaan Fisik</div>
+            <div class="kj-card" style="padding:12px;">
+                <div class="kj-fisik">
+                    <table>
+                        @foreach ($kjFisik as $kunci => $label)
+                            <tr>
+                                <td style="width:130px; font-size:12px;">{{ $label }}</td>
+                                <td style="width:90px;">
+                                    <label class="kj-opt"><input type="radio" name="kj_fisik_{{ $kunci }}" value="Normal"> Normal</label>
+                                </td>
+                                <td style="width:130px;">
+                                    <label class="kj-opt"><input type="radio" name="kj_fisik_{{ $kunci }}" value="Tidak Normal"> Tidak Normal</label>
+                                </td>
+                                <td><input type="text" class="kj-fisik-ket" data-kj="fisik_{{ $kunci }}_ket" autocomplete="off" disabled></td>
+                            </tr>
+                        @endforeach
+                    </table>
+
+                    <div class="kj-anatomi">
+                        <img src="{{ asset('images/anatomi-tubuh.png') }}" alt="Gambar anatomi tubuh (tampak depan dan belakang)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="kj-aksi">
+                <button type="button" class="kj-btn abu" onclick="kjHalaman(1)">&larr; Kembali</button>
+                <button type="button" class="kj-btn" id="btnSimpanKajian" onclick="simpanKajian()">
+                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     {{-- ===== TAB RADIOLOGI (hanya untuk dilihat, tidak bisa diisi) ===== --}}
     @php
@@ -2776,6 +3025,122 @@
     document.addEventListener('click', function (e) {
         if (!e.target.closest('.kb-search-box')) sembunyiDropdown();
     });
+
+    /* =========================================================
+       KAJIAN AWAL
+       (elemennya tidak ada untuk PMIK; semua pemanggilan aman terhadap null)
+       ========================================================= */
+
+    // Ubah ke true kalau route penyimpanan Kajian Awal sudah siap.
+    const KJ_SIMPAN_KE_DB = false;
+    const KJ_URL_SIMPAN   = "/poli/syaraf/kajian-awal"; // sesuaikan dengan route kamu
+
+    // Pindah antara halaman 1 (kajian) dan halaman 2 (pemeriksaan fisik)
+    function kjHalaman(n) {
+        document.querySelectorAll('#tab-kajian .kj-hal').forEach(function (el) {
+            el.classList.toggle('aktif', el.dataset.hal === String(n));
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // IMT = BB / (TB dalam meter)^2
+    function kjHitungIMT() {
+        const bb  = parseFloat(document.getElementById('kj_bb')?.value);
+        const tb  = parseFloat(document.getElementById('kj_tb')?.value);
+        const imt = document.getElementById('kj_imt');
+        if (!imt) return;
+
+        imt.value = (bb > 0 && tb > 0) ? (bb / Math.pow(tb / 100, 2)).toFixed(1) : '';
+    }
+
+    document.addEventListener('input', function (e) {
+        if (e.target.matches('#kj_bb, #kj_tb')) kjHitungIMT();
+
+        // Ngetik di kolom "Lainnya" / "Lain-lain" -> radio-nya otomatis kepilih
+        if (e.target.matches('#tab-kajian .kj-lain-teks')) {
+            const radio = e.target.closest('label')?.querySelector('input[type=radio]');
+            if (radio) radio.checked = e.target.value.trim() !== '';
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        if (!e.target.matches('#tab-kajian input[type=radio]')) return;
+
+        // Pilih opsi lain -> isian "Lainnya" dikosongkan
+        document.querySelectorAll('#tab-kajian input[type=radio][name="' + e.target.name + '"]').forEach(function (r) {
+            if (r === e.target) return;
+            const teks = r.closest('label')?.querySelector('.kj-lain-teks');
+            if (teks) teks.value = '';
+        });
+
+        // Pemeriksaan fisik: kolom keterangan hanya aktif kalau "Tidak Normal"
+        if (e.target.name.startsWith('kj_fisik_')) {
+            const ket = e.target.closest('tr')?.querySelector('.kj-fisik-ket');
+            if (!ket) return;
+            ket.disabled = e.target.value !== 'Tidak Normal';
+            if (ket.disabled) ket.value = '';
+            else ket.focus();
+        }
+    });
+
+    function kumpulkanDataKajian() {
+        const data = {};
+
+        // Semua input / select / textarea yang punya data-kj
+        document.querySelectorAll('#tab-kajian [data-kj]').forEach(function (el) {
+            data[el.dataset.kj] = el.value.trim();
+        });
+
+        // Radio: ambil yang tercentang saja
+        document.querySelectorAll('#tab-kajian input[type=radio]:checked').forEach(function (r) {
+            data[r.name.replace(/^kj_/, '')] = r.value;
+        });
+
+        return data;
+    }
+
+    async function simpanKajian() {
+        if (!NO_RM_PASIEN) {
+            alert('Data pasien tidak ditemukan.');
+            return;
+        }
+
+        const data   = kumpulkanDataKajian();
+        const tombol = document.getElementById('btnSimpanKajian');
+        const teks   = tombol.querySelector('span');
+
+        if (KJ_SIMPAN_KE_DB) {
+            tombol.disabled = true;
+            teks.textContent = 'Menyimpan...';
+
+            try {
+                await kirimJson(
+                    KJ_URL_SIMPAN,
+                    'POST',
+                    {
+                        id_pendaftaran: Number(document.getElementById('id_pendaftaran')?.value),
+                        data: data
+                    },
+                    'Kajian Awal gagal disimpan.'
+                );
+            } catch (error) {
+                console.error('Gagal menyimpan Kajian Awal:', error);
+                alert(error.message || 'Kajian Awal gagal disimpan.');
+                tombol.disabled = false;
+                teks.textContent = 'Simpan';
+                return;
+            }
+
+            tombol.disabled = false;
+            alert('Kajian Awal berhasil disimpan.');
+        } else {
+            console.log('Data Kajian Awal:', data);
+            alert('Kajian Awal berhasil divalidasi. Belum tersimpan ke database.');
+        }
+
+        teks.textContent = 'Tersimpan';
+        setTimeout(function () { teks.textContent = 'Simpan'; }, 1500);
+    }
 
     /* =========================================================
        RESUME MEDIS + POPUP SNOMED CT
