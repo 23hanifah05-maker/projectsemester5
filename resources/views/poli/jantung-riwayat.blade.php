@@ -1,20 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Kunjungan Poli Jantung - Klinik Utama Merah Putih')
-@section('header-icon')
-    <i class="fa-solid fa-stethoscope"></i>
-@endsection
+@section('title', 'Kunjungan Poli Jantung - Klinik Utama Merah Putih')
 @section('header-title', 'Poli Jantung')
 
 @section('extra-css')
     <link rel="stylesheet" href="{{ asset('css/pendaftaran.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pendaftaran-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('css/jantung-riwayat.css') }}?v={{ @filemtime(public_path('css/jantung-riwayat.css')) }}">
-    <style>
-        /* Baris riwayat yang bisa diklik */
-        .jr-tabel tbody tr.jr-klik { cursor: pointer; }
-        .jr-tabel tbody tr.jr-klik:hover { background: #fdecec; }
-        .jr-tabel tbody tr.jr-klik a { color: inherit; text-decoration: none; }
-    </style>
 @endsection
 
 @section('content')
@@ -25,144 +17,180 @@
         // Hapus blok ini bila data asli dari database sudah dikirim controller.
         if (!isset($pasien) || !isset($riwayat)) {
             $dummy = [
-                'E000031' => ['nama' => 'Hendra Wijaya',    'jk' => 'Laki-laki', 'lahir' => '1970-04-15', 'hp' => '081234560001',
-                    'riwayat' => [['20-11-2026','Jantung'],['06-11-2026','Jantung'],['22-10-2026','Saraf'],['09-10-2026','Jantung'],['18-09-2026','Jantung']]],
-                'E000032' => ['nama' => 'Lestari Wulandari','jk' => 'Perempuan', 'lahir' => '1968-09-22', 'hp' => '081234560002',
-                    'riwayat' => [['24-11-2026','Jantung'],['10-11-2026','Jantung'],['27-10-2026','Jantung'],['29-09-2026','Obgyn']]],
-                'E000033' => ['nama' => 'Bambang Hartono',  'jk' => 'Laki-laki', 'lahir' => '1975-11-02', 'hp' => '081234560003',
-                    'riwayat' => [['26-11-2026','Jantung'],['12-11-2026','Jantung'],['15-10-2026','Jiwa'],['01-10-2026','Jantung'],['03-09-2026','Jantung'],['13-08-2026','Jantung']]],
-                'E000034' => ['nama' => 'Ratna Kusuma',     'jk' => 'Perempuan', 'lahir' => '1982-07-13', 'hp' => '081234560004',
-                    'riwayat' => [['25-11-2026','Jantung'],['11-11-2026','Obgyn'],['21-10-2026','Jantung']]],
-                'E000035' => ['nama' => 'Yusuf Ramadhan',   'jk' => 'Laki-laki', 'lahir' => '1960-06-08', 'hp' => '081234560005',
-                    'riwayat' => [['23-11-2026','Jantung'],['09-11-2026','Jantung'],['19-10-2026','Saraf'],['05-10-2026','Jantung'],['14-09-2026','Jantung'],['24-08-2026','Jantung'],['03-08-2026','Jantung']]],
-                'E000036' => ['nama' => 'Mega Puspitasari', 'jk' => 'Perempuan', 'lahir' => '1990-12-24', 'hp' => '081234560006',
-                    'riwayat' => [['27-11-2026','Jantung'],['13-11-2026','Jiwa'],['30-10-2026','Jantung'],['16-10-2026','Jantung']]],
+                '000031' => ['nama_pasien'=>'Hendra Wijaya','jk'=>'Laki-laki','tempat_lahir'=>'Ngawi','tgl_lahir'=>'1970-04-15','no_hp'=>'081234560001',
+                    'riwayat'=>[['2026-11-27','jantung'],['2026-11-20','saraf'],['2026-11-06','jantung'],['2026-10-09','jantung']]],
+                '000032' => ['nama_pasien'=>'Lestari Wulandari','jk'=>'Perempuan','tempat_lahir'=>'Ngawi','tgl_lahir'=>'1968-09-22','no_hp'=>'081234560002',
+                    'riwayat'=>[['2026-11-27','jantung'],['2026-11-10','jantung'],['2026-10-27','obgyn']]],
+                '000033' => ['nama_pasien'=>'Bambang Hartono','jk'=>'Laki-laki','tempat_lahir'=>'Ngawi','tgl_lahir'=>'1975-11-02','no_hp'=>'081234560003',
+                    'riwayat'=>[['2026-11-27','jantung'],['2026-11-12','jiwa'],['2026-10-01','jantung'],['2026-09-03','jantung']]],
+                '000034' => ['nama_pasien'=>'Ratna Kusuma','jk'=>'Perempuan','tempat_lahir'=>'Ngawi','tgl_lahir'=>'1982-07-13','no_hp'=>'081234560004',
+                    'riwayat'=>[['2026-11-26','jantung'],['2026-11-11','obgyn']]],
             ];
 
-            $d = $dummy[$no_rm] ?? null;
+            $namaPoliDummy = ['jantung' => 'Jantung', 'jiwa' => 'Jiwa', 'saraf' => 'Saraf', 'obgyn' => 'Obgyn'];
+
+            $kunciRm = isset($no_rm) && isset($dummy[$no_rm]) ? $no_rm : array_key_first($dummy);
+            $d = $dummy[$kunciRm];
 
             $pasien = (object) [
-                'no_rm'        => $no_rm,
-                'nama'         => $d['nama'] ?? '-',
-                'jenis_kelamin'=> $d['jk'] ?? '-',
-                'tempat_lahir' => 'Ngawi',
-                'tgl_lahir'    => $d['lahir'] ?? null,
-                'no_hp'        => $d['hp'] ?? '-',
+                'no_rm'         => $kunciRm,
+                'nama_pasien'   => $d['nama_pasien'],
+                'jenis_kelamin' => $d['jk'],
+                'tempat_lahir'  => $d['tempat_lahir'],
+                'tgl_lahir'     => $d['tgl_lahir'],
+                'no_hp'         => $d['no_hp'],
             ];
 
-            $riwayat = collect($d['riwayat'] ?? [])->map(fn ($r) => (object) [
-                'tanggal' => $r[0],
-                'poli'    => $r[1],
+            $riwayat = collect($d['riwayat'])->map(fn ($r, $k) => (object) [
+                'id_pendaftaran' => $k + 1,
+                'tgl_registrasi' => $r[0],
+                'poli'           => (object) ['slug' => $r[1], 'nama_poli' => $namaPoliDummy[$r[1]] ?? $r[1]],
             ]);
         }
 
-        $tglLahirTampil = !empty($pasien->tgl_lahir)
-            ? \Carbon\Carbon::parse($pasien->tgl_lahir)->format('d-m-Y') : '-';
-        $umurTampil = !empty($pasien->tgl_lahir)
-            ? \Carbon\Carbon::parse($pasien->tgl_lahir)->age . ' tahun' : '-';
+        $noRmAktif = $pasien->no_rm;
+
+        $umurPasien = $umur ?? (
+            !empty($pasien->tgl_lahir)
+                ? \Carbon\Carbon::parse($pasien->tgl_lahir)->age . ' tahun'
+                : '-'
+        );
+
+        $jenisKelaminPasien = $jenisKelamin
+            ?? (is_numeric($pasien->jenis_kelamin)
+                ? match ((string) $pasien->jenis_kelamin) {
+                    '1' => 'Laki-laki',
+                    '2' => 'Perempuan',
+                    default => '-',
+                }
+                : $pasien->jenis_kelamin);
+
+        // slug poli -> nama route halaman detail kunjungan
+        $routeDetail = [
+            'obgyn'   => 'poli.obgyn.kunjungan.detail',
+            'saraf'   => 'poli.syaraf.kunjungan.detail',
+            'jantung' => 'poli.jantung.kunjungan.detail',
+            'jiwa'    => 'poli.jiwa.kunjungan.detail',
+        ];
     @endphp
 
-    <div class="jr-wrap">
+    <div class="obr-card">
 
-        {{-- ===== DATA PASIEN ===== --}}
-        <div class="jr-card">
-            <div class="jr-card-title">Data Pasien</div>
+        {{-- DATA PASIEN --}}
+        <div class="obr-datapasien-box">
+            <div class="obr-section-title">Data Pasien</div>
 
-            <div class="jr-card-body">
-                <div class="jr-col">
-                    <div class="jr-row">
-                        <label>No RM</label>
-                        <input type="text" value="{{ $pasien->no_rm }}" readonly>
-                    </div>
-                    <div class="jr-row">
-                        <label>Nama</label>
-                        <input type="text" value="{{ $pasien->nama }}" readonly>
-                    </div>
-                    <div class="jr-row">
-                        <label>Jenis Kelamin</label>
-                        <input type="text" value="{{ $pasien->jenis_kelamin }}" readonly>
-                    </div>
+            <div class="obr-fields">
+
+                <div class="obr-field">
+                    <span class="obr-label">No RM</span>
+                    <span class="obr-value">{{ $pasien->no_rm }}</span>
                 </div>
 
-                <div class="jr-col">
-                    <div class="jr-row">
-                        <label>Tempat, Tgl Lahir</label>
-                        <input type="text" value="{{ ($pasien->tempat_lahir ?? '-') . ', ' . $tglLahirTampil }}" readonly>
-                    </div>
-                    <div class="jr-row">
-                        <label>Umur</label>
-                        <input type="text" value="{{ $umurTampil }}" readonly>
-                    </div>
-                    <div class="jr-row">
-                        <label>No Hp</label>
-                        <input type="text" value="{{ $pasien->no_hp }}" readonly>
-                    </div>
+                <div class="obr-field">
+                    <span class="obr-label">Tempat, Tgl Lahir</span>
+                    <span class="obr-value">
+                        {{ $pasien->tempat_lahir ?? '-' }},
+                        {{ !empty($pasien->tgl_lahir)
+                            ? \Carbon\Carbon::parse($pasien->tgl_lahir)->format('d-m-Y')
+                            : '-' }}
+                    </span>
                 </div>
+
+                <div class="obr-field">
+                    <span class="obr-label">Nama</span>
+                    <span class="obr-value">{{ $pasien->nama_pasien ?? $pasien->nama ?? '-' }}</span>
+                </div>
+
+                <div class="obr-field">
+                    <span class="obr-label">Umur</span>
+                    <span class="obr-value">{{ $umurPasien }}</span>
+                </div>
+
+                <div class="obr-field">
+                    <span class="obr-label">Jenis Kelamin</span>
+                    <span class="obr-value">{{ $jenisKelaminPasien }}</span>
+                </div>
+
+                <div class="obr-field">
+                    <span class="obr-label">No Hp</span>
+                    <span class="obr-value">{{ $pasien->no_hp ?? '-' }}</span>
+                </div>
+
             </div>
         </div>
 
-        {{-- ===== RIWAYAT KUNJUNGAN ===== --}}
-        <div class="jr-card">
-            <div class="jr-card-title">Riwayat Kunjungan</div>
+        {{-- RIWAYAT KUNJUNGAN --}}
+        <div class="obr-riwayat-box">
+            <div class="obr-riwayat-title">Riwayat Kunjungan</div>
 
-            <div class="jr-card-body jr-tabel-wrap">
-                <table class="jr-tabel">
-                    <thead>
+            <table class="obr-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tgl. Kunjungan</th>
+                        <th>Riwayat Kunjungan</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @forelse ($riwayat as $i => $item)
+
+                        @php
+                            $tglItem = $item->tgl_registrasi ?? $item->tanggal ?? null;
+                            $tanggalKunjungan = $tglItem ? \Carbon\Carbon::parse($tglItem) : null;
+
+                            $poliItem = $item->poli ?? null;
+                            $namaPoli = is_object($poliItem)
+                                ? ($poliItem->nama_poli ?? 'Poli tidak diketahui')
+                                : ((string) $poliItem ?: 'Poli tidak diketahui');
+
+                            // slug: dari data poli bila ada, kalau tidak dari nama poli
+                            $slugPoli = is_object($poliItem) && !empty($poliItem->slug)
+                                ? $poliItem->slug
+                                : strtolower(trim(preg_replace('/^poli\s+/i', '', $namaPoli)));
+                            if ($slugPoli === 'syaraf') $slugPoli = 'saraf';
+
+                            $namaRoute = $routeDetail[$slugPoli] ?? null;
+                            $urlDetail = ($namaRoute && \Illuminate\Support\Facades\Route::has($namaRoute))
+                                ? route($namaRoute, [
+                                    'no_rm' => $noRmAktif,
+                                    'id_pendaftaran' => $item->id_pendaftaran ?? ($i + 1),
+                                ])
+                                : null;
+                        @endphp
+
                         <tr>
-                            <th class="jr-no">No</th>
-                            <th class="jr-tgl">Tgl. Kunjungan</th>
-                            <th>Riwayat Kunjungan</th>
+                            <td>{{ $i + 1 }}</td>
+
+                            <td>
+                                @if ($urlDetail)
+                                    <a href="{{ $urlDetail }}" class="obr-link">
+                                        {{ $tanggalKunjungan ? $tanggalKunjungan->format('d-m-Y') : '-' }}
+                                    </a>
+                                @else
+                                    {{ $tanggalKunjungan ? $tanggalKunjungan->format('d-m-Y') : '-' }}
+                                @endif
+                            </td>
+
+                            <td>
+                                @if ($urlDetail)
+                                    <a href="{{ $urlDetail }}" class="obr-link">{{ $namaPoli }}</a>
+                                @else
+                                    {{ $namaPoli }}
+                                @endif
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($riwayat as $i => $r)
-                            @php
-                                // Hanya kunjungan Poli Jantung yang membuka halaman kunjungan baru Jantung.
-                                $namaPoli = is_object($r->poli) ? ($r->poli->nama_poli ?? '') : (string) $r->poli;
-                                $bisaDibuka = stripos($namaPoli, 'jantung') !== false;
-                                $urlKunjungan = $bisaDibuka
-                                    ? route('poli.jantung.kunjungan.detail', [$pasien->no_rm, $r->id_pendaftaran ?? ($i + 1)])
-                                    : null;
-                            @endphp
-                            <tr @if ($bisaDibuka) class="jr-klik" data-url="{{ $urlKunjungan }}" tabindex="0" @endif>
-                                <td class="jr-no">{{ $i + 1 }}</td>
-                                <td class="jr-tgl">
-                                    @if ($bisaDibuka)
-                                        <a href="{{ $urlKunjungan }}">{{ $r->tanggal }}</a>
-                                    @else
-                                        {{ $r->tanggal }}
-                                    @endif
-                                </td>
-                                <td class="jr-poli">
-                                    @if ($bisaDibuka)
-                                        <a href="{{ $urlKunjungan }}">{{ $namaPoli }}</a>
-                                    @else
-                                        {{ $namaPoli }}
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="jr-kosong">Belum ada riwayat kunjungan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+
+                    @empty
+                        <tr>
+                            <td colspan="3" class="obr-kosong">Belum ada riwayat kunjungan.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
     </div>
-
-    <script>
-        // Klik di mana saja pada baris -> buka halaman kunjungan Poli Jantung
-        document.querySelectorAll('tr.jr-klik').forEach(function (tr) {
-            tr.addEventListener('click', function () {
-                window.location.href = tr.dataset.url;
-            });
-            tr.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') window.location.href = tr.dataset.url;
-            });
-        });
-    </script>
 
 @endsection

@@ -1,0 +1,256 @@
+/* =========================================================
+   Resume Medis (disamakan dengan Poli Obgyn)
+   Dipakai halaman kunjungan Poli Jantung & Poli Jiwa
+   ========================================================= */
+
+.rm-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.rm-wrap *,
+.rm-wrap *::before,
+.rm-wrap *::after { box-sizing: border-box; }
+
+.rm-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 12px;
+    background: #fff;
+}
+
+textarea.rm-input { resize: vertical; }
+
+.rm-input:disabled { background: #f4f4f4; color: #666; cursor: not-allowed; }
+
+.rm-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.rm-top-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rm-line {
+    display: grid;
+    grid-template-columns: 95px 1fr;
+    align-items: center;
+    gap: 8px;
+}
+
+.rm-line.rm-start { align-items: start; }
+
+.rm-line > label {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.rm-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.rm-pj {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #fff1f1;
+    border: 1px solid #f3c1c4;
+    border-radius: 4px;
+}
+
+.rm-pj-judul {
+    font-size: 12px;
+    font-weight: 700;
+    color: #b81d24;
+}
+
+.rm-pj-grid {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr;
+    gap: 8px 10px;
+    align-items: center;
+    font-size: 12px;
+}
+
+.rm-bar {
+    padding: 8px;
+    background: #b81d24;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 4px;
+}
+
+.rm-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.rm-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rm-blok {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rm-blok.rm-grow { flex: 1; }
+
+.rm-blok.rm-grow textarea {
+    flex: 1;
+    min-height: 56px;
+}
+
+.rm-lbl {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.rm-cek {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.rm-cek label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+}
+
+.rm-snomed {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #fff1f1;
+    border: 1px solid #f3c1c4;
+    border-radius: 4px;
+}
+
+.rm-snomed-judul {
+    font-size: 11px;
+    font-weight: 700;
+    color: #b81d24;
+}
+
+.rm-snomed-kosong {
+    font-size: 11px;
+    color: #b98a8d;
+}
+
+.rm-snomed-daftar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.rm-snomed-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    background: #fff;
+    border: 1px solid #b81d24;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+.rm-snomed-chip button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #b81d24;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.rm-snomed-btn {
+    padding: 3px 8px;
+    border: 1px solid #b81d24;
+    border-radius: 4px;
+    background: #fff;
+    color: #b81d24;
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.rm-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+}
+
+.rm-ttd-label {
+    margin-bottom: 4px;
+    font-size: 11px;
+}
+
+.rm-ttd-canvas {
+    display: block;
+    width: 160px;
+    height: 70px;
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 4px;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+.ob-ttd-hapus {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: #c1121f;
+    text-decoration: underline;
+}
+
+.rm-waktu label {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 11px;
+}
+
+.rm-btns {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 900px) {
+    .rm-top,
+    .rm-cols { grid-template-columns: 1fr; }
+
+    .rm-footer { flex-wrap: wrap; }
+}

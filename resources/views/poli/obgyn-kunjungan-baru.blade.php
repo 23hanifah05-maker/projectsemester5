@@ -1072,6 +1072,7 @@
                             <input
                                 type="text"
                                 name="{{ $name }}"
+                                @if ($name === 'td') data-tekanan-darah inputmode="text" autocomplete="off" @endif
                                 {{ $bolehTtv ? '' : 'readonly' }}
                                 placeholder="{{ $placeholder }}"
                                 value="{{ old($name, match ($name) {
@@ -1931,6 +1932,33 @@
 
 @section('extra-js')
 <script>
+    // ===== Tekanan darah (Assessment): hanya angka dan satu garis miring =====
+    // Format: maksimal 3 angka / 3 angka, mis. 120/80.
+    function bersihkanTekananDarah(teks) {
+        const bersih = teks.replace(/[^0-9\/]/g, '').replace(/^\/+/, '');
+        const [sistol, ...sisa] = bersih.split('/');
+        const hasil = sistol.slice(0, 3);
+
+        return sisa.length ? hasil + '/' + sisa.join('').slice(0, 3) : hasil;
+    }
+
+    // Fase capture (true): nilai dibersihkan lebih dulu, sebelum dibaca listener lain
+    // (teks TTV di Objective dan pengecekan data belum disimpan).
+    // Berlaku untuk ketikan, paste, drag & drop, autocorrect, dan keyboard HP.
+    document.addEventListener('input', function (e) {
+        const el = e.target;
+        if (!el.matches('[data-tekanan-darah]')) return;
+
+        const asli  = el.value;
+        const hasil = bersihkanTekananDarah(asli);
+        if (hasil === asli) return;
+
+        // Pertahankan posisi kursor saat karakter terlarang dibuang
+        const kursor = bersihkanTekananDarah(asli.slice(0, el.selectionStart)).length;
+        el.value = hasil;
+        el.setSelectionRange(kursor, kursor);
+    }, true);
+
     // ===========================================================
     // KONFIGURASI
     // ===========================================================

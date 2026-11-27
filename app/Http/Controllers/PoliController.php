@@ -192,6 +192,28 @@ class PoliController extends Controller
             ->map(function ($item) {
                 $p = $item->pasien;
 
+
+// Periksa apakah diagnosis atau tindakan ICD sudah tersimpan
+$assesmen = Assesmen::where(
+    'id_pendaftaran',
+    $item->id_pendaftaran
+)->first();
+
+$sudahKoding = false;
+
+if ($assesmen) {
+    $adaDiagnosis = DB::table('detail_diagnosis')
+        ->where('id_assesmen', $assesmen->id_assesmen)
+        ->exists();
+
+    $adaTindakan = DB::table('detail_tindakan')
+        ->where('id_assesmen', $assesmen->id_assesmen)
+        ->exists();
+
+    $sudahKoding = $adaDiagnosis || $adaTindakan;
+}
+
+
                 $petaAgama = [
                     1 => 'Islam',
                     2 => 'Kristen',
@@ -250,10 +272,15 @@ class PoliController extends Controller
                     'poli' => $item->poli->nama_poli ?? 'Poli Saraf',
                     'dokter' => $item->dpjp ?? '',
                     'pj_nama' => $p->pj_nama,
-                    'pj_hubungan' => $p->pj_hubungan,
-                    'pj_jenis_kelamin' => $this->formatJenisKelamin($p->pj_jenis_kelamin),
-                    'pj_no_hp' => $p->pj_no_hp,
-                    'status_periksa' => $item->status_periksa,
+'pj_hubungan' => $p->pj_hubungan,
+'pj_jenis_kelamin' => $this->formatJenisKelamin($p->pj_jenis_kelamin),
+'pj_no_hp' => $p->pj_no_hp,
+
+// Status koding ICD
+'status_koding' => $sudahKoding,
+
+// Status penyelesaian SOAP
+'status_periksa' => $item->status_periksa,
                 ];
             })
             ->values();
