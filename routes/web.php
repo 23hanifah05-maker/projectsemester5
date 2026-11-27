@@ -131,24 +131,33 @@ Route::middleware(['auth', \App\Http\Middleware\BatasiPoliDokter::class])->group
         Route::get('/poli/obgyn/kunjungan-baru/{no_rm}', [PoliController::class, 'kunjunganObgyn'])
             ->name('poli.obgyn.kunjungan-baru');
 
-        // ===== POLI JANTUNG =====
-Route::get('/poli/jantung', function () {
-    return view('poli.jantung');
-})->name('poli.jantung');
+        // Poli Jantung (SEMENTARA memakai data dummy, tanpa database)
+        Route::get('/poli/jantung', [PoliController::class, 'jantung'])
+            ->name('poli.jantung');
 
-Route::get('/poli/jantung/detail/{no_rm}', [PoliController::class, 'riwayatJantung'])
-    ->name('poli.jantung.riwayat');
+        Route::get('/poli/jantung/detail/{no_rm}', [PoliController::class, 'riwayatJantung'])
+            ->name('poli.jantung.riwayat');
 
-Route::get('/poli/jantung/kunjungan/{no_rm}', [PoliController::class, 'kunjunganJantung'])
-    ->name('poli.jantung.kunjungan');
+        // Halaman kunjungan (assesmen) Poli Jantung -> poli/jantung-kunjungan-baru.blade.php
+        Route::get('/poli/jantung/kunjungan/{no_rm}', [PoliController::class, 'kunjunganJantung'])
+            ->name('poli.jantung.kunjungan');
 
-Route::get('/poli/jantung/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::class, 'kunjunganJantung'])
-    ->name('poli.jantung.kunjungan.detail');
+        Route::get('/poli/jantung/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::class, 'kunjunganJantung'])
+            ->name('poli.jantung.kunjungan.detail');
 
-    //poli jiwa
-
+        // Poli Jiwa (SEMENTARA memakai data dummy, tanpa database)
         Route::get('/poli/jiwa', [PoliController::class, 'jiwa'])
             ->name('poli.jiwa');
+
+        Route::get('/poli/jiwa/detail/{no_rm}', [PoliController::class, 'riwayatJiwa'])
+            ->name('poli.jiwa.riwayat');
+
+        // Halaman kunjungan (assesmen) Poli Jiwa -> poli/jiwa-kunjungan-baru.blade.php
+        Route::get('/poli/jiwa/kunjungan/{no_rm}', [PoliController::class, 'kunjunganJiwa'])
+            ->name('poli.jiwa.kunjungan');
+
+        Route::get('/poli/jiwa/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::class, 'kunjunganJiwa'])
+            ->name('poli.jiwa.kunjungan.detail');
     });
 
 
@@ -190,7 +199,7 @@ Route::get('/poli/jantung/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::
 
 
     // ------------------------------------------------------------------
-    // Asesmen: dokter (S, O, A, P), perawat (S, O), pmik (kode ICD saja).
+    // Asesmen: dokter (S, O, A, P), perawat (TTV, S, O), pmik (kode ICD saja).
     // Pembatasan field per role WAJIB juga dilakukan di AssesmenController.
     // ------------------------------------------------------------------
     Route::middleware('role:dokter,perawat,pmik')->group(function () {
@@ -200,6 +209,14 @@ Route::get('/poli/jantung/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::
 
         Route::post('/poli/obgyn/assesmen', [AssesmenController::class, 'store'])
             ->name('poli.obgyn.assesmen.store');
+
+        // Jantung & Jiwa: SEMENTARA ke PoliController (dummy, belum ke database).
+        // Setelah tabel siap, ganti ke [AssesmenController::class, 'store'].
+        Route::post('/poli/jantung/assesmen', [PoliController::class, 'simpanAssesmenKunjungan'])
+            ->name('poli.jantung.assesmen.store');
+
+        Route::post('/poli/jiwa/assesmen', [PoliController::class, 'simpanAssesmenKunjungan'])
+            ->name('poli.jiwa.assesmen.store');
     });
 
 
@@ -227,6 +244,13 @@ Route::get('/poli/jantung/kunjungan/{no_rm}/{id_pendaftaran}', [PoliController::
 
         Route::post('/poli/obgyn/rujukan', [PoliController::class, 'kirimRujukanObgyn'])
             ->name('poli.obgyn.rujukan');
+
+        // Rujukan Jantung & Jiwa (SEMENTARA dummy)
+        Route::post('/poli/jantung/rujukan', [PoliController::class, 'kirimRujukanKunjungan'])
+            ->name('poli.jantung.rujukan');
+
+        Route::post('/poli/jiwa/rujukan', [PoliController::class, 'kirimRujukanKunjungan'])
+            ->name('poli.jiwa.rujukan');
 
         // Simpan informed consent (hanya untuk tindakan KB IUD)
         Route::post('/poli/obgyn/informed-consent', [PoliController::class, 'simpanInformedConsent'])

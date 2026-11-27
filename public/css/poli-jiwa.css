@@ -1,0 +1,147 @@
+/* ===== Poli Jiwa - daftar pasien ===== */
+
+/* Aksi: tombol mata + penanda status (sama seperti Poli Obgyn dan Poli Jantung) */
+.aksi-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-aksi svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: middle;
+}
+
+.badge-periksa {
+    display: inline-block;
+    min-width: 70px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: #fff;
+}
+
+.badge-periksa.periksa { background-color: #f4b400; color: #333; } /* kuning = periksa */
+.badge-periksa.selesai { background-color: #2e9e4f; }              /* hijau = selesai */
+
+.table-pendaftaran th:last-child { min-width: 170px; }
+
+/* ===== Baris bisa diklik -> riwayat pasien ===== */
+/* Sel bisa diklik; teks tidak ikut terseleksi saat diklik */
+.table-pendaftaran td.klik-riwayat {
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Blok sorotan dari kolom No sampai Pembayaran (kolom Aksi tidak ikut) */
+.table-pendaftaran tbody tr:hover td.klik-riwayat,
+.table-pendaftaran tbody tr:focus td.klik-riwayat { background: #fdf1f2; }
+
+.table-pendaftaran tbody tr:active td.klik-riwayat { background: #fbe3e5; }
+
+.table-pendaftaran tbody tr:focus { outline: none; }
+
+.link-riwayat {
+    color: inherit;
+    text-decoration: none;
+}
+
+.link-riwayat:hover { color: #c8102e; text-decoration: underline; }
+
+/* ===== Popup detail pasien (tampilan sama dengan halaman Pendaftaran) =====
+   Ukuran dibuat ringkas dan ikut tinggi layar supaya semua isi terlihat tanpa gulir. */
+.dp-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, .55);
+    backdrop-filter: blur(5px);
+}
+
+.dp-overlay.aktif { display: flex; }
+
+.dp-modal {
+    width: 100%;
+    max-width: 980px;
+    max-height: 96vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+}
+
+.dp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    min-height: min(56px, 7vh);
+    background: #c8141b;
+    color: #fff;
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.dp-tutup {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.dp-body { overflow-y: auto; }
+
+.dp-section {
+    padding: min(10px, 1.4vh) 22px;
+    border-bottom: 1px solid #f0e4e4;
+    background: #fdf4f4;
+    color: #c8141b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.dp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 28px;
+    padding: 0 22px 0 0;
+}
+
+.dp-grid > div:first-child .dp-row { padding-left: 22px; }
+
+.dp-row {
+    display: grid;
+    grid-template-columns: 150px 14px 1fr;
+    align-items: center;
+    min-height: min(34px, 4.4vh);
+    border-bottom: 1px solid #ececec;
+    font-size: 13px;
+}
+
+.dp-label { font-weight: 700; color: #222; }
+.dp-nilai { color: #333; overflow-wrap: anywhere; }
+
+@media (max-width: 800px) {
+    .dp-grid { grid-template-columns: 1fr; padding: 0; }
+    .dp-grid > div .dp-row { padding-left: 22px; }
+    .dp-row { grid-template-columns: 120px 12px 1fr; }
+}
