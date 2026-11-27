@@ -747,7 +747,7 @@
             <div class="kb-vitals">
                 <div class="kb-vital-row">
                     <label>TD</label>
-                    <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" autocomplete="off" {{ $bolehTtv ? '' : 'readonly' }}>
+                    <input type="text" id="tekanan_darah" name="tekanan_darah" data-field="tekanan_darah" value="{{ old('tekanan_darah', $ttv->tekanan_darah ?? '') }}" placeholder="mis. 120/80" inputmode="text" autocomplete="off" data-tekanan-darah {{ $bolehTtv ? '' : 'readonly' }}>
                     <span class="kb-vital-unit">mmHg</span>
                 </div>
                 <div class="kb-vital-row">
@@ -978,7 +978,7 @@
 
                 <div class="kj-grid">
                     <div class="kj-vital"><label for="kj_td">TD</label>
-                        <input type="text" id="kj_td" data-kj="td" autocomplete="off"><span class="kj-unit">mmHg</span></div>
+                        <input type="text" id="kj_td" data-kj="td" data-tekanan-darah placeholder="mis. 120/80" inputmode="text" autocomplete="off"><span class="kj-unit">mmHg</span></div>
                     <div class="kj-vital"><label for="kj_hr">HR</label>
                         <input type="number" id="kj_hr" data-kj="hr" min="0" max="300"><span class="kj-unit">x/menit</span></div>
                     <div class="kj-vital"><label for="kj_rr">RR</label>
@@ -1746,6 +1746,33 @@
 
 @section('extra-js')
 <script>
+    // ===== Tekanan darah (Assessment & Kajian Awal): hanya angka dan satu garis miring =====
+    // Format: maksimal 3 angka / 3 angka, mis. 120/80.
+    function bersihkanTekananDarah(teks) {
+        const bersih = teks.replace(/[^0-9\/]/g, '').replace(/^\/+/, '');
+        const [sistol, ...sisa] = bersih.split('/');
+        const hasil = sistol.slice(0, 3);
+
+        return sisa.length ? hasil + '/' + sisa.join('').slice(0, 3) : hasil;
+    }
+
+    // Fase capture (true): nilai dibersihkan lebih dulu, sebelum dibaca listener lain
+    // (teks TTV di Objective dan pengecekan data belum disimpan).
+    // Berlaku untuk ketikan, paste, drag & drop, autocorrect, dan keyboard HP.
+    document.addEventListener('input', function (e) {
+        const el = e.target;
+        if (!el.matches('[data-tekanan-darah]')) return;
+
+        const asli  = el.value;
+        const hasil = bersihkanTekananDarah(asli);
+        if (hasil === asli) return;
+
+        // Pertahankan posisi kursor saat karakter terlarang dibuang
+        const kursor = bersihkanTekananDarah(asli.slice(0, el.selectionStart)).length;
+        el.value = hasil;
+        el.setSelectionRange(kursor, kursor);
+    }, true);
+
     // ===== Konfigurasi =====
     // No. RM pasien yang sedang diperiksa (null kalau pasien tidak ditemukan)
     const NO_RM_PASIEN = "{{ $pasien->no_rm ?? '' }}" || null;
