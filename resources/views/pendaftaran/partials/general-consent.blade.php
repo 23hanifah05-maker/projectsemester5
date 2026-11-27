@@ -997,6 +997,8 @@
 
     // DIUBAH: nama terang Pemberi Informasi = akun yang login (hanya di halaman Pendaftaran)
     const GC_NAMA_PEMBERI = @json($inline ? '' : (auth()->user()->username ?? ''));
+    // Data General Consent dari kunjungan yang sedang dibuka.
+    const GC_DATA_TERSIMPAN = @json($generalConsent ?? null);
 
     let gcDataPasien = {};
     let gcTargetTtd = null;
@@ -1034,6 +1036,104 @@
             pad(sekarang.getHours()) + '.' +
             pad(sekarang.getMinutes());
 
+    }
+
+    /* MEMULIHKAN ISIAN GENERAL CONSENT DARI DATABASE */
+    function gcIsiConsentTersimpan(data) {
+        if (!data) return;
+
+        const kolomButir = {
+            1: 'hak_kewajiban',
+            2: 'persetujuan_pelayanan',
+            3: 'pelepasan_informasi',
+            4: 'pengajuan_keluhan',
+            5: 'informasi_rawat_jalan',
+            6: 'kewajiban_pembayaran',
+            7: 'pernyataan_persetujuan'
+        };
+
+        Object.entries(kolomButir).forEach(([nomor, kolom]) => {
+            const nilai = data[kolom];
+            if (nilai === null || typeof nilai === 'undefined') return;
+
+            // Kolom database menyimpan teks setuju/tidak_setuju.
+            // Tetap dukung data lama yang mungkin tersimpan sebagai 1/0.
+            const teks = String(nilai).trim().toLowerCase();
+            const pilihan = (teks === 'setuju' || teks === '1')
+                ? 'setuju'
+                : (teks === 'tidak_setuju' || teks === '0' ? 'tidak_setuju' : null);
+            if (!pilihan) return;
+            const radio = document.querySelector(
+                '.gc-row[data-index="' + nomor + '"] input[value="' + pilihan + '"]'
+            );
+            if (radio) radio.checked = true;
+        });
+
+        document.getElementById('gc-semua').checked =
+            Number(data.konfirmasi) === 1;
+
+        document.getElementById('gc-nama-pemberi').value =
+            data.nama_pemberi || GC_NAMA_PEMBERI || '';
+        document.getElementById('gc-nama-pasien').value =
+            data.nama_penandatangan || '';
+
+        if (data.tanggal) {
+            const tanggal = String(data.tanggal).slice(0, 10);
+            const bagian = tanggal.split('/');
+            const iso = tanggal.split('-');
+            document.getElementById('gc-tgl').value = bagian.length === 3
+                ? tanggal
+                : (iso.length === 3 ? iso[2] + '/' + iso[1] + '/' + iso[0] : tanggal);
+        }
+
+        if (data.jam) {
+            document.getElementById('gc-jam').value =
+                String(data.jam).slice(0, 5).replace(':', '.');
+        }
+
+        // Nama anggota keluarga disimpan sebagai JSON array.
+        let keluarga = [];
+        try {
+            keluarga = Array.isArray(data.anggota_keluarga)
+                ? data.anggota_keluarga
+                : JSON.parse(data.anggota_keluarga || '[]');
+        } catch (e) {
+            keluarga = [];
+        }
+
+        const daftar = document.getElementById('gc-keluarga-list');
+        const awal = daftar ? daftar.querySelector('.gc-keluarga-input') : null;
+        if (daftar && awal) {
+            daftar.querySelectorAll('.gc-keluarga-row').forEach((row, index) => {
+                if (index > 0) row.remove();
+            });
+
+            awal.value = keluarga[0] || '';
+            keluarga.slice(1, GC_MAKS_KELUARGA).forEach(nama => {
+                gcTambahKeluarga();
+                const inputs = daftar.querySelectorAll('.gc-keluarga-input');
+                inputs[inputs.length - 1].value = nama;
+            });
+            gcRefreshKeluarga();
+        }
+
+        // Pulihkan tanda tangan yang tersimpan dalam bentuk data URL.
+        const pulihkanTtd = (id, sumber) => {
+            if (!sumber) return;
+            const state = window.gcPad[id];
+            if (!state) return;
+
+            const gambar = new Image();
+            gambar.onload = function () {
+                state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+                state.ctx.drawImage(gambar, 0, 0, state.canvas.width, state.canvas.height);
+                state.dirty = true;
+            };
+            gambar.src = sumber;
+        };
+
+        pulihkanTtd('gcTtdPemberi', data.ttd_pemberi);
+        pulihkanTtd('gcTtd', data.ttd_pasien);
     }
 
     /* MEMBUKA GENERAL CONSENT */
@@ -1750,6 +1850,9 @@
         // Mode inline: langsung isi data pasien saat halaman dibuka.
         if (GC_INLINE) {
             window.bukaConsent(window.GC_DATA_PASIEN || {});
+
+            // Setelah canvas dan data pasien siap, isi formulir dari database.
+            gcIsiConsentTersimpan(GC_DATA_TERSIMPAN);
         }
 
     });

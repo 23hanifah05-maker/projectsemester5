@@ -319,10 +319,13 @@
                     <div class="row" id="row_no_bpjs"
                          @if (old('pembayaran') !== 'bpjs') style="display:none;" @endif>
                         <label for="no_bpjs">No. BPJS</label>
-                        <input type="text" name="no_bpjs" id="no_bpjs"
-                               value="{{ old('no_bpjs') }}"
-                               inputmode="numeric" maxlength="13"
-                               oninput="batasiAngka(this,13,'noBpjsError','Nomor BPJS hanya boleh angka, maksimal 13 digit.')">
+                       <input type="text"
+       name="nomor_bpjs"
+       id="no_bpjs"
+       value="{{ old('nomor_bpjs') }}"
+       inputmode="numeric"
+       maxlength="13"
+       oninput="batasiAngka(this, 13, 'noBpjsError', 'Nomor BPJS hanya boleh angka, maksimal 13 digit.')">
                         <small class="err" id="noBpjsError"></small>
                     </div>
                 </div>
